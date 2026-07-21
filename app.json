@@ -3,11 +3,13 @@
     "name": "fitness-tracker",
     "slug": "fitness-tracker",
     "version": "1.0.0",
+    "scheme": "fitness-tracker",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.espinozar.fitness-tracker"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +18,22 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.espinoza21.fitnesstracker"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c13be3e5-ece2-4588-b86e-ccd49e3c3a64"
+      }
     }
   }
 }

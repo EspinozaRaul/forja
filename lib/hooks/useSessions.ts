@@ -1,0 +1,93 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getAllSessions,
+  getSessionById,
+  createSession,
+  completeSession,
+  deleteSession,
+  getSessionExercises,
+  addExerciseToSession,
+} from '../db/queries';
+import type { Session, SessionExercise } from '../types';
+
+const SESSION_KEY = ['sessions'];
+
+export function useSessions() {
+  return useQuery<Session[]>({
+    queryKey: SESSION_KEY,
+    queryFn: getAllSessions,
+  });
+}
+
+export function useSession(id: number) {
+  return useQuery<Session[]>({
+    queryKey: [...SESSION_KEY, id],
+    queryFn: () => getSessionById(id),
+    enabled: !!id,
+  });
+}
+
+export function useSessionExercises(sessionId: number) {
+  return useQuery<SessionExercise[]>({
+    queryKey: [...SESSION_KEY, sessionId, 'exercises'],
+    queryFn: () => getSessionExercises(sessionId),
+    enabled: !!sessionId,
+  });
+}
+
+export function useCreateSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { routineId?: number }) => createSession(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useCompleteSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { completedAt?: Date; duration?: number; notes?: string };
+    }) => completeSession(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteSession(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useAddExerciseToSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      sessionId: number;
+      exerciseId: number;
+      order: number;
+      notes?: string;
+    }) => addExerciseToSession(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
+    },
+  });
+}

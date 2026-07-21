@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `name_category_idx` ON `exercises` (`name`,`category_id`);
