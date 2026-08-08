@@ -7,6 +7,11 @@ import {
   deleteSession,
   getSessionExercises,
   addExerciseToSession,
+  updateSessionExerciseRestTime,
+  updateSessionExerciseOrder,
+  replaceSessionExercise,
+  getLastSessionForRoutine,
+  duplicateSessionData,
 } from '../db/queries';
 import type { Session, SessionExercise } from '../types';
 
@@ -74,6 +79,33 @@ export function useDeleteSession() {
   });
 }
 
+export function useLastSessionForRoutine(routineId: number) {
+  return useQuery({
+    queryKey: ['sessions', 'lastForRoutine', routineId],
+    queryFn: () => getLastSessionForRoutine(routineId),
+    enabled: !!routineId,
+  });
+}
+
+export function useDuplicateSessionData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sourceSessionId,
+      targetSessionId,
+    }: {
+      sourceSessionId: number;
+      targetSessionId: number;
+    }) => duplicateSessionData(sourceSessionId, targetSessionId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.targetSessionId, 'exercises'],
+      });
+    },
+  });
+}
+
 export function useAddExerciseToSession() {
   const queryClient = useQueryClient();
 
@@ -88,6 +120,42 @@ export function useAddExerciseToSession() {
       queryClient.invalidateQueries({
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
+    },
+  });
+}
+
+export function useUpdateExerciseRestTime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, restTime }: { id: number; restTime: number }) =>
+      updateSessionExerciseRestTime(id, restTime),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useUpdateSessionExerciseOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, order }: { id: number; order: number }) =>
+      updateSessionExerciseOrder(id, order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useReplaceSessionExercise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, exerciseId }: { id: number; exerciseId: number }) =>
+      replaceSessionExercise(id, exerciseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
     },
   });
 }

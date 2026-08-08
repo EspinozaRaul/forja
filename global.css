@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-primary: #0A0A0A;
+    --color-bg-secondary: #141414;
+    --color-bg-card: #1A1A1A;
+    --color-bg-elevated: #222222;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #A0A0A0;
+    --color-text-muted: #666666;
+    --color-accent: #00F5A0;
+    --color-accent-dark: #00D9A0;
+    --color-border: #2A2A2A;
+    --color-error: #FF3B30;
+    --color-success: #00F5A0;
+    --color-warning: #FFB800;
+  }
+}
+
+body {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+}

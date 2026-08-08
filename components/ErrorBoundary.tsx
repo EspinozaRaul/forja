@@ -36,16 +36,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
 
       return (
-        <View className="flex-1 items-center justify-center bg-gray-50 p-6">
-          <Text className="text-lg font-semibold text-red-600 mb-2">Something went wrong</Text>
-          <Text className="text-sm text-gray-600 text-center mb-4">
+        <View className="flex-1 items-center justify-center bg-dark-bg p-6">
+          <Text className="text-lg font-semibold text-error mb-2">Something went wrong</Text>
+          <Text className="text-sm text-dark-text-secondary text-center mb-6">
             {this.state.error?.message || 'An unexpected error occurred'}
           </Text>
           <TouchableOpacity
             onPress={this.handleRetry}
-            className="bg-blue-500 rounded-lg px-6 py-3"
+            className="bg-accent rounded-xl px-8 py-4"
           >
-            <Text className="text-white font-semibold">Try Again</Text>
+            <Text className="text-dark-bg font-bold">Try Again</Text>
           </TouchableOpacity>
         </View>
       );

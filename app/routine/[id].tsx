@@ -1,15 +1,18 @@
-import { Text, View, ScrollView, Alert } from 'react-native';
+import { Text, View, ScrollView, Alert, Modal, Pressable, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine } from '../../lib/hooks/useRoutines';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
 import { useExercises } from '../../lib/hooks/useExercises';
-import { useCreateSession } from '../../lib/hooks/useSessions';
+import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { haptics } from '../../lib/utils/haptics';
+import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 
 export default function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,7 +25,12 @@ export default function RoutineDetailScreen() {
   const updateRoutine = useUpdateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const removeExerciseFromRoutine = useRemoveExerciseFromRoutine();
+  const deleteRoutine = useDeleteRoutine();
+  const updateOrder = useUpdateRoutineExerciseOrder();
   const createSession = useCreateSession();
+  const addExerciseToSession = useAddExerciseToSession();
+  const { data: lastSession } = useLastSessionForRoutine(routineId);
+  const duplicateSessionData = useDuplicateSessionData();
 
   const routine = routines?.[0];
   const isLoading = routineLoading || exercisesLoading || allExercisesLoading;
@@ -31,12 +39,17 @@ export default function RoutineDetailScreen() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const replaceExercise = useReplaceRoutineExercise();
 
-  // Map routine exercises to include exercise details
-  const routineExercisesWithDetails = routineExercises?.map((re) => {
-    const exercise = allExercises?.find((e) => e.id === re.exerciseId);
-    return { ...re, exercise };
-  }) ?? [];
+  const routineExercisesWithDetails = routineExercises
+    ?.map((re) => {
+      const exercise = allExercises?.find((e) => e.id === re.exerciseId);
+      return { ...re, exercise };
+    })
+    ?.sort((a, b) => a.order - b.order) ?? [];
 
   const handleStartEdit = () => {
     if (routine) {
@@ -54,10 +67,7 @@ export default function RoutineDetailScreen() {
     try {
       await updateRoutine.mutateAsync({
         id: routineId,
-        data: {
-          name: editName.trim(),
-          description: editDescription.trim() || undefined,
-        },
+        data: { name: editName.trim(), description: editDescription.trim() || undefined },
       });
       setIsEditing(false);
     } catch (error) {
@@ -80,19 +90,72 @@ export default function RoutineDetailScreen() {
     }
   };
 
+  const handleMultiAddExercises = async (exercises: { id: number }[]) => {
+    try {
+      for (let i = 0; i < exercises.length; i++) {
+        await addExerciseToRoutine.mutateAsync({
+          routineId,
+          exerciseId: exercises[i].id,
+          order: routineExercisesWithDetails.length + i + 1,
+          targetSets: 3,
+          targetReps: 10,
+        });
+      }
+      setShowPicker(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add exercises');
+    }
+  };
+
+  const handleDragHandleTap = async (index: number) => {
+    if (dragIndex === null) {
+      setDragIndex(index);
+    } else if (dragIndex === index) {
+      setDragIndex(null);
+    } else {
+      // Swap and persist
+      const target = routineExercisesWithDetails[index];
+      const source = routineExercisesWithDetails[dragIndex];
+      if (!target || !source) return;
+      
+      try {
+        await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1 });
+        await updateOrder.mutateAsync({ id: source.id, order: index + 1 });
+      } catch (error) {
+        Alert.alert('Error', 'Failed to reorder');
+      }
+      setDragIndex(null);
+    }
+  };
+
+  const handleReplaceExercise = async (exercise: { id: number }) => {
+    if (replaceIndex === null) return;
+    const target = routineExercisesWithDetails[replaceIndex];
+    if (!target) return;
+    
+    try {
+      await replaceExercise.mutateAsync({ id: target.id, exerciseId: exercise.id });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to replace exercise');
+    }
+    setReplaceIndex(null);
+    setShowPicker(false);
+  };
+
   const handleRemoveExercise = async (routineExerciseId: number) => {
     Alert.alert(
       'Remove Exercise',
       'Are you sure you want to remove this exercise from the routine?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
+        {
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             try {
               await haptics.warning();
               await removeExerciseFromRoutine.mutateAsync(routineExerciseId);
+              setDragIndex(null);
             } catch (error) {
               await haptics.error();
               Alert.alert('Error', 'Failed to remove exercise');
@@ -103,14 +166,62 @@ export default function RoutineDetailScreen() {
     );
   };
 
-  const handleStartSession = async () => {
+  const handleDeleteRoutine = async () => {
+    Alert.alert(
+      'Delete Routine',
+      'Are you sure you want to delete this routine? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await haptics.warning();
+              await deleteRoutine.mutateAsync(routineId);
+              router.back();
+            } catch (error) {
+              await haptics.error();
+              Alert.alert('Error', 'Failed to delete routine');
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleStartSession = async (continueFromLast: boolean = false) => {
     try {
       await haptics.success();
       const session = await createSession.mutateAsync({ routineId });
+
+      if (continueFromLast && lastSession) {
+        await duplicateSessionData.mutateAsync({
+          sourceSessionId: lastSession.id,
+          targetSessionId: session[0].id,
+        });
+      } else {
+        for (const re of routineExercisesWithDetails) {
+          await addExerciseToSession.mutateAsync({
+            sessionId: session[0].id,
+            exerciseId: re.exerciseId,
+            order: re.order,
+          });
+        }
+      }
+
       router.push(`/session/${session[0].id}`);
     } catch (error) {
       await haptics.error();
       Alert.alert('Error', 'Failed to start session');
+    }
+  };
+
+  const handleStartPress = () => {
+    if (lastSession) {
+      setShowStartModal(true);
+    } else {
+      handleStartSession(false);
     }
   };
 
@@ -120,117 +231,168 @@ export default function RoutineDetailScreen() {
 
   if (!routine) {
     return (
-      <View className="flex-1 bg-white p-4">
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
         <EmptyState title="Routine not found" />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Routine Info */}
-      <View className="bg-white p-4 border-b border-gray-200">
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         {isEditing ? (
           <>
-            <Input
-              label="Routine Name"
-              value={editName}
-              onChangeText={setEditName}
-              placeholder="Routine name"
-            />
-            <Input
-              label="Description"
-              value={editDescription}
-              onChangeText={setEditDescription}
-              placeholder="Description (optional)"
-              multiline
-            />
-            <View className="flex-row gap-2">
-              <Button
-                title="Save"
-                onPress={handleSaveEdit}
-                loading={updateRoutine.isPending}
-                className="flex-1"
-              />
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={() => setIsEditing(false)}
-                className="flex-1"
-              />
+            <Input label="Routine Name" value={editName} onChangeText={setEditName} placeholder="Routine name" />
+            <Input label="Description" value={editDescription} onChangeText={setEditDescription} placeholder="Description (optional)" multiline />
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button title="Save" onPress={handleSaveEdit} loading={updateRoutine.isPending} />
+              <Button title="Cancel" variant="secondary" onPress={() => setIsEditing(false)} />
             </View>
           </>
         ) : (
           <>
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-xl font-bold text-gray-900 flex-1">{routine.name}</Text>
-              <Button title="Edit" variant="secondary" onPress={handleStartEdit} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <Button title="Edit" variant="secondary" onPress={handleStartEdit} />
+                <Button title="Delete" variant="danger" onPress={handleDeleteRoutine} />
+              </View>
             </View>
             {routine.description && (
-              <Text className="text-gray-500 mb-3">{routine.description}</Text>
+              <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm + spacing.xs }}>{routine.description}</Text>
             )}
           </>
         )}
       </View>
 
       {/* Exercises List */}
-      <View className="bg-white p-4 border-t border-gray-200">
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-lg font-semibold text-gray-900">Exercises</Text>
-          <Button
-            title="Add Exercise"
-            variant="secondary"
-            onPress={() => setShowPicker(true)}
-          />
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>Exercises</Text>
+          <Button title="Add Exercise" variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
+        {dragIndex !== null && (
+          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: 10, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
+            <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
+              Tap another exercise to swap — or tap the same to cancel
+            </Text>
+          </View>
+        )}
+
         {routineExercisesWithDetails.length === 0 ? (
-          <EmptyState
-            title="No exercises"
-            message="Add exercises to this routine."
-          />
+          <EmptyState title="No exercises" message="Add exercises to this routine." />
         ) : (
-          routineExercisesWithDetails.map((re) => (
-            <View
+          routineExercisesWithDetails.map((re, index) => (
+            <Animated.View
               key={re.id}
-              className="bg-gray-50 rounded-lg p-3 mb-2 flex-row items-center justify-between"
+              layout={LinearTransition.duration(200)}
             >
-              <View className="flex-1">
-                <Text className="text-base font-medium text-gray-900">
-                  {re.exercise?.name ?? 'Unknown Exercise'}
-                </Text>
-                <Text className="text-sm text-gray-500">
-                  {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
-                </Text>
+              <View
+                style={{
+                  backgroundColor: dragIndex === index ? colors.bg.active : colors.bg.elevated,
+                  borderRadius: borderRadius.sm,
+                  padding: spacing.sm + spacing.xs,
+                  marginBottom: spacing.sm,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  borderWidth: 1,
+                  borderColor: dragIndex === index ? colors.accent.primary : 'transparent',
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => handleDragHandleTap(index)}
+                  activeOpacity={0.7}
+                  style={{ gap: 3, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
+                >
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); re.exercise && router.push(`/exercise/${re.exercise.id}`); }}
+                  style={{ flex: 1 }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>
+                    {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
+                  </Text>
+                  <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.xs }}>
+                    {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); setReplaceIndex(index); setShowPicker(true); }}
+                  style={{ padding: spacing.sm }}
+                >
+                  <Text style={{ fontSize: 14, color: colors.accent.primary }}>↻</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); handleRemoveExercise(re.id); }}
+                  style={{ padding: spacing.sm }}
+                >
+                  <Text style={{ fontSize: 16, color: colors.error }}>✕</Text>
+                </TouchableOpacity>
               </View>
-              <Button
-                title="Remove"
-                variant="danger"
-                onPress={() => handleRemoveExercise(re.id)}
-                className="py-1 px-2"
-              />
-            </View>
+            </Animated.View>
           ))
         )}
       </View>
 
       {/* Start Session Button */}
-      <View className="p-4 bg-white border-t border-gray-200">
+      <View style={{ padding: spacing.md, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <Button
           title="Start Session"
-          onPress={handleStartSession}
+          onPress={handleStartPress}
           loading={createSession.isPending}
           disabled={routineExercisesWithDetails.length === 0}
         />
       </View>
 
-      {/* Exercise Picker Modal */}
       <ExercisePicker
         visible={showPicker}
         exercises={allExercises ?? []}
-        onSelect={handleAddExercise}
-        onClose={() => setShowPicker(false)}
+        onSelect={replaceIndex !== null ? handleReplaceExercise : handleAddExercise}
+        onMultiSelect={handleMultiAddExercises}
+        onPreview={(exercise) => {
+          setShowPicker(false);
+          router.push(`/exercise/${exercise.id}`);
+        }}
+        onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
+        multiSelect
       />
+
+      <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
+          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>Start Session</Text>
+            <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.md }}>
+              You have a previous session for this routine. Want to continue with your last numbers?
+            </Text>
+            {lastSession && (
+              <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
+                <Text style={{ fontSize: 13, color: colors.text.secondary, marginBottom: spacing.xs }}>Last session</Text>
+                {lastSession.exercises?.map((se: any) => (
+                  <View key={se.id} style={{ marginBottom: spacing.xs }}>
+                    <Text style={{ fontSize: 14, color: colors.text.primary, fontWeight: '600' }}>Exercise {se.order}</Text>
+                    {se.sets?.map((s: any) => (
+                      <Text key={s.id} style={{ fontSize: 12, color: colors.text.secondary, marginLeft: spacing.sm }}>
+                        Set {s.setNumber}: {s.reps ?? '—'} reps × {s.weight ?? '—'} kg
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )}
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button title="Start Fresh" variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
+              <Button title="Continue Last" onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }

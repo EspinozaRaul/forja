@@ -1,32 +1,33 @@
-import { Text, View, ScrollView, Alert } from 'react-native';
+import { Text, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
 import { useExercises } from '../../lib/hooks/useExercises';
 import { useCreateRoutine, useAddExerciseToRoutine } from '../../lib/hooks/useRoutines';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import type { Exercise } from '../../lib/types';
-
-interface SelectedExercise {
-  exercise: Exercise;
-  targetSets: number;
-  targetReps: number;
-  targetWeight: number;
-}
 
 export default function CreateRoutineScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ folderId?: string }>();
+  const folderId = params.folderId ? Number(params.folderId) : undefined;
+
   const { data: exercises, isLoading: exercisesLoading } = useExercises();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedExercises, setSelectedExercises] = useState<SelectedExercise[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
 
   const validate = () => {
     const newErrors: { name?: string } = {};
@@ -40,32 +41,53 @@ export default function CreateRoutineScreen() {
   };
 
   const handleSelectExercise = (exercise: Exercise) => {
-    setSelectedExercises((prev) => [
-      ...prev,
-      {
-        exercise,
-        targetSets: 3,
-        targetReps: 10,
-        targetWeight: 0,
-      },
-    ]);
+    setSelectedExercises((prev) => [...prev, exercise]);
+    setShowPicker(false);
+  };
+
+  const handleMultiSelectExercises = (exercises: Exercise[]) => {
+    setSelectedExercises((prev) => {
+      const existingIds = new Set(prev.map((e) => e.id));
+      const newOnes = exercises.filter((e) => !existingIds.has(e.id));
+      return [...prev, ...newOnes];
+    });
     setShowPicker(false);
   };
 
   const handleRemoveExercise = (exerciseId: number) => {
-    setSelectedExercises((prev) => prev.filter((e) => e.exercise.id !== exerciseId));
+    setSelectedExercises((prev) => prev.filter((e) => e.id !== exerciseId));
+    setDragIndex(null);
   };
 
-  const handleUpdateExercise = (
-    exerciseId: number,
-    field: 'targetSets' | 'targetReps' | 'targetWeight',
-    value: number
-  ) => {
-    setSelectedExercises((prev) =>
-      prev.map((e) =>
-        e.exercise.id === exerciseId ? { ...e, [field]: value } : e
-      )
-    );
+  const handleDragHandleTap = (index: number) => {
+    if (dragIndex === null) {
+      // First tap — select this exercise
+      setDragIndex(index);
+    } else if (dragIndex === index) {
+      // Tap same — deselect
+      setDragIndex(null);
+    } else {
+      // Second tap — swap positions
+      setSelectedExercises((prev) => {
+        const next = [...prev];
+        const temp = next[dragIndex];
+        next[dragIndex] = next[index];
+        next[index] = temp;
+        return next;
+      });
+      setDragIndex(null);
+    }
+  };
+
+  const handleReplaceExercise = (exercise: Exercise) => {
+    if (replaceIndex === null) return;
+    setSelectedExercises((prev) => {
+      const next = [...prev];
+      next[replaceIndex] = exercise;
+      return next;
+    });
+    setReplaceIndex(null);
+    setShowPicker(false);
   };
 
   const handleSubmit = async () => {
@@ -75,17 +97,15 @@ export default function CreateRoutineScreen() {
       const routine = await createRoutine.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
+        folderId,
       });
 
-      // Add exercises to routine
       for (let i = 0; i < selectedExercises.length; i++) {
-        const selected = selectedExercises[i];
+        const exercise = selectedExercises[i];
         await addExerciseToRoutine.mutateAsync({
           routineId: routine[0].id,
-          exerciseId: selected.exercise.id,
+          exerciseId: exercise.id,
           order: i + 1,
-          targetSets: selected.targetSets,
-          targetReps: selected.targetReps,
         });
       }
 
@@ -100,8 +120,8 @@ export default function CreateRoutineScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-white p-4">
-      <Text className="text-lg font-semibold text-gray-900 mb-4">Create New Routine</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+      <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.md }}>Create New Routine</Text>
 
       <Input
         label="Routine Name"
@@ -121,82 +141,68 @@ export default function CreateRoutineScreen() {
       />
 
       {/* Selected Exercises */}
-      <View className="mb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-sm font-medium text-gray-700">Exercises</Text>
-          <Button
-            title="Add Exercise"
-            variant="secondary"
-            onPress={() => setShowPicker(true)}
-          />
+      <View style={{ marginBottom: spacing.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>Exercises</Text>
+          <Button title="Add Exercise" variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
+        {dragIndex !== null && (
+          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: 10, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
+            <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
+              Tap another exercise to swap positions — or tap the same to cancel
+            </Text>
+          </View>
+        )}
+
         {selectedExercises.length === 0 ? (
-          <View className="bg-gray-50 rounded-lg p-4 items-center">
-            <Text className="text-gray-400 text-sm">No exercises added yet</Text>
+          <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.md, alignItems: 'center' }}>
+            <Text style={{ color: colors.text.muted, fontSize: 14 }}>No exercises added yet</Text>
           </View>
         ) : (
-          selectedExercises.map((selected) => (
-            <View
-              key={selected.exercise.id}
-              className="bg-gray-50 rounded-lg p-3 mb-2"
+          selectedExercises.map((exercise, index) => (
+            <Animated.View
+              key={exercise.id}
+              layout={LinearTransition.duration(200)}
             >
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-base font-medium text-gray-900 flex-1">
-                  {selected.exercise.name}
+              <View
+                style={{
+                  backgroundColor: dragIndex === index ? colors.bg.active : colors.bg.card,
+                  borderRadius: borderRadius.md,
+                  paddingHorizontal: spacing.sm + spacing.xs,
+                  paddingVertical: 10,
+                  marginBottom: borderRadius.sm,
+                  borderWidth: 1,
+                  borderColor: dragIndex === index ? colors.accent.primary : colors.border.primary,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: borderRadius.sm,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => handleDragHandleTap(index)}
+                  activeOpacity={0.7}
+                  style={{ gap: 3, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
+                >
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.muted, width: 20 }}>{index + 1}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary, flex: 1 }} numberOfLines={1}>
+                  {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
                 </Text>
-                <Button
-                  title="Remove"
-                  variant="danger"
-                  onPress={() => handleRemoveExercise(selected.exercise.id)}
-                  className="py-1 px-2"
-                />
+                <TouchableOpacity
+                  onPress={() => { setReplaceIndex(index); setShowPicker(true); }}
+                  style={{ paddingLeft: spacing.sm }}
+                >
+                  <Text style={{ fontSize: 14, color: colors.accent.primary }}>↻</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleRemoveExercise(exercise.id)} style={{ paddingLeft: spacing.sm }}>
+                  <Text style={{ fontSize: 16, color: colors.error }}>✕</Text>
+                </TouchableOpacity>
               </View>
-              <View className="flex-row gap-2">
-                <View className="flex-1">
-                  <Text className="text-xs text-gray-500 mb-1">Sets</Text>
-                  <Input
-                    keyboardType="numeric"
-                    value={selected.targetSets.toString()}
-                    onChangeText={(text) =>
-                      handleUpdateExercise(
-                        selected.exercise.id,
-                        'targetSets',
-                        parseInt(text) || 0
-                      )
-                    }
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs text-gray-500 mb-1">Reps</Text>
-                  <Input
-                    keyboardType="numeric"
-                    value={selected.targetReps.toString()}
-                    onChangeText={(text) =>
-                      handleUpdateExercise(
-                        selected.exercise.id,
-                        'targetReps',
-                        parseInt(text) || 0
-                      )
-                    }
-                  />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs text-gray-500 mb-1">Weight (kg)</Text>
-                  <Input
-                    keyboardType="decimal-pad"
-                    value={selected.targetWeight.toString()}
-                    onChangeText={(text) =>
-                      handleUpdateExercise(
-                        selected.exercise.id,
-                        'targetWeight',
-                        parseFloat(text) || 0
-                      )
-                    }
-                  />
-                </View>
-              </View>
-            </View>
+            </Animated.View>
           ))
         )}
       </View>
@@ -208,12 +214,17 @@ export default function CreateRoutineScreen() {
         disabled={createRoutine.isPending || addExerciseToRoutine.isPending}
       />
 
-      {/* Exercise Picker Modal */}
       <ExercisePicker
         visible={showPicker}
         exercises={exercises ?? []}
-        onSelect={handleSelectExercise}
-        onClose={() => setShowPicker(false)}
+        onSelect={replaceIndex !== null ? handleReplaceExercise : handleSelectExercise}
+        onMultiSelect={handleMultiSelectExercises}
+        onPreview={(exercise) => {
+          setShowPicker(false);
+          router.push(`/exercise/${exercise.id}`);
+        }}
+        onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
+        multiSelect
       />
     </ScrollView>
   );

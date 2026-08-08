@@ -1,15 +1,21 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState, useRef } from 'react';
+import { Swipeable } from 'react-native-gesture-handler';
+import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 import type { Set } from '../lib/types';
 
 interface SetLoggerProps {
   set: Set;
   onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
+  onDelete?: () => void;
+  unit?: string; // kg or lbs
+  onUnitChange?: (unit: string) => void;
 }
 
-export function SetLogger({ set, onUpdate }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
+  const swipeableRef = useRef<Swipeable>(null);
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -31,44 +37,158 @@ export function SetLogger({ set, onUpdate }: SetLoggerProps) {
     }
   };
 
-  return (
-    <View className="flex-row items-center gap-3 py-2">
-      <Text className="text-sm font-medium text-gray-600 w-8 text-center">
-        #{set.setNumber}
-      </Text>
+  const handleDelete = () => {
+    swipeableRef.current?.close();
+    onDelete?.();
+  };
 
-      <View className="flex-1">
-        <TextInput
-          className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-center text-gray-900"
-          keyboardType="numeric"
-          placeholder="Reps"
-          placeholderTextColor="#9CA3AF"
-          value={reps}
-          onChangeText={handleRepsChange}
-        />
-      </View>
-
-      <View className="flex-1">
-        <TextInput
-          className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-center text-gray-900"
-          keyboardType="decimal-pad"
-          placeholder="kg"
-          placeholderTextColor="#9CA3AF"
-          value={weight}
-          onChangeText={handleWeightChange}
-        />
-      </View>
-
+  const renderRightActions = () => {
+    if (!onDelete) return null;
+    return (
       <TouchableOpacity
-        onPress={() => onUpdate({ completed: !set.completed })}
-        className={`w-9 h-9 rounded-full items-center justify-center ${
-          set.completed ? 'bg-green-500' : 'bg-gray-200'
-        }`}
+        onPress={handleDelete}
+        style={styles.deleteAction}
       >
-        <Text className={`text-sm font-bold ${set.completed ? 'text-white' : 'text-gray-500'}`}>
-          {set.completed ? '✓' : ''}
-        </Text>
+        <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
-    </View>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
+    >
+      <View style={styles.container}>
+        <Text style={styles.setNumber}>
+          #{set.setNumber}
+        </Text>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="Reps"
+            placeholderTextColor={colors.text.muted}
+            value={reps}
+            onChangeText={handleRepsChange}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            keyboardType="decimal-pad"
+            placeholder={unit}
+            placeholderTextColor={colors.text.muted}
+            value={weight}
+            onChangeText={handleWeightChange}
+          />
+        </View>
+        {onUnitChange && (
+          <TouchableOpacity
+            onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
+            style={styles.unitToggle}
+          >
+            <Text style={styles.unitText}>{unit}</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          onPress={() => onUpdate({ completed: !set.completed })}
+          style={[
+            styles.checkButton,
+            set.completed
+              ? styles.checkButtonCompleted
+              : styles.checkButtonIncomplete,
+          ]}
+        >
+          <Text style={[
+            styles.checkText,
+            { color: set.completed ? colors.bg.primary : colors.text.secondary }
+          ]}>
+            {set.completed ? '✓' : ''}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </Swipeable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: borderRadius.sm,
+    paddingVertical: spacing.xs,
+  },
+  setNumber: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text.muted,
+    width: 28,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flex: 1,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  input: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text.primary,
+    textAlign: 'center',
+    width: '100%',
+  },
+  checkButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkButtonCompleted: {
+    backgroundColor: colors.accent.primary,
+  },
+  checkButtonIncomplete: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.border.primary,
+  },
+  checkText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  deleteAction: {
+    backgroundColor: colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: borderRadius.sm,
+    marginLeft: spacing.sm,
+  },
+  deleteText: {
+    color: colors.text.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  unitToggle: {
+    backgroundColor: 'transparent',
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  unitText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text.muted,
+  },
+});

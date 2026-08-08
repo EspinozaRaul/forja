@@ -15,8 +15,8 @@ export default function SessionHistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 p-4">
+    <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+      <ScrollView style={{ flex: 1, padding: 16 }}>
         {!sessions || sessions.length === 0 ? (
           <EmptyState
             title="No sessions yet"

@@ -8,10 +8,20 @@ import {
   getRoutineExercises,
   addExerciseToRoutine,
   removeExerciseFromRoutine,
+  updateRoutineExerciseOrder,
+  replaceRoutineExercise,
+  getAllFolders,
+  getFolderById,
+  getRoutinesByFolder,
+  getFolderRoutineCount,
+  createFolder,
+  updateFolder,
+  deleteFolder,
 } from '../db/queries';
-import type { Routine, RoutineExercise } from '../types';
+import type { Routine, RoutineExercise, RoutineFolder } from '../types';
 
 const ROUTINE_KEY = ['routines'];
+const FOLDER_KEY = ['folders'];
 
 export function useRoutines() {
   return useQuery<Routine[]>({
@@ -40,10 +50,11 @@ export function useCreateRoutine() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string; description?: string; categoryId?: number }) =>
+    mutationFn: (data: { name: string; description?: string; categoryId?: number; folderId?: number }) =>
       createRoutine(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
   });
 }
@@ -72,6 +83,7 @@ export function useDeleteRoutine() {
     mutationFn: (id: number) => deleteRoutine(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
   });
 }
@@ -101,6 +113,105 @@ export function useRemoveExerciseFromRoutine() {
   return useMutation({
     mutationFn: (id: number) => removeExerciseFromRoutine(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
+    },
+  });
+}
+
+export function useUpdateRoutineExerciseOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, order }: { id: number; order: number }) =>
+      updateRoutineExerciseOrder(id, order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+    },
+  });
+}
+
+export function useReplaceRoutineExercise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, exerciseId }: { id: number; exerciseId: number }) =>
+      replaceRoutineExercise(id, exerciseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+    },
+  });
+}
+
+// ─── Folder Hooks ──────────────────────────────────────
+
+export function useFolders() {
+  return useQuery<RoutineFolder[]>({
+    queryKey: FOLDER_KEY,
+    queryFn: getAllFolders,
+  });
+}
+
+export function useFolder(id: number) {
+  return useQuery<RoutineFolder[]>({
+    queryKey: [...FOLDER_KEY, id],
+    queryFn: () => getFolderById(id),
+    enabled: !!id,
+  });
+}
+
+export function useRoutinesByFolder(folderId: number) {
+  return useQuery<Routine[]>({
+    queryKey: [...FOLDER_KEY, folderId, 'routines'],
+    queryFn: () => getRoutinesByFolder(folderId),
+    enabled: !!folderId,
+  });
+}
+
+export function useFolderRoutineCount(folderId: number) {
+  return useQuery<number>({
+    queryKey: [...FOLDER_KEY, folderId, 'count'],
+    queryFn: () => getFolderRoutineCount(folderId),
+    enabled: !!folderId,
+  });
+}
+
+export function useCreateFolder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { name: string; description?: string; color?: string; icon?: string }) =>
+      createFolder(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
+    },
+  });
+}
+
+export function useUpdateFolder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { name?: string; description?: string; color?: string; icon?: string };
+    }) => updateFolder(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
+    },
+  });
+}
+
+export function useDeleteFolder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteFolder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
   });

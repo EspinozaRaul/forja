@@ -1,12 +1,82 @@
-import { Text, View, ScrollView } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
+import { Image } from 'expo-image';
+import * as FileSystem from 'expo-file-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useExercise } from '../../lib/hooks/useExercises';
-import { useExerciseHistory } from '../../lib/hooks/useExercises';
+import { useExerciseStats, useExerciseSessions, useExercisePRs } from '../../lib/hooks/useExercises';
 import { useTotalVolumeByWeek } from '../../lib/hooks/useProgress';
 import { ProgressChart } from '../../components/ProgressChart';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Button } from '../../components/ui/Button';
+import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { formatDuration, formatRelativeDate } from '../../lib/utils/format';
+import { EXERCISE_IMAGES } from '../../lib/assets/exercise-images';
+import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+
+function formatVolume(kg: number): string {
+  if (kg >= 1000) {
+    return `${(kg / 1000).toFixed(1)}k`;
+  }
+  return kg.toFixed(1);
+}
+
+function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
+  const [localUri, setLocalUri] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!visible || !url || localUri) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        // Build a cache path from the URL hash
+        const filename = url.split('/').pop() ?? 'gif.gif';
+        const cacheDir = `${FileSystem.cacheDirectory}exercise-gifs/`;
+        const dirInfo = await FileSystem.getInfoAsync(cacheDir);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+        }
+        const filePath = `${cacheDir}${filename}`;
+        const fileInfo = await FileSystem.getInfoAsync(filePath);
+        if (fileInfo.exists) {
+          if (!cancelled) setLocalUri(filePath);
+        } else {
+          const { uri } = await FileSystem.downloadAsync(url, filePath);
+          if (!cancelled) setLocalUri(uri);
+        }
+      } catch {
+        // Fallback: try loading directly from URL
+        if (!cancelled) setLocalUri(url);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [visible, url]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' }}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Text style={{ color: '#FFF', fontSize: 14, marginBottom: 12 }}>Toca para cerrar</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#60A5FA" />
+        ) : localUri ? (
+          <Image
+            source={{ uri: localUri }}
+            style={{ width: 300, height: 300, borderRadius: borderRadius.md, resizeMode: 'contain' }}
+            transition={200}
+          />
+        ) : null}
+      </TouchableOpacity>
+    </Modal>
+  );
+}
 
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,11 +84,14 @@ export default function ExerciseDetailScreen() {
   const exerciseId = parseInt(id, 10);
 
   const { data: exercises, isLoading: exerciseLoading } = useExercise(exerciseId);
-  const { data: history, isLoading: historyLoading } = useExerciseHistory(exerciseId);
+  const { data: stats, isLoading: statsLoading } = useExerciseStats(exerciseId);
+  const { data: prs, isLoading: prsLoading } = useExercisePRs(exerciseId);
+  const { data: sessions, isLoading: sessionsLoading } = useExerciseSessions(exerciseId);
   const { data: volumeData, isLoading: volumeLoading } = useTotalVolumeByWeek(exerciseId);
+  const [showGif, setShowGif] = useState(false);
 
   const exercise = exercises?.[0];
-  const isLoading = exerciseLoading || historyLoading || volumeLoading;
+  const isLoading = exerciseLoading || statsLoading || prsLoading || sessionsLoading || volumeLoading;
 
   if (isLoading) {
     return <LoadingSpinner message="Loading exercise..." />;
@@ -26,33 +99,179 @@ export default function ExerciseDetailScreen() {
 
   if (!exercise) {
     return (
-      <View className="flex-1 bg-white p-4">
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
         <EmptyState title="Exercise not found" />
       </View>
     );
   }
 
-  // Group history by session
-  const groupedBySession = history?.reduce((acc, set) => {
-    if (!acc[set.sessionId]) {
-      acc[set.sessionId] = [];
-    }
-    acc[set.sessionId].push(set);
-    return acc;
-  }, {} as Record<number, typeof history>) ?? {};
+  const exerciseImage = exercise.originalId ? EXERCISE_IMAGES[exercise.originalId] : null;
+  const gifUrl = exercise.gifUrl;
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      {/* Exercise Info */}
-      <View className="bg-white p-4 border-b border-gray-200">
-        <Text className="text-xl font-bold text-gray-900">{exercise.name}</Text>
-        {exercise.description && (
-          <Text className="text-gray-500 mt-1">{exercise.description}</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+      {/* Exercise Image + GIF Button */}
+      {exerciseImage && (
+        <View style={{ backgroundColor: colors.bg.card, alignItems: 'center', paddingVertical: spacing.lg }}>
+          <Image
+            source={exerciseImage}
+            style={{ width: 200, height: 200, borderRadius: borderRadius.md, resizeMode: 'contain' }}
+          />
+          {gifUrl && (
+            <TouchableOpacity
+              onPress={() => setShowGif(true)}
+              style={{ marginTop: spacing.sm, backgroundColor: '#1E3A5F', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 9999 }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#60A5FA' }}>Ver animacion</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* GIF Modal */}
+      {gifUrl && (
+        <GifPlayer url={gifUrl} visible={showGif} onClose={() => setShowGif(false)} />
+      )}
+
+      {/* Exercise Header */}
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text.primary }}>
+          {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
+        </Text>
+
+        {/* Tags */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm }}>
+          {exercise.muscleGroup && (
+            <View style={{ backgroundColor: '#1E3A5F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 9999 }}>
+              <Text style={{ fontSize: 12, color: '#60A5FA' }}>{exercise.muscleGroup}</Text>
+            </View>
+          )}
+          {exercise.equipment && (
+            <View style={{ backgroundColor: '#1E3A2F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 9999 }}>
+              <Text style={{ fontSize: 12, color: '#34D399' }}>{exercise.equipment}</Text>
+            </View>
+          )}
+        </View>
+
+        {exercise.instructionsEs && (
+          <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.md, lineHeight: 20 }}>
+            {exercise.instructionsEs}
+          </Text>
         )}
       </View>
 
+      {/* Stats Cards */}
+      <View style={{ flexDirection: 'row', padding: spacing.md, gap: spacing.sm }}>
+        <View style={{
+          flex: 1,
+          backgroundColor: colors.bg.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          alignItems: 'center',
+        }}>
+          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+            Max Weight
+          </Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+            {stats?.maxWeight ? `${stats.maxWeight} kg` : '-'}
+          </Text>
+        </View>
+
+        <View style={{
+          flex: 1,
+          backgroundColor: colors.bg.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          alignItems: 'center',
+        }}>
+          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+            Total Volume
+          </Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+            {stats?.totalVolume ? `${formatVolume(stats.totalVolume)} kg` : '0'}
+          </Text>
+        </View>
+
+        <View style={{
+          flex: 1,
+          backgroundColor: colors.bg.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          alignItems: 'center',
+        }}>
+          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+            Sessions
+          </Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+            {stats?.totalSessions ?? 0}
+          </Text>
+        </View>
+      </View>
+
+      {/* Personal Records */}
+      {prs && (prs.maxWeight || prs.bestSet || prs.estimated1RM) && (
+        <View style={{ backgroundColor: colors.bg.card, marginHorizontal: spacing.md, borderRadius: borderRadius.md, padding: spacing.lg }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
+            Personal Records
+          </Text>
+
+          <View style={{ gap: spacing.md }}>
+            {prs.maxWeight && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Max Weight</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                    {prs.maxWeight.value} kg
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                    {formatRelativeDate(prs.maxWeight.date)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {prs.bestSet && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Set</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                    {prs.bestSet.weight} kg × {prs.bestSet.reps}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                    {formatRelativeDate(prs.bestSet.date)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {prs.maxVolumeSession && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Session</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                    {formatVolume(prs.maxVolumeSession.volume)} kg
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                    {formatRelativeDate(prs.maxVolumeSession.date)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {prs.estimated1RM && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Est. 1RM</Text>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                  {prs.estimated1RM} kg
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+
       {/* Progress Chart */}
-      <View className="p-4">
+      <View style={{ padding: spacing.md }}>
         <ProgressChart
           data={volumeData ?? []}
           title="Weekly Volume (kg)"
@@ -60,35 +279,63 @@ export default function ExerciseDetailScreen() {
         />
       </View>
 
-      {/* History */}
-      <View className="bg-white p-4 border-t border-gray-200">
-        <Text className="text-lg font-semibold text-gray-900 mb-3">Set History</Text>
-        {Object.keys(groupedBySession).length === 0 ? (
+      {/* Session History */}
+      <View style={{ backgroundColor: colors.bg.card, marginTop: spacing.md, padding: spacing.lg }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
+          Session History
+        </Text>
+
+        {!sessions || sessions.length === 0 ? (
           <EmptyState
-            title="No sets logged"
-            message="Start a session to log sets for this exercise."
+            title="No sessions yet"
+            message="Start a session to see your history here."
           />
         ) : (
-          Object.entries(groupedBySession).map(([sessionId, sets]) => (
-            <View key={sessionId} className="mb-4">
-              <Text className="text-sm font-medium text-gray-500 mb-2">
-                Session #{sessionId}
-              </Text>
-              {sets.map((set) => (
-                <View key={set.id} className="flex-row justify-between py-1 border-b border-gray-100">
-                  <Text className="text-sm text-gray-600">Set {set.setNumber}</Text>
-                  <Text className="text-sm text-gray-900">
-                    {set.reps ?? '-'} reps × {set.weight ?? '-'} kg
+          sessions.map((session) => (
+            <TouchableOpacity
+              key={session.sessionId}
+              onPress={() => router.push(`/session/history/${session.sessionId}`)}
+              style={{
+                backgroundColor: colors.bg.elevated,
+                borderRadius: borderRadius.md,
+                padding: spacing.md,
+                marginBottom: spacing.sm,
+              }}
+            >
+              {/* Session Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>
+                  {formatRelativeDate(session.startedAt)}
+                </Text>
+                {session.duration && (
+                  <Text style={{ fontSize: 12, color: colors.text.muted }}>
+                    {formatDuration(session.duration)}
                   </Text>
-                  <Text className={`text-sm ${set.completed ? 'text-green-500' : 'text-gray-400'}`}>
-                    {set.completed ? '✓' : '○'}
+                )}
+              </View>
+
+              {/* Session Stats */}
+              <View style={{ flexDirection: 'row', gap: spacing.lg }}>
+                <View>
+                  <Text style={{ fontSize: 12, color: colors.text.muted }}>Volume</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
+                    {formatVolume(session.volume)} kg
                   </Text>
                 </View>
-              ))}
-            </View>
+                <View>
+                  <Text style={{ fontSize: 12, color: colors.text.muted }}>Sets</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
+                    {session.completedSets}/{session.setCount}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           ))
         )}
       </View>
+
+      {/* Bottom spacer */}
+      <View style={{ height: spacing.xxl }} />
     </ScrollView>
   );
 }

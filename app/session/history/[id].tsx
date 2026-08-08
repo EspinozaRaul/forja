@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TextInput, Alert } from 'react-native';
+import { Text, View, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession, useSessionExercises, useCompleteSession } from '../../../lib/hooks/useSessions';
@@ -7,7 +7,9 @@ import { useSets } from '../../../lib/hooks/useSets';
 import { Button } from '../../../components/ui/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { EXERCISE_NAMES_ES } from '../../../lib/db/exercise-names-es';
 import { formatDuration } from '../../../lib/utils/format';
+import { colors, spacing, borderRadius } from '../../../lib/theme/tokens';
 import type { SessionExercise } from '../../../lib/types';
 
 export default function SessionSummaryScreen() {
@@ -31,13 +33,12 @@ export default function SessionSummaryScreen() {
 
   if (!session) {
     return (
-      <View className="flex-1 bg-white p-4">
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
         <EmptyState title="Session not found" />
       </View>
     );
   }
 
-  // Calculate stats
   const exerciseCount = sessionExercises?.length ?? 0;
   const duration = session.duration ?? 0;
 
@@ -54,28 +55,30 @@ export default function SessionSummaryScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Session Info */}
-      <View className="bg-white p-4 border-b border-gray-200">
-        <Text className="text-lg font-semibold text-gray-900 mb-2">Session Summary</Text>
-        <View className="flex-row justify-between">
-          <View className="items-center flex-1">
-            <Text className="text-2xl font-bold text-blue-500">{exerciseCount}</Text>
-            <Text className="text-sm text-gray-500">Exercises</Text>
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.sm }}>
+          Session Summary
+        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+          <View style={{ alignItems: 'center', flex: 1 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.accent.primary }}>{exerciseCount}</Text>
+            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Exercises</Text>
           </View>
-          <View className="items-center flex-1">
-            <Text className="text-2xl font-bold text-green-500">
+          <View style={{ alignItems: 'center', flex: 1 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.accent.primary }}>
               {formatDuration(duration)}
             </Text>
-            <Text className="text-sm text-gray-500">Duration</Text>
+            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Duration</Text>
           </View>
         </View>
       </View>
 
       {/* Notes */}
-      <View className="bg-white p-4 border-t border-gray-200">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-sm font-medium text-gray-700">Notes</Text>
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>Notes</Text>
           <Button
             title={isEditingNotes ? 'Save' : 'Edit'}
             variant="secondary"
@@ -92,24 +95,37 @@ export default function SessionSummaryScreen() {
         </View>
         {isEditingNotes ? (
           <TextInput
-            className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-base text-gray-900"
+            style={{
+              backgroundColor: colors.bg.elevated,
+              borderWidth: 1,
+              borderColor: colors.border.primary,
+              borderRadius: borderRadius.sm,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.sm,
+              fontSize: 16,
+              color: colors.text.primary,
+              minHeight: 80,
+              textAlignVertical: 'top',
+            }}
             multiline
             numberOfLines={3}
             value={notes}
             onChangeText={setNotes}
             placeholder="Add notes about this session..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.muted}
           />
         ) : (
-          <Text className="text-gray-600">
+          <Text style={{ color: colors.text.secondary }}>
             {session.notes || 'No notes'}
           </Text>
         )}
       </View>
 
       {/* Exercises and Sets */}
-      <View className="bg-white p-4 border-t border-gray-200">
-        <Text className="text-lg font-semibold text-gray-900 mb-3">Exercises</Text>
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.md }}>
+          Exercises
+        </Text>
         {!sessionExercises || sessionExercises.length === 0 ? (
           <EmptyState
             title="No exercises logged"
@@ -123,12 +139,14 @@ export default function SessionSummaryScreen() {
       </View>
 
       {/* Back Button */}
-      <View className="p-4 bg-white border-t border-gray-200">
+      <View style={{ padding: spacing.md, marginTop: spacing.sm }}>
         <Button
           title="Back to Home"
           onPress={() => router.push('/')}
         />
       </View>
+
+      <View style={{ height: spacing.xxl }} />
     </ScrollView>
   );
 }
@@ -136,6 +154,7 @@ export default function SessionSummaryScreen() {
 function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionExercise }) {
   const { data: exercises } = useExercise(sessionExercise.exerciseId);
   const { data: sets } = useSets(sessionExercise.id);
+  const router = useRouter();
 
   const exercise = exercises?.[0];
   const completedSets = sets?.filter((s) => s.completed) ?? [];
@@ -144,34 +163,42 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
   }, 0);
 
   return (
-    <View className="mb-4">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-base font-semibold text-gray-900">
-          {exercise?.name ?? 'Unknown Exercise'}
-        </Text>
-        <Text className="text-sm text-gray-500">
+    <View style={{ marginBottom: spacing.lg }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+        <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.accent.primary }}>
+            {exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio desconocido'}
+          </Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 13, color: colors.text.muted }}>
           {completedSets.length} sets • {totalVolume.toFixed(0)} kg
         </Text>
       </View>
       {sets && sets.length > 0 ? (
-        <View className="bg-gray-50 rounded-lg p-2">
+        <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm }}>
           {sets.map((set) => (
             <View
               key={set.id}
-              className="flex-row justify-between py-1 border-b border-gray-100 last:border-b-0"
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingVertical: spacing.xs,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border.primary,
+              }}
             >
-              <Text className="text-sm text-gray-600">Set {set.setNumber}</Text>
-              <Text className="text-sm text-gray-900">
+              <Text style={{ fontSize: 14, color: colors.text.secondary }}>Set {set.setNumber}</Text>
+              <Text style={{ fontSize: 14, color: colors.text.primary }}>
                 {set.reps ?? '-'} reps × {set.weight ?? '-'} kg
               </Text>
-              <Text className={`text-sm ${set.completed ? 'text-green-500' : 'text-gray-400'}`}>
+              <Text style={{ fontSize: 14, color: set.completed ? colors.success : colors.text.muted }}>
                 {set.completed ? '✓' : '○'}
               </Text>
             </View>
           ))}
         </View>
       ) : (
-        <Text className="text-sm text-gray-400">No sets logged</Text>
+        <Text style={{ fontSize: 14, color: colors.text.muted }}>No sets logged</Text>
       )}
     </View>
   );

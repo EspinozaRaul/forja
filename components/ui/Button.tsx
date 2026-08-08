@@ -1,7 +1,7 @@
 import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
 import { type ReactNode } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'accent';
 
 interface ButtonProps {
   title?: string;
@@ -13,18 +13,22 @@ interface ButtonProps {
   className?: string;
 }
 
-const variantStyles: Record<ButtonVariant, { container: string; text: string }> = {
+const variantStyles: Record<ButtonVariant, { container: any; text: any }> = {
   primary: {
-    container: 'bg-blue-500 active:bg-blue-600',
-    text: 'text-white',
+    container: { backgroundColor: '#00F5A0' },
+    text: { color: '#0A0A0A' },
   },
   secondary: {
-    container: 'bg-gray-200 active:bg-gray-300',
-    text: 'text-gray-800',
+    container: { backgroundColor: '#222222', borderWidth: 1, borderColor: '#2A2A2A' },
+    text: { color: '#FFFFFF' },
   },
   danger: {
-    container: 'bg-red-500 active:bg-red-600',
-    text: 'text-white',
+    container: { backgroundColor: '#FF3B30' },
+    text: { color: '#FFFFFF' },
+  },
+  accent: {
+    container: { backgroundColor: 'rgba(0, 245, 160, 0.2)' },
+    text: { color: '#00F5A0' },
   },
 };
 
@@ -45,16 +49,21 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.8}
-      className={`flex-row items-center justify-center rounded-lg px-4 py-3 ${
-        isDisabled ? 'opacity-50' : ''
-      } ${styles.container} ${className}`}
+      style={[
+        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+        styles.container,
+        isDisabled && { opacity: 0.4 },
+      ]}
+      className={`flex-row items-center justify-center rounded-xl px-6 py-4 ${
+        isDisabled ? 'opacity-40' : ''
+      } ${className}`}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={variant === 'secondary' ? '#374151' : '#FFFFFF'} />
+        <ActivityIndicator size="small" color={variant === 'secondary' ? '#FFFFFF' : '#0A0A0A'} />
       ) : children ? (
         children
       ) : (
-        <Text className={`text-base font-semibold ${styles.text}`}>{title}</Text>
+        <Text style={[{ fontSize: 16, fontWeight: 'bold' }, styles.text]} className={`text-base font-bold`}>{title}</Text>
       )}
     </TouchableOpacity>
   );

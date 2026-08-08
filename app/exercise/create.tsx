@@ -51,8 +51,8 @@ export default function CreateExerciseScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-white p-4">
-      <Text className="text-lg font-semibold text-gray-900 mb-4">Create New Exercise</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A', padding: 16 }} className="flex-1 bg-white p-4">
+      <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginBottom: 16 }} className="text-lg font-semibold text-gray-900 mb-4">Create New Exercise</Text>
 
       <Input
         label="Exercise Name"
@@ -71,9 +71,9 @@ export default function CreateExerciseScreen() {
         numberOfLines={3}
       />
 
-      <Text className="text-sm font-medium text-gray-700 mb-2">Category *</Text>
+      <Text style={{ fontSize: 14, fontWeight: '600', color: '#A0A0A0', marginBottom: 8 }} className="text-sm font-medium text-gray-700 mb-2">Category *</Text>
       {errors.category && (
-        <Text className="text-red-500 text-sm mb-2">{errors.category}</Text>
+        <Text style={{ color: '#FF3B30', fontSize: 14, marginBottom: 8 }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
       )}
       <View className="flex-row flex-wrap mb-4">
         {categories?.map((category) => (

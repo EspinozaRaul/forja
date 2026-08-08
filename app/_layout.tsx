@@ -1,12 +1,95 @@
 import '../global.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useDatabase } from '../lib/hooks/useDatabase';
+import { useAuth } from '../lib/hooks/useAuth';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const queryClient = new QueryClient();
+
+function RootLayoutNav() {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    if (!user && !inAuthGroup) {
+      // Not logged in, redirect to login
+      router.replace('/auth/login');
+    } else if (user && inAuthGroup) {
+      // Logged in but on auth screen, redirect to main app
+      router.replace('/(tabs)');
+    }
+
+    setIsReady(true);
+  }, [user, loading, segments]);
+
+  if (loading || !isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0A' }}>
+        <ActivityIndicator size="large" color="#00F5A0" />
+        <Text style={{ color: '#888', marginTop: 16 }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: '#0A0A0A' },
+        headerTintColor: '#FFFFFF',
+        headerTitleStyle: { color: '#FFFFFF', fontWeight: '600' },
+        contentStyle: { backgroundColor: '#0A0A0A' },
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="exercise/create"
+        options={{ title: 'New Exercise', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="exercise/[id]"
+        options={{ title: 'Exercise' }}
+      />
+      <Stack.Screen
+        name="routine/create"
+        options={{ title: 'New Routine', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="routine/[id]"
+        options={{ title: 'Routine' }}
+      />
+      <Stack.Screen
+        name="routine/folder/[id]"
+        options={{ title: 'Folder', headerShown: false }}
+      />
+      <Stack.Screen
+        name="session/new"
+        options={{ title: 'New Session', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="session/[id]"
+        options={{ title: 'Session', headerShown: false }}
+      />
+      <Stack.Screen
+        name="session/history/[id]"
+        options={{ title: 'Session Summary' }}
+      />
+      <Stack.Screen
+        name="session/history"
+        options={{ title: 'Session History' }}
+      />
+    </Stack>
+  );
+}
 
 function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   const { isReady, error } = useDatabase();
@@ -14,9 +97,9 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   if (error) {
     console.error('Database initialization failed:', error);
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 p-6">
-        <Text className="text-lg font-semibold text-red-600 mb-2">Database Error</Text>
-        <Text className="text-sm text-gray-600 text-center">
+      <View className="flex-1 items-center justify-center bg-dark-bg p-6">
+        <Text className="text-lg font-semibold text-error mb-2">Database Error</Text>
+        <Text className="text-sm text-dark-text-secondary text-center">
           Failed to initialize database. Please restart the app.
         </Text>
       </View>
@@ -25,9 +108,9 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
   if (!isReady) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-sm text-gray-500 mt-3">Initializing database...</Text>
+      <View className="flex-1 items-center justify-center bg-dark-bg">
+        <ActivityIndicator size="large" color="#00F5A0" />
+        <Text className="text-sm text-dark-text-secondary mt-4">Initializing database...</Text>
       </View>
     );
   }
@@ -37,46 +120,14 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <DatabaseInitializer>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="exercise/create"
-              options={{ title: 'New Exercise', presentation: 'modal' }}
-            />
-            <Stack.Screen
-              name="exercise/[id]"
-              options={{ title: 'Exercise' }}
-            />
-            <Stack.Screen
-              name="routine/create"
-              options={{ title: 'New Routine', presentation: 'modal' }}
-            />
-            <Stack.Screen
-              name="routine/[id]"
-              options={{ title: 'Routine' }}
-            />
-            <Stack.Screen
-              name="session/new"
-              options={{ title: 'New Session', presentation: 'modal' }}
-            />
-            <Stack.Screen
-              name="session/[id]"
-              options={{ title: 'Session' }}
-            />
-            <Stack.Screen
-              name="session/history/[id]"
-              options={{ title: 'Session Summary' }}
-            />
-            <Stack.Screen
-              name="session/history"
-              options={{ title: 'Session History' }}
-            />
-          </Stack>
-        </DatabaseInitializer>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <DatabaseInitializer>
+            <RootLayoutNav />
+          </DatabaseInitializer>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }

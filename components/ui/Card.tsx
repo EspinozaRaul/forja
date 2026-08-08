@@ -9,7 +9,7 @@ interface CardProps extends ViewProps {
 export function Card({ onPress, children, className = '', ...props }: CardProps) {
   const content = (
     <View
-      className={`bg-white rounded-lg p-4 shadow-sm ${className}`}
+      className={`bg-dark-card rounded-2xl p-5 ${className}`}
       {...props}
     >
       {children}

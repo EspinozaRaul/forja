@@ -13,16 +13,37 @@ export const exercises = sqliteTable('exercises', {
   name: text('name').notNull(),
   categoryId: integer('category_id').references(() => categories.id),
   description: text('description'),
+  // New fields from exercises-dataset
+  equipment: text('equipment'),
+  targetMuscle: text('target_muscle'),
+  muscleGroup: text('muscle_group'),
+  bodyPart: text('body_part'), // Dataset category: chest, back, shoulders, etc.
+  secondaryMuscles: text('secondary_muscles'), // JSON array
+  instructionsEs: text('instructions_es'),
+  imageUrl: text('image_url'),
+  gifUrl: text('gif_url'),
+  originalId: text('original_id'), // ID from dataset for tracking
+  unit: text('unit').default('kg'), // kg or lbs per exercise
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (exercises) => ({
   nameCategoryUnique: uniqueIndex('name_category_idx').on(exercises.name, exercises.categoryId),
 }));
+
+export const routineFolders = sqliteTable('routine_folders', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  description: text('description'),
+  color: text('color').default('#00F5A0'),
+  icon: text('icon').default('📁'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
 
 export const routines = sqliteTable('routines', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   description: text('description'),
   categoryId: integer('category_id').references(() => categories.id),
+  folderId: integer('folder_id').references(() => routineFolders.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
@@ -57,6 +78,7 @@ export const sessionExercises = sqliteTable('session_exercises', {
     .references(() => exercises.id)
     .notNull(),
   order: integer('order').notNull(),
+  restTime: integer('rest_time').default(60), // seconds, per-exercise rest duration
   notes: text('notes'),
 });
 

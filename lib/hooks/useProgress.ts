@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { db } from '../db';
 import { sets, sessionExercises, sessions } from '../db/schema';
 import { eq, sql, and, gte, lte } from 'drizzle-orm';
+import { getWeeklySessions } from '../db/queries';
 import type { ProgressDataPoint, WeeklyVolume } from '../types';
+import type { WeeklySessionDetail } from '../db/queries';
 
 const PROGRESS_KEY = ['progress'];
 
@@ -95,5 +97,13 @@ export function useTotalVolumeByWeek(exerciseId: number) {
       }));
     },
     enabled: !!exerciseId,
+  });
+}
+
+export function useWeeklySessions(week: string | null, exerciseId?: number) {
+  return useQuery<WeeklySessionDetail[]>({
+    queryKey: [...PROGRESS_KEY, 'weeklySessions', week, exerciseId],
+    queryFn: () => getWeeklySessions(week!, exerciseId),
+    enabled: !!week,
   });
 }

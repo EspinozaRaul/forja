@@ -1,19 +1,29 @@
 {
   "expo": {
-    "name": "fitness-tracker",
+    "name": "Fitness Tracker",
     "slug": "fitness-tracker",
     "version": "1.0.0",
     "scheme": "fitness-tracker",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "assets/exercises/images/**/*",
+      "assets/exercises/gifs/**/*"
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.espinozar.fitness-tracker"
+      "bundleIdentifier": "com.espinozar.fitnesstracker"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0A0A0A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -27,7 +37,17 @@
     "plugins": [
       "expo-sqlite",
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-image",
+      "expo-video",
+      "expo-task-manager",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#00F5A0"
+        }
+      ]
     ],
     "extra": {
       "router": {},

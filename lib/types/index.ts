@@ -13,6 +13,16 @@ export interface Exercise {
   name: string;
   categoryId: number | null;
   description: string | null;
+  equipment: string | null;
+  targetMuscle: string | null;
+  muscleGroup: string | null;
+  bodyPart: string | null;
+  secondaryMuscles: string | null;
+  instructionsEs: string | null;
+  imageUrl: string | null;
+  gifUrl: string | null;
+  originalId: string | null;
+  unit: string | null; // kg or lbs
   createdAt: Date;
 }
 
@@ -21,6 +31,16 @@ export interface Routine {
   name: string;
   description: string | null;
   categoryId: number | null;
+  folderId: number | null;
+  createdAt: Date;
+}
+
+export interface RoutineFolder {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string | null;
+  icon: string | null;
   createdAt: Date;
 }
 
@@ -47,6 +67,7 @@ export interface SessionExercise {
   sessionId: number;
   exerciseId: number;
   order: number;
+  restTime: number | null; // seconds
   notes: string | null;
 }
 
@@ -116,6 +137,14 @@ export interface CreateRoutineInput {
   name: string;
   description?: string;
   categoryId?: number;
+  folderId?: number;
+}
+
+export interface CreateFolderInput {
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
 }
 
 export interface CreateSessionInput {
