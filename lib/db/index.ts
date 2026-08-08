@@ -111,6 +111,9 @@ CREATE TABLE IF NOT EXISTS sets (
   reps INTEGER,
   weight REAL,
   completed INTEGER NOT NULL DEFAULT 0,
+  method TEXT DEFAULT 'linear',
+  drop_order INTEGER DEFAULT 0,
+  is_drop_group INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 `;
@@ -149,6 +152,23 @@ export async function initializeDatabase() {
   // Migration: add unit to exercises if missing
   try {
     expoDb.execSync("ALTER TABLE exercises ADD COLUMN unit TEXT DEFAULT 'kg'");
+  } catch {
+    // Column already exists, ignore
+  }
+
+  // Migration: add drop set columns to sets table
+  try {
+    expoDb.execSync("ALTER TABLE sets ADD COLUMN method TEXT DEFAULT 'linear'");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE sets ADD COLUMN drop_order INTEGER DEFAULT 0");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE sets ADD COLUMN is_drop_group INTEGER DEFAULT 0");
   } catch {
     // Column already exists, ignore
   }
