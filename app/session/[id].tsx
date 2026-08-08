@@ -9,10 +9,11 @@ import { useSession, useSessionExercises, useCompleteSession, useAddExerciseToSe
 
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise } from '../../lib/hooks/useExercises';
-import { useSets, useCreateSet, useUpdateSet, useDeleteSet } from '../../lib/hooks/useSets';
+import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
+import { DropSetLogger } from '../../components/DropSetLogger';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -258,6 +259,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
   const { data: exercises } = useExercise(sessionExercise.exerciseId);
   const { data: sets } = useSets(sessionExercise.id);
   const createSet = useCreateSet();
+  const createDropSets = useCreateDropSets();
   const updateSet = useUpdateSet();
   const deleteSet = useDeleteSet();
   const updateRestTime = useUpdateExerciseRestTime();
@@ -266,6 +268,8 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
   const [showCustomRest, setShowCustomRest] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
   const [customSeconds, setCustomSeconds] = useState('');
+  const [dropSetMode, setDropSetMode] = useState<number | null>(null); // set ID being converted to drop set
+  const [dropSetDrafts, setDropSetDrafts] = useState<Record<number, Array<{ weight: number | null; reps: number | null; completed: boolean }>>>({});
 
   const exercise = exercises?.[0];
   const currentRestTime = sessionExercise.restTime ?? 60;
@@ -307,6 +311,78 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
         data: { unit },
       });
     }
+  };
+
+  // Drop set handlers
+  const handleConvertToDropSet = (setId: number, set: Set) => {
+    setDropSetMode(setId);
+    // Initialize with parent set values + 2 empty drops
+    setDropSetDrafts((prev) => ({
+      ...prev,
+      [setId]: [
+        { weight: set.weight ?? null, reps: set.reps ?? null, completed: set.completed },
+        { weight: null, reps: null, completed: false },
+        { weight: null, reps: null, completed: false },
+      ],
+    }));
+  };
+
+  const handleAddDropToSet = (setId: number) => {
+    setDropSetDrafts((prev) => ({
+      ...prev,
+      [setId]: [...(prev[setId] ?? []), { weight: null, reps: null, completed: false }],
+    }));
+  };
+
+  const handleUpdateDrop = (setId: number, dropIndex: number, updates: { reps?: number; weight?: number; completed?: boolean }) => {
+    setDropSetDrafts((prev) => {
+      const drops = [...(prev[setId] ?? [])];
+      drops[dropIndex] = { ...drops[dropIndex], ...updates };
+      return { ...prev, [setId]: drops };
+    });
+  };
+
+  const handleDeleteDrop = (setId: number, dropIndex: number) => {
+    setDropSetDrafts((prev) => {
+      const drops = [...(prev[setId] ?? [])];
+      drops.splice(dropIndex, 1);
+      return { ...prev, [setId]: drops };
+    });
+  };
+
+  const handleSaveDropSet = async (setId: number) => {
+    const drops = dropSetDrafts[setId];
+    if (!drops || drops.length < 2) return;
+
+    // Delete the original linear set
+    await deleteSet.mutateAsync(setId);
+
+    // Find the set number from the original set
+    const originalSet = sets?.find((s) => s.id === setId);
+    const setNumber = originalSet?.setNumber ?? 1;
+
+    // Create drop set group
+    await createDropSets.mutateAsync({
+      sessionExerciseId: sessionExercise.id,
+      setNumber,
+      drops: drops.map((d) => ({ reps: d.reps ?? undefined, weight: d.weight ?? undefined })),
+    });
+
+    setDropSetMode(null);
+    setDropSetDrafts((prev) => {
+      const next = { ...prev };
+      delete next[setId];
+      return next;
+    });
+  };
+
+  const handleCancelDropSet = (setId: number) => {
+    setDropSetMode(null);
+    setDropSetDrafts((prev) => {
+      const next = { ...prev };
+      delete next[setId];
+      return next;
+    });
   };
 
   const REST_PRESETS = [30, 60, 90, 120, 180];
@@ -457,16 +533,115 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
           </View>
         </View>
       </Modal>
-      {sets?.map((set) => (
-        <SetLogger
-          key={set.id}
-          set={set}
-          onUpdate={(updates) => handleUpdateSet(set, updates)}
-          onDelete={() => handleDeleteSet(set.id)}
-          unit={exercise?.unit ?? 'kg'}
-          onUnitChange={handleUnitChange}
-        />
-      ))}
+      {sets?.map((set) => {
+        // If this set is a drop group, show DropSetLogger
+        if (set.isDropGroup === true && set.method === 'dropset') {
+          const drops = sets
+            ?.filter((s) => s.method === 'dropset' && s.setNumber === set.setNumber)
+            .sort((a, b) => (a.dropOrder ?? 0) - (b.dropOrder ?? 0))
+            .map((s) => ({
+              id: s.id,
+              weight: s.weight,
+              reps: s.reps,
+              completed: s.completed,
+            })) ?? [];
+
+          return (
+            <DropSetLogger
+              key={set.id}
+              parentSet={set}
+              drops={drops}
+              onUpdateDrop={(dropIndex, updates) => {
+                const dropSet = drops[dropIndex];
+                if (dropSet?.id) {
+                  updateSet.mutateAsync({ id: dropSet.id, data: updates });
+                }
+              }}
+              onAddDrop={() => {
+                // Add a new drop to the existing drop set
+                const lastDrop = drops[drops.length - 1];
+                if (lastDrop?.id) {
+                  createSet.mutateAsync({
+                    sessionExerciseId: sessionExercise.id,
+                    setNumber: set.setNumber,
+                    reps: lastDrop.reps ?? undefined,
+                    weight: lastDrop.weight ? lastDrop.weight - 2.5 : undefined, // Default: decrease by 2.5
+                  });
+                }
+              }}
+              onDeleteDrop={(dropIndex) => {
+                const dropSet = drops[dropIndex];
+                if (dropSet?.id) {
+                  deleteSet.mutateAsync(dropSet.id);
+                }
+              }}
+              onCompleteAll={() => {
+                drops.forEach((drop) => {
+                  if (drop.id && !drop.completed) {
+                    updateSet.mutateAsync({ id: drop.id, data: { completed: true } });
+                  }
+                });
+              }}
+              unit={exercise?.unit ?? 'kg'}
+            />
+          );
+        }
+
+        // If this set is a drop child (not the group parent), skip it — it's rendered by DropSetLogger
+        if (set.method === 'dropset' && set.isDropGroup !== true) {
+          return null;
+        }
+
+        // If we're in drop set editing mode for this set
+        if (dropSetMode === set.id) {
+          const drops = dropSetDrafts[set.id] ?? [];
+          return (
+            <View key={set.id}>
+              <DropSetLogger
+                parentSet={set}
+                drops={drops}
+                onUpdateDrop={(dropIndex, updates) => handleUpdateDrop(set.id, dropIndex, updates)}
+                onAddDrop={() => handleAddDropToSet(set.id)}
+                onDeleteDrop={(dropIndex) => handleDeleteDrop(set.id, dropIndex)}
+                onCompleteAll={() => {
+                  setDropSetDrafts((prev) => ({
+                    ...prev,
+                    [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: true })),
+                  }));
+                }}
+                unit={exercise?.unit ?? 'kg'}
+              />
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs, marginLeft: spacing.md + 16 }}>
+                <TouchableOpacity
+                  onPress={() => handleSaveDropSet(set.id)}
+                  style={{ flex: 1, backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
+                >
+                  <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 13 }}>Guardar Drop Set</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleCancelDropSet(set.id)}
+                  style={{ flex: 1, backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
+                >
+                  <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }
+
+        // Regular set or linear set — show with convert button
+        return (
+          <SetLogger
+            key={set.id}
+            set={set}
+            onUpdate={(updates) => handleUpdateSet(set, updates)}
+            onDelete={() => handleDeleteSet(set.id)}
+            unit={exercise?.unit ?? 'kg'}
+            onUnitChange={handleUnitChange}
+            onConvertToDropSet={() => handleConvertToDropSet(set.id, set)}
+          />
+        );
+      })}
       <Button
         title="Add Set"
         variant="secondary"

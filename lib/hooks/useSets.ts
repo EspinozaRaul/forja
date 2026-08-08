@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getSetsForSessionExercise,
   createSet,
+  createDropSets,
   updateSet,
   deleteSet,
 } from '../db/queries';
@@ -27,6 +28,23 @@ export function useCreateSet() {
       reps?: number;
       weight?: number;
     }) => createSet(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SET_KEY, variables.sessionExerciseId],
+      });
+    },
+  });
+}
+
+export function useCreateDropSets() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      sessionExerciseId: number;
+      setNumber: number;
+      drops: Array<{ reps?: number; weight?: number }>;
+    }) => createDropSets(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],

@@ -91,5 +91,9 @@ export const sets = sqliteTable('sets', {
   reps: integer('reps'),
   weight: real('weight'),
   completed: integer('completed', { mode: 'boolean' }).default(false).notNull(),
+  // Drop set support
+  method: text('method').default('linear'), // 'linear', 'dropset', 'superset', 'pyramid_up', 'pyramid_down'
+  dropOrder: integer('drop_order').default(0), // order within a drop set group (0 = not a drop)
+  isDropGroup: integer('is_drop_group', { mode: 'boolean' }).default(false), // true if this set STARTS a drop set
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });

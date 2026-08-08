@@ -303,11 +303,47 @@ export async function createSet(data: {
   setNumber: number;
   reps?: number;
   weight?: number;
+  method?: string;
+  dropOrder?: number;
+  isDropGroup?: boolean;
 }) {
   return db
     .insert(sets)
-    .values({ ...data, completed: false, createdAt: new Date() })
+    .values({
+      ...data,
+      completed: false,
+      createdAt: new Date(),
+    })
     .returning();
+}
+
+export async function createDropSets(data: {
+  sessionExerciseId: number;
+  setNumber: number;
+  drops: Array<{ reps?: number; weight?: number }>;
+}) {
+  const results: any[] = [];
+
+  for (let i = 0; i < data.drops.length; i++) {
+    const drop = data.drops[i];
+    const result = await db
+      .insert(sets)
+      .values({
+        sessionExerciseId: data.sessionExerciseId,
+        setNumber: data.setNumber,
+        reps: drop.reps,
+        weight: drop.weight,
+        completed: false,
+        method: 'dropset',
+        dropOrder: i + 1,
+        isDropGroup: i === 0,
+        createdAt: new Date(),
+      })
+      .returning();
+    results.push(result[0]);
+  }
+
+  return results;
 }
 
 export async function updateSet(
@@ -406,6 +442,9 @@ export async function getSetsByExerciseId(exerciseId: number) {
       reps: sets.reps,
       weight: sets.weight,
       completed: sets.completed,
+      method: sets.method,
+      dropOrder: sets.dropOrder,
+      isDropGroup: sets.isDropGroup,
       createdAt: sets.createdAt,
       sessionId: sessionExercises.sessionId,
       exerciseId: sessionExercises.exerciseId,

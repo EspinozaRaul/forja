@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
-import type { Set } from '../lib/types';
+import type { Set, SetMethod } from '../lib/types';
 
 interface SetLoggerProps {
   set: Set;
@@ -10,12 +10,18 @@ interface SetLoggerProps {
   onDelete?: () => void;
   unit?: string; // kg or lbs
   onUnitChange?: (unit: string) => void;
+  onConvertToDropSet?: () => void;
+  isDropGroup?: boolean;
+  dropCount?: number;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onConvertToDropSet, isDropGroup, dropCount }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
+
+  const isDropSet = set.method === 'dropset';
+  const isLinear = set.method === 'linear' || set.method === null;
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -62,9 +68,20 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange }
       friction={2}
     >
       <View style={styles.container}>
-        <Text style={styles.setNumber}>
-          #{set.setNumber}
-        </Text>
+        {/* Set number with method badge */}
+        <View style={styles.setInfo}>
+          <Text style={styles.setNumber}>
+            #{set.setNumber}
+          </Text>
+          {isDropSet && isDropGroup && (
+            <View style={styles.dropBadge}>
+              <Text style={styles.dropBadgeText}>⚡ DROP</Text>
+            </View>
+          )}
+          {isDropSet && !isDropGroup && (
+            <Text style={styles.dropOrderText}>↓{set.dropOrder}</Text>
+          )}
+        </View>
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -93,6 +110,16 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange }
             style={styles.unitToggle}
           >
             <Text style={styles.unitText}>{unit}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Convert to drop set button (only for linear sets) */}
+        {isLinear && onConvertToDropSet && (
+          <TouchableOpacity
+            onPress={onConvertToDropSet}
+            style={styles.convertButton}
+          >
+            <Text style={{ fontSize: 14, color: colors.warning }}>⚡</Text>
           </TouchableOpacity>
         )}
 
@@ -190,5 +217,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.text.muted,
+  },
+  setInfo: {
+    width: 28,
+    alignItems: 'center',
+    gap: 2,
+  },
+  dropBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  dropBadgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: colors.warning,
+  },
+  dropOrderText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.warning,
+  },
+  convertButton: {
+    padding: 6,
+    borderRadius: borderRadius.sm,
   },
 });

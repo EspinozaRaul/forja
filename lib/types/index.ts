@@ -71,6 +71,8 @@ export interface SessionExercise {
   notes: string | null;
 }
 
+export type SetMethod = 'linear' | 'dropset' | 'superset' | 'pyramid_up' | 'pyramid_down';
+
 export interface Set {
   id: number;
   sessionExerciseId: number;
@@ -78,7 +80,15 @@ export interface Set {
   reps: number | null;
   weight: number | null;
   completed: boolean;
+  method: string | null; // SetMethod values, but DB returns string
+  dropOrder: number | null;
+  isDropGroup: boolean | null;
   createdAt: Date;
+}
+
+export interface DropSetGroup {
+  parentSet: Set;
+  drops: Set[];
 }
 
 // ─── Composite Types ───────────────────────────────────
