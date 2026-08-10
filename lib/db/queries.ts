@@ -1,4 +1,4 @@
-import { eq, desc, sql, and, gte, lte } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, gte, lte } from 'drizzle-orm';
 import {
   categories,
   exercises,
@@ -289,13 +289,54 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     .returning();
 }
 
+export async function deleteSessionExercise(id: number) {
+  return db.delete(sessionExercises).where(eq(sessionExercises.id, id));
+}
+
+export async function createSuperSetPair(firstId: number, secondId: number) {
+  // Generate a new unique pair id (use a timestamp-based value; enough for local app)
+  const pairId = Date.now();
+  await db.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, firstId));
+  await db.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, secondId));
+
+  // Balance series between both sides: a super set cycle needs a set on EACH side with the same
+  // setNumber. If one exercise already had sets before pairing (e.g. Press had serie 1 and the
+  // paired Remo has none), create empty matching sets on the side that's missing them.
+  const [setsFirst, setsSecond] = await Promise.all([
+    db.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, firstId)),
+    db.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, secondId)),
+  ]);
+  const firstNumbers = new Set(setsFirst.map((s) => s.setNumber));
+  const secondNumbers = new Set(setsSecond.map((s) => s.setNumber));
+  const allNumbers = new Set([...firstNumbers, ...secondNumbers]);
+
+  for (const setNumber of allNumbers) {
+    if (!firstNumbers.has(setNumber)) {
+      await db.insert(sets).values({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: new Date() });
+    }
+    if (!secondNumbers.has(setNumber)) {
+      await db.insert(sets).values({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: new Date() });
+    }
+  }
+
+  return pairId;
+}
+
+export async function unlinkSuperSetPair(pairId: number) {
+  return db
+    .update(sessionExercises)
+    .set({ supersetPairId: null })
+    .where(eq(sessionExercises.supersetPairId, pairId));
+}
+
 // ─── Sets ──────────────────────────────────────────────
 
 export async function getSetsForSessionExercise(sessionExerciseId: number) {
   return db
     .select()
     .from(sets)
-    .where(eq(sets.sessionExerciseId, sessionExerciseId));
+    .where(eq(sets.sessionExerciseId, sessionExerciseId))
+    .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
 }
 
 export async function createSet(data: {
@@ -306,6 +347,7 @@ export async function createSet(data: {
   method?: string;
   dropOrder?: number;
   isDropGroup?: boolean;
+  rir?: number;
 }) {
   return db
     .insert(sets)
@@ -320,7 +362,8 @@ export async function createSet(data: {
 export async function createDropSets(data: {
   sessionExerciseId: number;
   setNumber: number;
-  drops: Array<{ reps?: number; weight?: number }>;
+  method?: string;
+  drops: Array<{ reps?: number; weight?: number; rir?: number }>;
 }) {
   const results: any[] = [];
 
@@ -334,9 +377,10 @@ export async function createDropSets(data: {
         reps: drop.reps,
         weight: drop.weight,
         completed: false,
-        method: 'dropset',
+        method: data.method ?? 'dropset',
         dropOrder: i + 1,
         isDropGroup: i === 0,
+        rir: drop.rir,
         createdAt: new Date(),
       })
       .returning();
@@ -352,6 +396,7 @@ export async function updateSet(
     reps?: number;
     weight?: number;
     completed?: boolean;
+    rir?: number;
   }
 ) {
   return db.update(sets).set(data).where(eq(sets.id, id)).returning();
@@ -359,6 +404,12 @@ export async function updateSet(
 
 export async function deleteSet(id: number) {
   return db.delete(sets).where(eq(sets.id, id));
+}
+
+export async function deleteDropSetGroup(sessionExerciseId: number, setNumber: number) {
+  return db
+    .delete(sets)
+    .where(and(eq(sets.sessionExerciseId, sessionExerciseId), eq(sets.setNumber, setNumber)));
 }
 
 // ─── Last Session for Routine ──────────────────────────
@@ -410,6 +461,7 @@ export async function duplicateSessionData(
         exerciseId: se.exerciseId,
         order: se.order,
         notes: se.notes,
+        supersetPairId: se.supersetPairId,
       })
       .returning();
 
@@ -425,6 +477,10 @@ export async function duplicateSessionData(
         reps: s.reps,
         weight: s.weight,
         completed: false,
+        method: s.method,
+        dropOrder: s.dropOrder,
+        isDropGroup: s.isDropGroup,
+        rir: s.rir,
         createdAt: new Date(),
       });
     }
@@ -445,6 +501,7 @@ export async function getSetsByExerciseId(exerciseId: number) {
       method: sets.method,
       dropOrder: sets.dropOrder,
       isDropGroup: sets.isDropGroup,
+      rir: sets.rir,
       createdAt: sets.createdAt,
       sessionId: sessionExercises.sessionId,
       exerciseId: sessionExercises.exerciseId,

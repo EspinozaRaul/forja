@@ -3,19 +3,20 @@ import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 import type { Set, SetMethod } from '../lib/types';
+import { RirPicker } from './RirPicker';
 
 interface SetLoggerProps {
   set: Set;
-  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
+  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean; rir?: number }) => void;
   onDelete?: () => void;
   unit?: string; // kg or lbs
   onUnitChange?: (unit: string) => void;
-  onConvertToDropSet?: () => void;
+  onOpenIntensityPicker?: () => void;
   isDropGroup?: boolean;
   dropCount?: number;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onConvertToDropSet, isDropGroup, dropCount }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
@@ -67,78 +68,84 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
       overshootRight={false}
       friction={2}
     >
-      <View style={styles.container}>
-        {/* Set number with method badge */}
-        <View style={styles.setInfo}>
-          <Text style={styles.setNumber}>
-            #{set.setNumber}
-          </Text>
-          {isDropSet && isDropGroup && (
-            <View style={styles.dropBadge}>
-              <Text style={styles.dropBadgeText}>⚡ DROP</Text>
-            </View>
+      <View>
+        <View style={styles.container}>
+          {/* Set number with method badge */}
+          <View style={styles.setInfo}>
+            <Text style={styles.setNumber}>
+              #{set.setNumber}
+            </Text>
+            {isDropSet && isDropGroup && (
+              <View style={styles.dropBadge}>
+                <Text style={styles.dropBadgeText}>⚡ DROP</Text>
+              </View>
+            )}
+            {isDropSet && !isDropGroup && (
+              <Text style={styles.dropOrderText}>↓{set.dropOrder}</Text>
+            )}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              placeholder="Reps"
+              placeholderTextColor={colors.text.muted}
+              value={reps}
+              onChangeText={handleRepsChange}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              keyboardType="decimal-pad"
+              placeholder={unit}
+              placeholderTextColor={colors.text.muted}
+              value={weight}
+              onChangeText={handleWeightChange}
+            />
+          </View>
+          {onUnitChange && (
+            <TouchableOpacity
+              onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
+              style={styles.unitToggle}
+            >
+              <Text style={styles.unitText}>{unit}</Text>
+            </TouchableOpacity>
           )}
-          {isDropSet && !isDropGroup && (
-            <Text style={styles.dropOrderText}>↓{set.dropOrder}</Text>
+
+          {/* Convert to drop set button (only for linear sets) */}
+          {isLinear && onOpenIntensityPicker && (
+            <TouchableOpacity
+              onPress={onOpenIntensityPicker}
+              style={styles.convertButton}
+            >
+              <Text style={{ fontSize: 14, color: colors.warning }}>⚡</Text>
+            </TouchableOpacity>
           )}
-        </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="Reps"
-            placeholderTextColor={colors.text.muted}
-            value={reps}
-            onChangeText={handleRepsChange}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            keyboardType="decimal-pad"
-            placeholder={unit}
-            placeholderTextColor={colors.text.muted}
-            value={weight}
-            onChangeText={handleWeightChange}
-          />
-        </View>
-        {onUnitChange && (
           <TouchableOpacity
-            onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
-            style={styles.unitToggle}
+            onPress={() => onUpdate({ completed: !set.completed })}
+            style={[
+              styles.checkButton,
+              set.completed
+                ? styles.checkButtonCompleted
+                : styles.checkButtonIncomplete,
+            ]}
           >
-            <Text style={styles.unitText}>{unit}</Text>
+            <Text style={[
+              styles.checkText,
+              { color: set.completed ? colors.bg.primary : colors.text.secondary }
+            ]}>
+              {set.completed ? '✓' : ''}
+            </Text>
           </TouchableOpacity>
-        )}
-
-        {/* Convert to drop set button (only for linear sets) */}
-        {isLinear && onConvertToDropSet && (
-          <TouchableOpacity
-            onPress={onConvertToDropSet}
-            style={styles.convertButton}
-          >
-            <Text style={{ fontSize: 14, color: colors.warning }}>⚡</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          onPress={() => onUpdate({ completed: !set.completed })}
-          style={[
-            styles.checkButton,
-            set.completed
-              ? styles.checkButtonCompleted
-              : styles.checkButtonIncomplete,
-          ]}
-        >
-          <Text style={[
-            styles.checkText,
-            { color: set.completed ? colors.bg.primary : colors.text.secondary }
-          ]}>
-            {set.completed ? '✓' : ''}
-          </Text>
-        </TouchableOpacity>
+        </View>
+        <RirPicker
+          value={set.rir}
+          onChange={(rir) => onUpdate({ rir: rir ?? undefined })}
+        />
       </View>
     </Swipeable>
   );
@@ -174,9 +181,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   checkButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

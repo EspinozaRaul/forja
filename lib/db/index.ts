@@ -101,7 +101,8 @@ CREATE TABLE IF NOT EXISTS session_exercises (
   session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   exercise_id INTEGER NOT NULL REFERENCES exercises(id),
   "order" INTEGER NOT NULL,
-  notes TEXT
+  notes TEXT,
+  superset_pair_id INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS sets (
@@ -114,6 +115,7 @@ CREATE TABLE IF NOT EXISTS sets (
   method TEXT DEFAULT 'linear',
   drop_order INTEGER DEFAULT 0,
   is_drop_group INTEGER DEFAULT 0,
+  rir INTEGER,
   created_at INTEGER NOT NULL
 );
 `;
@@ -149,6 +151,13 @@ export async function initializeDatabase() {
     // Column already exists, ignore
   }
 
+  // Migration: add superset pair id to session_exercises
+  try {
+    expoDb.execSync('ALTER TABLE session_exercises ADD COLUMN superset_pair_id INTEGER');
+  } catch {
+    // Column already exists, ignore
+  }
+
   // Migration: add unit to exercises if missing
   try {
     expoDb.execSync("ALTER TABLE exercises ADD COLUMN unit TEXT DEFAULT 'kg'");
@@ -169,6 +178,13 @@ export async function initializeDatabase() {
   }
   try {
     expoDb.execSync("ALTER TABLE sets ADD COLUMN is_drop_group INTEGER DEFAULT 0");
+  } catch {
+    // Column already exists, ignore
+  }
+
+  // Migration: add RIR (Reps In Reserve) to sets table
+  try {
+    expoDb.execSync("ALTER TABLE sets ADD COLUMN rir INTEGER");
   } catch {
     // Column already exists, ignore
   }

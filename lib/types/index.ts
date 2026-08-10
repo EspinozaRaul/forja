@@ -69,9 +69,10 @@ export interface SessionExercise {
   order: number;
   restTime: number | null; // seconds
   notes: string | null;
+  supersetPairId: number | null; // shared pair id; both exercises of a super set get the same value
 }
 
-export type SetMethod = 'linear' | 'dropset' | 'superset' | 'pyramid_up' | 'pyramid_down';
+export type SetMethod = 'linear' | 'dropset' | 'superset' | 'pyramid_up' | 'pyramid_down' | 'rest_pause' | 'cluster';
 
 export interface Set {
   id: number;
@@ -83,6 +84,7 @@ export interface Set {
   method: string | null; // SetMethod values, but DB returns string
   dropOrder: number | null;
   isDropGroup: boolean | null;
+  rir: number | null; // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
   createdAt: Date;
 }
 

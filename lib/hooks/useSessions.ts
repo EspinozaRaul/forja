@@ -10,8 +10,11 @@ import {
   updateSessionExerciseRestTime,
   updateSessionExerciseOrder,
   replaceSessionExercise,
+  deleteSessionExercise,
   getLastSessionForRoutine,
   duplicateSessionData,
+  createSuperSetPair,
+  unlinkSuperSetPair,
 } from '../db/queries';
 import type { Session, SessionExercise } from '../types';
 
@@ -154,6 +157,38 @@ export function useReplaceSessionExercise() {
   return useMutation({
     mutationFn: ({ id, exerciseId }: { id: number; exerciseId: number }) =>
       replaceSessionExercise(id, exerciseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useDeleteSessionExercise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteSessionExercise(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useCreateSuperSetPair() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ firstId, secondId }: { firstId: number; secondId: number }) =>
+      createSuperSetPair(firstId, secondId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useUnlinkSuperSet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pairId: number) => unlinkSuperSetPair(pairId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
     },

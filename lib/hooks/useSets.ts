@@ -5,6 +5,7 @@ import {
   createDropSets,
   updateSet,
   deleteSet,
+  deleteDropSetGroup,
 } from '../db/queries';
 import type { Set } from '../types';
 
@@ -27,6 +28,10 @@ export function useCreateSet() {
       setNumber: number;
       reps?: number;
       weight?: number;
+      method?: string;
+      dropOrder?: number;
+      isDropGroup?: boolean;
+      rir?: number;
     }) => createSet(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -43,7 +48,8 @@ export function useCreateDropSets() {
     mutationFn: (data: {
       sessionExerciseId: number;
       setNumber: number;
-      drops: Array<{ reps?: number; weight?: number }>;
+      method?: string;
+      drops: Array<{ reps?: number; weight?: number; rir?: number }>;
     }) => createDropSets(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -62,10 +68,13 @@ export function useUpdateSet() {
       data,
     }: {
       id: number;
-      data: { reps?: number; weight?: number; completed?: boolean };
+      data: { reps?: number; weight?: number; completed?: boolean; rir?: number };
+      sessionExerciseId: number;
     }) => updateSet(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SET_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SET_KEY, variables.sessionExerciseId],
+      });
     },
   });
 }
@@ -74,9 +83,36 @@ export function useDeleteSet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteSet(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SET_KEY });
+    mutationFn: ({
+      id,
+      sessionExerciseId,
+    }: {
+      id: number;
+      sessionExerciseId: number;
+    }) => deleteSet(id),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SET_KEY, variables.sessionExerciseId],
+      });
+    },
+  });
+}
+
+export function useDeleteDropSetGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sessionExerciseId,
+      setNumber,
+    }: {
+      sessionExerciseId: number;
+      setNumber: number;
+    }) => deleteDropSetGroup(sessionExerciseId, setNumber),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SET_KEY, variables.sessionExerciseId],
+      });
     },
   });
 }

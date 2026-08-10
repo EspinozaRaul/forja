@@ -1,5 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 import type { Set } from '../lib/types';
 
@@ -13,9 +14,13 @@ interface Drop {
 interface DropSetLoggerProps {
   parentSet: Set;
   drops: Drop[];
-  onUpdateDrop: (dropIndex: number, updates: { reps?: number; weight?: number; completed?: boolean }) => void;
+  method?: string;
+  expanded: boolean;
+  onToggle: () => void;
+  onUpdateDrop: (dropIndex: number, updates: { reps?: number; weight?: number }) => void;
   onAddDrop: () => void;
   onDeleteDrop: (dropIndex: number) => void;
+  onDelete?: () => void;
   onCompleteAll: () => void;
   unit?: string;
 }
@@ -23,137 +28,314 @@ interface DropSetLoggerProps {
 export function DropSetLogger({
   parentSet,
   drops,
+  method = 'dropset',
+  expanded,
+  onToggle,
   onUpdateDrop,
   onAddDrop,
   onDeleteDrop,
+  onDelete,
   onCompleteAll,
   unit = 'kg',
 }: DropSetLoggerProps) {
   const allCompleted = drops.length > 0 && drops.every((d) => d.completed);
+  const swipeableRef = useRef<Swipeable>(null);
+
+  const badgeText = method === 'dropset' ? 'DS' : method === 'rest_pause' ? 'RP' : method === 'cluster' ? 'CL' : 'DS';
+  const dropLabel = (index: number) =>
+    method === 'dropset' ? `Drop ${index + 1}` : `Segmento ${index + 1}`;
+
+  const handleDelete = () => {
+    swipeableRef.current?.close();
+    onDelete?.();
+  };
+
+  const renderRightActions = () => {
+    if (!onDelete) return null;
+    return (
+      <TouchableOpacity
+        onPress={handleDelete}
+        style={styles.deleteAction}
+      >
+        <Text style={styles.deleteText}>Delete</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  if (!expanded) {
+    // Collapsed — same row structure as SetLogger
+    const firstDrop = drops[0];
+    const summaryReps = firstDrop?.reps;
+    const summaryWeight = firstDrop?.weight;
+
+    return (
+      <Swipeable
+        ref={swipeableRef}
+        renderRightActions={renderRightActions}
+        overshootRight={false}
+        friction={2}
+      >
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.7}>
+          <View style={styles.row}>
+            <View style={styles.setInfo}>
+              <Text style={styles.setNumber}>#{parentSet.setNumber}</Text>
+            </View>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>⚡ {badgeText}</Text>
+            </View>
+            <View style={styles.rowCenter}>
+              <Text style={styles.rowSummary}>
+                {drops.length} drops
+                {summaryReps != null ? ` · ${summaryReps}r` : ''}
+                {summaryWeight != null ? ` · ${summaryWeight}${unit}` : ''}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onToggle} style={styles.checkButton}>
+              {allCompleted ? (
+                <View style={styles.checkDone}>
+                  <Text style={styles.checkDoneText}>✓</Text>
+                </View>
+              ) : (
+                <Text style={styles.expandIcon}>›</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Swipeable>
+    );
+  }
+
+  // Expanded — same left alignment as SetLogger
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
+    >
+      <View style={styles.expandedOuter}>
+        {/* Top row: tappable to collapse, check button completes + collapses */}
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.row}>
+          <View style={styles.setInfo}>
+            <Text style={styles.setNumber}>#{parentSet.setNumber}</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>⚡ {badgeText}</Text>
+          </View>
+          <View style={styles.rowCenter}>
+            <Text style={styles.rowTitle}>Serie #{parentSet.setNumber}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              onCompleteAll();
+              onToggle();
+            }}
+            style={styles.checkButton}
+          >
+            {allCompleted ? (
+              <View style={styles.checkDone}>
+                <Text style={styles.checkDoneText}>✓</Text>
+              </View>
+            ) : (
+              <View style={styles.checkEmpty} />
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+
+        {/* Drops — indented below the set number */}
+        <View style={styles.dropsBlock}>
+          {drops.map((drop, index) => (
+            <DropRow
+              key={drop.id ?? index}
+              index={index}
+              drop={drop}
+              unit={unit}
+              label={dropLabel(index)}
+              showDelete={drops.length > 1}
+              showLine={index < drops.length - 1}
+              onUpdateDrop={onUpdateDrop}
+              onDeleteDrop={onDeleteDrop}
+            />
+          ))}
+
+          {/* Add drop */}
+          <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton}>
+            <Text style={{ fontSize: 14, color: colors.accent.secondary }}>+</Text>
+            <Text style={styles.addDropText}>Agregar Drop</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Swipeable>
+  );
+}
+
+function DropRow({
+  index,
+  drop,
+  unit,
+  label,
+  showDelete,
+  showLine,
+  onUpdateDrop,
+  onDeleteDrop,
+}: {
+  index: number;
+  drop: Drop;
+  unit: string;
+  label: string;
+  showDelete: boolean;
+  showLine: boolean;
+  onUpdateDrop: (dropIndex: number, updates: { reps?: number; weight?: number }) => void;
+  onDeleteDrop: (dropIndex: number) => void;
+}) {
+  // Local state so typing is instant — DB sync happens in the background via onUpdateDrop
+  const [reps, setReps] = useState(drop.reps?.toString() ?? '');
+  const [weight, setWeight] = useState(drop.weight?.toString() ?? '');
+
+  const handleRepsChange = (text: string) => {
+    setReps(text);
+    const value = parseInt(text, 10);
+    onUpdateDrop(index, { reps: isNaN(value) || value < 0 ? undefined : value });
+  };
+
+  const handleWeightChange = (text: string) => {
+    setWeight(text);
+    const value = parseFloat(text);
+    onUpdateDrop(index, { weight: isNaN(value) || value < 0 ? undefined : value });
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Parent set header */}
-      <View style={styles.parentHeader}>
-        <View style={styles.parentBadge}>
-          <Text style={styles.parentBadgeText}>⚡ DROP SET</Text>
-        </View>
-        <Text style={styles.parentText}>
-          Serie #{parentSet.setNumber}
-        </Text>
-        {allCompleted && (
-          <Text style={{ fontSize: 16, color: colors.accent.primary }}>✓</Text>
-        )}
+    <View style={styles.dropRow}>
+      <View style={styles.dropIndicator}>
+        <View style={[styles.dropDot, drop.completed && styles.dropDotCompleted]} />
+        {showLine && <View style={styles.dropLine} />}
       </View>
 
-      {/* Drops list */}
-      {drops.map((drop, index) => (
-        <View key={index} style={styles.dropRow}>
-          <View style={styles.dropIndicator}>
-            <View style={[styles.dropDot, drop.completed && styles.dropDotCompleted]} />
-            {index < drops.length - 1 && <View style={styles.dropLine} />}
-          </View>
-
-          <View style={styles.dropContent}>
-            <Text style={styles.dropLabel}>Drop {index + 1}</Text>
-            <View style={styles.dropInputs}>
-              <TextInput
-                style={styles.dropInput}
-                keyboardType="numeric"
-                placeholder="Reps"
-                placeholderTextColor={colors.text.muted}
-                value={drop.reps?.toString() ?? ''}
-                onChangeText={(text) => {
-                  const value = parseInt(text, 10);
-                  onUpdateDrop(index, { reps: isNaN(value) ? undefined : value });
-                }}
-              />
-              <TextInput
-                style={styles.dropInput}
-                keyboardType="decimal-pad"
-                placeholder={unit}
-                placeholderTextColor={colors.text.muted}
-                value={drop.weight?.toString() ?? ''}
-                onChangeText={(text) => {
-                  const value = parseFloat(text);
-                  onUpdateDrop(index, { weight: isNaN(value) ? undefined : value });
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => onUpdateDrop(index, { completed: !drop.completed })}
-                style={[
-                  styles.dropCheck,
-                  drop.completed ? styles.dropCheckCompleted : styles.dropCheckIncomplete,
-                ]}
-              >
-                <Text style={{ color: drop.completed ? colors.bg.primary : colors.text.muted, fontSize: 12, fontWeight: '700' }}>
-                  {drop.completed ? '✓' : ''}
-                </Text>
-              </TouchableOpacity>
-              {drops.length > 1 && (
-                <TouchableOpacity
-                  onPress={() => onDeleteDrop(index)}
-                  style={styles.dropDelete}
-                >
-                  <Text style={{ fontSize: 14, color: colors.error }}>×</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+      <View style={styles.dropContent}>
+        <Text style={styles.dropLabel}>{label}</Text>
+        <View style={styles.dropInputs}>
+          <TextInput
+            style={styles.dropInput}
+            keyboardType="numeric"
+            placeholder="Reps"
+            placeholderTextColor={colors.text.muted}
+            value={reps}
+            onChangeText={handleRepsChange}
+          />
+          <TextInput
+            style={styles.dropInput}
+            keyboardType="decimal-pad"
+            placeholder={unit}
+            placeholderTextColor={colors.text.muted}
+            value={weight}
+            onChangeText={handleWeightChange}
+          />
+          {showDelete && (
+            <TouchableOpacity
+              onPress={() => onDeleteDrop(index)}
+              style={styles.dropDelete}
+            >
+              <Text style={{ fontSize: 14, color: colors.error }}>×</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      ))}
-
-      {/* Add drop button */}
-      <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton}>
-        <Text style={{ fontSize: 14, color: colors.accent.secondary }}>+</Text>
-        <Text style={styles.addDropText}>Agregar Drop</Text>
-      </TouchableOpacity>
-
-      {/* Complete all button */}
-      {!allCompleted && drops.length > 0 && (
-        <TouchableOpacity onPress={onCompleteAll} style={styles.completeAllButton}>
-          <Text style={styles.completeAllText}>Completar todos los drops</Text>
-        </TouchableOpacity>
-      )}
+      </View>
     </View>
   );
 }
 
+const ROW_HEIGHT = 28;
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.bg.secondary,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    marginLeft: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-    marginBottom: spacing.xs,
-  },
-  parentHeader: {
+  // --- Shared row layout (matches SetLogger) ---
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    gap: borderRadius.sm,
+    paddingVertical: spacing.xs,
   },
-  parentBadge: {
-    flexDirection: 'row',
+  setInfo: {
+    width: 28,
     alignItems: 'center',
-    gap: 4,
+  },
+  setNumber: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text.muted,
+    width: 28,
+    textAlign: 'center',
+  },
+  badge: {
     backgroundColor: 'rgba(255, 184, 0, 0.15)',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
-  parentBadgeText: {
-    fontSize: 10,
+  badgeText: {
+    fontSize: 9,
     fontWeight: '800',
     color: colors.warning,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
-  parentText: {
+  rowCenter: {
+    flex: 1,
+    marginLeft: spacing.xs,
+  },
+  rowSummary: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  rowTitle: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.text.secondary,
+  },
+  checkButton: {
+    width: ROW_HEIGHT,
+    height: ROW_HEIGHT,
+    borderRadius: ROW_HEIGHT / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkDone: {
+    width: ROW_HEIGHT,
+    height: ROW_HEIGHT,
+    borderRadius: ROW_HEIGHT / 2,
+    backgroundColor: colors.accent.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkDoneText: {
+    color: colors.bg.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  checkEmpty: {
+    width: ROW_HEIGHT,
+    height: ROW_HEIGHT,
+    borderRadius: ROW_HEIGHT / 2,
+    borderWidth: 1.5,
+    borderColor: colors.border.primary,
+  },
+  expandIcon: {
+    fontSize: 20,
+    color: colors.text.muted,
+    fontWeight: '600',
+  },
+
+  // --- Expanded ---
+  expandedOuter: {
+    marginBottom: spacing.xs,
+  },
+  dropsBlock: {
+    backgroundColor: colors.bg.secondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    marginLeft: 28,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning,
   },
   dropRow: {
     flexDirection: 'row',
@@ -205,21 +387,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
   },
-  dropCheck: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dropCheckCompleted: {
-    backgroundColor: colors.accent.primary,
-  },
-  dropCheckIncomplete: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.border.primary,
-  },
   dropDelete: {
     padding: 4,
   },
@@ -236,17 +403,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.accent.secondary,
   },
-  completeAllButton: {
-    backgroundColor: colors.accent.muted,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    marginTop: spacing.xs,
+  deleteAction: {
+    backgroundColor: colors.error,
+    justifyContent: 'center',
     alignItems: 'center',
+    width: 80,
+    borderRadius: borderRadius.sm,
+    marginLeft: spacing.sm,
   },
-  completeAllText: {
-    fontSize: 12,
+  deleteText: {
+    color: colors.text.primary,
     fontWeight: '700',
-    color: colors.accent.primary,
+    fontSize: 14,
   },
 });

@@ -80,6 +80,7 @@ export const sessionExercises = sqliteTable('session_exercises', {
   order: integer('order').notNull(),
   restTime: integer('rest_time').default(60), // seconds, per-exercise rest duration
   notes: text('notes'),
+  supersetPairId: integer('superset_pair_id'), // shared pair id; both exercises of a super set get the same value
 });
 
 export const sets = sqliteTable('sets', {
@@ -95,5 +96,6 @@ export const sets = sqliteTable('sets', {
   method: text('method').default('linear'), // 'linear', 'dropset', 'superset', 'pyramid_up', 'pyramid_down'
   dropOrder: integer('drop_order').default(0), // order within a drop set group (0 = not a drop)
   isDropGroup: integer('is_drop_group', { mode: 'boolean' }).default(false), // true if this set STARTS a drop set
+  rir: integer('rir'), // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
