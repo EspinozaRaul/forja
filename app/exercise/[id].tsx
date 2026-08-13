@@ -1,7 +1,7 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
-import * as FileSystem from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useExercise } from '../../lib/hooks/useExercises';
 import { useExerciseStats, useExerciseSessions, useExercisePRs } from '../../lib/hooks/useExercises';
@@ -33,18 +33,16 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
       try {
         // Build a cache path from the URL hash
         const filename = url.split('/').pop() ?? 'gif.gif';
-        const cacheDir = `${FileSystem.cacheDirectory}exercise-gifs/`;
-        const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-        if (!dirInfo.exists) {
-          await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+        const cacheDir = new Directory(Paths.cache, 'exercise-gifs');
+        if (!cacheDir.exists) {
+          cacheDir.create({ intermediates: true });
         }
-        const filePath = `${cacheDir}${filename}`;
-        const fileInfo = await FileSystem.getInfoAsync(filePath);
-        if (fileInfo.exists) {
-          if (!cancelled) setLocalUri(filePath);
+        const file = new File(cacheDir, filename);
+        if (file.exists) {
+          if (!cancelled) setLocalUri(file.uri);
         } else {
-          const { uri } = await FileSystem.downloadAsync(url, filePath);
-          if (!cancelled) setLocalUri(uri);
+          const downloaded = await File.downloadFileAsync(url, file);
+          if (!cancelled) setLocalUri(downloaded.uri);
         }
       } catch {
         // Fallback: try loading directly from URL
