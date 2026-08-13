@@ -1,13 +1,4 @@
-import { useEffect } from 'react';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming,
-  Easing,
-  FadeIn,
-  FadeInDown,
-} from 'react-native-reanimated';
-import { View } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 interface AnimatedListItemProps {
   children: React.ReactNode;
@@ -17,38 +8,24 @@ interface AnimatedListItemProps {
   className?: string;
 }
 
-export function AnimatedListItem({ 
-  children, 
-  index = 0, 
+/**
+ * Fade-in list item wrapper (Reanimated).
+ *
+ * Uses a native entering animation instead of manually driving a shared value
+ * with a setTimeout. Mounting is guaranteed to play the animation, so an item
+ * can never get stuck invisible when a screen remounts (e.g. navigating back).
+ */
+export function AnimatedListItem({
+  children,
+  index = 0,
   delay = 50,
   duration = 300,
-  className = ''
+  className = '',
 }: AnimatedListItemProps) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      opacity.value = withTiming(1, {
-        duration,
-        easing: Easing.out(Easing.cubic),
-      });
-      translateY.value = withTiming(0, {
-        duration,
-        easing: Easing.out(Easing.cubic),
-      });
-    }, index * delay);
-
-    return () => clearTimeout(timeout);
-  }, [index, delay, duration, opacity, translateY]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
+  const entering = FadeInDown.delay(index * delay).duration(duration);
 
   return (
-    <Animated.View style={animatedStyle} className={className}>
+    <Animated.View entering={entering} className={className}>
       {children}
     </Animated.View>
   );
