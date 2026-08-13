@@ -425,8 +425,18 @@ export async function getLastSessionForRoutine(routineId: number) {
   if (lastSession.length === 0) return null;
 
   const sessionExercisesData = await db
-    .select()
+    .select({
+      id: sessionExercises.id,
+      sessionId: sessionExercises.sessionId,
+      exerciseId: sessionExercises.exerciseId,
+      order: sessionExercises.order,
+      restTime: sessionExercises.restTime,
+      notes: sessionExercises.notes,
+      supersetPairId: sessionExercises.supersetPairId,
+      exerciseName: exercises.name,
+    })
     .from(sessionExercises)
+    .leftJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
     .where(eq(sessionExercises.sessionId, lastSession[0].id));
 
   const exercisesWithSets = await Promise.all(

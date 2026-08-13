@@ -7,6 +7,8 @@ import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
+import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { summarizeSets } from '../../lib/utils/session-summary';
 
 export default function NewSessionScreen() {
   const router = useRouter();
@@ -75,11 +77,17 @@ export default function NewSessionScreen() {
               <Text style={{ fontSize: 14, color: colors.accent.primary, fontFamily: fonts.bodyMedium }}>Continuing from last session</Text>
               {lastSession.exercises?.map((se: any) => (
                 <View key={se.id} style={{ marginTop: spacing.xs, marginLeft: spacing.sm }}>
-                  <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Exercise {se.order}</Text>
-                  {se.sets?.map((s: any) => (
-                    <Text key={s.id} style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginLeft: spacing.sm }}>
-                      Set {s.setNumber}: {s.reps ?? '—'} reps × {s.weight ?? '—'} kg
-                    </Text>
+                  <Text style={{ fontSize: 13, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{EXERCISE_NAMES_ES[se.exerciseName] || se.exerciseName || `Exercise ${se.order}`}</Text>
+                  {summarizeSets(se.sets ?? []).map((line) => (
+                    line.type === 'group' ? (
+                      <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: 12, fontFamily: fonts.bodyMedium, color: colors.accent.primary, marginLeft: spacing.sm }}>
+                        {line.label} × {line.count}
+                      </Text>
+                    ) : (
+                      <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginLeft: spacing.sm }}>
+                        Set {line.setNumber}: {line.reps ?? '—'} reps × {line.weight ?? '—'} kg
+                      </Text>
+                    )
                   ))}
                 </View>
               ))}
