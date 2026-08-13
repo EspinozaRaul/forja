@@ -53,6 +53,7 @@ export default function SessionScreen() {
   const [showRestTimer, setShowRestTimer] = useState(false);
   const [restDuration, setRestDuration] = useState(60);
   const [restExerciseName, setRestExerciseName] = useState('');
+  const [restartKey, setRestartKey] = useState(0);
   const [replaceId, setReplaceId] = useState<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [supersetPartnerMode, setSupersetPartnerMode] = useState<{ id: number } | null>(null);
@@ -324,6 +325,7 @@ export default function SessionScreen() {
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
                           setRestDuration(restTime);
+                          setRestartKey((k) => k + 1);
                           setShowRestTimer(true);
                         }}
                       />
@@ -339,6 +341,7 @@ export default function SessionScreen() {
                       onSetCompleted={(exerciseName, restTime) => {
                         setRestExerciseName(exerciseName);
                         setRestDuration(restTime);
+                        setRestartKey((k) => k + 1);
                         setShowRestTimer(true);
                       }}
                       onReplace={() => { setReplaceId(se.id); setShowPicker(true); }}
@@ -358,23 +361,24 @@ export default function SessionScreen() {
 
       {/* Bottom — fixed: rest timer + end session */}
       <View style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
-        {showRestTimer && (
-          <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm + spacing.xs }}>
-            {restExerciseName ? (
+        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm + spacing.xs : 0 }}>
+          {showRestTimer && restExerciseName ? (
         <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
           Descanso: {restExerciseName}
         </Text>
-            ) : null}
-            <RestTimer
-              sessionId={id}
-              duration={restDuration}
-              autoStart
-              onComplete={() => setShowRestTimer(false)}
-              onSkip={() => setShowRestTimer(false)}
-              onDurationChange={setRestDuration}
-            />
-          </View>
-        )}
+          ) : null}
+          <RestTimer
+            sessionId={id}
+            duration={restDuration}
+            autoStart
+            visible={showRestTimer}
+            restartKey={restartKey}
+            onComplete={() => setShowRestTimer(false)}
+            onSkip={() => setShowRestTimer(false)}
+            onDurationChange={setRestDuration}
+            onRestored={() => setShowRestTimer(true)}
+          />
+        </View>
 
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs }}>
           <TouchableOpacity

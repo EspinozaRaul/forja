@@ -25,6 +25,12 @@ interface RestTimerProps {
   sessionId?: string;
   duration: number; // seconds
   autoStart?: boolean;
+  /** When false the component stays mounted but renders nothing. */
+  visible?: boolean;
+  /** Increment to force a clean restart with the current duration. */
+  restartKey?: number;
+  /** Called when a live persisted timer is restored (parent should show the timer). */
+  onRestored?: () => void;
   onComplete?: () => void;
   onSkip?: () => void;
   onDurationChange?: (seconds: number) => void;
@@ -73,6 +79,9 @@ export function RestTimer({
   sessionId,
   duration,
   autoStart = false,
+  visible = true,
+  restartKey = 0,
+  onRestored,
   onComplete,
   onSkip,
   onDurationChange,
@@ -83,14 +92,20 @@ export function RestTimer({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const endTimestampRef = useRef<number>(0);
   const onCompleteRef = useRef(onComplete);
+  const onRestoredRef = useRef(onRestored);
   const hasAutoStarted = useRef(false);
   const notificationIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef(sessionId);
+  const lastRestartKeyRef = useRef<number | null>(null);
 
   // Keep refs fresh
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
+
+  useEffect(() => {
+    onRestoredRef.current = onRestored;
+  }, [onRestored]);
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
@@ -137,6 +152,32 @@ export function RestTimer({
     }
   }, []);
 
+  // Clean restart whenever the parent completes another set (restartKey bump).
+  // Stays mounted; state survives, so there is no race with AsyncStorage cleanup.
+  useEffect(() => {
+    if (!visible || !autoStart) return;
+    if (lastRestartKeyRef.current === restartKey) return;
+    lastRestartKeyRef.current = restartKey;
+
+    // Cancel any pending notification from a previous run, then start fresh.
+    cancelNotification();
+    const endTs = Date.now() + duration * 1000;
+    endTimestampRef.current = endTs;
+    setRemaining(duration);
+    setSelectedDuration(duration);
+    setActive(true);
+    if (sessionId) {
+      saveRestTimer({
+        sessionId,
+        endTimestamp: endTs,
+        totalDuration: duration,
+        isRunning: true,
+      });
+    }
+    scheduleNotification(endTs, 'tu siguiente serie');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restartKey, visible]);
+
   // AppState listener — recalculate when app comes to foreground
   useEffect(() => {
     const handleAppStateChange = (nextState: AppStateStatus) => {
@@ -145,10 +186,9 @@ export function RestTimer({
         const remainingSec = Math.ceil((endTimestampRef.current - now) / 1000);
 
         if (remainingSec <= 0) {
-          // Timer completed while in background
+          // Timer completed while in background — let the scheduled notification fire.
           setRemaining(0);
           setActive(false);
-          cancelNotification();
           if (sessionIdRef.current) clearRestTimer();
           onCompleteRef.current?.();
         } else {
@@ -159,32 +199,16 @@ export function RestTimer({
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
-  }, [active, cancelNotification]);
+  }, [active]);
 
-  // Restore state on mount
+  // Restore a persisted live timer on mount (e.g. app was closed mid-rest).
+  // Fresh starts are driven by restartKey + autoStart, not by this effect.
   useEffect(() => {
     if (!sessionId) return;
 
     loadRestTimer(sessionId).then((saved) => {
-      if (!saved || !saved.isRunning) {
-        if (autoStart && !hasAutoStarted.current) {
-          hasAutoStarted.current = true;
-          const endTs = Date.now() + duration * 1000;
-          endTimestampRef.current = endTs;
-          setRemaining(duration);
-          setSelectedDuration(duration);
-          setActive(true);
-          saveRestTimer({
-            sessionId,
-            endTimestamp: endTs,
-            totalDuration: duration,
-            isRunning: true,
-          });
-        }
-        return;
-      }
+      if (!saved || !saved.isRunning) return;
 
-      // Restore from saved state
       const remainingSec = calculateRestRemaining(saved);
       endTimestampRef.current = saved.endTimestamp;
 
@@ -197,9 +221,14 @@ export function RestTimer({
       } else {
         setRemaining(remainingSec);
         setActive(true);
+        setSelectedDuration(saved.totalDuration || duration);
+        // Mark this restartKey as handled so the restart effect does not
+        // overwrite a restored live timer.
+        lastRestartKeyRef.current = restartKey;
+        onRestoredRef.current?.();
       }
     });
-  }, [sessionId, autoStart, duration]);
+  }, [sessionId, duration]);
 
   // Countdown interval
   useEffect(() => {
@@ -210,9 +239,10 @@ export function RestTimer({
           const remainingSec = Math.ceil((endTimestampRef.current - now) / 1000);
 
           if (remainingSec <= 0) {
+            // Timer completed — let the scheduled notification fire instead of
+            // cancelling it (cancelling races the OS delivery and silences it).
             setRemaining(0);
             setActive(false);
-            cancelNotification();
             if (sessionIdRef.current) clearRestTimer();
             onCompleteRef.current?.();
           } else {
@@ -228,7 +258,7 @@ export function RestTimer({
         intervalRef.current = null;
       }
     };
-  }, [active, cancelNotification]);
+  }, [active]);
 
   const handleStart = (dur?: number) => {
     const finalDur = dur ?? selectedDuration;
@@ -306,6 +336,9 @@ export function RestTimer({
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  // Hidden but mounted — parent controls visibility; state survives.
+  if (!visible) return null;
 
   // Duration selector mode (not active, not counting down)
   if (!active && remaining === 0) {
