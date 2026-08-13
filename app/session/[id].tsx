@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useSession, useSessionExercises, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
@@ -263,16 +263,20 @@ export default function SessionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
             <Text style={{ fontSize: 20, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, flex: 1 }}>Session</Text>
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>Session</Text>
         </View>
         <Timer sessionId={id} onTimeUpdate={setElapsedSeconds} autoStart />
       </View>
 
       {/* Exercises — scrollable middle */}
-      <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.bg.primary }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         <View style={{ padding: spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary }}>Exercises</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Exercises</Text>
             <TouchableOpacity
               onPress={() => setShowPicker(true)}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}
@@ -282,7 +286,7 @@ export default function SessionScreen() {
           </View>
 
           {dragIndex !== null && (
-            <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: 10, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
+            <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
               <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
                 Tap another exercise to swap — or tap the same to cancel
               </Text>
@@ -357,9 +361,9 @@ export default function SessionScreen() {
         {showRestTimer && (
           <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm + spacing.xs }}>
             {restExerciseName ? (
-              <Text style={{ fontSize: 11, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
-                Descanso: {restExerciseName}
-              </Text>
+        <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
+          Descanso: {restExerciseName}
+        </Text>
             ) : null}
             <RestTimer
               sessionId={id}
@@ -375,9 +379,9 @@ export default function SessionScreen() {
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs }}>
           <TouchableOpacity
             onPress={handleEndSession}
-            style={{ backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: 14, alignItems: 'center' }}
+            style={{ backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 16 }}>End Session</Text>
+            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>End Session</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -396,7 +400,7 @@ export default function SessionScreen() {
       <Modal visible={supersetPartnerMode !== null} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text.primary, textAlign: 'center', marginBottom: 4 }}>
+            <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: 4 }}>
               Elegí el ejercicio para el Super Set
             </Text>
             <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
@@ -743,7 +747,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, flex: 1 }}>
+        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
           {exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio desconocido'}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -777,7 +781,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
       {/* Rest time picker */}
       {showRestPicker && (
         <View style={{ marginBottom: spacing.sm }}>
-          <View style={{ flexDirection: 'row', gap: borderRadius.sm, flexWrap: 'wrap', marginBottom: borderRadius.sm }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: spacing.sm }}>
             {REST_PRESETS.map((dur) => (
               <TouchableOpacity
                 key={dur}
@@ -785,7 +789,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                 style={{
                   backgroundColor: currentRestTime === dur ? colors.accent.primary : colors.bg.elevated,
                   borderRadius: borderRadius.sm,
-                  paddingHorizontal: 10,
+                  paddingHorizontal: spacing.sm + spacing.xs,
                   paddingVertical: 5,
                   borderWidth: currentRestTime === dur ? 0 : 1,
                   borderColor: colors.border.primary,
@@ -811,7 +815,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
               style={{
                 backgroundColor: colors.bg.elevated,
                 borderRadius: borderRadius.sm,
-                paddingHorizontal: 10,
+                paddingHorizontal: spacing.sm + spacing.xs,
                 paddingVertical: 5,
                 borderWidth: 1,
                 borderColor: colors.accent.primary,
@@ -827,7 +831,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
       <Modal visible={showCustomRest} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>Tiempo de descanso</Text>
+            <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>Tiempo de descanso</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: 20 }}>
               <TextInput
                 value={customMinutes}
@@ -836,7 +840,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={3}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: 'monospace', fontWeight: '700', width: 80, textAlign: 'center' }}
+                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
               />
               <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>min</Text>
               <Text style={{ fontSize: 20, color: colors.text.muted }}>:</Text>
@@ -847,7 +851,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={2}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: 'monospace', fontWeight: '700', width: 80, textAlign: 'center' }}
+                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
               />
               <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>seg</Text>
             </View>
@@ -1032,6 +1036,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
       <Button
         title="Add Set"
         variant="secondary"
+        compact
         onPress={handleAddSet}
         loading={createSet.isPending}
       />
@@ -1080,13 +1085,13 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
   };
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: borderRadius.sm, paddingVertical: spacing.xs }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }}>
       <Text numberOfLines={1} style={{ width: 64, fontSize: 12, fontWeight: '600', color: colors.text.muted }}>
         {label}
       </Text>
-      <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
         <TextInput
-          style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
+          style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="decimal-pad"
           placeholder={unit}
           placeholderTextColor={colors.text.muted}
@@ -1094,9 +1099,9 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
           onChangeText={handleWeightChange}
         />
       </View>
-      <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
         <TextInput
-          style={{ fontSize: 15, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
+          style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="numeric"
           placeholder="Reps"
           placeholderTextColor={colors.text.muted}
@@ -1107,7 +1112,7 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
       <TouchableOpacity
         onPress={() => onUpdate({ completed: !set.completed })}
         style={[
-          { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+          { width: 28, height: 28, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center' },
           set.completed
             ? { backgroundColor: colors.accent.primary }
             : { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.border.primary },
@@ -1264,10 +1269,10 @@ function SupersetBlock({ exercises, nameA, nameB, onSetCompleted, onDeletePair }
         friction={2}
       >
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>
+        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           {nameA} ⟷ {nameB}
         </Text>
-        <Text style={{ fontSize: 11, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
           Registrá A y luego B: la serie se cierra cuando ambos están ✓
         </Text>
 
@@ -1290,7 +1295,7 @@ function SupersetBlock({ exercises, nameA, nameB, onSetCompleted, onDeletePair }
             disabled={createSet.isPending}
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.xs }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
+            <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
               + Agregar serie
             </Text>
           </TouchableOpacity>
@@ -1341,7 +1346,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, onUpdateSet, onDelete
     >
       <View style={{ marginBottom: spacing.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text.muted }}>
+          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
             Serie {row.setNumber}
           </Text>
           <TouchableOpacity

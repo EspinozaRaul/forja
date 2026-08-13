@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, AppState, Platform, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import {
   saveRestTimer,
   loadRestTimer,
@@ -37,6 +37,25 @@ function formatCountdown(seconds: number): string {
 }
 
 const PRESET_OPTIONS = [30, 60, 90, 120, 180];
+
+// Android 8.0+ requires all notifications to belong to a channel; without an
+// explicit channel with sound, Android falls back to a silent "Miscellaneous"
+// channel. Create one channel for rest-timer alerts and always target it.
+const REST_CHANNEL_ID = 'rest-timer';
+
+async function ensureRestChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await Notifications.setNotificationChannelAsync(REST_CHANNEL_ID, {
+      name: 'Descansos',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+    });
+  } catch {
+    // Channel creation is best-effort; scheduling still proceeds on the fallback channel.
+  }
+}
 
 async function requestNotificationPermission(): Promise<boolean> {
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -79,6 +98,10 @@ export function RestTimer({
 
   // Schedule notification when timer starts
   const scheduleNotification = useCallback(async (endTs: number, label: string) => {
+    // Android 13+ shows the permission prompt only after a channel exists, so
+    // create the channel before requesting permission.
+    await ensureRestChannel();
+
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return;
 
@@ -99,6 +122,7 @@ export function RestTimer({
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: secondsUntilEnd,
+        channelId: REST_CHANNEL_ID,
       },
     });
 
@@ -125,6 +149,7 @@ export function RestTimer({
           setRemaining(0);
           setActive(false);
           cancelNotification();
+          if (sessionIdRef.current) clearRestTimer();
           onCompleteRef.current?.();
         } else {
           setRemaining(remainingSec);
@@ -167,6 +192,7 @@ export function RestTimer({
         // Timer completed while away
         setActive(false);
         setRemaining(0);
+        if (sessionId) clearRestTimer();
         onCompleteRef.current?.();
       } else {
         setRemaining(remainingSec);
@@ -187,6 +213,7 @@ export function RestTimer({
             setRemaining(0);
             setActive(false);
             cancelNotification();
+            if (sessionIdRef.current) clearRestTimer();
             onCompleteRef.current?.();
           } else {
             setRemaining(remainingSec);
@@ -247,6 +274,7 @@ export function RestTimer({
     if (newRemaining === 0) {
       setActive(false);
       cancelNotification();
+      if (sessionIdRef.current) clearRestTimer();
       onCompleteRef.current?.();
     } else {
       setRemaining(newRemaining);
@@ -282,8 +310,8 @@ export function RestTimer({
   // Duration selector mode (not active, not counting down)
   if (!active && remaining === 0) {
     return (
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: 10, borderWidth: 1, borderColor: colors.border.primary }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: borderRadius.sm, marginBottom: spacing.sm }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
           <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>DESCANSO</Text>
           {PRESET_OPTIONS.map((dur) => (
             <TouchableOpacity
@@ -318,11 +346,11 @@ export function RestTimer({
       </TouchableOpacity>
       <View style={{ alignItems: 'center', flex: 1 }}>
         <Text style={{ fontSize: 9, fontWeight: '600', color: colors.accent.primary, marginBottom: 1 }}>DESCANSO</Text>
-        <Text style={{ fontSize: 22, fontFamily: 'monospace', fontWeight: '700', color: colors.accent.primary }}>
+        <Text style={{ fontSize: 22, fontFamily: fonts.display, fontWeight: '700', color: colors.accent.primary }}>
           {formatCountdown(remaining)}
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', gap: borderRadius.sm }}>
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <TouchableOpacity
           onPress={() => handleAdjust(15)}
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}

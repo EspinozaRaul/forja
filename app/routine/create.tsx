@@ -2,7 +2,7 @@ import { Text, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useExercises } from '../../lib/hooks/useExercises';
 import { useCreateRoutine, useAddExerciseToRoutine } from '../../lib/hooks/useRoutines';
 import { Input } from '../../components/ui/Input';
@@ -120,8 +120,8 @@ export default function CreateRoutineScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-      <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.md }}>Create New Routine</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Create New Routine</Text>
 
       <Input
         label="Routine Name"
@@ -143,12 +143,12 @@ export default function CreateRoutineScreen() {
       {/* Selected Exercises */}
       <View style={{ marginBottom: spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>Exercises</Text>
+          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>Exercises</Text>
           <Button title="Add Exercise" variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (
-          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: 10, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
+          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
             <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
               Tap another exercise to swap positions — or tap the same to cancel
             </Text>
@@ -157,7 +157,7 @@ export default function CreateRoutineScreen() {
 
         {selectedExercises.length === 0 ? (
           <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.md, alignItems: 'center' }}>
-            <Text style={{ color: colors.text.muted, fontSize: 14 }}>No exercises added yet</Text>
+            <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>No exercises added yet</Text>
           </View>
         ) : (
           selectedExercises.map((exercise, index) => (
@@ -170,13 +170,13 @@ export default function CreateRoutineScreen() {
                   backgroundColor: dragIndex === index ? colors.bg.active : colors.bg.card,
                   borderRadius: borderRadius.md,
                   paddingHorizontal: spacing.sm + spacing.xs,
-                  paddingVertical: 10,
-                  marginBottom: borderRadius.sm,
+                  paddingVertical: spacing.sm + spacing.xs,
+                  marginBottom: spacing.sm,
                   borderWidth: 1,
                   borderColor: dragIndex === index ? colors.accent.primary : colors.border.primary,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: borderRadius.sm,
+                  gap: spacing.sm,
                 }}
               >
                 <TouchableOpacity
@@ -189,7 +189,7 @@ export default function CreateRoutineScreen() {
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
                 </TouchableOpacity>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.muted, width: 20 }}>{index + 1}</Text>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary, flex: 1 }} numberOfLines={1}>
+                <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={1}>
                   {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
                 </Text>
                 <TouchableOpacity
@@ -224,7 +224,7 @@ export default function CreateRoutineScreen() {
           router.push(`/exercise/${exercise.id}`);
         }}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
-        multiSelect
+        multiSelect={replaceIndex === null}
       />
     </ScrollView>
   );

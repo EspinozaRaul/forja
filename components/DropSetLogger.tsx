@@ -1,7 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Set } from '../lib/types';
 
 interface Drop {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: borderRadius.sm,
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
   setInfo: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   dropDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: borderRadius.sm,
     backgroundColor: colors.border.light,
     marginTop: 6,
   },
@@ -381,8 +381,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    fontSize: 13,
+    paddingVertical: spacing.xs,
+    fontSize: 14,
+    fontFamily: fonts.display,
     fontWeight: '600',
     color: colors.text.primary,
     textAlign: 'center',

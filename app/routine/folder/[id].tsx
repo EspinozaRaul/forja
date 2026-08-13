@@ -2,7 +2,7 @@ import { Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput } fro
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, borderRadius } from '../../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
 import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder } from '../../../lib/hooks/useRoutines';
 import { useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
@@ -11,7 +11,7 @@ import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
 import { Button } from '../../../components/ui/Button';
 import { haptics } from '../../../lib/utils/haptics';
 
-const FOLDER_COLORS = ['#00F5A0', '#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#F472B6', '#34D399', '#60A5FA'];
+const FOLDER_COLORS = ['#4A6FA5', '#7A9AB5', '#6E9C8A', '#C2A05C', '#9AA4AE', '#3A587F', '#C96F6F', '#22344A'];
 
 export default function FolderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +28,7 @@ export default function FolderDetailScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [editColor, setEditColor] = useState('#00F5A0');
+  const [editColor, setEditColor] = useState(colors.accent.primary);
 
   const folder = folders?.[0];
 
@@ -36,7 +36,7 @@ export default function FolderDetailScreen() {
     if (!folder) return;
     setEditName(folder.name);
     setEditDescription(folder.description || '');
-    setEditColor(folder.color || '#00F5A0');
+    setEditColor(folder.color || colors.accent.primary);
     setShowEditModal(true);
   };
 
@@ -125,18 +125,18 @@ export default function FolderDetailScreen() {
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary }}>{folder.name}</Text>
+              <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
             </View>
             {folder.description && (
-              <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.xs }}>{folder.description}</Text>
+              <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{folder.description}</Text>
             )}
           </View>
           <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }}>
-              <Text style={{ fontSize: 14, color: colors.text.link, fontWeight: '600' }}>Edit</Text>
+              <Text style={{ fontSize: 14, color: colors.text.link, fontFamily: fonts.bodyMedium }}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: spacing.sm }}>
-              <Text style={{ fontSize: 14, color: colors.error, fontWeight: '600' }}>Delete</Text>
+              <Text style={{ fontSize: 14, color: colors.error, fontFamily: fonts.bodyMedium }}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -157,11 +157,11 @@ export default function FolderDetailScreen() {
                 onLongPress={() => handleDeleteRoutine(routine.id, routine.name)}
                 style={{ marginBottom: spacing.sm + spacing.xs }}
               >
-                <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{routine.name}</Text>
+                    <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
                     {routine.description && (
-                      <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
+                      <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
                     )}
                   </View>
                   <TouchableOpacity
@@ -181,15 +181,15 @@ export default function FolderDetailScreen() {
       <View style={{ padding: spacing.md, paddingTop: spacing.sm, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
         <TouchableOpacity
           onPress={() => router.push(`/routine/create?folderId=${folderId}`)}
-          style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
+          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: '600', fontSize: 14 }}>+ Rutina</Text>
+          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ Rutina</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
-          style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
+          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.primary, fontWeight: '600', fontSize: 14 }}>Sin carpeta</Text>
+          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>Sin carpeta</Text>
         </TouchableOpacity>
       </View>
 
@@ -197,9 +197,9 @@ export default function FolderDetailScreen() {
       <Modal visible={showEditModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: 20 }}>Editar Carpeta</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>Editar Carpeta</Text>
 
-            <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>Nombre</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Nombre</Text>
             <TextInput
               value={editName}
               onChangeText={setEditName}
@@ -208,7 +208,7 @@ export default function FolderDetailScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>Descripción (opcional)</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Descripción (opcional)</Text>
             <TextInput
               value={editDescription}
               onChangeText={setEditDescription}
@@ -217,7 +217,7 @@ export default function FolderDetailScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>Color</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Color</Text>
             <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
               {FOLDER_COLORS.map((color) => (
                 <TouchableOpacity
@@ -226,7 +226,7 @@ export default function FolderDetailScreen() {
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: 20,
+                    borderRadius: borderRadius.full,
                     backgroundColor: color,
                     borderWidth: editColor === color ? 3 : 0,
                     borderColor: colors.text.primary,
@@ -240,13 +240,13 @@ export default function FolderDetailScreen() {
                 onPress={() => setShowEditModal(false)}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>Cancelar</Text>
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveEdit}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontWeight: '600' }}>Guardar</Text>
+                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>

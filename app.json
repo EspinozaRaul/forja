@@ -29,6 +29,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.espinoza21.fitnesstracker"
     },
     "web": {
@@ -47,7 +48,8 @@
           "icon": "./assets/icon.png",
           "color": "#00F5A0"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "router": {},

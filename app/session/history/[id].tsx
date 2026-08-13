@@ -9,7 +9,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { EXERCISE_NAMES_ES } from '../../../lib/db/exercise-names-es';
 import { formatDuration } from '../../../lib/utils/format';
-import { colors, spacing, borderRadius } from '../../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
 import type { SessionExercise } from '../../../lib/types';
 
 export default function SessionSummaryScreen() {
@@ -55,22 +55,22 @@ export default function SessionSummaryScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       {/* Session Info */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
           Session Summary
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <View style={{ alignItems: 'center', flex: 1 }}>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.accent.primary }}>{exerciseCount}</Text>
-            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Exercises</Text>
+            <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>{exerciseCount}</Text>
+            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Exercises</Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.accent.primary }}>
+            <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>
               {formatDuration(duration)}
             </Text>
-            <Text style={{ fontSize: 13, color: colors.text.secondary }}>Duration</Text>
+            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Duration</Text>
           </View>
         </View>
       </View>
@@ -78,7 +78,7 @@ export default function SessionSummaryScreen() {
       {/* Notes */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>Notes</Text>
+          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>Notes</Text>
           <Button
             title={isEditingNotes ? 'Save' : 'Edit'}
             variant="secondary"
@@ -115,7 +115,7 @@ export default function SessionSummaryScreen() {
             placeholderTextColor={colors.text.muted}
           />
         ) : (
-          <Text style={{ color: colors.text.secondary }}>
+          <Text style={{ color: colors.text.secondary, fontFamily: fonts.body }}>
             {session.notes || 'No notes'}
           </Text>
         )}
@@ -123,7 +123,7 @@ export default function SessionSummaryScreen() {
 
       {/* Exercises and Sets */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
-        <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.md }}>
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>
           Exercises
         </Text>
         {!sessionExercises || sessionExercises.length === 0 ? (
@@ -166,7 +166,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
     <View style={{ marginBottom: spacing.lg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
         <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.accent.primary }}>
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
             {exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio desconocido'}
           </Text>
         </TouchableOpacity>
@@ -198,7 +198,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
           ))}
         </View>
       ) : (
-        <Text style={{ fontSize: 14, color: colors.text.muted }}>No sets logged</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>No sets logged</Text>
       )}
     </View>
   );

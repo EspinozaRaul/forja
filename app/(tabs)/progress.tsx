@@ -74,8 +74,8 @@ export default function ProgressScreen() {
               backgroundColor: selectedExerciseId === null ? colors.accent.primary : colors.bg.elevated,
               borderWidth: selectedExerciseId === null ? 0 : 1,
               borderColor: colors.border.primary,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.sm + spacing.xs,
               borderRadius: borderRadius.md,
               marginRight: 8,
             }}
@@ -92,8 +92,8 @@ export default function ProgressScreen() {
                   backgroundColor: selectedExerciseId === exercise.id ? colors.accent.primary : colors.bg.elevated,
                   borderWidth: selectedExerciseId === exercise.id ? 0 : 1,
                   borderColor: colors.border.primary,
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm + spacing.xs,
                   borderRadius: borderRadius.md,
                 }}
               >
@@ -124,8 +124,8 @@ export default function ProgressScreen() {
                 backgroundColor: dateRange === range ? colors.accent.primary : colors.bg.elevated,
                 borderWidth: dateRange === range ? 0 : 1,
                 borderColor: colors.border.primary,
-                paddingHorizontal: 16,
-                paddingVertical: 10,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm + spacing.xs,
                 borderRadius: borderRadius.md,
                 marginRight: 8,
               }}

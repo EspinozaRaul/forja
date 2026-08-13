@@ -1,7 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Set, SetMethod } from '../lib/types';
 import { RirPicker } from './RirPicker';
 
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: borderRadius.sm,
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
   setNumber: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.display,
     color: colors.text.muted,
     width: 28,
     textAlign: 'center',
@@ -170,11 +170,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
   },
   input: {
-    fontSize: 15,
+    fontSize: 14,
+    fontFamily: fonts.display,
     fontWeight: '600',
     color: colors.text.primary,
     textAlign: 'center',
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   checkButton: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 184, 0, 0.15)',
     paddingHorizontal: 4,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: borderRadius.sm,
   },
   dropBadgeText: {
     fontSize: 8,

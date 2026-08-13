@@ -153,7 +153,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             <ScrollView style={{ flex: 1, padding: spacing.md }}>
               <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>Nombre *</Text>
               <TextInput
-                style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md }}
+                style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md }}
                 placeholder="Ej: Press con mancuerna"
                 placeholderTextColor={colors.text.muted}
                 value={newName}
@@ -163,7 +163,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
 
               <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>Descripción (opcional)</Text>
               <TextInput
-                style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md, minHeight: 80, textAlignVertical: 'top' }}
+                style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md, minHeight: 80, textAlignVertical: 'top' }}
                 placeholder="Breve descripción del ejercicio"
                 placeholderTextColor={colors.text.muted}
                 value={newDescription}
@@ -177,7 +177,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   <TouchableOpacity
                     key={cat.id}
                     onPress={() => setSelectedCategoryId(cat.id)}
-                    style={{ backgroundColor: selectedCategoryId === cat.id ? cat.color : colors.bg.elevated, borderWidth: selectedCategoryId === cat.id ? 0 : 1, borderColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: 10, borderRadius: borderRadius.full }}
+                    style={{ backgroundColor: selectedCategoryId === cat.id ? cat.color : colors.bg.elevated, borderWidth: selectedCategoryId === cat.id ? 0 : 1, borderColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.full }}
                   >
                     <Text style={{ fontSize: 14, fontWeight: '600', color: selectedCategoryId === cat.id ? colors.text.primary : colors.text.secondary }}>
                       {cat.name}
@@ -216,7 +216,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           {/* Search */}
           <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs }}>
             <TextInput
-              style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: 16, color: colors.text.primary }}
+              style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary }}
               placeholder="Buscar ejercicios..."
               placeholderTextColor={colors.text.muted}
               value={search}
@@ -237,9 +237,9 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                     borderWidth: 1,
                     borderColor: selectedMuscle === muscle.label ? colors.accent.primary : colors.border.primary,
                     paddingHorizontal: spacing.sm + spacing.xs,
-                    paddingVertical: borderRadius.sm,
+                    paddingVertical: spacing.xs,
                     borderRadius: borderRadius.full,
-                    marginRight: borderRadius.sm,
+                    marginRight: spacing.sm,
                   }}
                 >
                   <Text style={{
@@ -265,7 +265,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           {/* Create New Button */}
           <TouchableOpacity
             onPress={() => setShowCreate(true)}
-            style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm + spacing.xs, backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: 14, alignItems: 'center' }}
+            style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm + spacing.xs, backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
             <Text style={{ fontSize: 16, fontWeight: '600', color: colors.bg.primary }}>+ Crear Ejercicio Nuevo</Text>
           </TouchableOpacity>
@@ -276,7 +276,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 24 }}
             ListEmptyComponent={
-              <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+              <View style={{ paddingVertical: spacing.xxl, alignItems: 'center' }}>
                 <Text style={{ color: colors.text.muted, fontSize: 14 }}>No se encontraron ejercicios</Text>
               </View>
             }
@@ -288,7 +288,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   backgroundColor: isSelected ? colors.bg.selected : colors.bg.card,
                   borderRadius: borderRadius.md,
                   paddingHorizontal: spacing.sm + spacing.xs,
-                  paddingVertical: 10,
+                  paddingVertical: spacing.sm + spacing.xs,
                   marginBottom: spacing.sm,
                   borderWidth: 1,
                   borderColor: isSelected ? colors.accent.primary : colors.border.primary,
@@ -323,7 +323,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       style={{
                         backgroundColor: isSelected ? colors.accent.primary : colors.border.primary,
                         borderRadius: borderRadius.sm,
-                        paddingHorizontal: 14,
+                        paddingHorizontal: spacing.sm + spacing.xs,
                         paddingVertical: spacing.sm,
                         borderWidth: isSelected ? 0 : 1,
                         borderColor: colors.border.light,
@@ -336,7 +336,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   ) : (
                     <TouchableOpacity
                       onPress={() => onSelect(item)}
-                      style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingHorizontal: 14, paddingVertical: spacing.sm }}
+                      style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm + spacing.xs, paddingVertical: spacing.sm }}
                     >
                       <Text style={{ fontSize: 18, fontWeight: '700', color: colors.bg.primary }}>+</Text>
                     </TouchableOpacity>

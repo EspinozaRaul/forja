@@ -9,21 +9,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        strength: '#EF4444',
-        cardio: '#3B82F6',
-        flexibility: '#8B5CF6',
-        hiit: '#F59E0B',
+        strength: '#4A6FA5',
+        cardio: '#7A9AB5',
+        flexibility: '#9AA4AE',
+        hiit: '#C2A05C',
         dark: {
-          bg: '#0A0A0A',
-          secondary: '#141414',
-          card: '#1A1A1A',
-          elevated: '#222222',
+          bg: '#101316',
+          secondary: '#15181C',
+          card: '#1A1E23',
+          elevated: '#22272D',
         },
         accent: {
-          DEFAULT: '#00F5A0',
-          dark: '#00D9A0',
-          muted: 'rgba(0, 245, 160, 0.15)',
+          DEFAULT: '#4A6FA5',
+          dark: '#3A587F',
+          muted: 'rgba(74, 111, 165, 0.15)',
         },
+      },
+      fontFamily: {
+        display: ['Oswald_600SemiBold'],
+        body: ['SpaceGrotesk_400Regular'],
+        'body-medium': ['SpaceGrotesk_500Medium'],
+        'body-semibold': ['SpaceGrotesk_600SemiBold'],
       },
     },
   },

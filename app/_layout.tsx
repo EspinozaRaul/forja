@@ -2,11 +2,13 @@ import '../global.css';
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { Stack, router, useSegments } from 'expo-router';
+import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useDatabase } from '../lib/hooks/useDatabase';
 import { useAuth } from '../lib/hooks/useAuth';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { colors } from '../lib/theme/tokens';
 
 const queryClient = new QueryClient();
 
@@ -33,9 +35,9 @@ function RootLayoutNav() {
 
   if (loading || !isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0A' }}>
-        <ActivityIndicator size="large" color="#00F5A0" />
-        <Text style={{ color: '#888', marginTop: 16 }}>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#141210' }}>
+        <ActivityIndicator size="large" color={colors.accent.primary} />
+        <Text style={{ color: '#7A7265', marginTop: 16 }}>Loading...</Text>
       </View>
     );
   }
@@ -43,10 +45,10 @@ function RootLayoutNav() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#0A0A0A' },
-        headerTintColor: '#FFFFFF',
-        headerTitleStyle: { color: '#FFFFFF', fontWeight: '600' },
-        contentStyle: { backgroundColor: '#0A0A0A' },
+        headerStyle: { backgroundColor: '#141210' },
+        headerTintColor: '#F2ECE2',
+        headerTitleStyle: { color: '#F2ECE2', fontWeight: '600' },
+        contentStyle: { backgroundColor: '#141210' },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -109,8 +111,27 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   if (!isReady) {
     return (
       <View className="flex-1 items-center justify-center bg-dark-bg">
-        <ActivityIndicator size="large" color="#00F5A0" />
+        <ActivityIndicator size="large" color={colors.accent.primary} />
         <Text className="text-sm text-dark-text-secondary mt-4">Initializing database...</Text>
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+function FontInitializer({ children }: { children: React.ReactNode }) {
+  const [fontsLoaded, fontError] = useFonts({
+    Oswald_600SemiBold: require('../assets/fonts/Oswald-SemiBold.ttf'),
+    SpaceGrotesk_400Regular: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
+    SpaceGrotesk_500Medium: require('../assets/fonts/SpaceGrotesk-Medium.ttf'),
+    SpaceGrotesk_600SemiBold: require('../assets/fonts/SpaceGrotesk-SemiBold.ttf'),
+  });
+
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-dark-bg">
+        <ActivityIndicator size="large" color={colors.accent.primary} />
       </View>
     );
   }
@@ -123,9 +144,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <DatabaseInitializer>
-            <RootLayoutNav />
-          </DatabaseInitializer>
+          <FontInitializer>
+            <DatabaseInitializer>
+              <RootLayoutNav />
+            </DatabaseInitializer>
+          </FontInitializer>
         </QueryClientProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

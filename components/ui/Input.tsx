@@ -1,4 +1,5 @@
 import { TextInput, View, Text, type TextInputProps } from 'react-native';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -7,25 +8,26 @@ interface InputProps extends TextInputProps {
 
 export function Input({ label, error, className = '', ...props }: InputProps) {
   return (
-    <View style={{ marginBottom: 16 }} className={`mb-4 ${className}`}>
+    <View style={{ marginBottom: spacing.md }} className={`mb-4 ${className}`}>
       {label && (
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#A0A0A0', marginBottom: 8 }}>{label}</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }}>{label}</Text>
       )}
       <TextInput
         style={{
-          backgroundColor: '#222222',
+          backgroundColor: colors.bg.elevated,
           borderWidth: 1,
-          borderColor: error ? '#FF3B30' : '#2A2A2A',
-          borderRadius: 12,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
+          borderColor: error ? colors.error : colors.border.primary,
+          borderRadius: borderRadius.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.md,
           fontSize: 16,
-          color: '#FFFFFF',
+          fontFamily: fonts.body,
+          color: colors.text.primary,
         }}
-        placeholderTextColor="#666666"
+        placeholderTextColor={colors.text.muted}
         {...props}
       />
-      {error && <Text style={{ color: '#FF3B30', fontSize: 14, marginTop: 4 }}>{error}</Text>}
+      {error && <Text style={{ color: colors.error, fontSize: 14, marginTop: 4 }}>{error}</Text>}
     </View>
   );
 }

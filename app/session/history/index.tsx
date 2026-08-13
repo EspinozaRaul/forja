@@ -1,5 +1,6 @@
 import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { colors, spacing } from '../../../lib/theme/tokens';
 import { useSessions } from '../../../lib/hooks/useSessions';
 import { SessionCard } from '../../../components/SessionCard';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
@@ -15,8 +16,8 @@ export default function SessionHistoryScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-      <ScrollView style={{ flex: 1, padding: 16 }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+      <ScrollView style={{ flex: 1, padding: spacing.md }}>
         {!sessions || sessions.length === 0 ? (
           <EmptyState
             title="No sessions yet"

@@ -1,5 +1,6 @@
 import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
 import { type ReactNode } from 'react';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'accent';
 
@@ -11,24 +12,25 @@ interface ButtonProps {
   loading?: boolean;
   children?: ReactNode;
   className?: string;
+  compact?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, { container: any; text: any }> = {
   primary: {
-    container: { backgroundColor: '#00F5A0' },
-    text: { color: '#0A0A0A' },
+    container: { backgroundColor: colors.accent.primary },
+    text: { color: colors.text.primary },
   },
   secondary: {
-    container: { backgroundColor: '#222222', borderWidth: 1, borderColor: '#2A2A2A' },
-    text: { color: '#FFFFFF' },
+    container: { backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary },
+    text: { color: colors.text.primary },
   },
   danger: {
-    container: { backgroundColor: '#FF3B30' },
-    text: { color: '#FFFFFF' },
+    container: { backgroundColor: colors.error },
+    text: { color: colors.text.primary },
   },
   accent: {
-    container: { backgroundColor: 'rgba(0, 245, 160, 0.2)' },
-    text: { color: '#00F5A0' },
+    container: { backgroundColor: colors.accent.muted },
+    text: { color: colors.accent.primary },
   },
 };
 
@@ -40,6 +42,7 @@ export function Button({
   loading = false,
   children,
   className = '',
+  compact = false,
 }: ButtonProps) {
   const styles = variantStyles[variant];
   const isDisabled = disabled || loading;
@@ -50,7 +53,7 @@ export function Button({
       disabled={isDisabled}
       activeOpacity={0.8}
       style={[
-        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: compact ? borderRadius.sm : borderRadius.md, paddingHorizontal: compact ? spacing.md : spacing.lg, paddingVertical: compact ? spacing.sm : spacing.md },
         styles.container,
         isDisabled && { opacity: 0.4 },
       ]}
@@ -59,11 +62,11 @@ export function Button({
       } ${className}`}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={variant === 'secondary' ? '#FFFFFF' : '#0A0A0A'} />
+        <ActivityIndicator size="small" color={variant === 'secondary' ? colors.text.primary : colors.text.primary} />
       ) : children ? (
         children
       ) : (
-        <Text style={[{ fontSize: 16, fontWeight: 'bold' }, styles.text]} className={`text-base font-bold`}>{title}</Text>
+        <Text style={[{ fontSize: compact ? 14 : 16, fontFamily: fonts.bodySemiBold }, styles.text]} className={`text-base font-bold`}>{title}</Text>
       )}
     </TouchableOpacity>
   );

@@ -1,13 +1,16 @@
 import { Text, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 
 export default function NewSessionScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { routineId, continueFromLast } = useLocalSearchParams<{ routineId?: string; continueFromLast?: string }>();
   const createSession = useCreateSession();
 
@@ -58,23 +61,23 @@ export default function NewSessionScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0A0A0A', padding: 16 }} className="flex-1 bg-white p-4">
-      <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginBottom: 16 }} className="text-lg font-semibold text-gray-900 mb-4">Start New Session</Text>
+    <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md, paddingBottom: insets.bottom + spacing.md }} className="flex-1 bg-dark-bg p-4">
+      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">Start New Session</Text>
       
       {routine ? (
-        <View style={{ backgroundColor: '#222222', borderRadius: 8, padding: 16, marginBottom: 16 }} className="bg-gray-50 rounded-lg p-4 mb-4">
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }} className="text-base font-medium text-gray-900">{routine.name}</Text>
+        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.md, marginBottom: spacing.md }} className="bg-dark-card rounded-lg p-4 mb-4">
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">{routine.name}</Text>
           {routine.description && (
-            <Text style={{ fontSize: 14, color: '#A0A0A0', marginTop: 4 }} className="text-sm text-gray-500 mt-1">{routine.description}</Text>
+            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">{routine.description}</Text>
           )}
           {shouldContinue && lastSession ? (
-            <View style={{ marginTop: 8 }}>
-              <Text style={{ fontSize: 14, color: '#00F5A0', fontWeight: '600' }}>Continuing from last session</Text>
+            <View style={{ marginTop: spacing.sm }}>
+              <Text style={{ fontSize: 14, color: colors.accent.primary, fontFamily: fonts.bodyMedium }}>Continuing from last session</Text>
               {lastSession.exercises?.map((se: any) => (
-                <View key={se.id} style={{ marginTop: 4, marginLeft: 8 }}>
-                  <Text style={{ fontSize: 13, color: '#A0A0A0' }}>Exercise {se.order}</Text>
+                <View key={se.id} style={{ marginTop: spacing.xs, marginLeft: spacing.sm }}>
+                  <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Exercise {se.order}</Text>
                   {se.sets?.map((s: any) => (
-                    <Text key={s.id} style={{ fontSize: 12, color: '#A0A0A0', marginLeft: 8 }}>
+                    <Text key={s.id} style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginLeft: spacing.sm }}>
                       Set {s.setNumber}: {s.reps ?? '—'} reps × {s.weight ?? '—'} kg
                     </Text>
                   ))}
@@ -82,15 +85,15 @@ export default function NewSessionScreen() {
               ))}
             </View>
           ) : (
-            <Text style={{ fontSize: 14, color: '#A0A0A0', marginTop: 8 }} className="text-sm text-gray-500 mt-2">
+            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">
               {routineExercises?.length ?? 0} exercises
             </Text>
           )}
         </View>
       ) : (
-        <View style={{ backgroundColor: '#222222', borderRadius: 8, padding: 16, marginBottom: 16 }} className="bg-gray-50 rounded-lg p-4 mb-4">
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }} className="text-base font-medium text-gray-900">Empty Session</Text>
-          <Text style={{ fontSize: 14, color: '#A0A0A0', marginTop: 4 }} className="text-sm text-gray-500 mt-1">
+        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.md, marginBottom: spacing.md }} className="bg-dark-card rounded-lg p-4 mb-4">
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">Empty Session</Text>
+          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">
             You can add exercises during the session.
           </Text>
         </View>

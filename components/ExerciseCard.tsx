@@ -1,5 +1,6 @@
 import { View, Text } from 'react-native';
 import { Badge } from './ui/Badge';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { ExerciseWithCategory } from '../lib/types';
 
 interface ExerciseCardProps {
@@ -8,9 +9,9 @@ interface ExerciseCardProps {
 
 export function ExerciseCard({ exercise }: ExerciseCardProps) {
   return (
-    <View style={{ backgroundColor: '#1A1A1A', borderRadius: 16, padding: 16 }} className="bg-dark-card rounded-2xl p-4">
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }} className="bg-dark-card rounded-2xl p-4">
       <View className="flex-row items-center justify-between">
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF', flex: 1 }} className="text-base font-semibold text-white flex-1">
+        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} className="text-base font-semibold text-white flex-1">
           {exercise.name}
         </Text>
         {exercise.category && (
@@ -18,7 +19,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         )}
       </View>
       {exercise.description && (
-        <Text style={{ fontSize: 14, color: '#A0A0A0', marginTop: 8 }} className="text-sm text-dark-text-secondary mt-2">{exercise.description}</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">{exercise.description}</Text>
       )}
     </View>
   );

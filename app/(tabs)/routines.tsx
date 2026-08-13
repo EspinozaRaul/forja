@@ -7,9 +7,9 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { Button } from '../../components/ui/Button';
 import { haptics } from '../../lib/utils/haptics';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 
-const FOLDER_COLORS = ['#00F5A0', '#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#F472B6', '#34D399', '#60A5FA'];
+const FOLDER_COLORS = ['#4A6FA5', '#7A9AB5', '#6E9C8A', '#C2A05C', '#9AA4AE', '#3A587F', '#C96F6F', '#22344A'];
 
 export default function RoutinesScreen() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function RoutinesScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDescription, setNewFolderDescription] = useState('');
-  const [newFolderColor, setNewFolderColor] = useState('#00F5A0');
+  const [newFolderColor, setNewFolderColor] = useState(colors.accent.primary);
 
   const isLoading = loadingFolders || loadingRoutines;
 
@@ -37,7 +37,7 @@ export default function RoutinesScreen() {
       setShowCreateModal(false);
       setNewFolderName('');
       setNewFolderDescription('');
-      setNewFolderColor('#00F5A0');
+      setNewFolderColor(colors.accent.primary);
     } catch {
       await haptics.error();
       Alert.alert('Error', 'No se pudo crear la carpeta');
@@ -76,15 +76,15 @@ export default function RoutinesScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Header */}
-      <View style={{ backgroundColor: colors.bg.card, padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary }}>Mis Rutinas</Text>
+      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Mis Rutinas</Text>
       </View>
 
       <ScrollView style={{ flex: 1, padding: spacing.md }}>
         {/* Folders Section */}
         {folders && folders.length > 0 && (
           <View style={{ marginBottom: spacing.lg }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
               Carpetas
             </Text>
             {folders.map((folder, index) => (
@@ -97,16 +97,16 @@ export default function RoutinesScreen() {
                   <View style={{
                     backgroundColor: colors.bg.card,
                     borderRadius: borderRadius.lg,
-                    padding: 20,
+                    padding: spacing.md + spacing.xs,
                     flexDirection: 'row',
                     alignItems: 'center',
                     borderLeftWidth: 4,
                     borderLeftColor: folder.color || colors.accent.primary,
                   }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{folder.name}</Text>
+                      <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
                       {folder.description && (
-                        <Text style={{ fontSize: 13, color: colors.text.secondary, marginTop: 4 }} numberOfLines={1}>
+                        <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }} numberOfLines={1}>
                           {folder.description}
                         </Text>
                       )}
@@ -122,7 +122,7 @@ export default function RoutinesScreen() {
         {/* Unlinked Routines Section */}
         {unlinkedRoutines.length > 0 && (
           <View style={{ marginBottom: spacing.lg }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
               Sin carpeta
             </Text>
             {unlinkedRoutines.map((routine, index) => (
@@ -131,11 +131,11 @@ export default function RoutinesScreen() {
                   onPress={() => router.push(`/routine/${routine.id}`)}
                   style={{ marginBottom: spacing.sm }}
                 >
-                  <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text.primary }}>{routine.name}</Text>
+                      <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
                       {routine.description && (
-                        <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
+                        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
                       )}
                     </View>
                     <Text style={{ fontSize: 20, color: colors.text.muted }}>›</Text>
@@ -159,15 +159,15 @@ export default function RoutinesScreen() {
       <View style={{ padding: spacing.md, paddingTop: spacing.sm, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, flexDirection: 'row', gap: spacing.sm }}>
         <TouchableOpacity
           onPress={() => setShowCreateModal(true)}
-          style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
+          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: '600', fontSize: 14 }}>+ Carpeta</Text>
+          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ Carpeta</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
-          style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
+          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.primary, fontWeight: '600', fontSize: 14 }}>+ Rutina</Text>
+          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ Rutina</Text>
         </TouchableOpacity>
       </View>
 
@@ -175,9 +175,9 @@ export default function RoutinesScreen() {
       <Modal visible={showCreateModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: 20 }}>Nueva Carpeta</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>Nueva Carpeta</Text>
 
-            <Text style={{ color: colors.text.secondary, marginBottom: 8 }}>Nombre</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>Nombre</Text>
             <TextInput
               value={newFolderName}
               onChangeText={setNewFolderName}
@@ -186,7 +186,7 @@ export default function RoutinesScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, marginBottom: 8 }}>Descripción (opcional)</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>Descripción (opcional)</Text>
             <TextInput
               value={newFolderDescription}
               onChangeText={setNewFolderDescription}
@@ -195,7 +195,7 @@ export default function RoutinesScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, marginBottom: 8 }}>Color</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>Color</Text>
             <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
               {FOLDER_COLORS.map((color) => (
                 <TouchableOpacity
@@ -204,7 +204,7 @@ export default function RoutinesScreen() {
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: 20,
+                    borderRadius: borderRadius.full,
                     backgroundColor: color,
                     borderWidth: newFolderColor === color ? 3 : 0,
                     borderColor: colors.text.primary,
@@ -218,13 +218,13 @@ export default function RoutinesScreen() {
                 onPress={() => setShowCreateModal(false)}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>Cancelar</Text>
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreateFolder}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontWeight: '600' }}>Crear</Text>
+                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>Crear</Text>
               </TouchableOpacity>
             </View>
           </View>

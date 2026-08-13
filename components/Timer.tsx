@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, AppState, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import {
   saveSessionTimer,
   loadSessionTimer,
@@ -151,7 +151,7 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm }}>
-      <Text style={{ fontSize: 20, fontFamily: 'monospace', fontWeight: '600', color: colors.accent.primary }}>
+      <Text style={{ fontSize: 20, fontFamily: fonts.display, fontWeight: '600', color: colors.accent.primary }}>
         {formatTime(elapsed)}
       </Text>
 

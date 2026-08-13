@@ -6,6 +6,7 @@ import { useCreateExercise } from '../../lib/hooks/useExercises';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { colors, spacing, fonts } from '../../lib/theme/tokens';
 
 export default function CreateExerciseScreen() {
   const router = useRouter();
@@ -51,8 +52,8 @@ export default function CreateExerciseScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A', padding: 16 }} className="flex-1 bg-white p-4">
-      <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginBottom: 16 }} className="text-lg font-semibold text-gray-900 mb-4">Create New Exercise</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} className="flex-1 bg-dark-bg p-4">
+      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">Create New Exercise</Text>
 
       <Input
         label="Exercise Name"
@@ -71,9 +72,9 @@ export default function CreateExerciseScreen() {
         numberOfLines={3}
       />
 
-      <Text style={{ fontSize: 14, fontWeight: '600', color: '#A0A0A0', marginBottom: 8 }} className="text-sm font-medium text-gray-700 mb-2">Category *</Text>
+      <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-sm font-medium text-dark-text-secondary mb-2">Category *</Text>
       {errors.category && (
-        <Text style={{ color: '#FF3B30', fontSize: 14, marginBottom: 8 }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
+        <Text style={{ color: colors.error, fontSize: 14, marginBottom: spacing.sm }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
       )}
       <View className="flex-row flex-wrap mb-4">
         {categories?.map((category) => (

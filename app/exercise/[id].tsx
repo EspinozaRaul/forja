@@ -65,7 +65,7 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
       >
         <Text style={{ color: '#FFF', fontSize: 14, marginBottom: 12 }}>Toca para cerrar</Text>
         {loading ? (
-          <ActivityIndicator size="large" color="#60A5FA" />
+          <ActivityIndicator size="large" color={colors.text.link} />
         ) : localUri ? (
           <Image
             source={{ uri: localUri }}
@@ -120,9 +120,9 @@ export default function ExerciseDetailScreen() {
           {gifUrl && (
             <TouchableOpacity
               onPress={() => setShowGif(true)}
-              style={{ marginTop: spacing.sm, backgroundColor: '#1E3A5F', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 9999 }}
+              style={{ marginTop: spacing.sm, backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#60A5FA' }}>Ver animacion</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.tag.text }}>Ver animacion</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -142,13 +142,13 @@ export default function ExerciseDetailScreen() {
         {/* Tags */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm }}>
           {exercise.muscleGroup && (
-            <View style={{ backgroundColor: '#1E3A5F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 9999 }}>
-              <Text style={{ fontSize: 12, color: '#60A5FA' }}>{exercise.muscleGroup}</Text>
+            <View style={{ backgroundColor: colors.tag.muscle, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
+              <Text style={{ fontSize: 12, color: colors.tag.text }}>{exercise.muscleGroup}</Text>
             </View>
           )}
           {exercise.equipment && (
-            <View style={{ backgroundColor: '#1E3A2F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 9999 }}>
-              <Text style={{ fontSize: 12, color: '#34D399' }}>{exercise.equipment}</Text>
+            <View style={{ backgroundColor: colors.tag.equipment, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
+              <Text style={{ fontSize: 12, color: colors.tag.equipmentText }}>{exercise.equipment}</Text>
             </View>
           )}
         </View>
