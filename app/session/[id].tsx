@@ -21,10 +21,12 @@ import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { NewRecordBanner } from '../../components/NewRecordBanner';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../../lib/constants/routine-defaults';
 import { haptics } from '../../lib/utils/haptics';
 import { detectRoutineDiff, summarizeDiff, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
+import { findPreviousSetWeight, shouldCelebrateNewRecord } from '../../lib/utils/session-sets';
 import type { SessionExercise, Set, Exercise, RoutineExercise } from '../../lib/types';
 import type { SessionExerciseWithSets } from '../../lib/db/queries';
 
@@ -120,6 +122,13 @@ export default function SessionScreen() {
   const [showRoutineDiffModal, setShowRoutineDiffModal] = useState(false);
   const [pendingDiff, setPendingDiff] = useState<RoutineDiff | null>(null);
   const [applyingRoutineUpdate, setApplyingRoutineUpdate] = useState(false);
+  const [recordNotif, setRecordNotif] = useState<{ exerciseName: string; weight: number; unit: string; nonce: number } | null>(null);
+  const recordNonceRef = useRef(0);
+
+  const handleNewRecord = (exerciseName: string, weight: number, unit: string) => {
+    recordNonceRef.current += 1;
+    setRecordNotif({ exerciseName, weight, unit, nonce: recordNonceRef.current });
+  };
 
   const handleDragHandleTap = async (index: number) => {
     if (dragIndex === null) {
@@ -506,6 +515,16 @@ export default function SessionScreen() {
         <Timer sessionId={id} onTimeUpdate={setElapsedSeconds} autoStart />
       </View>
 
+      {recordNotif && (
+        <NewRecordBanner
+          key={recordNotif.nonce}
+          exerciseName={recordNotif.exerciseName}
+          weight={recordNotif.weight}
+          unit={recordNotif.unit}
+          onDismiss={() => setRecordNotif(null)}
+        />
+      )}
+
       {/* Exercises — scrollable middle */}
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.bg.primary }}
@@ -560,6 +579,7 @@ export default function SessionScreen() {
                         nameB={getExerciseName(members[1])}
                         previousWeightFor={getPreviousForExercise}
                         maxWeightFor={getMaxWeightForExercise}
+                        onNewRecord={handleNewRecord}
                         onDeletePair={() => handleDeleteSuperSet(members)}
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
@@ -579,6 +599,7 @@ export default function SessionScreen() {
                       sessionExercise={se}
                       previousWeightFor={getPreviousForExercise}
                       maxWeightFor={getMaxWeightForExercise}
+                      onNewRecord={handleNewRecord}
                       onSetCompleted={(exerciseName, restTime) => {
                         setRestExerciseName(exerciseName);
                         setRestDuration(restTime);
@@ -759,11 +780,12 @@ export default function SessionScreen() {
     );
   }
 
-function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
+function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
   previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
+  onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
   onReplace?: () => void;
   onDragTap?: () => void;
   isDragging?: boolean;
@@ -780,6 +802,9 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const updateRestTime = useUpdateExerciseRestTime();
   const updateExercise = useUpdateExercise();
   const queryClient = useQueryClient();
+  // Synchronous mirror of weights just typed in this session, so the new-record
+  // comparison never depends on the async react-query refetch of `sets`.
+  const pendingWeightsRef = useRef(new Map<number, number>());
   const [showRestPicker, setShowRestPicker] = useState(false);
   const [showCustomRest, setShowCustomRest] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
@@ -817,6 +842,26 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   };
 
   const handleUpdateSet = async (set: Set, updates: { reps?: number; weight?: number; completed?: boolean; rir?: number }) => {
+    const mergedSets = (sets ?? []).map((s) =>
+      pendingWeightsRef.current.has(s.id) ? { ...s, weight: pendingWeightsRef.current.get(s.id) ?? null } : s
+    );
+    const prevW = findPreviousSetWeight(mergedSets, set.id);
+    // The visible placeholder ("peso previo") is the mark users actually read,
+    // so beating it must celebrate even when it is below the all-time max.
+    const phW = previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null;
+    const maxW = maxWeightFor?.(sessionExercise.exerciseId) ?? null;
+    if (
+      updates.weight != null &&
+      shouldCelebrateNewRecord(updates.weight, prevW, phW, maxW)
+    ) {
+      void haptics.success();
+      const name = exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio';
+      onNewRecord?.(name, updates.weight, exercise?.unit ?? 'kg');
+    }
+    if (updates.weight !== undefined) {
+      if (updates.weight > 0) pendingWeightsRef.current.set(set.id, updates.weight);
+      else pendingWeightsRef.current.delete(set.id);
+    }
     if (updates.completed && !set.completed) {
       await haptics.complete();
       onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
@@ -1449,13 +1494,14 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
   );
 }
 
-function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onDeletePair }: {
+function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onDeletePair }: {
   exercises: SessionExercise[];
   nameA: string;
   nameB: string;
   previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
+  onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
   onDeletePair?: () => void;
 }) {
   const a = exercises[0];
@@ -1465,6 +1511,10 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   const updateSet = useUpdateSet();
   const deleteSet = useDeleteSet();
   const pairId = a?.supersetPairId;
+
+  // Synchronous mirror of weights just typed in this session, so the new-record
+  // comparison never depends on the async react-query refetch of `sets`.
+  const pendingWeightsRef = useRef(new Map<number, number>());
 
   const { data: setsA } = useSets(a?.id ?? 0);
   const { data: setsB } = useSets(b?.id ?? 0);
@@ -1519,9 +1569,27 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   };
 
   const handleUpdateSet = async (set: Set, updates: { reps?: number; weight?: number; completed?: boolean }) => {
+    const isA = set.sessionExerciseId === a?.id;
+    const sourceSets = (isA ? (setsA ?? []) : (setsB ?? [])).map((s) =>
+      pendingWeightsRef.current.has(s.id) ? { ...s, weight: pendingWeightsRef.current.get(s.id) ?? null } : s
+    );
+    const prevW = findPreviousSetWeight(sourceSets, set.id);
+    const exerciseId = isA ? a?.exerciseId : b?.exerciseId;
+    const phW = previousWeightFor?.(exerciseId ?? 0, set.setNumber)?.weight ?? null;
+    const maxW = maxWeightFor?.(exerciseId ?? 0) ?? null;
+    if (
+      updates.weight != null &&
+      shouldCelebrateNewRecord(updates.weight, prevW, phW, maxW)
+    ) {
+      void haptics.success();
+      onNewRecord?.(isA ? nameA : nameB, updates.weight, isA ? unitA : unitB);
+    }
+    if (updates.weight !== undefined) {
+      if (updates.weight > 0) pendingWeightsRef.current.set(set.id, updates.weight);
+      else pendingWeightsRef.current.delete(set.id);
+    }
     if (updates.completed && !set.completed) {
       await haptics.complete();
-      const isA = set.sessionExerciseId === a?.id;
       onSetCompleted?.(isA ? nameA : nameB, isA ? restA : restB);
     }
     await updateSet.mutateAsync({

@@ -37,6 +37,7 @@ export function useCreateSet() {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
     },
   });
 }
@@ -55,6 +56,7 @@ export function useCreateDropSets() {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
     },
   });
 }
@@ -75,6 +77,7 @@ export function useUpdateSet() {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
     },
   });
 }
@@ -94,6 +97,7 @@ export function useDeleteSet() {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
     },
   });
 }
@@ -113,6 +117,7 @@ export function useDeleteDropSetGroup() {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
     },
   });
 }
