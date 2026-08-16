@@ -1,31 +1,26 @@
 import { Text, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
+import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
-import { summarizeSets } from '../../lib/utils/session-summary';
 
 export default function NewSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { routineId, continueFromLast } = useLocalSearchParams<{ routineId?: string; continueFromLast?: string }>();
+  const { routineId } = useLocalSearchParams<{ routineId?: string }>();
   const createSession = useCreateSession();
 
   const routineIdNum = routineId ? parseInt(routineId, 10) : undefined;
   const { data: routines, isLoading: routineLoading } = useRoutine(routineIdNum ?? 0);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineIdNum ?? 0);
   const addExerciseToSession = useAddExerciseToSession();
-  const { data: lastSession, isLoading: lastSessionLoading } = useLastSessionForRoutine(routineIdNum ?? 0);
-  const duplicateSessionData = useDuplicateSessionData();
 
   const routine = routines?.[0];
   const isLoading = routineIdNum ? (routineLoading || exercisesLoading) : false;
-  const shouldContinue = continueFromLast === 'true' && !!lastSession;
 
   const handleStartSession = async () => {
     try {
@@ -34,13 +29,7 @@ export default function NewSessionScreen() {
         routineId: routineIdNum,
       });
 
-      if (shouldContinue && lastSession) {
-        // Duplicate exercises and sets from last session
-        await duplicateSessionData.mutateAsync({
-          sourceSessionId: lastSession.id,
-          targetSessionId: session[0].id,
-        });
-      } else if (routineExercises && routineExercises.length > 0) {
+      if (routineExercises && routineExercises.length > 0) {
         // Copy routine exercises to the new session (fresh start)
         for (const re of routineExercises) {
           await addExerciseToSession.mutateAsync({
@@ -58,7 +47,7 @@ export default function NewSessionScreen() {
     }
   };
 
-  if (isLoading || (shouldContinue && lastSessionLoading)) {
+  if (isLoading) {
     return <LoadingSpinner message="Loading routine..." />;
   }
 
@@ -72,31 +61,9 @@ export default function NewSessionScreen() {
           {routine.description && (
             <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">{routine.description}</Text>
           )}
-          {shouldContinue && lastSession ? (
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={{ fontSize: 14, color: colors.accent.primary, fontFamily: fonts.bodyMedium }}>Continuing from last session</Text>
-              {lastSession.exercises?.map((se: any) => (
-                <View key={se.id} style={{ marginTop: spacing.xs, marginLeft: spacing.sm }}>
-                  <Text style={{ fontSize: 13, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{EXERCISE_NAMES_ES[se.exerciseName] || se.exerciseName || `Exercise ${se.order}`}</Text>
-                  {summarizeSets(se.sets ?? []).map((line) => (
-                    line.type === 'group' ? (
-                      <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: 12, fontFamily: fonts.bodyMedium, color: colors.accent.primary, marginLeft: spacing.sm }}>
-                        {line.label} × {line.count}
-                      </Text>
-                    ) : (
-                      <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginLeft: spacing.sm }}>
-                        Set {line.setNumber}: {line.reps ?? '—'} reps × {line.weight ?? '—'} kg
-                      </Text>
-                    )
-                  ))}
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">
-              {routineExercises?.length ?? 0} exercises
-            </Text>
-          )}
+          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">
+            {routineExercises?.length ?? 0} exercises
+          </Text>
         </View>
       ) : (
         <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.md, marginBottom: spacing.md }} className="bg-dark-card rounded-lg p-4 mb-4">

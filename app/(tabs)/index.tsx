@@ -1,8 +1,10 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useSessions, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
-import { useRoutines } from '../../lib/hooks/useRoutines';
+import { useSessions } from '../../lib/hooks/useSessions';
+import { useRoutines, useRoutineExercises } from '../../lib/hooks/useRoutines';
+import { useExercises, useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
+import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { SessionCard } from '../../components/SessionCard';
 import { Button } from '../../components/ui/Button';
@@ -10,6 +12,8 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { haptics } from '../../lib/utils/haptics';
+import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -18,7 +22,11 @@ export default function HomeScreen() {
   const { data: globalStats, isLoading: statsLoading } = useGlobalStats();
 
   const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
-  const { data: lastSession, isLoading: lastSessionLoading } = useLastSessionForRoutine(selectedRoutineId ?? 0);
+  const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(selectedRoutineId ?? 0);
+  const { data: allExercises } = useExercises();
+  const lastWeights = useLastWeightByExerciseIds(routineExercises?.map((re) => re.exerciseId) ?? []);
+  const createSession = useCreateSession();
+  const addExerciseToSession = useAddExerciseToSession();
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
@@ -38,27 +46,45 @@ export default function HomeScreen() {
     router.push('/session/new');
   };
 
-  const handleStartRoutineSession = (routineId: number) => {
-    router.push(`/session/new?routineId=${routineId}`);
-  };
-
   const handleRoutinePress = (routineId: number) => {
     setSelectedRoutineId(routineId);
   };
 
-  const handleStartFresh = () => {
-    if (selectedRoutineId) {
-      handleStartRoutineSession(selectedRoutineId);
+  const handleStartRoutineSession = async () => {
+    if (!selectedRoutineId) return;
+    try {
+      await haptics.success();
+      const session = await createSession.mutateAsync({
+        routineId: selectedRoutineId,
+      });
+
+      // Copy routine exercises to the new session (fresh start)
+      if (routineExercises && routineExercises.length > 0) {
+        for (const re of routineExercises) {
+          await addExerciseToSession.mutateAsync({
+            sessionId: session[0].id,
+            exerciseId: re.exerciseId,
+            order: re.order,
+          });
+        }
+      }
+
+      setSelectedRoutineId(null);
+      router.replace(`/session/${session[0].id}`);
+    } catch (error) {
+      await haptics.error();
+      Alert.alert('Error', 'Failed to create session');
     }
-    setSelectedRoutineId(null);
   };
 
-  const handleContinueLast = () => {
-    if (selectedRoutineId) {
-      router.push(`/session/new?routineId=${selectedRoutineId}&continueFromLast=true`);
-    }
-    setSelectedRoutineId(null);
-  };
+  const selectedRoutine = routines?.find((r) => r.id === selectedRoutineId);
+
+  const routineExercisesWithDetails = routineExercises
+    ?.map((re) => {
+      const exercise = allExercises?.find((e) => e.id === re.exerciseId);
+      return { ...re, exercise };
+    })
+    ?.sort((a, b) => a.order - b.order) ?? [];
 
   if (isLoading) {
     return <LoadingSpinner message="Loading dashboard..." />;
@@ -147,7 +173,7 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Start Session Modal */}
+      {/* Routine Preview Modal */}
       <Modal
         visible={selectedRoutineId !== null}
         transparent
@@ -162,44 +188,43 @@ export default function HomeScreen() {
             style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }}
             onPress={(e) => e.stopPropagation()}
           >
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Start Session</Text>
-            {lastSessionLoading ? (
-              <LoadingSpinner message="Checking last session..." />
-            ) : lastSession ? (
-              <>
-                <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
-                  You have a previous session for this routine. Want to continue with your last numbers?
-                </Text>
-                <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
-                  <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: 4 }}>Last session</Text>
-                  {lastSession.exercises?.map((se: any) => (
-                    <View key={se.id} style={{ marginBottom: 4 }}>
-                      <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                        Exercise {se.order}
-                      </Text>
-                      {se.sets?.map((s: any) => (
-                        <Text key={s.id} style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginLeft: 8 }}>
-                          Set {s.setNumber}: {s.reps ?? '—'} reps × {s.weight ?? '—'} kg
-                        </Text>
-                      ))}
-                    </View>
-                  ))}
-                </View>
-                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                  <View style={{ flex: 1 }}>
-                    <Button title="Start Fresh" variant="secondary" onPress={handleStartFresh} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Button title="Continue Last" onPress={handleContinueLast} />
-                  </View>
-                </View>
-              </>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+              <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+                {selectedRoutine?.name ?? 'Start Session'}
+              </Text>
+              <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }}>
+                <Text style={{ fontSize: 18, color: colors.text.muted }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {selectedRoutine?.description && (
+              <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.sm }}>{selectedRoutine.description}</Text>
+            )}
+            {exercisesLoading ? (
+              <LoadingSpinner message="Loading exercises..." />
             ) : (
               <>
-                <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
-                  No previous session found. Start a fresh session?
-                </Text>
-                <Button title="Start Session" onPress={handleStartFresh} />
+                {routineExercisesWithDetails.length === 0 ? (
+                  <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
+                    No exercises in this routine yet.
+                  </Text>
+                ) : (
+                  <View style={{ marginBottom: spacing.md }}>
+                    {routineExercisesWithDetails.map((re) => (
+                      <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>
+                        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+                          {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
+                        </Text>
+                        <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 1 }}>
+                          {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
+                          {re.exercise && lastWeights.data?.[re.exercise.id] != null
+                            ? ` · último: ${lastWeights.data?.[re.exercise.id]?.weight}${lastWeights.data?.[re.exercise.id]?.unit ?? 'kg'}`
+                            : ''}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                <Button title="Start Session" onPress={handleStartRoutineSession} loading={createSession.isPending} />
               </>
             )}
           </Pressable>
