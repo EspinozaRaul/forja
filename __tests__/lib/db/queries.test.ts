@@ -4,6 +4,7 @@ import {
   getGlobalStats,
   getLastSessionForRoutine,
   getExerciseSessions,
+  getMaxWeightByExerciseIds,
 } from '../../../lib/db/queries';
 
 // Mock the database module
@@ -218,6 +219,35 @@ describe('Database Queries', () => {
       const result = await getLastSessionForRoutine(999);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('getMaxWeightByExerciseIds', () => {
+    it('should return max weight per exercise', async () => {
+      const mockRows = [
+        { exerciseId: 1, maxWeight: 100 },
+        { exerciseId: 2, maxWeight: 60.5 },
+      ];
+
+      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery(mockRows));
+
+      const result = await getMaxWeightByExerciseIds([1, 2]);
+
+      expect(result).toEqual({ 1: 100, 2: 60.5 });
+    });
+
+    it('should omit exercises without recorded weight', async () => {
+      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery([]));
+
+      const result = await getMaxWeightByExerciseIds([1, 2]);
+
+      expect(result).toEqual({});
+    });
+
+    it('should return empty object for empty id list', async () => {
+      const result = await getMaxWeightByExerciseIds([]);
+
+      expect(result).toEqual({});
     });
   });
 

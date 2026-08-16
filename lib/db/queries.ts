@@ -590,6 +590,36 @@ export async function getLastWeightByExerciseIds(exerciseIds: number[]): Promise
   return result;
 }
 
+// ─── Max Weight Per Exercise ───────────────────────────
+
+/**
+ * Returns the all-time max weight recorded for each of the given exercises,
+ * keyed by exercise id. Exercises with no recorded weight are absent from the
+ * result; callers should treat a missing key as null.
+ */
+export async function getMaxWeightByExerciseIds(exerciseIds: number[]): Promise<Record<number, number | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      maxWeight: sql<number>`max(${sets.weight})`,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(and(
+      inArray(sessionExercises.exerciseId, exerciseIds),
+      isNotNull(sets.weight),
+    ))
+    .groupBy(sessionExercises.exerciseId);
+
+  const result: Record<number, number | null> = {};
+  for (const row of rows) {
+    result[row.exerciseId] = row.maxWeight ?? null;
+  }
+  return result;
+}
+
 // ─── Exercise Sessions History ─────────────────────────
 
 export interface ExerciseSessionEntry {

@@ -23,6 +23,9 @@ interface DropSetLoggerProps {
   onDelete?: () => void;
   onCompleteAll: () => void;
   unit?: string;
+  previousWeight?: number | null;
+  previousReps?: number | null;
+  maxWeight?: number | null;
 }
 
 export function DropSetLogger({
@@ -37,6 +40,9 @@ export function DropSetLogger({
   onDelete,
   onCompleteAll,
   unit = 'kg',
+  previousWeight = null,
+  previousReps = null,
+  maxWeight = null,
 }: DropSetLoggerProps) {
   const allCompleted = drops.length > 0 && drops.every((d) => d.completed);
   const swipeableRef = useRef<Swipeable>(null);
@@ -159,6 +165,9 @@ export function DropSetLogger({
               showLine={index < drops.length - 1}
               onUpdateDrop={onUpdateDrop}
               onDeleteDrop={onDeleteDrop}
+              previousWeight={previousWeight}
+              previousReps={previousReps}
+              maxWeight={maxWeight}
             />
           ))}
 
@@ -182,6 +191,9 @@ function DropRow({
   showLine,
   onUpdateDrop,
   onDeleteDrop,
+  previousWeight = null,
+  previousReps = null,
+  maxWeight = null,
 }: {
   index: number;
   drop: Drop;
@@ -191,6 +203,9 @@ function DropRow({
   showLine: boolean;
   onUpdateDrop: (dropIndex: number, updates: { reps?: number; weight?: number }) => void;
   onDeleteDrop: (dropIndex: number) => void;
+  previousWeight?: number | null;
+  previousReps?: number | null;
+  maxWeight?: number | null;
 }) {
   // Local state so typing is instant — DB sync happens in the background via onUpdateDrop
   const [reps, setReps] = useState(drop.reps?.toString() ?? '');
@@ -208,6 +223,16 @@ function DropRow({
     onUpdateDrop(index, { weight: isNaN(value) || value < 0 ? undefined : value });
   };
 
+  const weightPlaceholder = () => {
+    if (previousWeight == null) return unit;
+    if (maxWeight != null) {
+      return previousWeight >= maxWeight ? `${previousWeight} ▲` : `${previousWeight} ▼`;
+    }
+    return String(previousWeight);
+  };
+
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'Reps');
+
   return (
     <View style={styles.dropRow}>
       <View style={styles.dropIndicator}>
@@ -221,7 +246,7 @@ function DropRow({
           <TextInput
             style={styles.dropInput}
             keyboardType="numeric"
-            placeholder="Reps"
+            placeholder={repsPlaceholder()}
             placeholderTextColor={colors.text.muted}
             value={reps}
             onChangeText={handleRepsChange}
@@ -229,7 +254,7 @@ function DropRow({
           <TextInput
             style={styles.dropInput}
             keyboardType="decimal-pad"
-            placeholder={unit}
+            placeholder={weightPlaceholder()}
             placeholderTextColor={colors.text.muted}
             value={weight}
             onChangeText={handleWeightChange}

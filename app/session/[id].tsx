@@ -6,10 +6,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
-import { useSession, useSessionExercises, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise } from '../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
-import { useExercise, useExercises, useUpdateExercise } from '../../lib/hooks/useExercises';
+import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds } from '../../lib/hooks/useExercises';
 import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
@@ -42,6 +42,29 @@ export default function SessionScreen() {
   const isLoading = sessionLoading || exercisesLoading;
 
   const sortedExercises = sessionExercises?.sort((a, b) => a.order - b.order) ?? [];
+
+  // Previous-session data for the "peso previo" placeholders (guidance only).
+  const { data: lastSession } = useLastSessionForRoutine(session?.routineId ?? 0);
+  const { data: maxWeights } = useMaxWeightByExerciseIds(
+    sessionExercises?.map((se) => se.exerciseId) ?? []
+  );
+
+  // Previous values per exerciseId + setNumber from the last completed session
+  // of THIS routine. Prefer the drop group parent (isDropGroup === true, the
+  // heaviest first drop) or a plain linear set; fall back to any set with the
+  // same setNumber.
+  const getPreviousForExercise = (exerciseId: number, setNumber: number) => {
+    const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
+    if (!prevSets || prevSets.length === 0) return undefined;
+    const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
+    if (withNumber.length === 0) return undefined;
+    const preferred = withNumber.find((s) => s.isDropGroup === true || s.dropOrder == null);
+    const chosen = preferred ?? withNumber[0];
+    return { weight: chosen.weight ?? null, reps: chosen.reps ?? null };
+  };
+
+  const getMaxWeightForExercise = (exerciseId: number) =>
+    maxWeights?.[exerciseId] ?? null;
 
   const getExerciseName = (se: SessionExercise): string => {
     const ex = allExercises?.find((e) => e.id === se.exerciseId);
@@ -322,6 +345,8 @@ export default function SessionScreen() {
                         exercises={members}
                         nameA={getExerciseName(members[0])}
                         nameB={getExerciseName(members[1])}
+                        previousWeightFor={getPreviousForExercise}
+                        maxWeightFor={getMaxWeightForExercise}
                         onDeletePair={() => handleDeleteSuperSet(members)}
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
@@ -339,6 +364,8 @@ export default function SessionScreen() {
                   <Animated.View key={se.id} layout={LinearTransition.duration(200)}>
                     <SessionExerciseItem
                       sessionExercise={se}
+                      previousWeightFor={getPreviousForExercise}
+                      maxWeightFor={getMaxWeightForExercise}
                       onSetCompleted={(exerciseName, restTime) => {
                         setRestExerciseName(exerciseName);
                         setRestDuration(restTime);
@@ -467,8 +494,10 @@ export default function SessionScreen() {
     );
   }
 
-function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
+function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onReplace?: () => void;
   onDragTap?: () => void;
@@ -975,6 +1004,9 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                   });
                 }}
                 unit={exercise?.unit ?? 'kg'}
+                previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
               />
             );
           }
@@ -1003,6 +1035,9 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                     handleSaveDropSet(set.id);
                   }}
                   unit={exercise?.unit ?? 'kg'}
+                  previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                  previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                  maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
                 />
                 <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs, marginLeft: spacing.md + 16 }}>
                   <TouchableOpacity
@@ -1036,6 +1071,9 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
               unit={exercise?.unit ?? 'kg'}
               onUnitChange={handleUnitChange}
               onOpenIntensityPicker={() => handleOpenIntensityPicker(set.id, set)}
+              previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+              previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+              maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
             />
           );
         });
@@ -1062,14 +1100,27 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
   );
 }
 
-function SupersetSetRow({ set, label, unit, onUpdate }: {
+function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps = null, maxWeight = null, onUpdate }: {
   set: Set;
   label: string;
   unit: string;
+  previousWeight?: number | null;
+  previousReps?: number | null;
+  maxWeight?: number | null;
   onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
 }) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
+
+  const weightPlaceholder = () => {
+    if (previousWeight == null) return unit;
+    if (maxWeight != null) {
+      return previousWeight >= maxWeight ? `${previousWeight} ▲` : `${previousWeight} ▼`;
+    }
+    return String(previousWeight);
+  };
+
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'Reps');
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -1100,7 +1151,7 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
         <TextInput
           style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="decimal-pad"
-          placeholder={unit}
+          placeholder={weightPlaceholder()}
           placeholderTextColor={colors.text.muted}
           value={weight}
           onChangeText={handleWeightChange}
@@ -1110,7 +1161,7 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
         <TextInput
           style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="numeric"
-          placeholder="Reps"
+          placeholder={repsPlaceholder()}
           placeholderTextColor={colors.text.muted}
           value={reps}
           onChangeText={handleRepsChange}
@@ -1133,10 +1184,12 @@ function SupersetSetRow({ set, label, unit, onUpdate }: {
   );
 }
 
-function SupersetBlock({ exercises, nameA, nameB, onSetCompleted, onDeletePair }: {
+function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onDeletePair }: {
   exercises: SessionExercise[];
   nameA: string;
   nameB: string;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onDeletePair?: () => void;
 }) {
@@ -1291,6 +1344,10 @@ function SupersetBlock({ exercises, nameA, nameB, onSetCompleted, onDeletePair }
             nameB={nameB}
             unitA={unitA}
             unitB={unitB}
+            exerciseIdA={a?.exerciseId ?? 0}
+            exerciseIdB={b?.exerciseId ?? 0}
+            previousWeightFor={previousWeightFor}
+            maxWeightFor={maxWeightFor}
             onUpdateSet={handleUpdateSet}
             onDeleteSeries={handleDeleteSeries}
           />
@@ -1317,16 +1374,25 @@ function SupersetBlock({ exercises, nameA, nameB, onSetCompleted, onDeletePair }
   );
 }
 
-function SupersetSeries({ row, nameA, nameB, unitA, unitB, onUpdateSet, onDeleteSeries }: {
+function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exerciseIdB, previousWeightFor, maxWeightFor, onUpdateSet, onDeleteSeries }: {
   row: { setNumber: number; a?: Set; b?: Set };
   nameA: string;
   nameB: string;
   unitA: string;
   unitB: string;
+  exerciseIdA: number;
+  exerciseIdB: number;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  maxWeightFor?: (exerciseId: number) => number | null;
   onUpdateSet: (set: Set, updates: { reps?: number; weight?: number; completed?: boolean }) => void;
   onDeleteSeries: (row: { setNumber: number; a?: Set; b?: Set }) => void;
 }) {
   const swipeableRef = useRef<Swipeable>(null);
+
+  const prevA = row.a ? previousWeightFor?.(exerciseIdA, row.a.setNumber) : undefined;
+  const prevB = row.b ? previousWeightFor?.(exerciseIdB, row.b.setNumber) : undefined;
+  const maxA = maxWeightFor?.(exerciseIdA) ?? null;
+  const maxB = maxWeightFor?.(exerciseIdB) ?? null;
 
   const handleSwipeDelete = () => {
     swipeableRef.current?.close();
@@ -1369,6 +1435,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, onUpdateSet, onDelete
             set={row.a}
             label={nameA}
             unit={unitA}
+            previousWeight={prevA?.weight ?? null}
+            previousReps={prevA?.reps ?? null}
+            maxWeight={maxA}
             onUpdate={(updates) => onUpdateSet(row.a!, updates)}
           />
         ) : null}
@@ -1378,6 +1447,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, onUpdateSet, onDelete
             set={row.b}
             label={nameB}
             unit={unitB}
+            previousWeight={prevB?.weight ?? null}
+            previousReps={prevB?.reps ?? null}
+            maxWeight={maxB}
             onUpdate={(updates) => onUpdateSet(row.b!, updates)}
           />
         ) : null}

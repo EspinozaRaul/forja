@@ -11,6 +11,7 @@ import {
   getExerciseSessions,
   getExercisePRs,
   getLastWeightByExerciseIds,
+  getMaxWeightByExerciseIds,
 } from '../db/queries';
 import type { Exercise, Set } from '../types';
 import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs } from '../db/queries';
@@ -84,6 +85,14 @@ export function useLastWeightByExerciseIds(exerciseIds: number[]) {
   return useQuery({
     queryKey: [EXERCISE_KEY, 'lastWeight', [...exerciseIds].sort()],
     queryFn: () => getLastWeightByExerciseIds(exerciseIds),
+    enabled: exerciseIds.length > 0,
+  });
+}
+
+export function useMaxWeightByExerciseIds(exerciseIds: number[]) {
+  return useQuery({
+    queryKey: [EXERCISE_KEY, 'maxWeight', [...exerciseIds].sort()],
+    queryFn: () => getMaxWeightByExerciseIds(exerciseIds),
     enabled: exerciseIds.length > 0,
   });
 }

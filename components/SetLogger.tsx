@@ -14,15 +14,28 @@ interface SetLoggerProps {
   onOpenIntensityPicker?: () => void;
   isDropGroup?: boolean;
   dropCount?: number;
+  previousWeight?: number | null;
+  previousReps?: number | null;
+  maxWeight?: number | null;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, maxWeight = null }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
 
   const isDropSet = set.method === 'dropset';
   const isLinear = set.method === 'linear' || set.method === null;
+
+  const weightPlaceholder = () => {
+    if (previousWeight == null) return unit;
+    if (maxWeight != null) {
+      return previousWeight >= maxWeight ? `${previousWeight} ▲` : `${previousWeight} ▼`;
+    }
+    return String(previousWeight);
+  };
+
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'Reps');
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -89,7 +102,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
             <TextInput
               style={styles.input}
               keyboardType="numeric"
-              placeholder="Reps"
+              placeholder={repsPlaceholder()}
               placeholderTextColor={colors.text.muted}
               value={reps}
               onChangeText={handleRepsChange}
@@ -100,7 +113,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
             <TextInput
               style={styles.input}
               keyboardType="decimal-pad"
-              placeholder={unit}
+              placeholder={weightPlaceholder()}
               placeholderTextColor={colors.text.muted}
               value={weight}
               onChangeText={handleWeightChange}
