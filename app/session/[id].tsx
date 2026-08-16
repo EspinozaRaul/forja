@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Alert, TouchableOpacity, TextInput, Modal, Pressable } from 'react-native';
+import { Text, View, ScrollView, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation } from 'react-native';
 import { useState, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -780,6 +780,29 @@ export default function SessionScreen() {
     );
   }
 
+// Minimal linear chevron toggle: a thin two-side "V" drawn with CSS borders,
+// rotated to point up (collapse) or down (expand). No emoji, no text.
+function CollapseChevron({ collapsed, onPress }: { collapsed: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={{ alignItems: 'center', justifyContent: 'center', padding: spacing.xs }}
+    >
+      <View
+        style={{
+          width: 10,
+          height: 10,
+          borderRightWidth: 1.5,
+          borderBottomWidth: 1.5,
+          borderColor: colors.text.secondary,
+          transform: [{ rotate: collapsed ? '45deg' : '-135deg' }],
+        }}
+      />
+    </TouchableOpacity>
+  );
+}
+
 function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
   previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
@@ -794,6 +817,12 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
 }) {
   const { data: exercises } = useExercise(sessionExercise.exerciseId);
   const { data: sets } = useSets(sessionExercise.id);
+  // Count of visible rows for the collapsed summary (drop children excluded,
+  // same rule as the render loop below).
+  const visibleCount = (sets ?? []).filter((s) => {
+    if ((s.method === 'dropset' || s.method === 'rest_pause' || s.method === 'cluster') && s.isDropGroup !== true) return false;
+    return true;
+  }).length;
   const createSet = useCreateSet();
   const createDropSets = useCreateDropSets();
   const updateSet = useUpdateSet();
@@ -816,6 +845,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const [pendingConversionSetId, setPendingConversionSetId] = useState<number | null>(null);
   const [pendingConversionSet, setPendingConversionSet] = useState<Set | null>(null);
   const [expandedDropSets, setExpandedDropSets] = useState<number[]>([]);
+  const [collapsed, setCollapsed] = useState(false);
 
   const exercise = exercises?.[0];
   const currentRestTime = sessionExercise.restTime ?? DEFAULT_REST_SECONDS;
@@ -828,6 +858,11 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       }
       return [...prev, setNumber];
     });
+  };
+
+  const toggleCollapsed = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCollapsed((c) => !c);
   };
 
   const handleAddSet = async () => {
@@ -1121,6 +1156,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               {currentRestTime >= 60 ? `${currentRestTime / 60}m` : `${currentRestTime}s`}
             </Text>
           </TouchableOpacity>
+          <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
         </View>
       </View>
 
@@ -1226,7 +1262,17 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           </View>
         </View>
       </Modal>
-      {(() => {
+      {collapsed ? (
+        <TouchableOpacity
+          onPress={toggleCollapsed}
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
+        >
+          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
+            {visibleCount} {visibleCount === 1 ? 'serie' : 'series'} · tocar para expandir
+          </Text>
+        </TouchableOpacity>
+      ) : (
+      (() => {
         // Pre-process: filter to visible items and assign sequential display numbers
         let displayNumber = 0;
         const visibleItems = sets?.filter((s) => {
@@ -1387,7 +1433,9 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
             />
           );
         });
-      })()}
+      })()
+      )}
+      {!collapsed && (
       <Button
         title="Add Set"
         variant="secondary"
@@ -1395,6 +1443,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
         onPress={handleAddSet}
         loading={createSet.isPending}
       />
+      )}
 
       <IntensityMethodPicker
         visible={showIntensityPicker}
@@ -1515,6 +1564,12 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   // Synchronous mirror of weights just typed in this session, so the new-record
   // comparison never depends on the async react-query refetch of `sets`.
   const pendingWeightsRef = useRef(new Map<number, number>());
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleCollapsed = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCollapsed((c) => !c);
+  };
 
   const { data: setsA } = useSets(a?.id ?? 0);
   const { data: setsB } = useSets(b?.id ?? 0);
@@ -1662,14 +1717,29 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
         friction={2}
       >
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
-        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-          {nameA} ⟷ {nameB}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+            {nameA} ⟷ {nameB}
+          </Text>
+          <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
+        </View>
+        {!collapsed && (
         <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
           Registrá A y luego B: la serie se cierra cuando ambos están ✓
         </Text>
+        )}
 
-        {seriesRows.map((row) => (
+        {collapsed ? (
+        <TouchableOpacity
+          onPress={toggleCollapsed}
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
+        >
+          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
+            {seriesRows.length} {seriesRows.length === 1 ? 'serie' : 'series'} · tocar para expandir
+          </Text>
+        </TouchableOpacity>
+        ) : (
+        seriesRows.map((row) => (
           <SupersetSeries
             key={row.setNumber}
             row={row}
@@ -1684,9 +1754,12 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
             onUpdateSet={handleUpdateSet}
             onDeleteSeries={handleDeleteSeries}
           />
-        ))}
+        ))
+        )}
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md, marginTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border.divider, paddingTop: spacing.sm }}>
+          {!collapsed && (
+          <>
           <TouchableOpacity
             onPress={handleAddSeries}
             disabled={createSet.isPending}
@@ -1700,6 +1773,8 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
           <TouchableOpacity onPress={handleUnlink} style={{ paddingVertical: spacing.xs }}>
             <Text style={{ fontSize: 12, color: colors.text.muted }}>Desvincular</Text>
           </TouchableOpacity>
+          </>
+          )}
         </View>
       </View>
       </Swipeable>
