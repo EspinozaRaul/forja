@@ -70,7 +70,7 @@ export default function HomeScreen() {
       }
 
       setSelectedRoutineId(null);
-      router.replace(`/session/${session[0].id}`);
+      router.push(`/session/${session[0].id}`);
     } catch (error) {
       await haptics.error();
       Alert.alert('Error', 'Failed to create session');
