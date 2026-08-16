@@ -50,6 +50,7 @@ export default function SessionScreen() {
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
   const [showRestTimer, setShowRestTimer] = useState(false);
   const [restDuration, setRestDuration] = useState(60);
   const [restExerciseName, setRestExerciseName] = useState('');
@@ -399,6 +400,8 @@ export default function SessionScreen() {
           router.push(`/exercise/${exercise.id}`);
         }}
         onClose={() => { setShowPicker(false); setReplaceId(null); }}
+        state={pickerState}
+        onStateChange={setPickerState}
       />
 
       <Modal visible={supersetPartnerMode !== null} transparent animationType="fade">

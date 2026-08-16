@@ -42,6 +42,7 @@ export default function RoutineDetailScreen() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
   const [showStartModal, setShowStartModal] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
@@ -365,6 +366,8 @@ export default function RoutineDetailScreen() {
         }}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
         multiSelect={replaceIndex === null}
+        state={pickerState}
+        onStateChange={setPickerState}
       />
 
       <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>

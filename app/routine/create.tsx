@@ -25,6 +25,7 @@ export default function CreateRoutineScreen() {
   const [description, setDescription] = useState('');
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
@@ -225,6 +226,8 @@ export default function CreateRoutineScreen() {
         }}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
         multiSelect={replaceIndex === null}
+        state={pickerState}
+        onStateChange={setPickerState}
       />
     </ScrollView>
   );

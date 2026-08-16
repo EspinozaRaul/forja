@@ -8,6 +8,12 @@ import { EXERCISE_IMAGES } from '../lib/assets/exercise-images';
 import { EXERCISE_NAMES_ES } from '../lib/db/exercise-names-es';
 import type { Exercise } from '../lib/types';
 
+interface ExercisePickerState {
+  search: string;
+  selectedMuscle: string;
+  selectedIds: number[];
+}
+
 interface ExercisePickerProps {
   visible: boolean;
   exercises: Exercise[];
@@ -16,7 +22,14 @@ interface ExercisePickerProps {
   onPreview?: (exercise: Exercise) => void;
   onClose: () => void;
   multiSelect?: boolean;
+  // Controlled state (optional): when provided with onStateChange, the parent
+  // owns search/filter/selection so they survive navigating to an exercise
+  // preview and coming back. Falls back to internal state when omitted.
+  state?: ExercisePickerState;
+  onStateChange?: (state: ExercisePickerState) => void;
 }
+
+const EMPTY_STATE: ExercisePickerState = { search: '', selectedMuscle: 'Todos', selectedIds: [] };
 
 // Muscle group filters — uses dataset "target" field (more accurate than muscle_group)
 const MUSCLE_FILTERS = [
@@ -39,16 +52,35 @@ function getExerciseName(exercise: Exercise): string {
   return EXERCISE_NAMES_ES[exercise.name] || exercise.name;
 }
 
-export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onPreview, onClose, multiSelect = false }: ExercisePickerProps) {
-  const [search, setSearch] = useState('');
-  const [selectedMuscle, setSelectedMuscle] = useState<string>('Todos');
+export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onPreview, onClose, multiSelect = false, state: controlledState, onStateChange }: ExercisePickerProps) {
+  // Internal fallback state — used only when the parent does not control state
+  const [internalSearch, setInternalSearch] = useState('');
+  const [internalMuscle, setInternalMuscle] = useState('Todos');
+  const [internalIds, setInternalIds] = useState<Set<number>>(new Set());
+
+  const isControlled = !!controlledState && !!onStateChange;
+  const search = isControlled ? controlledState.search : internalSearch;
+  const setSearch = (value: string) => {
+    if (isControlled) onStateChange({ ...controlledState, search: value });
+    else setInternalSearch(value);
+  };
+  const selectedMuscle = isControlled ? controlledState.selectedMuscle : internalMuscle;
+  const setSelectedMuscle = (value: string) => {
+    if (isControlled) onStateChange({ ...controlledState, selectedMuscle: value });
+    else setInternalMuscle(value);
+  };
+  const selectedIds = isControlled ? new Set(controlledState.selectedIds) : internalIds;
+  const setSelectedIds = (value: Set<number>) => {
+    if (isControlled) onStateChange({ ...controlledState, selectedIds: [...value] });
+    else setInternalIds(value);
+  };
+
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const createExercise = useCreateExercise();
   const { data: categories } = useCategories();
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const filtered = useMemo(() => {
     let result = exercises;
@@ -83,15 +115,13 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
   }, [exercises, search, selectedMuscle]);
 
   const handleToggleSelect = (exercise: Exercise) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(exercise.id)) {
-        next.delete(exercise.id);
-      } else {
-        next.add(exercise.id);
-      }
-      return next;
-    });
+    const next = new Set(selectedIds);
+    if (next.has(exercise.id)) {
+      next.delete(exercise.id);
+    } else {
+      next.add(exercise.id);
+    }
+    setSelectedIds(next);
   };
 
   const handleConfirmMultiSelect = () => {
