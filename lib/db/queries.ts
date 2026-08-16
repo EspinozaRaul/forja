@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, gte, lte } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, gte, lte, inArray, isNotNull } from 'drizzle-orm';
 import {
   categories,
   exercises,
@@ -552,6 +552,42 @@ export async function getExerciseStats(exerciseId: number): Promise<ExerciseStat
     totalSessions: sessionCount[0]?.count ?? 0,
     totalSets: result[0]?.totalSets ?? 0,
   };
+}
+
+// ─── Last Weight Per Exercise ──────────────────────────
+
+/**
+ * Returns the most recent weight recorded for each of the given exercises,
+ * keyed by exercise id. Used to prefill/refine the "peso previo" shown when
+ * building a routine or logging a new set.
+ */
+export async function getLastWeightByExerciseIds(exerciseIds: number[]): Promise<Record<number, { weight: number; unit: string | null } | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      weight: sets.weight,
+      unit: exercises.unit,
+      createdAt: sets.createdAt,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+    .where(and(
+      inArray(sessionExercises.exerciseId, exerciseIds),
+      isNotNull(sets.weight),
+    ))
+    .orderBy(desc(sets.createdAt));
+
+  // First row per exercise (ordered by createdAt desc) is the latest one
+  const result: Record<number, { weight: number; unit: string | null } | null> = {};
+  for (const row of rows) {
+    if (!(row.exerciseId in result) && row.weight != null) {
+      result[row.exerciseId] = { weight: row.weight, unit: row.unit };
+    }
+  }
+  return result;
 }
 
 // ─── Exercise Sessions History ─────────────────────────

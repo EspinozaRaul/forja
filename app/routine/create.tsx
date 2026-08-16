@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useExercises } from '../../lib/hooks/useExercises';
+import { useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
 import { useCreateRoutine, useAddExerciseToRoutine } from '../../lib/hooks/useRoutines';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -29,6 +30,7 @@ export default function CreateRoutineScreen() {
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const lastWeights = useLastWeightByExerciseIds(selectedExercises.map((e) => e.id));
 
   const validate = () => {
     const newErrors: { name?: string } = {};
@@ -193,6 +195,11 @@ export default function CreateRoutineScreen() {
                 <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={1}>
                   {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
                 </Text>
+                {lastWeights.data?.[exercise.id] != null && (
+                  <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.accent.secondary }}>
+                    último: {lastWeights.data?.[exercise.id]?.weight}{lastWeights.data?.[exercise.id]?.unit ?? 'kg'}
+                  </Text>
+                )}
                 <TouchableOpacity
                   onPress={() => { setReplaceIndex(index); setShowPicker(true); }}
                   style={{ paddingLeft: spacing.sm }}

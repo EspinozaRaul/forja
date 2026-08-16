@@ -6,6 +6,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
 import { useExercises } from '../../lib/hooks/useExercises';
+import { useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
 import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -25,6 +26,7 @@ export default function RoutineDetailScreen() {
   const { data: routines, isLoading: routineLoading } = useRoutine(routineId);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineId);
   const { data: allExercises, isLoading: allExercisesLoading } = useExercises();
+  const lastWeights = useLastWeightByExerciseIds(routineExercises?.map((re) => re.exerciseId) ?? []);
   const updateRoutine = useUpdateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const removeExerciseFromRoutine = useRemoveExerciseFromRoutine();
@@ -326,6 +328,11 @@ export default function RoutineDetailScreen() {
                   <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>
                     {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
                   </Text>
+                  {re.exercise && lastWeights.data?.[re.exercise.id] != null && (
+                    <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.accent.secondary, marginTop: 2 }}>
+                      último: {lastWeights.data?.[re.exercise.id]?.weight}{lastWeights.data?.[re.exercise.id]?.unit ?? 'kg'}
+                    </Text>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); setReplaceIndex(index); setShowPicker(true); }}

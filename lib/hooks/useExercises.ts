@@ -10,6 +10,7 @@ import {
   getExerciseStats,
   getExerciseSessions,
   getExercisePRs,
+  getLastWeightByExerciseIds,
 } from '../db/queries';
 import type { Exercise, Set } from '../types';
 import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs } from '../db/queries';
@@ -76,6 +77,14 @@ export function useDeleteExercise() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EXERCISE_KEY });
     },
+  });
+}
+
+export function useLastWeightByExerciseIds(exerciseIds: number[]) {
+  return useQuery({
+    queryKey: [EXERCISE_KEY, 'lastWeight', [...exerciseIds].sort()],
+    queryFn: () => getLastWeightByExerciseIds(exerciseIds),
+    enabled: exerciseIds.length > 0,
   });
 }
 
