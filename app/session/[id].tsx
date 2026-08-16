@@ -1008,7 +1008,7 @@ function SessionExerciseItem({ sessionExercise, onSetCompleted, onReplace, onDra
                     style={{ flex: 1, backgroundColor: createDropSets.isPending || deleteSet.isPending ? colors.text.muted : colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
                   >
                     <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 13 }}>
-                      {createDropSets.isPending || deleteSet.isPending ? 'Guardando...' : 'Guardar Drop Set'}
+                      {createDropSets.isPending || deleteSet.isPending ? 'Guardando...' : (dropSetMethod[set.id] ?? 'dropset') === 'dropset' ? 'Guardar Drop Set' : 'Guardar Serie'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity

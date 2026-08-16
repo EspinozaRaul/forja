@@ -44,6 +44,9 @@ export function DropSetLogger({
   const badgeText = method === 'dropset' ? 'DS' : method === 'rest_pause' ? 'RP' : method === 'cluster' ? 'CL' : 'DS';
   const dropLabel = (index: number) =>
     method === 'dropset' ? `Drop ${index + 1}` : `Segmento ${index + 1}`;
+  // Method-aware unit labels so cluster/rest-pause never read as "Drop"
+  const unitLabel = method === 'dropset' ? 'Drop' : 'Segmento';
+  const unitLabelPlural = method === 'dropset' ? 'drops' : 'segmentos';
 
   const handleDelete = () => {
     swipeableRef.current?.close();
@@ -85,7 +88,7 @@ export function DropSetLogger({
             </View>
             <View style={styles.rowCenter}>
               <Text style={styles.rowSummary}>
-                {drops.length} drops
+                {drops.length} {unitLabelPlural}
                 {summaryReps != null ? ` · ${summaryReps}r` : ''}
                 {summaryWeight != null ? ` · ${summaryWeight}${unit}` : ''}
               </Text>
@@ -162,7 +165,7 @@ export function DropSetLogger({
           {/* Add drop */}
           <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton}>
             <Text style={{ fontSize: 14, color: colors.accent.secondary }}>+</Text>
-            <Text style={styles.addDropText}>Agregar Drop</Text>
+            <Text style={styles.addDropText}>Agregar {unitLabel}</Text>
           </TouchableOpacity>
         </View>
       </View>
