@@ -6,6 +6,7 @@ import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useDatabase } from '../lib/hooks/useDatabase';
+import { repairRoutineTargetDefaults } from '../lib/db/queries';
 import { useAuth } from '../lib/hooks/useAuth';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { colors } from '../lib/theme/tokens';
@@ -95,6 +96,17 @@ function RootLayoutNav() {
 
 function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   const { isReady, error } = useDatabase();
+
+  // Transient one-time data fix: clean up routine_exercises rows corrupted by
+  // the partial-session upsync bug (target_sets = 1, null/0 targets broke the
+  // Home preview). Fire-and-forget once the DB is ready; the [isReady]
+  // dependency guarantees it does not re-run on every render.
+  useEffect(() => {
+    if (!isReady) return;
+    repairRoutineTargetDefaults().catch((err) => {
+      console.error('Failed to repair routine target defaults:', err);
+    });
+  }, [isReady]);
 
   if (error) {
     console.error('Database initialization failed:', error);

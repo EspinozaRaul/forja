@@ -12,9 +12,11 @@ import {
   getExercisePRs,
   getLastWeightByExerciseIds,
   getMaxWeightByExerciseIds,
+  getLastRepsByExerciseIds,
+  getLastWorkoutPerExercise,
 } from '../db/queries';
 import type { Exercise, Set } from '../types';
-import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs } from '../db/queries';
+import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs, LastWorkoutPerExercise } from '../db/queries';
 
 const EXERCISE_KEY = ['exercises'];
 
@@ -93,6 +95,22 @@ export function useMaxWeightByExerciseIds(exerciseIds: number[]) {
   return useQuery({
     queryKey: [EXERCISE_KEY, 'maxWeight', [...exerciseIds].sort()],
     queryFn: () => getMaxWeightByExerciseIds(exerciseIds),
+    enabled: exerciseIds.length > 0,
+  });
+}
+
+export function useLastRepsByExerciseIds(exerciseIds: number[]) {
+  return useQuery({
+    queryKey: [EXERCISE_KEY, 'lastReps', [...exerciseIds].sort()],
+    queryFn: () => getLastRepsByExerciseIds(exerciseIds),
+    enabled: exerciseIds.length > 0,
+  });
+}
+
+export function useLastWorkoutPerExercise(exerciseIds: number[]) {
+  return useQuery<Record<number, LastWorkoutPerExercise | null>>({
+    queryKey: [EXERCISE_KEY, 'lastWorkout', [...exerciseIds].sort()],
+    queryFn: () => getLastWorkoutPerExercise(exerciseIds),
     enabled: exerciseIds.length > 0,
   });
 }

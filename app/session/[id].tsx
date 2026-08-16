@@ -6,10 +6,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
-import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
-import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds } from '../../lib/hooks/useExercises';
+import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds } from '../../lib/hooks/useExercises';
 import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
 import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
@@ -22,8 +22,9 @@ import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../../lib/constants/routine-defaults';
 import { haptics } from '../../lib/utils/haptics';
-import { detectRoutineDiff, summarizeDiff, countVisibleSets, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
+import { detectRoutineDiff, summarizeDiff, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
 import type { SessionExercise, Set, Exercise, RoutineExercise } from '../../lib/types';
 import type { SessionExerciseWithSets } from '../../lib/db/queries';
 
@@ -37,6 +38,7 @@ export default function SessionScreen() {
   const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
   const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
   const completeSession = useCompleteSession();
+  const deleteSession = useDeleteSession();
   const addExerciseToSession = useAddExerciseToSession();
   const updateOrder = useUpdateSessionExerciseOrder();
   const { data: allExercises } = useExercises();
@@ -56,6 +58,12 @@ export default function SessionScreen() {
 
   // Previous-session data for the "peso previo" placeholders (guidance only).
   const { data: lastSession } = useLastSessionForRoutine(session?.routineId ?? 0);
+  const lastWeights = useLastWeightByExerciseIds(
+    sessionExercises?.map((se) => se.exerciseId) ?? []
+  );
+  const lastReps = useLastRepsByExerciseIds(
+    sessionExercises?.map((se) => se.exerciseId) ?? []
+  );
   const { data: maxWeights } = useMaxWeightByExerciseIds(
     sessionExercises?.map((se) => se.exerciseId) ?? []
   );
@@ -63,15 +71,26 @@ export default function SessionScreen() {
   // Previous values per exerciseId + setNumber from the last completed session
   // of THIS routine. Prefer the drop group parent (isDropGroup === true, the
   // heaviest first drop) or a plain linear set; fall back to any set with the
-  // same setNumber.
+  // same setNumber. The fallback works PER FIELD: if the matching set left a
+  // field empty, fall back to the most recent recorded value for the exercise
+  // overall (weight and reps independently). These are guidance-only
+  // placeholders — they never get saved.
   const getPreviousForExercise = (exerciseId: number, setNumber: number) => {
+    let weight: number | null = null;
+    let reps: number | null = null;
     const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
-    if (!prevSets || prevSets.length === 0) return undefined;
-    const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
-    if (withNumber.length === 0) return undefined;
-    const preferred = withNumber.find((s) => s.isDropGroup === true || s.dropOrder == null);
-    const chosen = preferred ?? withNumber[0];
-    return { weight: chosen.weight ?? null, reps: chosen.reps ?? null };
+    if (prevSets && prevSets.length > 0) {
+      const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
+      if (withNumber.length > 0) {
+        const preferred = withNumber.find((s) => s.isDropGroup === true || s.dropOrder == null);
+        const chosen = preferred ?? withNumber[0];
+        weight = chosen.weight != null ? chosen.weight : null;
+        reps = chosen.reps != null ? chosen.reps : null;
+      }
+    }
+    if (weight == null) weight = lastWeights.data?.[exerciseId]?.weight ?? null;
+    if (reps == null) reps = lastReps.data?.[exerciseId]?.reps ?? null;
+    return weight != null || reps != null ? { weight, reps } : undefined;
   };
 
   const getMaxWeightForExercise = (exerciseId: number) =>
@@ -86,7 +105,7 @@ export default function SessionScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
   const [showRestTimer, setShowRestTimer] = useState(false);
-  const [restDuration, setRestDuration] = useState(60);
+  const [restDuration, setRestDuration] = useState(DEFAULT_REST_SECONDS);
   const [restExerciseName, setRestExerciseName] = useState('');
   const [restartKey, setRestartKey] = useState(0);
   const [replaceId, setReplaceId] = useState<number | null>(null);
@@ -174,6 +193,30 @@ export default function SessionScreen() {
     );
   };
 
+  const cancelSessionAndLeave = async () => {
+    Alert.alert(
+      'Cancel Session',
+      'This session will be discarded and nothing will be saved. Continue?',
+      [
+        { text: 'Go Back', style: 'cancel' },
+        {
+          text: 'Discard Session',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await haptics.heavy();
+              await deleteSession.mutateAsync(sessionId);
+              router.back();
+            } catch (error) {
+              await haptics.error();
+              Alert.alert('Error', 'Failed to discard session');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const completeSessionAndNavigate = async () => {
     try {
       await haptics.heavy();
@@ -218,7 +261,7 @@ export default function SessionScreen() {
         id: r.id,
         exerciseId: r.exerciseId,
         order: r.order,
-        targetSets: r.targetSets ?? 3,
+        targetSets: r.targetSets ?? DEFAULT_TARGET_SETS,
       })),
       sessionExercises: sessionRows.map((s) => ({ exerciseId: s.exerciseId, order: s.order })),
       setsByExercise: buildSetsByExercise(sessionRows),
@@ -237,18 +280,6 @@ export default function SessionScreen() {
       routineRows: routineRes.data ?? routineExercises ?? [],
       sessionRows: sessionRes.data ?? sessionExercisesWithSets ?? [],
     };
-  };
-
-  const countVisibleSetsForExercise = (sessionRows: SessionExerciseWithSets[], exerciseId: number): number => {
-    const rows = sessionRows
-      .filter((s) => s.exerciseId === exerciseId)
-      .flatMap((s) => (s.sets ?? []).map((set) => ({
-        setNumber: set.setNumber,
-        method: set.method,
-        isDropGroup: set.isDropGroup === true,
-        dropOrder: set.dropOrder ?? 0,
-      })));
-    return countVisibleSets(rows);
   };
 
   const handleEndSession = async () => {
@@ -290,7 +321,10 @@ export default function SessionScreen() {
     }
 
     // added: session exercises not in the routine → insert with session order
-    // and the real number of counted sets
+    // and the default targets. A partial session (e.g. only 1 set logged for a
+    // brand new exercise) must NOT pin a low target like 1 into the template —
+    // use the same default (3 sets × 10 reps) that handleAddExercise uses when
+    // building routines, so the Home preview never shows degraded values.
     for (const entry of diff.added) {
       if (routineRowByExercise.has(entry.exerciseId)) continue; // idempotent retry
       const se = sessionRowByExercise.get(entry.exerciseId);
@@ -299,8 +333,8 @@ export default function SessionScreen() {
         routineId: session.routineId,
         exerciseId: entry.exerciseId,
         order: se.order,
-        targetSets: countVisibleSetsForExercise(sessionRows, entry.exerciseId),
-        targetReps: 10,
+        targetSets: DEFAULT_TARGET_SETS,
+        targetReps: DEFAULT_TARGET_REPS,
       });
     }
 
@@ -310,7 +344,7 @@ export default function SessionScreen() {
       if (!row) continue;
       await updateRoutineExerciseTargets.mutateAsync({
         id: row.id,
-        data: { targetSets: entry.toSets, targetReps: row.targetReps ?? 10 },
+        data: { targetSets: entry.toSets, targetReps: row.targetReps ?? DEFAULT_TARGET_REPS },
       });
     }
 
@@ -587,10 +621,16 @@ export default function SessionScreen() {
           />
         </View>
 
-        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs }}>
+        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs, flexDirection: 'row', gap: spacing.sm }}>
+          <TouchableOpacity
+            onPress={cancelSessionAndLeave}
+            style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+          >
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>Cancel</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={handleEndSession}
-            style={{ backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+            style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
             <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>End Session</Text>
           </TouchableOpacity>
@@ -753,7 +793,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const [expandedDropSets, setExpandedDropSets] = useState<number[]>([]);
 
   const exercise = exercises?.[0];
-  const currentRestTime = sessionExercise.restTime ?? 60;
+  const currentRestTime = sessionExercise.restTime ?? DEFAULT_REST_SECONDS;
 
   // Use setNumber for toggle tracking (more stable than ID during optimistic updates)
   const handleToggleDropSet = (setNumber: number) => {
@@ -1431,8 +1471,8 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   const { data: exA } = useExercise(a?.exerciseId ?? 0);
   const { data: exB } = useExercise(b?.exerciseId ?? 0);
 
-  const restA = a?.restTime ?? 60;
-  const restB = b?.restTime ?? 60;
+  const restA = a?.restTime ?? DEFAULT_REST_SECONDS;
+  const restB = b?.restTime ?? DEFAULT_REST_SECONDS;
   const unitA = exA?.[0]?.unit ?? 'kg';
   const unitB = exB?.[0]?.unit ?? 'kg';
 

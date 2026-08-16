@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useSessions } from '../../lib/hooks/useSessions';
 import { useRoutines, useRoutineExercises } from '../../lib/hooks/useRoutines';
-import { useExercises, useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
+import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
 import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { SessionCard } from '../../components/SessionCard';
@@ -14,6 +14,8 @@ import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { DEFAULT_TARGET_SETS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
+import { useCreateSet } from '../../lib/hooks/useSets';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -24,9 +26,10 @@ export default function HomeScreen() {
   const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(selectedRoutineId ?? 0);
   const { data: allExercises } = useExercises();
-  const lastWeights = useLastWeightByExerciseIds(routineExercises?.map((re) => re.exerciseId) ?? []);
+  const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
   const createSession = useCreateSession();
   const addExerciseToSession = useAddExerciseToSession();
+  const createSet = useCreateSet();
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
@@ -58,14 +61,23 @@ export default function HomeScreen() {
         routineId: selectedRoutineId,
       });
 
-      // Copy routine exercises to the new session (fresh start)
+      // Copy routine exercises to the new session (fresh start) with the
+      // planned set template already materialized (empty sets guide the user).
       if (routineExercises && routineExercises.length > 0) {
         for (const re of routineExercises) {
-          await addExerciseToSession.mutateAsync({
+          const se = await addExerciseToSession.mutateAsync({
             sessionId: session[0].id,
             exerciseId: re.exerciseId,
             order: re.order,
           });
+          const sessionExerciseId = se[0].id;
+          const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
+          for (let i = 1; i <= plannedSets; i++) {
+            await createSet.mutateAsync({
+              sessionExerciseId,
+              setNumber: i,
+            });
+          }
         }
       }
 
@@ -209,19 +221,22 @@ export default function HomeScreen() {
                   </Text>
                 ) : (
                   <View style={{ marginBottom: spacing.md }}>
-                    {routineExercisesWithDetails.map((re) => (
-                      <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>
-                        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                          {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
-                        </Text>
-                        <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 1 }}>
-                          {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
-                          {re.exercise && lastWeights.data?.[re.exercise.id] != null
-                            ? ` · último: ${lastWeights.data?.[re.exercise.id]?.weight}${lastWeights.data?.[re.exercise.id]?.unit ?? 'kg'}`
-                            : ''}
-                        </Text>
-                      </View>
-                    ))}
+                    {routineExercisesWithDetails.map((re) => {
+                      const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
+                      const label = entry
+                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${entry.weight}${entry.unit ?? 'kg'}` : ''}`
+                        : formatSetsRepsLabel(re.targetSets, re.targetReps);
+                      return (
+                        <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>
+                          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+                            {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
+                          </Text>
+                          <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 1 }}>
+                            {label}
+                          </Text>
+                        </View>
+                      );
+                    })}
                   </View>
                 )}
                 <Button title="Start Session" onPress={handleStartRoutineSession} loading={createSession.isPending} />

@@ -5,9 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
-import { useExercises } from '../../lib/hooks/useExercises';
-import { useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
+import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
 import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
+import { useCreateSet } from '../../lib/hooks/useSets';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
@@ -15,6 +15,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { haptics } from '../../lib/utils/haptics';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
 import { summarizeSets } from '../../lib/utils/session-summary';
 
 export default function RoutineDetailScreen() {
@@ -26,7 +27,7 @@ export default function RoutineDetailScreen() {
   const { data: routines, isLoading: routineLoading } = useRoutine(routineId);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineId);
   const { data: allExercises, isLoading: allExercisesLoading } = useExercises();
-  const lastWeights = useLastWeightByExerciseIds(routineExercises?.map((re) => re.exerciseId) ?? []);
+  const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
   const updateRoutine = useUpdateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const removeExerciseFromRoutine = useRemoveExerciseFromRoutine();
@@ -34,6 +35,7 @@ export default function RoutineDetailScreen() {
   const updateOrder = useUpdateRoutineExerciseOrder();
   const createSession = useCreateSession();
   const addExerciseToSession = useAddExerciseToSession();
+  const createSet = useCreateSet();
   const { data: lastSession } = useLastSessionForRoutine(routineId);
   const duplicateSessionData = useDuplicateSessionData();
 
@@ -87,8 +89,8 @@ export default function RoutineDetailScreen() {
         routineId,
         exerciseId: exercise.id,
         order: routineExercisesWithDetails.length + 1,
-        targetSets: 3,
-        targetReps: 10,
+        targetSets: DEFAULT_TARGET_SETS,
+        targetReps: DEFAULT_TARGET_REPS,
       });
       setShowPicker(false);
     } catch (error) {
@@ -103,8 +105,8 @@ export default function RoutineDetailScreen() {
           routineId,
           exerciseId: exercises[i].id,
           order: routineExercisesWithDetails.length + i + 1,
-          targetSets: 3,
-          targetReps: 10,
+          targetSets: DEFAULT_TARGET_SETS,
+          targetReps: DEFAULT_TARGET_REPS,
         });
       }
       setShowPicker(false);
@@ -208,11 +210,20 @@ export default function RoutineDetailScreen() {
         });
       } else {
         for (const re of routineExercisesWithDetails) {
-          await addExerciseToSession.mutateAsync({
+          const se = await addExerciseToSession.mutateAsync({
             sessionId: session[0].id,
             exerciseId: re.exerciseId,
             order: re.order,
           });
+          // Materialize the planned set template (empty sets guide the user)
+          const sessionExerciseId = se[0].id;
+          const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
+          for (let i = 1; i <= plannedSets; i++) {
+            await createSet.mutateAsync({
+              sessionExerciseId,
+              setNumber: i,
+            });
+          }
         }
       }
 
@@ -326,13 +337,13 @@ export default function RoutineDetailScreen() {
                     {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
                   </Text>
                   <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>
-                    {re.targetSets ?? 3} sets × {re.targetReps ?? 10} reps
+                    {(() => {
+                      const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
+                      return entry
+                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${entry.weight}${entry.unit ?? 'kg'}` : ''}`
+                        : formatSetsRepsLabel(re.targetSets, re.targetReps);
+                    })()}
                   </Text>
-                  {re.exercise && lastWeights.data?.[re.exercise.id] != null && (
-                    <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.accent.secondary, marginTop: 2 }}>
-                      último: {lastWeights.data?.[re.exercise.id]?.weight}{lastWeights.data?.[re.exercise.id]?.unit ?? 'kg'}
-                    </Text>
-                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); setReplaceIndex(index); setShowPicker(true); }}

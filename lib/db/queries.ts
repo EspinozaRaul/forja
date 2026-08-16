@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, gte, lte, inArray, isNotNull } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, gte, lte, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
   categories,
   exercises,
@@ -10,6 +10,8 @@ import {
   sets,
 } from './schema';
 import { db } from './index';
+import { countVisibleSets } from '../utils/routine-diff';
+import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS } from '../constants/routine-defaults';
 import type { SessionExercise, Set } from '../types';
 
 // ─── Categories ────────────────────────────────────────
@@ -219,6 +221,33 @@ export async function updateRoutineExerciseTargets(
     .set(data)
     .where(eq(routineExercises.id, id))
     .returning();
+}
+
+/**
+ * One-time data repair for routines damaged by an earlier upsync bug. A partial
+ * session written target_sets = 1 (the count of a single logged set) into the
+ * template — no UI ever sets 1 explicitly in a routine, so those rows are
+ * guaranteed to come from that partial upsync. Additionally null/0 targets
+ * break the Home preview (which only falls back to defaults when the value is
+ * null). Reset everything to the intended defaults (3 sets × 10 reps).
+ */
+export async function repairRoutineTargetDefaults() {
+  await db
+    .update(routineExercises)
+    .set({ targetSets: DEFAULT_TARGET_SETS })
+    .where(eq(routineExercises.targetSets, 1));
+  await db
+    .update(routineExercises)
+    .set({ targetSets: DEFAULT_TARGET_SETS })
+    .where(isNull(routineExercises.targetSets));
+  await db
+    .update(routineExercises)
+    .set({ targetReps: DEFAULT_TARGET_REPS })
+    .where(isNull(routineExercises.targetReps));
+  await db
+    .update(routineExercises)
+    .set({ targetReps: DEFAULT_TARGET_REPS })
+    .where(lte(routineExercises.targetReps, 0));
 }
 
 // ─── Sessions ──────────────────────────────────────────
@@ -621,6 +650,122 @@ export async function getLastWeightByExerciseIds(exerciseIds: number[]): Promise
       result[row.exerciseId] = { weight: row.weight, unit: row.unit };
     }
   }
+  return result;
+}
+
+/**
+ * Returns the most recent reps recorded for each of the given exercises, keyed
+ * by exercise id. Used by the session "peso previo" placeholders so a missing
+ * reps value on the last session's matching set still falls back to the latest
+ * reps ever recorded for the exercise.
+ */
+export async function getLastRepsByExerciseIds(exerciseIds: number[]): Promise<Record<number, { reps: number } | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      reps: sets.reps,
+      createdAt: sets.createdAt,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(and(
+      inArray(sessionExercises.exerciseId, exerciseIds),
+      isNotNull(sets.reps),
+    ))
+    .orderBy(desc(sets.createdAt));
+
+  // First row per exercise (ordered by createdAt desc) is the latest one
+  const result: Record<number, { reps: number } | null> = {};
+  for (const row of rows) {
+    if (!(row.exerciseId in result) && row.reps != null) {
+      result[row.exerciseId] = { reps: row.reps };
+    }
+  }
+  return result;
+}
+
+// ─── Last Workout Per Exercise ────────────────────────
+
+export interface LastWorkoutPerExercise {
+  sets: number;
+  reps: number | null;
+  weight: number | null;
+  unit: string | null;
+}
+
+/**
+ * For each exercise, finds the MOST RECENT session that contains it and returns
+ * the visible set count of that session plus the reps/weight of its latest set.
+ * Used to show the real last workout in routine previews instead of the target
+ * template (3 sets × 10 reps). Exercises never trained map to null.
+ */
+export async function getLastWorkoutPerExercise(
+  exerciseIds: number[]
+): Promise<Record<number, LastWorkoutPerExercise | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      sessionId: sessionExercises.sessionId,
+      sessionStartedAt: sessions.startedAt,
+      setNumber: sets.setNumber,
+      reps: sets.reps,
+      weight: sets.weight,
+      unit: exercises.unit,
+      method: sets.method,
+      isDropGroup: sets.isDropGroup,
+      dropOrder: sets.dropOrder,
+      createdAt: sets.createdAt,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
+    .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+    .where(inArray(sessionExercises.exerciseId, exerciseIds))
+    .orderBy(desc(sessions.startedAt), desc(sets.createdAt));
+
+  const result: Record<number, LastWorkoutPerExercise | null> = {};
+  for (const id of exerciseIds) {
+    result[id] = null;
+  }
+
+  const byExercise: Record<number, typeof rows> = {};
+  for (const row of rows) {
+    (byExercise[row.exerciseId] ??= []).push(row);
+  }
+
+  for (const [exerciseIdStr, exerciseRows] of Object.entries(byExercise)) {
+    const exerciseId = Number(exerciseIdStr);
+    const firstRow = exerciseRows[0];
+
+    // Rows are ordered by startedAt desc then createdAt desc, so all sets of the
+    // latest session are contiguous at the start; that block is the last workout.
+    const lastSessionRows = exerciseRows.filter(
+      (r) => r.sessionId === firstRow.sessionId
+    );
+
+    const setsCount = countVisibleSets(
+      lastSessionRows.map((r) => ({
+        setNumber: r.setNumber,
+        method: r.method,
+        isDropGroup: r.isDropGroup === true,
+        dropOrder: r.dropOrder ?? 0,
+      }))
+    );
+
+    const reps = firstRow.reps ?? null;
+    const weightRow = lastSessionRows.find((r) => r.weight != null);
+    result[exerciseId] = {
+      sets: setsCount,
+      reps,
+      weight: weightRow?.weight ?? null,
+      unit: weightRow?.unit ?? null,
+    };
+  }
+
   return result;
 }
 

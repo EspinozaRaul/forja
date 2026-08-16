@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../constants/routine-defaults';
 
 export const categories = sqliteTable('categories', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -56,8 +57,8 @@ export const routineExercises = sqliteTable('routine_exercises', {
     .references(() => exercises.id)
     .notNull(),
   order: integer('order').notNull(),
-  targetSets: integer('target_sets').default(3),
-  targetReps: integer('target_reps').default(10),
+  targetSets: integer('target_sets').default(DEFAULT_TARGET_SETS),
+  targetReps: integer('target_reps').default(DEFAULT_TARGET_REPS),
 });
 
 export const sessions = sqliteTable('sessions', {
@@ -78,7 +79,7 @@ export const sessionExercises = sqliteTable('session_exercises', {
     .references(() => exercises.id)
     .notNull(),
   order: integer('order').notNull(),
-  restTime: integer('rest_time').default(60), // seconds, per-exercise rest duration
+  restTime: integer('rest_time').default(DEFAULT_REST_SECONDS), // seconds, per-exercise rest duration
   notes: text('notes'),
   supersetPairId: integer('superset_pair_id'), // shared pair id; both exercises of a super set get the same value
 });

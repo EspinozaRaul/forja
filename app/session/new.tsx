@@ -2,11 +2,13 @@ import { Text, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
+import { useCreateSet } from '../../lib/hooks/useSets';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
+import { DEFAULT_TARGET_SETS } from '../../lib/constants/routine-defaults';
 
 export default function NewSessionScreen() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function NewSessionScreen() {
   const { data: routines, isLoading: routineLoading } = useRoutine(routineIdNum ?? 0);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineIdNum ?? 0);
   const addExerciseToSession = useAddExerciseToSession();
+  const createSet = useCreateSet();
 
   const routine = routines?.[0];
   const isLoading = routineIdNum ? (routineLoading || exercisesLoading) : false;
@@ -30,13 +33,22 @@ export default function NewSessionScreen() {
       });
 
       if (routineExercises && routineExercises.length > 0) {
-        // Copy routine exercises to the new session (fresh start)
+        // Copy routine exercises to the new session (fresh start) and
+        // materialize the planned set template (empty sets guide the user)
         for (const re of routineExercises) {
-          await addExerciseToSession.mutateAsync({
+          const se = await addExerciseToSession.mutateAsync({
             sessionId: session[0].id,
             exerciseId: re.exerciseId,
             order: re.order,
           });
+          const sessionExerciseId = se[0].id;
+          const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
+          for (let i = 1; i <= plannedSets; i++) {
+            await createSet.mutateAsync({
+              sessionExerciseId,
+              setNumber: i,
+            });
+          }
         }
       }
 
