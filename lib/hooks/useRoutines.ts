@@ -9,6 +9,7 @@ import {
   addExerciseToRoutine,
   removeExerciseFromRoutine,
   updateRoutineExerciseOrder,
+  updateRoutineExerciseTargets,
   replaceRoutineExercise,
   getAllFolders,
   getFolderById,
@@ -125,6 +126,23 @@ export function useUpdateRoutineExerciseOrder() {
   return useMutation({
     mutationFn: ({ id, order }: { id: number; order: number }) =>
       updateRoutineExerciseOrder(id, order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+    },
+  });
+}
+
+export function useUpdateRoutineExerciseTargets() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { targetSets?: number; targetReps?: number };
+    }) => updateRoutineExerciseTargets(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },

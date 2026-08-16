@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Alert, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { Text, View, ScrollView, Alert, TouchableOpacity, TextInput, Modal, Pressable } from 'react-native';
 import { useState, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,10 +6,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
-import { useSession, useSessionExercises, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds } from '../../lib/hooks/useExercises';
+import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
 import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
@@ -22,7 +23,9 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import { haptics } from '../../lib/utils/haptics';
-import type { SessionExercise, Set, Exercise } from '../../lib/types';
+import { detectRoutineDiff, summarizeDiff, countVisibleSets, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
+import type { SessionExercise, Set, Exercise, RoutineExercise } from '../../lib/types';
+import type { SessionExerciseWithSets } from '../../lib/db/queries';
 
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,6 +43,14 @@ export default function SessionScreen() {
 
   const session = sessions?.[0];
   const isLoading = sessionLoading || exercisesLoading;
+
+  // Routine diff / upsync (End Session structural comparison)
+  const { data: routineExercises, refetch: refetchRoutineExercises } = useRoutineExercises(session?.routineId ?? 0);
+  const { data: sessionExercisesWithSets, refetch: refetchSessionWithSets } = useSessionExercisesWithSets(sessionId);
+  const removeExerciseFromRoutine = useRemoveExerciseFromRoutine();
+  const addExerciseToRoutine = useAddExerciseToRoutine();
+  const updateRoutineExerciseOrder = useUpdateRoutineExerciseOrder();
+  const updateRoutineExerciseTargets = useUpdateRoutineExerciseTargets();
 
   const sortedExercises = sessionExercises?.sort((a, b) => a.order - b.order) ?? [];
 
@@ -87,6 +98,9 @@ export default function SessionScreen() {
   const createSuperSetPair = useCreateSuperSetPair();
   const unlinkSuperSet = useUnlinkSuperSet();
   const deleteSessionExercise = useDeleteSessionExercise();
+  const [showRoutineDiffModal, setShowRoutineDiffModal] = useState(false);
+  const [pendingDiff, setPendingDiff] = useState<RoutineDiff | null>(null);
+  const [applyingRoutineUpdate, setApplyingRoutineUpdate] = useState(false);
 
   const handleDragHandleTap = async (index: number) => {
     if (dragIndex === null) {
@@ -149,7 +163,7 @@ export default function SessionScreen() {
     );
   }
 
-  const handleEndSession = async () => {
+  const confirmEndSession = () => {
     Alert.alert(
       'End Session',
       'Are you sure you want to end this session?',
@@ -172,6 +186,171 @@ export default function SessionScreen() {
       await haptics.error();
       Alert.alert('Error', 'Failed to end session');
     }
+  };
+
+  const buildSetsByExercise = (rows: SessionExerciseWithSets[]): Record<number, DiffSetRow[]> => {
+    const result: Record<number, DiffSetRow[]> = {};
+    for (const se of rows) {
+      result[se.exerciseId] = (se.sets ?? []).map((s) => ({
+        setNumber: s.setNumber,
+        method: s.method,
+        isDropGroup: s.isDropGroup === true,
+        dropOrder: s.dropOrder ?? 0,
+      }));
+    }
+    return result;
+  };
+
+  const buildRoutineDiff = (routineRows: RoutineExercise[], sessionRows: SessionExerciseWithSets[]): RoutineDiff => {
+    const exerciseNames: Record<number, string> = {};
+    const addNames = (exerciseIds: number[]) => {
+      for (const exerciseId of exerciseIds) {
+        if (exerciseNames[exerciseId] !== undefined) continue;
+        const ex = allExercises?.find((e) => e.id === exerciseId);
+        exerciseNames[exerciseId] = ex ? (EXERCISE_NAMES_ES[ex.name] || ex.name) : 'Ejercicio desconocido';
+      }
+    };
+    addNames(routineRows.map((r) => r.exerciseId));
+    addNames(sessionRows.map((s) => s.exerciseId));
+
+    return detectRoutineDiff({
+      routineExercises: routineRows.map((r) => ({
+        id: r.id,
+        exerciseId: r.exerciseId,
+        order: r.order,
+        targetSets: r.targetSets ?? 3,
+      })),
+      sessionExercises: sessionRows.map((s) => ({ exerciseId: s.exerciseId, order: s.order })),
+      setsByExercise: buildSetsByExercise(sessionRows),
+      exerciseNames,
+    });
+  };
+
+  // Re-read routine + session data from the DB so the comparison always uses
+  // the freshest state (the per-row set mutations invalidate their own keys).
+  const refreshDiffData = async (): Promise<{ routineRows: RoutineExercise[]; sessionRows: SessionExerciseWithSets[] }> => {
+    const [routineRes, sessionRes] = await Promise.all([
+      refetchRoutineExercises(),
+      refetchSessionWithSets(),
+    ]);
+    return {
+      routineRows: routineRes.data ?? routineExercises ?? [],
+      sessionRows: sessionRes.data ?? sessionExercisesWithSets ?? [],
+    };
+  };
+
+  const countVisibleSetsForExercise = (sessionRows: SessionExerciseWithSets[], exerciseId: number): number => {
+    const rows = sessionRows
+      .filter((s) => s.exerciseId === exerciseId)
+      .flatMap((s) => (s.sets ?? []).map((set) => ({
+        setNumber: set.setNumber,
+        method: set.method,
+        isDropGroup: set.isDropGroup === true,
+        dropOrder: set.dropOrder ?? 0,
+      })));
+    return countVisibleSets(rows);
+  };
+
+  const handleEndSession = async () => {
+    if (session.routineId == null) {
+      confirmEndSession();
+      return;
+    }
+
+    let diff: RoutineDiff;
+    try {
+      const { routineRows, sessionRows } = await refreshDiffData();
+      diff = buildRoutineDiff(routineRows, sessionRows);
+    } catch (error) {
+      // Fall back to the plain confirmation if the comparison data fails to load.
+      confirmEndSession();
+      return;
+    }
+
+    if (!diff.hasChanges) {
+      confirmEndSession();
+      return;
+    }
+
+    setPendingDiff(diff);
+    setShowRoutineDiffModal(true);
+  };
+
+  const applyRoutineUpsync = async (diff: RoutineDiff) => {
+    if (session.routineId == null) return;
+
+    const { routineRows, sessionRows } = await refreshDiffData();
+    const routineRowByExercise = new Map(routineRows.map((r) => [r.exerciseId, r]));
+    const sessionRowByExercise = new Map(sessionRows.map((s) => [s.exerciseId, s]));
+
+    // removed: routine rows whose exerciseId is absent from the session
+    for (const entry of diff.removed) {
+      const row = routineRowByExercise.get(entry.exerciseId);
+      if (row) await removeExerciseFromRoutine.mutateAsync(row.id);
+    }
+
+    // added: session exercises not in the routine → insert with session order
+    // and the real number of counted sets
+    for (const entry of diff.added) {
+      if (routineRowByExercise.has(entry.exerciseId)) continue; // idempotent retry
+      const se = sessionRowByExercise.get(entry.exerciseId);
+      if (!se) continue;
+      await addExerciseToRoutine.mutateAsync({
+        routineId: session.routineId,
+        exerciseId: entry.exerciseId,
+        order: se.order,
+        targetSets: countVisibleSetsForExercise(sessionRows, entry.exerciseId),
+        targetReps: 10,
+      });
+    }
+
+    // volumeChanged: exercises present in both → update targets keeping routine reps
+    for (const entry of diff.volumeChanged) {
+      const row = routineRowByExercise.get(entry.exerciseId);
+      if (!row) continue;
+      await updateRoutineExerciseTargets.mutateAsync({
+        id: row.id,
+        data: { targetSets: entry.toSets, targetReps: row.targetReps ?? 10 },
+      });
+    }
+
+    // reordered: exercises present in both → new order from the session sequence
+    if (diff.reordered) {
+      const sessionSorted = [...sessionRows].sort((a, b) => a.order - b.order);
+      const positionByExercise = new Map<number, number>();
+      sessionSorted.forEach((se, i) => {
+        positionByExercise.set(se.exerciseId, i + 1);
+      });
+      for (const [exerciseId, row] of routineRowByExercise) {
+        if (!sessionRowByExercise.has(exerciseId)) continue;
+        const position = positionByExercise.get(exerciseId);
+        if (position == null) continue;
+        if (row.order !== position) {
+          await updateRoutineExerciseOrder.mutateAsync({ id: row.id, order: position });
+        }
+      }
+    }
+  };
+
+  const handleUpdateRoutine = async () => {
+    if (!pendingDiff) return;
+    setApplyingRoutineUpdate(true);
+    try {
+      await applyRoutineUpsync(pendingDiff);
+      setShowRoutineDiffModal(false);
+      setPendingDiff(null);
+      await completeSessionAndNavigate();
+    } catch (error) {
+      await haptics.error();
+      setApplyingRoutineUpdate(false);
+      Alert.alert('Error', 'No se pudo actualizar la rutina.');
+    }
+  };
+
+  const handleSaveSessionOnly = () => {
+    setShowRoutineDiffModal(false);
+    setPendingDiff(null);
+    completeSessionAndNavigate();
   };
 
   const handleAddExercise = async (exercise: { id: number }) => {
@@ -490,6 +669,52 @@ export default function SessionScreen() {
           onSelect={handleSupersetCatalogSelect}
           onClose={() => { setShowSupersetCatalog(false); setSupersetFirstId(null); }}
         />
+
+        <Modal
+          visible={showRoutineDiffModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            if (!applyingRoutineUpdate) setShowRoutineDiffModal(false);
+          }}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+            onPress={() => {
+              if (!applyingRoutineUpdate) setShowRoutineDiffModal(false);
+            }}
+          >
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
+              <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
+                ¿Actualizar la rutina?
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+                La sesión tiene cambios estructurales respecto a tu rutina.
+              </Text>
+              <View style={{ marginBottom: spacing.md }}>
+                {(pendingDiff ? summarizeDiff(pendingDiff) : []).map((line) => (
+                  <Text key={line} style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.primary, marginBottom: spacing.xs }}>
+                    • {line}
+                  </Text>
+                ))}
+              </View>
+              <Button
+                title="Actualizar rutina"
+                variant="primary"
+                onPress={handleUpdateRoutine}
+                loading={applyingRoutineUpdate}
+                disabled={applyingRoutineUpdate}
+              />
+              <View style={{ height: spacing.sm }} />
+              <Button
+                title="Solo guardar sesión"
+                variant="secondary"
+                onPress={handleSaveSessionOnly}
+                disabled={applyingRoutineUpdate}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     );
   }

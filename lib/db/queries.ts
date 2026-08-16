@@ -10,6 +10,7 @@ import {
   sets,
 } from './schema';
 import { db } from './index';
+import type { SessionExercise, Set } from '../types';
 
 // ─── Categories ────────────────────────────────────────
 
@@ -209,6 +210,17 @@ export async function replaceRoutineExercise(id: number, exerciseId: number) {
     .returning();
 }
 
+export async function updateRoutineExerciseTargets(
+  id: number,
+  data: { targetSets?: number; targetReps?: number }
+) {
+  return db
+    .update(routineExercises)
+    .set(data)
+    .where(eq(routineExercises.id, id))
+    .returning();
+}
+
 // ─── Sessions ──────────────────────────────────────────
 
 export async function getAllSessions() {
@@ -251,6 +263,28 @@ export async function getSessionExercises(sessionId: number) {
     .select()
     .from(sessionExercises)
     .where(eq(sessionExercises.sessionId, sessionId));
+}
+
+export interface SessionExerciseWithSets extends SessionExercise {
+  sets: Set[];
+}
+
+export async function getSessionExercisesWithSets(sessionId: number): Promise<SessionExerciseWithSets[]> {
+  const rows = await db
+    .select()
+    .from(sessionExercises)
+    .where(eq(sessionExercises.sessionId, sessionId));
+
+  return Promise.all(
+    rows.map(async (se) => {
+      const setRows = await db
+        .select()
+        .from(sets)
+        .where(eq(sets.sessionExerciseId, se.id))
+        .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
+      return { ...se, sets: setRows };
+    })
+  );
 }
 
 export async function addExerciseToSession(data: {

@@ -6,6 +6,7 @@ import {
   completeSession,
   deleteSession,
   getSessionExercises,
+  getSessionExercisesWithSets,
   addExerciseToSession,
   updateSessionExerciseRestTime,
   updateSessionExerciseOrder,
@@ -17,6 +18,7 @@ import {
   unlinkSuperSetPair,
 } from '../db/queries';
 import type { Session, SessionExercise } from '../types';
+import type { SessionExerciseWithSets } from '../db/queries';
 
 const SESSION_KEY = ['sessions'];
 
@@ -39,6 +41,14 @@ export function useSessionExercises(sessionId: number) {
   return useQuery<SessionExercise[]>({
     queryKey: [...SESSION_KEY, sessionId, 'exercises'],
     queryFn: () => getSessionExercises(sessionId),
+    enabled: !!sessionId,
+  });
+}
+
+export function useSessionExercisesWithSets(sessionId: number) {
+  return useQuery<SessionExerciseWithSets[]>({
+    queryKey: [...SESSION_KEY, sessionId, 'exercises', 'withSets'],
+    queryFn: () => getSessionExercisesWithSets(sessionId),
     enabled: !!sessionId,
   });
 }
