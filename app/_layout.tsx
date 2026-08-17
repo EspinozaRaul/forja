@@ -5,6 +5,7 @@ import { Stack, router, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useDatabase } from '../lib/hooks/useDatabase';
 import { repairRoutineTargetDefaults } from '../lib/db/queries';
 import { useAuth } from '../lib/hooks/useAuth';
@@ -154,15 +155,17 @@ function FontInitializer({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <FontInitializer>
-            <DatabaseInitializer>
-              <RootLayoutNav />
-            </DatabaseInitializer>
-          </FontInitializer>
-        </QueryClientProvider>
-      </ErrorBoundary>
+      <KeyboardProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <FontInitializer>
+              <DatabaseInitializer>
+                <RootLayoutNav />
+              </DatabaseInitializer>
+            </FontInitializer>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

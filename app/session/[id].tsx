@@ -1,4 +1,5 @@
-import { Text, View, ScrollView, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation } from 'react-native';
+import { Text, View, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useState, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -124,6 +125,7 @@ export default function SessionScreen() {
   const [applyingRoutineUpdate, setApplyingRoutineUpdate] = useState(false);
   const [recordNotif, setRecordNotif] = useState<{ exerciseName: string; weight: number; unit: string; nonce: number } | null>(null);
   const recordNonceRef = useRef(0);
+  const [confirmAction, setConfirmAction] = useState<null | 'end' | 'cancel'>(null);
 
   const handleNewRecord = (exerciseName: string, weight: number, unit: string) => {
     recordNonceRef.current += 1;
@@ -192,38 +194,22 @@ export default function SessionScreen() {
   }
 
   const confirmEndSession = () => {
-    Alert.alert(
-      'End Session',
-      'Are you sure you want to end this session?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'End Session', style: 'destructive', onPress: completeSessionAndNavigate },
-      ]
-    );
+    setConfirmAction('end');
   };
 
-  const cancelSessionAndLeave = async () => {
-    Alert.alert(
-      'Cancel Session',
-      'This session will be discarded and nothing will be saved. Continue?',
-      [
-        { text: 'Go Back', style: 'cancel' },
-        {
-          text: 'Discard Session',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await haptics.heavy();
-              await deleteSession.mutateAsync(sessionId);
-              router.back();
-            } catch (error) {
-              await haptics.error();
-              Alert.alert('Error', 'Failed to discard session');
-            }
-          },
-        },
-      ]
-    );
+  const cancelSessionAndLeave = () => {
+    setConfirmAction('cancel');
+  };
+
+  const confirmDiscardSession = async () => {
+    try {
+      await haptics.heavy();
+      await deleteSession.mutateAsync(sessionId);
+      router.back();
+    } catch (error) {
+      await haptics.error();
+      Alert.alert('Error', 'Failed to discard session');
+    }
   };
 
   const completeSessionAndNavigate = async () => {
@@ -526,10 +512,10 @@ export default function SessionScreen() {
       )}
 
       {/* Exercises — scrollable middle */}
-      <ScrollView
+      <KeyboardAwareScrollView
         style={{ flex: 1, backgroundColor: colors.bg.primary }}
         keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
+        bottomOffset={spacing.md + spacing.sm}
       >
         <View style={{ padding: spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -619,7 +605,7 @@ export default function SessionScreen() {
             })()
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Bottom — fixed: rest timer + end session */}
       <View style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
@@ -773,6 +759,53 @@ export default function SessionScreen() {
                 onPress={handleSaveSessionOnly}
                 disabled={applyingRoutineUpdate}
               />
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={confirmAction !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmAction(null)}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+            onPress={() => setConfirmAction(null)}
+          >
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
+              <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
+                {confirmAction === 'cancel' ? 'Cancelar sesión' : 'Finalizar sesión'}
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+                {confirmAction === 'cancel'
+                  ? 'Se descartará la sesión y no se guardará nada. ¿Continuar?'
+                  : '¿Seguro que querés finalizar esta sesión?'}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    title="Volver"
+                    variant="secondary"
+                    onPress={() => setConfirmAction(null)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    title={confirmAction === 'cancel' ? 'Descartar' : 'Finalizar'}
+                    variant="danger"
+                    onPress={() => {
+                      const action = confirmAction;
+                      setConfirmAction(null);
+                      if (action === 'cancel') {
+                        confirmDiscardSession();
+                      } else if (action === 'end') {
+                        completeSessionAndNavigate();
+                      }
+                    }}
+                  />
+                </View>
+              </View>
             </Pressable>
           </Pressable>
         </Modal>
