@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { supabase } from '../../lib/supabase';
 
 export default function SignupScreen() {
@@ -12,17 +12,17 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Completá todos los campos');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -33,7 +33,7 @@ export default function SignupScreen() {
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-      Alert.alert('Success', 'Account created! Please check your email to verify.');
+      Alert.alert('Éxito', 'Cuenta creada! Verificá tu email para confirmar.');
       router.replace('/auth/login');
     }
   };
@@ -41,8 +41,12 @@ export default function SignupScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Sign up to get started</Text>
+        <View style={styles.brandRow}>
+          <View style={styles.emberDot} />
+          <Text style={styles.brandName}>FORJA</Text>
+        </View>
+        <Text style={styles.title}>Empezá a forjar</Text>
+        <Text style={styles.subtitle}>Creá tu cuenta y registrá tu primer entrenamiento</Text>
       </View>
 
       <View style={styles.form}>
@@ -57,7 +61,7 @@ export default function SignupScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="Contraseña"
           placeholderTextColor={colors.text.muted}
           value={password}
           onChangeText={setPassword}
@@ -65,7 +69,7 @@ export default function SignupScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Confirm Password"
+          placeholder="Confirmar contraseña"
           placeholderTextColor={colors.text.muted}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
@@ -78,7 +82,7 @@ export default function SignupScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Creating account...' : 'Sign Up'}
+            {loading ? 'Creando cuenta...' : 'Crear cuenta'}
           </Text>
         </TouchableOpacity>
 
@@ -87,7 +91,7 @@ export default function SignupScreen() {
           onPress={() => router.push('/auth/login')}
         >
           <Text style={styles.linkText}>
-            Already have an account? <Text style={styles.linkBold}>Sign In</Text>
+            ¿Ya tenés cuenta? <Text style={styles.linkBold}>Iniciar sesión</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -104,6 +108,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 40,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  emberDot: {
+    width: 10,
+    height: 10,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.ember.primary,
+  },
+  brandName: {
+    fontSize: fontSizes.xl,
+    fontFamily: fonts.display,
+    color: colors.text.primary,
+    letterSpacing: 2,
   },
   title: {
     fontSize: 32,

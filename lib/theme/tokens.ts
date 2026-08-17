@@ -1,6 +1,7 @@
-// Design system "Acero frío" — cold monochrome: near-black blues, white/grays,
-// one steel-blue accent. Built for a data-entry tool under fatigue: quiet,
-// technical, coherent. No warm tones anywhere.
+// Design system "Forja" (forge) — cold steel monochrome: near-black blues,
+// white/grays, one steel-blue accent + one ember accent used with restraint.
+// Forja identity: quiet technical steel with a living ember inside — the ember
+// only glows where the user's work is honored (PRs, streaks, milestones).
 
 export const colors = {
   // Backgrounds — cold near-black with a blue undertone
@@ -19,11 +20,19 @@ export const colors = {
     muted: '#6C7680',
     link: '#7A9AB5',      // steel blue — edit links, info links
   },
-  // Accent — steel blue (the only hue, used with restraint)
+  // Accent — steel blue (the only cold hue, used with restraint)
   accent: {
     primary: '#4A6FA5',
     secondary: '#3A587F',
     muted: 'rgba(74, 111, 165, 0.15)',
+  },
+  // Ember — the forge's warm core. Achievement-only: PRs, streaks, milestones.
+  // 5-10% of any screen. Precisely the one warm tone that "fuses" with the
+  // cold steel ecosystem (molten metal inside a dark forge).
+  ember: {
+    primary: '#C77B45',
+    deep: '#A05F33',
+    muted: 'rgba(199, 123, 69, 0.14)',
   },
   // Status — cold, desaturated; each has one job
   success: '#6E9C8A',     // blue-green sage — completed sets ONLY

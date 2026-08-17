@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginScreen() {
@@ -11,7 +11,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Completá todos los campos');
       return;
     }
 
@@ -29,8 +29,12 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+        <View style={styles.brandRow}>
+          <View style={styles.emberDot} />
+          <Text style={styles.brandName}>FORJA</Text>
+        </View>
+        <Text style={styles.title}>Tus registros te esperan</Text>
+        <Text style={styles.subtitle}>Iniciá sesión para seguir forjando</Text>
       </View>
 
       <View style={styles.form}>
@@ -45,7 +49,7 @@ export default function LoginScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="Contraseña"
           placeholderTextColor={colors.text.muted}
           value={password}
           onChangeText={setPassword}
@@ -58,7 +62,7 @@ export default function LoginScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Iniciando...' : 'Iniciar sesión'}
           </Text>
         </TouchableOpacity>
 
@@ -67,7 +71,7 @@ export default function LoginScreen() {
           onPress={() => router.push('/auth/signup')}
         >
           <Text style={styles.linkText}>
-            Don't have an account? <Text style={styles.linkBold}>Sign Up</Text>
+            ¿Sin cuenta? <Text style={styles.linkBold}>Crear cuenta</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -84,6 +88,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 40,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  emberDot: {
+    width: 10,
+    height: 10,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.ember.primary,
+  },
+  brandName: {
+    fontSize: fontSizes.xl,
+    fontFamily: fonts.display,
+    color: colors.text.primary,
+    letterSpacing: 2,
   },
   title: {
     fontSize: 32,

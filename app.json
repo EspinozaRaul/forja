@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Fitness Tracker",
-    "slug": "fitness-tracker",
+    "name": "Forja",
+    "slug": "forja",
     "version": "1.0.0",
-    "scheme": "fitness-tracker",
+    "scheme": "forja",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0A",
+        "backgroundColor": "#101316",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -46,7 +46,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#00F5A0"
+          "color": "#C77B45"
         }
       ],
       "expo-font"
