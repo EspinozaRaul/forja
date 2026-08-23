@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: colors.text.muted,
-    width: 70,
+    width: 65,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    width: 52,
+    flex: 1,
     justifyContent: 'center',
   },
   unitHeaderText: {
@@ -71,11 +71,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: colors.text.muted,
-    width: 52,
+    flex: 1,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   checkHeader: {
-    width: 24,
+    width: 28,
   },
 });

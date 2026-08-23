@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   anteriorCell: {
-    width: 70,
+    width: 65,
     alignItems: 'center',
   },
   anteriorText: {
@@ -188,21 +188,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
   },
   inputCell: {
-    width: 52,
+    flex: 1,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   repsCell: {
-    width: 52,
+    flex: 1,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   input: {
@@ -214,13 +214,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   intensityButton: {
-    width: 20,
+    width: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkButton: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
