@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   serieHeader: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
     width: 28,
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   anteriorHeader: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
     width: 65,
@@ -62,13 +62,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unitHeaderText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
     letterSpacing: 0.5,
   },
   repsHeader: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
     flex: 1,
