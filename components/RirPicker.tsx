@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: spacing.xs + 2,
-    paddingLeft: spacing.sm + 2,
+    paddingLeft: 36,
   },
   label: {
     fontSize: 10,
