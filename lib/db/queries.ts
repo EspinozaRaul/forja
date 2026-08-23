@@ -357,6 +357,17 @@ export async function deleteSessionExercise(id: number) {
   return db.delete(sessionExercises).where(eq(sessionExercises.id, id));
 }
 
+export async function updateSessionExerciseNotes(
+  id: number,
+  notes: string | null
+) {
+  return db
+    .update(sessionExercises)
+    .set({ notes })
+    .where(eq(sessionExercises.id, id))
+    .returning();
+}
+
 export async function createSuperSetPair(firstId: number, secondId: number) {
   // Generate a new unique pair id (use a timestamp-based value; enough for local app)
   const pairId = Date.now();
@@ -972,6 +983,7 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
 export interface GlobalStats {
   totalWorkouts: number;
   totalVolume: number;
+  totalCompletedSets: number;
   totalTime: number;
   currentStreak: number;
   mostFrequentExercise: string | null;
@@ -990,6 +1002,12 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     .select({ total: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)` })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(eq(sets.completed, true));
+
+  // Total completed sets
+  const totalCompletedSets = await db
+    .select({ count: sql<number>`coalesce(count(*), 0)` })
+    .from(sets)
     .where(eq(sets.completed, true));
 
   // Total time (sum of all session durations)
@@ -1048,6 +1066,7 @@ export async function getGlobalStats(): Promise<GlobalStats> {
   return {
     totalWorkouts: totalWorkouts[0]?.count ?? 0,
     totalVolume: totalVolume[0]?.total ?? 0,
+    totalCompletedSets: totalCompletedSets[0]?.count ?? 0,
     totalTime: totalTime[0]?.total ?? 0,
     currentStreak: streak,
     mostFrequentExercise: mostFrequent[0]?.name ?? null,

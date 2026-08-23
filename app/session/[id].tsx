@@ -8,7 +8,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
-import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine, useUpdateSessionExerciseNotes } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
@@ -19,6 +19,7 @@ import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
 import { SetLoggerHeader } from '../../components/SetLoggerHeader';
 import { DropSetLogger } from '../../components/DropSetLogger';
+import { ExerciseNotes } from '../../components/ExerciseNotes';
 import { IntensityMethodPicker, type IntensityMethod } from '../../components/IntensityMethodPicker';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
@@ -915,6 +916,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const deleteDropSetGroup = useDeleteDropSetGroup();
   const updateRestTime = useUpdateExerciseRestTime();
   const updateExercise = useUpdateExercise();
+  const updateNotes = useUpdateSessionExerciseNotes();
   const queryClient = useQueryClient();
   const settings = useSettings();
   // Synchronous mirror of weights just typed in this session, so the new-record
@@ -1247,6 +1249,12 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
         </View>
       </View>
+
+      {/* Exercise notes */}
+      <ExerciseNotes
+        notes={sessionExercise.notes}
+        onNotesChange={(notes) => updateNotes.mutateAsync({ id: sessionExercise.id, notes })}
+      />
 
       {/* Rest time picker */}
       {showRestPicker && (

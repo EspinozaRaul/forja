@@ -72,7 +72,7 @@ export interface SessionExercise {
   supersetPairId: number | null; // shared pair id; both exercises of a super set get the same value
 }
 
-export type SetMethod = 'linear' | 'dropset' | 'superset' | 'pyramid_up' | 'pyramid_down' | 'rest_pause' | 'cluster';
+export type SetMethod = 'linear' | 'dropset' | 'superset' | 'pyramid_up' | 'pyramid_down' | 'rest_pause' | 'cluster' | 'partial';
 
 export interface Set {
   id: number;

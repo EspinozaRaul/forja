@@ -12,6 +12,7 @@ import {
   updateSessionExerciseOrder,
   replaceSessionExercise,
   deleteSessionExercise,
+  updateSessionExerciseNotes,
   getLastSessionForRoutine,
   duplicateSessionData,
   createSuperSetPair,
@@ -199,6 +200,17 @@ export function useUnlinkSuperSet() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (pairId: number) => unlinkSuperSetPair(pairId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+  });
+}
+
+export function useUpdateSessionExerciseNotes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes: string | null }) =>
+      updateSessionExerciseNotes(id, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
     },

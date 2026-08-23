@@ -1,7 +1,7 @@
 import { Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { useFolders, useRoutines, useCreateFolder, useDeleteFolder } from '../../lib/hooks/useRoutines';
+import { useFolders, useRoutines, useCreateFolder, useDeleteFolder, useUpdateRoutine } from '../../lib/hooks/useRoutines';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
@@ -17,11 +17,14 @@ export default function RoutinesScreen() {
   const { data: routines, isLoading: loadingRoutines } = useRoutines();
   const createFolder = useCreateFolder();
   const deleteFolder = useDeleteFolder();
+  const updateRoutine = useUpdateRoutine();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDescription, setNewFolderDescription] = useState('');
   const [newFolderColor, setNewFolderColor] = useState(colors.accent.primary);
+  const [movingRoutineId, setMovingRoutineId] = useState<number | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState(false);
 
   const isLoading = loadingFolders || loadingRoutines;
 
@@ -64,6 +67,27 @@ export default function RoutinesScreen() {
         },
       ]
     );
+  };
+
+  const handleMoveToFolder = (routineId: number) => {
+    setMovingRoutineId(routineId);
+    setShowMoveModal(true);
+  };
+
+  const handleSelectFolder = async (folderId: number | null) => {
+    if (movingRoutineId == null) return;
+    try {
+      await haptics.press();
+      await updateRoutine.mutateAsync({
+        id: movingRoutineId,
+        data: { folderId: folderId ?? undefined },
+      });
+      setShowMoveModal(false);
+      setMovingRoutineId(null);
+    } catch {
+      await haptics.error();
+      Alert.alert('Error', 'No se pudo mover la rutina');
+    }
   };
 
   // Routines without a folder
@@ -129,6 +153,7 @@ export default function RoutinesScreen() {
               <AnimatedListItem key={routine.id} index={index} delay={100}>
                 <TouchableOpacity
                   onPress={() => router.push(`/routine/${routine.id}`)}
+                  onLongPress={() => handleMoveToFolder(routine.id)}
                   style={{ marginBottom: spacing.sm }}
                 >
                   <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -225,6 +250,56 @@ export default function RoutinesScreen() {
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>Crear</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Move to Folder Modal */}
+      <Modal visible={showMoveModal} transparent animationType="slide">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>Mover a carpeta</Text>
+
+            {folders && folders.length > 0 && (
+              <View style={{ marginBottom: spacing.md }}>
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>Seleccioná una carpeta</Text>
+                {folders.map((folder) => (
+                  <TouchableOpacity
+                    key={folder.id}
+                    onPress={() => handleSelectFolder(folder.id)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.sm,
+                      padding: spacing.md,
+                      backgroundColor: colors.bg.elevated,
+                      borderRadius: borderRadius.sm,
+                      marginBottom: spacing.xs,
+                      borderLeftWidth: 3,
+                      borderLeftColor: folder.color || colors.accent.primary,
+                    }}
+                  >
+                    <Text style={{ flex: 1, fontSize: 15, color: colors.text.primary }}>{folder.name}</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.muted }}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <TouchableOpacity
+                onPress={() => { setShowMoveModal(false); setMovingRoutineId(null); }}
+                style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center' }}
+              >
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleSelectFolder(null)}
+                style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
+              >
+                <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>Sin carpeta</Text>
               </TouchableOpacity>
             </View>
           </View>

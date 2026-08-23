@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 
-export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset';
+export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
 
 interface IntensityMethodOption {
   id: IntensityMethod;
@@ -35,6 +35,12 @@ const INTENSITY_METHODS: IntensityMethodOption[] = [
     label: 'Super Set',
     description: 'Dos ejercicios alternados sin descanso',
     icon: 'repeat',
+  },
+  {
+    id: 'partial',
+    label: 'Parcial',
+    description: 'Repeticiones parciales con rango limitado',
+    icon: 'resize',
   },
 ];
 

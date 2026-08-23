@@ -26,7 +26,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const swipeableRef = useRef<Swipeable>(null);
 
   const isDropSet = set.method === 'dropset';
-  const isLinear = set.method === 'linear' || set.method === null;
+  const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';
 
   const weightPlaceholder = () => {
     if (previousWeight == null) return '0';
