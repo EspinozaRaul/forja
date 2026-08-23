@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 
 export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset';
@@ -7,7 +8,7 @@ interface IntensityMethodOption {
   id: IntensityMethod;
   label: string;
   description: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
 }
 
 const INTENSITY_METHODS: IntensityMethodOption[] = [
@@ -15,25 +16,25 @@ const INTENSITY_METHODS: IntensityMethodOption[] = [
     id: 'dropset',
     label: 'Drop Set',
     description: 'Reducir peso y continuar sin descanso',
-    icon: '⚡',
+    icon: 'flash',
   },
   {
     id: 'rest_pause',
     label: 'Rest-Pause',
     description: 'Pausa corta y continuar con el mismo peso',
-    icon: '⏸️',
+    icon: 'pause',
   },
   {
     id: 'cluster',
     label: 'Cluster',
     description: 'Repeticiones agrupadas con micro-descansos',
-    icon: '🎯',
+    icon: 'ellipse',
   },
   {
     id: 'superset',
     label: 'Super Set',
     description: 'Dos ejercicios alternados sin descanso',
-    icon: '🔄',
+    icon: 'repeat',
   },
 ];
 
@@ -64,7 +65,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
               }}
               style={styles.option}
             >
-              <Text style={styles.optionIcon}>{method.icon}</Text>
+              <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />
               <View style={styles.optionText}>
                 <Text style={styles.optionLabel}>{method.label}</Text>
                 <Text style={styles.optionDescription}>{method.description}</Text>
@@ -122,7 +123,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   optionIcon: {
-    fontSize: 20,
     width: 32,
     textAlign: 'center',
   },
