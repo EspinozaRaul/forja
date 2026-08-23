@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   serieCell: {
-    width: 32,
+    width: 28,
     alignItems: 'center',
   },
   serieNumber: {
@@ -179,30 +179,30 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   anteriorCell: {
-    flex: 1,
+    width: 70,
     alignItems: 'center',
   },
   anteriorText: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.text.muted,
     fontFamily: fonts.body,
   },
   inputCell: {
-    width: 64,
+    width: 52,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
     paddingHorizontal: spacing.xs,
-    paddingVertical: 6,
+    paddingVertical: 5,
     alignItems: 'center',
   },
   repsCell: {
-    width: 56,
+    width: 52,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
     paddingHorizontal: spacing.xs,
-    paddingVertical: 6,
+    paddingVertical: 5,
     alignItems: 'center',
   },
   input: {
@@ -214,13 +214,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   intensityButton: {
-    width: 24,
+    width: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkButton: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
