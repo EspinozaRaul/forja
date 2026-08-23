@@ -1,6 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Set, SetMethod } from '../lib/types';
 import { RirPicker } from './RirPicker';
@@ -135,7 +136,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
               onPress={onOpenIntensityPicker}
               style={styles.convertButton}
             >
-              <Text style={styles.convertText}>⚡</Text>
+              <Ionicons name="flash" size={14} color={colors.warning} />
             </TouchableOpacity>
           )}
 
@@ -180,7 +181,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    maxWidth: 70,
+    flex: 1,
+    maxWidth: 80,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,

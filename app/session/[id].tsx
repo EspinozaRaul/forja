@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 
@@ -1226,14 +1227,6 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>Super Set</Text>
             </TouchableOpacity>
           )}
-          {onReplace && (
-            <TouchableOpacity
-              onPress={(e) => { e.stopPropagation(); onReplace(); }}
-              style={{ padding: spacing.xs }}
-            >
-              <Text style={{ fontSize: 14, color: colors.accent.primary }}>↻</Text>
-            </TouchableOpacity>
-          )}
           <TouchableOpacity
             onPress={() => setShowRestPicker(!showRestPicker)}
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
@@ -1242,6 +1235,14 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               {currentRestTime >= 60 ? `${currentRestTime / 60}m` : `${currentRestTime}s`}
             </Text>
           </TouchableOpacity>
+          {onReplace && (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onReplace(); }}
+              style={{ padding: spacing.xs }}
+            >
+              <Ionicons name="repeat" size={16} color={colors.accent.primary} />
+            </TouchableOpacity>
+          )}
           <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
         </View>
       </View>
