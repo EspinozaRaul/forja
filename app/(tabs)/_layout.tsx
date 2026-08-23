@@ -1,5 +1,6 @@
 import { Tabs, router } from 'expo-router';
-import { Text, View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../../lib/theme/tokens';
 
 export default function TabLayout() {
@@ -29,10 +30,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{ opacity: focused ? 1 : 0.7 }}>
-              <Text style={{ color, fontSize: 22 }}>🏠</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
           ),
           headerRight: () => (
             <TouchableOpacity
@@ -40,7 +39,7 @@ export default function TabLayout() {
               style={{ padding: spacing.sm }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Text style={{ fontSize: 22, color: colors.text.secondary }}>⚙️</Text>
+              <Ionicons name="settings-outline" size={22} color={colors.text.secondary} />
             </TouchableOpacity>
           ),
         }}
@@ -49,10 +48,8 @@ export default function TabLayout() {
         name="routines"
         options={{
           title: 'Routines',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{ opacity: focused ? 1 : 0.7 }}>
-              <Text style={{ color, fontSize: 22 }}>📋</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list" size={size} color={color} />
           ),
         }}
       />
@@ -60,10 +57,8 @@ export default function TabLayout() {
         name="progress"
         options={{
           title: 'Progress',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{ opacity: focused ? 1 : 0.7 }}>
-              <Text style={{ color, fontSize: 22 }}>📈</Text>
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bar-chart" size={size} color={color} />
           ),
         }}
       />
