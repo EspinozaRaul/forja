@@ -33,7 +33,6 @@ export function RirPicker({ value, onChange }: RirPickerProps) {
           );
         })}
       </View>
-      <Text style={styles.hint}>{value == null ? '—' : value === 0 ? 'fallo' : value === 1 ? '1 en reserva' : `${value} en reserva`}</Text>
     </View>
   );
 }
@@ -45,7 +44,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.xs + 2,
     paddingLeft: 36,
-    paddingRight: spacing.sm,
   },
   label: {
     fontSize: 10,
@@ -57,8 +55,6 @@ const styles = StyleSheet.create({
   chips: {
     flexDirection: 'row',
     gap: spacing.xs,
-    flex: 1,
-    justifyContent: 'flex-start',
   },
   chip: {
     minWidth: 30,
@@ -82,10 +78,5 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: colors.accent.primary,
-  },
-  hint: {
-    fontSize: 10,
-    color: colors.text.muted,
-    marginLeft: spacing.xs,
   },
 });
