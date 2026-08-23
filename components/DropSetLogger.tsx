@@ -336,14 +336,14 @@ const styles = StyleSheet.create({
   checkButton: {
     width: ROW_HEIGHT,
     height: ROW_HEIGHT,
-    borderRadius: ROW_HEIGHT / 2,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkDone: {
     width: ROW_HEIGHT,
     height: ROW_HEIGHT,
-    borderRadius: ROW_HEIGHT / 2,
+    borderRadius: 2,
     backgroundColor: colors.accent.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   checkEmpty: {
     width: ROW_HEIGHT,
     height: ROW_HEIGHT,
-    borderRadius: ROW_HEIGHT / 2,
+    borderRadius: 2,
     borderWidth: 1.5,
     borderColor: colors.border.primary,
   },

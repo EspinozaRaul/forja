@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   checkButton: {
     width: 28,
     height: 28,
-    borderRadius: borderRadius.sm,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.xs,
