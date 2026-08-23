@@ -23,6 +23,7 @@ interface DropSetLoggerProps {
   onDelete?: () => void;
   onCompleteAll: () => void;
   unit?: string;
+  onUnitChange?: (unit: string) => void;
   previousWeight?: number | null;
   previousReps?: number | null;
   maxWeight?: number | null;
@@ -40,6 +41,7 @@ export function DropSetLogger({
   onDelete,
   onCompleteAll,
   unit = 'kg',
+  onUnitChange,
   previousWeight = null,
   previousReps = null,
   maxWeight = null,
@@ -163,6 +165,7 @@ export function DropSetLogger({
               label={dropLabel(index)}
               showDelete={drops.length > 1}
               showLine={index < drops.length - 1}
+              onUnitChange={onUnitChange}
               onUpdateDrop={onUpdateDrop}
               onDeleteDrop={onDeleteDrop}
               previousWeight={previousWeight}
@@ -189,6 +192,7 @@ function DropRow({
   label,
   showDelete,
   showLine,
+  onUnitChange,
   onUpdateDrop,
   onDeleteDrop,
   previousWeight = null,
@@ -201,6 +205,7 @@ function DropRow({
   label: string;
   showDelete: boolean;
   showLine: boolean;
+  onUnitChange?: (unit: string) => void;
   onUpdateDrop: (dropIndex: number, updates: { reps?: number; weight?: number }) => void;
   onDeleteDrop: (dropIndex: number) => void;
   previousWeight?: number | null;
@@ -259,6 +264,14 @@ function DropRow({
             value={weight}
             onChangeText={handleWeightChange}
           />
+          {onUnitChange && (
+            <TouchableOpacity
+              onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
+              style={styles.unitToggle}
+            >
+              <Text style={styles.unitText}>{unit}</Text>
+            </TouchableOpacity>
+          )}
           {showDelete && (
             <TouchableOpacity
               onPress={() => onDeleteDrop(index)}
@@ -418,6 +431,19 @@ const styles = StyleSheet.create({
   },
   dropDelete: {
     padding: 4,
+  },
+  unitToggle: {
+    backgroundColor: 'transparent',
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  unitText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text.muted,
   },
   addDropButton: {
     flexDirection: 'row',

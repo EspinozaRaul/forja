@@ -8,7 +8,9 @@ import { Button } from '../../../components/ui/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { EXERCISE_NAMES_ES } from '../../../lib/db/exercise-names-es';
-import { formatDuration } from '../../../lib/utils/format';
+import { formatDuration, formatVolume } from '../../../lib/utils/format';
+import { useSettings } from '../../../lib/utils/settings';
+import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
 import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
 import type { SessionExercise } from '../../../lib/types';
 
@@ -155,8 +157,10 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
   const { data: exercises } = useExercise(sessionExercise.exerciseId);
   const { data: sets } = useSets(sessionExercise.id);
   const router = useRouter();
+  const settings = useSettings();
 
   const exercise = exercises?.[0];
+  const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
   const completedSets = sets?.filter((s) => s.completed) ?? [];
   const totalVolume = completedSets.reduce((sum, set) => {
     return sum + (set.reps ?? 0) * (set.weight ?? 0);
@@ -171,7 +175,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
           </Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 13, color: colors.text.muted }}>
-          {completedSets.length} sets • {totalVolume.toFixed(0)} kg
+          {completedSets.length} sets • {formatVolume(totalVolume, unit)}
         </Text>
       </View>
       {sets && sets.length > 0 ? (
@@ -189,7 +193,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
             >
               <Text style={{ fontSize: 14, color: colors.text.secondary }}>Set {set.setNumber}</Text>
               <Text style={{ fontSize: 14, color: colors.text.primary }}>
-                {set.reps ?? '-'} reps × {set.weight ?? '-'} kg
+                {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
               </Text>
               <Text style={{ fontSize: 14, color: set.completed ? colors.success : colors.text.muted }}>
                 {set.completed ? '✓' : '○'}

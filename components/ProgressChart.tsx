@@ -8,6 +8,7 @@ interface ProgressChartProps {
   unit?: string;
   selectedWeek?: string | null;
   onBarPress?: (week: string) => void;
+  embedded?: boolean;
 }
 
 function formatValue(value: number): string {
@@ -17,15 +18,19 @@ function formatValue(value: number): string {
   return value.toString();
 }
 
-export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress }: ProgressChartProps) {
+export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress, embedded = false }: ProgressChartProps) {
+  const containerStyle = embedded
+    ? { backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }
+    : { backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs };
+
   if (data.length === 0) {
     return (
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs }}>
+      <View style={containerStyle}>
         {title && (
           <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
         )}
-        <View style={{ height: 160, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>No data yet</Text>
+        <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>Sin datos todavía</Text>
         </View>
       </View>
     );
@@ -34,12 +39,12 @@ export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress
   const maxValue = Math.max(...data.map((d) => d.value));
 
   return (
-    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs }}>
+    <View style={containerStyle}>
       {title && (
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 16 }}>{title}</Text>
       )}
 
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 160, gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 140, gap: 4 }}>
         {data.map((point, index) => {
           const heightPercent = maxValue > 0 ? (point.value / maxValue) * 100 : 0;
           const isSelected = selectedWeek === point.date;

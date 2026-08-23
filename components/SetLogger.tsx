@@ -7,7 +7,7 @@ import { RirPicker } from './RirPicker';
 
 interface SetLoggerProps {
   set: Set;
-  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean; rir?: number }) => void;
+  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean; rir?: number | null }) => void;
   onDelete?: () => void;
   unit?: string; // kg or lbs
   onUnitChange?: (unit: string) => void;
@@ -16,10 +16,11 @@ interface SetLoggerProps {
   dropCount?: number;
   previousWeight?: number | null;
   previousReps?: number | null;
+  previousRir?: number | null;
   maxWeight?: number | null;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, maxWeight = null }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, previousRir = null, maxWeight = null }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
@@ -134,7 +135,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
               onPress={onOpenIntensityPicker}
               style={styles.convertButton}
             >
-              <Text style={{ fontSize: 14, color: colors.warning }}>⚡</Text>
+              <Text style={styles.convertText}>⚡</Text>
             </TouchableOpacity>
           )}
 
@@ -157,7 +158,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
         </View>
         <RirPicker
           value={set.rir}
-          onChange={(rir) => onUpdate({ rir: rir ?? undefined })}
+          onChange={(rir) => onUpdate({ rir })}
         />
       </View>
     </Swipeable>
@@ -168,8 +169,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
+    gap: spacing.xs,
+    paddingVertical: 3,
   },
   setNumber: {
     fontSize: 14,
@@ -179,11 +180,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    flex: 1,
+    maxWidth: 70,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 3,
     alignItems: 'center',
   },
   input: {
@@ -264,7 +265,16 @@ const styles = StyleSheet.create({
     color: colors.warning,
   },
   convertButton: {
-    padding: 6,
+    backgroundColor: 'transparent',
     borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  convertText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.warning,
   },
 });

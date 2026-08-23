@@ -14,6 +14,7 @@ import {
   getMaxWeightByExerciseIds,
   getLastRepsByExerciseIds,
   getLastWorkoutPerExercise,
+  getLastRirByRoutineExerciseIds,
 } from '../db/queries';
 import type { Exercise, Set } from '../types';
 import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs, LastWorkoutPerExercise } from '../db/queries';
@@ -47,7 +48,7 @@ export function useCreateExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string; categoryId: number; description?: string }) =>
+    mutationFn: (data: { name: string; categoryId: number; description?: string; unit?: string }) =>
       createExercise(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EXERCISE_KEY });
@@ -144,5 +145,13 @@ export function useExercisePRs(exerciseId: number) {
     queryKey: [...EXERCISE_KEY, 'prs', exerciseId],
     queryFn: () => getExercisePRs(exerciseId),
     enabled: !!exerciseId,
+  });
+}
+
+export function useLastRirByRoutineExerciseIds(routineId: number, exerciseIds: number[]) {
+  return useQuery<Record<number, Record<number, number | null>>>({
+    queryKey: [...EXERCISE_KEY, 'lastRir', routineId, [...exerciseIds].sort()],
+    queryFn: () => getLastRirByRoutineExerciseIds(routineId, exerciseIds),
+    enabled: !!routineId && exerciseIds.length > 0,
   });
 }

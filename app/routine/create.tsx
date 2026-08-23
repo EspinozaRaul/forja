@@ -10,6 +10,8 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { useSettings } from '../../lib/utils/settings';
+import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import type { Exercise } from '../../lib/types';
 
@@ -21,6 +23,8 @@ export default function CreateRoutineScreen() {
   const { data: exercises, isLoading: exercisesLoading } = useExercises();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
+  const settings = useSettings();
+  const settingsUnit = settings.data.weightUnit;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -197,7 +201,7 @@ export default function CreateRoutineScreen() {
                 </Text>
                 {lastWeights.data?.[exercise.id] != null && (
                   <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.accent.secondary }}>
-                    último: {lastWeights.data?.[exercise.id]?.weight}{lastWeights.data?.[exercise.id]?.unit ?? 'kg'}
+                    último: {formatWeight(lastWeights.data?.[exercise.id]?.weight, resolveUnit(lastWeights.data?.[exercise.id]?.unit, settingsUnit))}
                   </Text>
                 )}
                 <TouchableOpacity

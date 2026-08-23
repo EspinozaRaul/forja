@@ -14,6 +14,8 @@ import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { haptics } from '../../lib/utils/haptics';
+import { useSettings } from '../../lib/utils/settings';
+import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
 import { summarizeSets } from '../../lib/utils/session-summary';
@@ -38,6 +40,8 @@ export default function RoutineDetailScreen() {
   const createSet = useCreateSet();
   const { data: lastSession } = useLastSessionForRoutine(routineId);
   const duplicateSessionData = useDuplicateSessionData();
+  const settings = useSettings();
+  const settingsUnit = settings.data.weightUnit;
 
   const routine = routines?.[0];
   const isLoading = routineLoading || exercisesLoading || allExercisesLoading;
@@ -340,7 +344,7 @@ export default function RoutineDetailScreen() {
                     {(() => {
                       const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
                       return entry
-                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${entry.weight}${entry.unit ?? 'kg'}` : ''}`
+                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
                         : formatSetsRepsLabel(re.targetSets, re.targetReps);
                     })()}
                   </Text>
@@ -398,7 +402,12 @@ export default function RoutineDetailScreen() {
             {lastSession && (
               <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
                 <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>Last session</Text>
-                {lastSession.exercises?.map((se: any) => (
+                {lastSession.exercises?.map((se: any) => {
+                  const unit = resolveUnit(
+                    allExercises?.find((e) => e.id === se.exerciseId)?.unit ?? null,
+                    settingsUnit
+                  );
+                  return (
                   <View key={se.id} style={{ marginBottom: spacing.xs }}>
                     <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{EXERCISE_NAMES_ES[se.exerciseName] || se.exerciseName || `Exercise ${se.order}`}</Text>
                     {summarizeSets(se.sets ?? []).map((line) => (
@@ -408,12 +417,13 @@ export default function RoutineDetailScreen() {
                         </Text>
                       ) : (
                         <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: 12, color: colors.text.secondary, fontFamily: fonts.body, marginLeft: spacing.sm }}>
-                          Set {line.setNumber}: {line.reps ?? '—'} reps × {line.weight ?? '—'} kg
+                          Set {line.setNumber}: {line.reps ?? '—'} reps × {line.weight != null ? formatWeight(line.weight, unit) : '—'}
                         </Text>
                       )
                     ))}
                   </View>
-                ))}
+                  );
+                })}
               </View>
             )}
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>

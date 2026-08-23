@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useCategories } from '../../lib/hooks/useCategories';
 import { useCreateExercise } from '../../lib/hooks/useExercises';
+import { useSettings } from '../../lib/utils/settings';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -12,6 +13,7 @@ export default function CreateExerciseScreen() {
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const createExercise = useCreateExercise();
+  const settings = useSettings();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -40,6 +42,7 @@ export default function CreateExerciseScreen() {
         name: name.trim(),
         categoryId: selectedCategoryId!,
         description: description.trim() || undefined,
+        unit: settings.data.weightUnit,
       });
       router.back();
     } catch (error) {

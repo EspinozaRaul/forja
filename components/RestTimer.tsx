@@ -9,13 +9,14 @@ import {
   calculateRestRemaining,
   type RestTimerState,
 } from '../lib/utils/timer-persistence';
+import { getCachedSettings } from '../lib/utils/settings';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: true,
+    shouldPlaySound: getCachedSettings().soundEnabled,
     shouldSetBadge: false,
   }),
 });
@@ -130,7 +131,7 @@ export function RestTimer({
       content: {
         title: 'Descanso terminado',
         body: `¡Hora de continuar con ${label}!`,
-        sound: true,
+        sound: getCachedSettings().soundEnabled,
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },
       trigger: {

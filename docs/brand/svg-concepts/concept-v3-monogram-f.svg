@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FORJA — V3: Monograma F geométrico</title>
+  <desc id="desc">Letra F construida con barras geométricas; la barra del medio en brasa como único acento cálido.</desc>
+  <rect width="512" height="512" fill="#101316"/>
+  <!-- F: asta vertical -->
+  <rect x="128" y="128" width="72" height="256" rx="14" fill="#D7DEE4"/>
+  <!-- F: barra superior -->
+  <rect x="128" y="128" width="240" height="72" rx="14" fill="#D7DEE4"/>
+  <!-- F: barra media brasa -->
+  <rect x="128" y="228" width="176" height="72" rx="14" fill="#C77B45"/>
+</svg>

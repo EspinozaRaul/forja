@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FORJA — V1: Mancuerna minimalista fría</title>
+  <desc id="desc">Mancuerna geométrica simple en acero claro, sin acentos cálidos, estilo Hevy.</desc>
+  <rect width="512" height="512" fill="#101316"/>
+  <!-- barra -->
+  <rect x="40" y="240" width="432" height="32" rx="16" fill="#D7DEE4"/>
+  <!-- discos -->
+  <rect x="40" y="196" width="56" height="120" rx="16" fill="#A0B0BC"/>
+  <rect x="416" y="196" width="56" height="120" rx="16" fill="#A0B0BC"/>
+</svg>

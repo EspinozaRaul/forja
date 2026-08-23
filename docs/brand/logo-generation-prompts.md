@@ -88,3 +88,122 @@ background #101316, no text, no shadow, no detail loss at small size.
 
 Reglas: el símbolo debe quedar legible a 16×16; la brasa es el único elemento cálido;
 fondo de la app siempre `#101316`; nada de texto en los íconos.
+
+---
+
+# ALTERNATIVAS v2 (2026-08-17)
+
+La opción 1 (Prompt 1, "Opc A — Barra olímpica") fue aprobada por el usuario como
+la vara de calidad de producto. Esta plantilla de estructura es la que produce el
+mejor resultado — TODA alternativa debe seguir el mismo nivel de especificidad
+(materiales, texturas, estructura, luces, colores con hex, reglas finales).
+
+ESTADO (2026-08-17): APROBADAS → Opc A, Opc D, Opc G. REESCRITAS con la
+ESTRUCTURA EXACTA de 4 etapas de Opc A (formato → sujeto+materiales → Style →
+reglas finales) → Opc B, Opc C, Opc E, Opc F (versiones v3 abajo). Las
+aprobadas no se tocan. La estructura de 4 etapas es la que produce el mejor
+resultado (el Prompt 1 original con 4 párrafos ordenados).
+
+## Opc A — Barra olímpica con discos brasa (APROBADA)
+```
+Premium product-quality app icon, 1024x1024, square. An olympic barbell seen
+slightly from the front: THICK steel bar with proper knurled grip texture, two
+large olympic steel plates on the outer ends and two large molten ember plates
+in the middle (#C77B45 to #FFB86B) with bright hot centers emitting a subtle
+warm glow, like metal being forged. Plates have realistic center holes and rim
+edges. Dark charcoal-navy background (#101316) with very subtle depth. Clean,
+high-end render, sharp, no text, no watermark, readable at 16px.
+```
+
+## Opc B v3 — Mancuerna hexagonal única (ESTRUCTURA 4 ETAPAS)
+```
+App icon, 1024x1024, square, full-bleed, flat minimalist design, premium fitness
+brand named FORJA (Spanish for "forge").
+A SINGLE hex dumbbell centered horizontally, floating slightly angled: the left
+plate stack is cold steel (#D7DEE4 to #A0B0BC) — brushed-metal finish with sharp
+hexagonal edges, visible bevel on each plate rim and a subtle blue-steel tint on
+the inner face; the right plate stack is molten ember, glowing warm orange
+(#C77B45 to #FFB86B) with a bright hot core and a faint hot inner ring, like one
+side already forged and the other still in the fire. The central handle connects
+both stacks with subtle knurled grip texture and two thin metal collars.
+Background is near-black with a cold blue undertone (#101316), flat with a very
+faint warm glow rising from the ember side.
+Style: geometric, industrial, clean vector aesthetic, subtle rim lighting, no
+text, no gradients outside the ember glow, no 3D render look, sharp edges.
+Icon must remain readable at 16px. Centered, asymmetric contrast (steel left,
+ember right), no shadows.
+```
+
+## Opc C v3 — Monograma F de placas (ESTRUCTURA 4 ETAPAS)
+```
+App icon, 1024x1024, square, full-bleed, flat minimalist design, premium fitness
+brand named FORJA (Spanish for "forge").
+A bold geometric letter F constructed from weight plates, centered: the vertical
+stem is one tall steel plate seen from the side with a visible center hole and
+polished rim edge; the upper horizontal bar is a steel plate with a visible
+center hole; the middle horizontal bar is a molten ember plate, glowing warm
+orange (#C77B45 to #FFB86B) with a bright hot core and a slightly hotter rim —
+the only warm element, like the middle of the mark is being forged. All plates
+have subtle brushed-metal texture and thin beveled edges with realistic
+highlights. Background is near-black with a cold blue undertone (#101316), flat
+with a very faint warm glow behind the middle bar.
+Style: geometric, industrial, clean vector aesthetic, subtle rim lighting, no
+text, no gradients outside the ember glow, no 3D render look, sharp edges.
+Icon must remain readable at 16px. Centered, balanced, no shadows.
+```
+
+## Opc D — Kettlebell brasa (APROBADA)
+```
+Premium product-quality app icon, square. A single KETTLEBELL in cold steel
+(#D7DEE4 to #A0B0BC) with subtle brushed-metal finish, but the center of the
+kettlebell body glows molten ember (#C77B45 to #FFB86B) with a bright hot core —
+as if heated from inside, ready to be forged. Handle is cold steel. Dark
+background #101316, studio lighting, no text, no watermark, sharp, readable
+at 16px.
+```
+
+## Opc E v3 — Placas vistas desde arriba (ESTRUCTURA 4 ETAPAS)
+```
+App icon, 1024x1024, square, full-bleed, flat minimalist design, premium fitness
+brand named FORJA (Spanish for "forge").
+A TOP-DOWN view of a loaded barbell centered: four concentric plate rings around
+a central bar hole — the two outer rings are cold steel (#D7DEE4 to #A0B0BC)
+with thin bevel highlights around each edge; the two inner rings are molten
+ember, glowing warm orange (#C77B45 to #FFB86B) with bright hot cores and a
+subtle warm radial glow between them; the smallest center is the dark bar hole.
+The heat concentrates in the middle like an abstract target while the steel
+cools toward the rim. Background is near-black with a cold blue undertone
+(#101316), flat with a very faint warm glow at the core.
+Style: geometric, industrial, clean vector aesthetic, subtle rim lighting, no
+text, no gradients outside the ember glow, no 3D render look, sharp edges.
+Icon must remain readable at 16px. Perfectly centered, radially symmetric, no
+shadows.
+```
+
+## Opc F v3 — Barra + flecha de progreso (ESTRUCTURA 4 ETAPAS)
+```
+App icon, 1024x1024, square, full-bleed, flat minimalist design, premium fitness
+brand named FORJA (Spanish for "forge").
+A short bold steel barbell fused with an ascending diagonal arrow, centered: the
+bar is tilted upward about 20 degrees like a progress curve; the left plate is
+cold steel (#D7DEE4 to #A0B0BC) with a visible center hole and polished rim; the
+right plate is molten ember, glowing warm orange (#C77B45 to #FFB86B) with a
+bright hot core and soft glow; a subtle steel arrowhead extends from the top end
+of the bar pointing up-right, drawn in the same metal finish, so the object
+reads as both a barbell and an upward progress marker. Background is near-black
+with a cold blue undertone (#101316), flat with a very faint warm glow behind
+the ember plate.
+Style: geometric, industrial, clean vector aesthetic, subtle rim lighting, no
+text, no gradients outside the ember glow, no 3D render look, sharp edges.
+Icon must remain readable at 16px. Centered, clear silhouette, no shadows.
+```
+
+## Opc G — Yunque + pesa integrada (APROBADA)
+```
+Premium product-quality app icon, square. A minimal steel anvil silhouette
+(#D7DEE4 to #A0B0BC) with a chunky dumbbell resting across its face: the
+dumbbell left stack steel, right stack molten ember (#C77B45 to #FFB86B) with
+hot core. The forge and the weight are one object. Avoid literal blacksmith
+complexity: silhouette clean, geometric, premium. Dark background #101316, no
+text, no watermark, sharp, readable at 16px.
+```

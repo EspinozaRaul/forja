@@ -13,6 +13,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
+import { useSettings } from '../../lib/utils/settings';
+import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
 import { DEFAULT_TARGET_SETS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
 import { useCreateSet } from '../../lib/hooks/useSets';
@@ -27,6 +29,8 @@ export default function HomeScreen() {
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(selectedRoutineId ?? 0);
   const { data: allExercises } = useExercises();
   const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
+  const settings = useSettings();
+  const settingsUnit = settings.data.weightUnit;
   const createSession = useCreateSession();
   const addExerciseToSession = useAddExerciseToSession();
   const createSet = useCreateSet();
@@ -131,27 +135,29 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Quick Start */}
+      {/* Rutinas — up top, the main action */}
+      {routines && routines.length > 0 && (
+        <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
+          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Rutinas</Text>
+          {routines.slice(0, 3).map((routine) => (
+            <TouchableOpacity
+              key={routine.id}
+              onPress={() => handleRoutinePress(routine.id)}
+              style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.sm }}
+            >
+              <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
+              {routine.description && (
+                <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Quick Start — compact, below routines */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Quick Start</Text>
-        <Button title="Start Empty Session" onPress={handleStartEmptySession} />
-        {routines && routines.length > 0 && (
-          <View style={{ marginTop: spacing.md }}>
-            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted, marginBottom: spacing.sm }}>Or start from routine:</Text>
-            {routines.slice(0, 3).map((routine) => (
-              <TouchableOpacity
-                key={routine.id}
-                onPress={() => handleRoutinePress(routine.id)}
-                style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.sm }}
-              >
-                <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
-                {routine.description && (
-                  <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>Iniciar sesión</Text>
+        <Button title="Nueva sesión" onPress={handleStartEmptySession} compact />
       </View>
 
       {/* Recent Sessions */}
@@ -224,7 +230,7 @@ export default function HomeScreen() {
                     {routineExercisesWithDetails.map((re) => {
                       const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
                       const label = entry
-                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${entry.weight}${entry.unit ?? 'kg'}` : ''}`
+                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
                         : formatSetsRepsLabel(re.targetSets, re.targetReps);
                       return (
                         <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>

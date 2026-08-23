@@ -72,6 +72,15 @@ function RootLayoutNav() {
         options={{ title: 'Routine' }}
       />
       <Stack.Screen
+        name="settings"
+        options={{
+          title: 'Ajustes',
+          headerStyle: { backgroundColor: '#141210' },
+          headerTintColor: '#F2ECE2',
+          headerTitleStyle: { color: '#F2ECE2', fontWeight: '600' },
+        }}
+      />
+      <Stack.Screen
         name="routine/folder/[id]"
         options={{ title: 'Folder', headerShown: false }}
       />

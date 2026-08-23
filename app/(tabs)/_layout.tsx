@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
-import { colors } from '../../lib/theme/tokens';
+import { Tabs, router } from 'expo-router';
+import { Text, View, TouchableOpacity } from 'react-native';
+import { colors, spacing } from '../../lib/theme/tokens';
 
 export default function TabLayout() {
   return (
@@ -33,6 +33,15 @@ export default function TabLayout() {
             <View style={{ opacity: focused ? 1 : 0.7 }}>
               <Text style={{ color, fontSize: 22 }}>🏠</Text>
             </View>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/settings')}
+              style={{ padding: spacing.sm }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={{ fontSize: 22, color: colors.text.secondary }}>⚙️</Text>
+            </TouchableOpacity>
           ),
         }}
       />

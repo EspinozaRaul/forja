@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FORJA — Concepto A: Barra olímpica con discos brasa</title>
+  <desc id="desc">Barra olímpica de acero con dos discos de brasa al rojo vivo en el centro, sobre fondo oscuro.</desc>
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7DEE4"/>
+      <stop offset="1" stop-color="#A0B0BC"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB86B"/>
+      <stop offset="0.5" stop-color="#C77B45"/>
+      <stop offset="1" stop-color="#9E5A2E"/>
+    </linearGradient>
+    <radialGradient id="hotCore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFB86B" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#C77B45" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#C77B45" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bgGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#C77B45" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#C77B45" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#101316"/>
+  <circle cx="256" cy="256" r="150" fill="url(#bgGlow)"/>
+  <!-- Barra -->
+  <rect x="40" y="244" width="432" height="24" rx="12" fill="url(#steel)"/>
+  <!-- Discos externos de acero -->
+  <circle cx="104" cy="256" r="44" fill="url(#steel)" stroke="#E9EDF0" stroke-opacity="0.3" stroke-width="2"/>
+  <circle cx="104" cy="256" r="16" fill="#101316"/>
+  <circle cx="408" cy="256" r="44" fill="url(#steel)" stroke="#E9EDF0" stroke-opacity="0.3" stroke-width="2"/>
+  <circle cx="408" cy="256" r="16" fill="#101316"/>
+  <!-- Discos internos de brasa -->
+  <circle cx="168" cy="256" r="40" fill="url(#ember)" stroke="#FFB86B" stroke-opacity="0.4" stroke-width="2"/>
+  <circle cx="168" cy="256" r="40" fill="url(#hotCore)"/>
+  <circle cx="168" cy="256" r="15" fill="#101316"/>
+  <circle cx="344" cy="256" r="40" fill="url(#ember)" stroke="#FFB86B" stroke-opacity="0.4" stroke-width="2"/>
+  <circle cx="344" cy="256" r="40" fill="url(#hotCore)"/>
+  <circle cx="344" cy="256" r="15" fill="#101316"/>
+</svg>

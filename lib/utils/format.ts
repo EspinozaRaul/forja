@@ -23,15 +23,23 @@ export function formatRelativeDate(date: Date | string): string {
   return d.toLocaleDateString();
 }
 
+import type { WeightUnit } from './weight-unit';
+
 /**
- * Format volume in kg with appropriate precision
+ * Format volume with appropriate precision for the given unit. Aggregates mix
+ * units, so callers pass the unit they want the label shown in; numbers are
+ * never converted.
  */
-export function formatVolume(kg: number): string {
-  if (kg >= 1000) {
-    return `${(kg / 1000).toFixed(1)}t`;
+export function formatVolume(volume: number, unit: WeightUnit = 'kg'): string {
+  if (unit === 'lbs') {
+    if (volume >= 100) return `${Math.round(volume)} lbs`;
+    return `${volume.toFixed(1)} lbs`;
   }
-  if (kg >= 100) {
-    return `${Math.round(kg)}kg`;
+  if (volume >= 1000) {
+    return `${(volume / 1000).toFixed(1)}t`;
   }
-  return `${kg.toFixed(1)}kg`;
+  if (volume >= 100) {
+    return `${Math.round(volume)}kg`;
+  }
+  return `${volume.toFixed(1)}kg`;
 }

@@ -6,20 +6,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useExercise } from '../../lib/hooks/useExercises';
 import { useExerciseStats, useExerciseSessions, useExercisePRs } from '../../lib/hooks/useExercises';
 import { useTotalVolumeByWeek } from '../../lib/hooks/useProgress';
+import { useSettings } from '../../lib/utils/settings';
 import { ProgressChart } from '../../components/ProgressChart';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
-import { formatDuration, formatRelativeDate } from '../../lib/utils/format';
+import { formatDuration, formatRelativeDate, formatVolume } from '../../lib/utils/format';
+import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_IMAGES } from '../../lib/assets/exercise-images';
 import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
-
-function formatVolume(kg: number): string {
-  if (kg >= 1000) {
-    return `${(kg / 1000).toFixed(1)}k`;
-  }
-  return kg.toFixed(1);
-}
 
 function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
   const [localUri, setLocalUri] = useState<string | null>(null);
@@ -86,9 +81,11 @@ export default function ExerciseDetailScreen() {
   const { data: prs, isLoading: prsLoading } = useExercisePRs(exerciseId);
   const { data: sessions, isLoading: sessionsLoading } = useExerciseSessions(exerciseId);
   const { data: volumeData, isLoading: volumeLoading } = useTotalVolumeByWeek(exerciseId);
+  const settings = useSettings();
   const [showGif, setShowGif] = useState(false);
 
   const exercise = exercises?.[0];
+  const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
   const isLoading = exerciseLoading || statsLoading || prsLoading || sessionsLoading || volumeLoading;
 
   if (isLoading) {
@@ -171,7 +168,7 @@ export default function ExerciseDetailScreen() {
             Max Weight
           </Text>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
-            {stats?.maxWeight ? `${stats.maxWeight} kg` : '-'}
+            {stats?.maxWeight ? formatWeight(stats.maxWeight, unit) : '-'}
           </Text>
         </View>
 
@@ -186,7 +183,7 @@ export default function ExerciseDetailScreen() {
             Total Volume
           </Text>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
-            {stats?.totalVolume ? `${formatVolume(stats.totalVolume)} kg` : '0'}
+            {stats?.totalVolume ? formatVolume(stats.totalVolume, unit) : '0'}
           </Text>
         </View>
 
@@ -219,7 +216,7 @@ export default function ExerciseDetailScreen() {
                 <Text style={{ fontSize: 14, color: colors.text.secondary }}>Max Weight</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
-                    {prs.maxWeight.value} kg
+                    {formatWeight(prs.maxWeight.value, unit)}
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.text.muted }}>
                     {formatRelativeDate(prs.maxWeight.date)}
@@ -233,7 +230,7 @@ export default function ExerciseDetailScreen() {
                 <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Set</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
-                    {prs.bestSet.weight} kg × {prs.bestSet.reps}
+                    {formatWeight(prs.bestSet.weight, unit)} × {prs.bestSet.reps}
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.text.muted }}>
                     {formatRelativeDate(prs.bestSet.date)}
@@ -247,7 +244,7 @@ export default function ExerciseDetailScreen() {
                 <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Session</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
-                    {formatVolume(prs.maxVolumeSession.volume)} kg
+                    {formatVolume(prs.maxVolumeSession.volume, unit)}
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.text.muted }}>
                     {formatRelativeDate(prs.maxVolumeSession.date)}
@@ -260,7 +257,7 @@ export default function ExerciseDetailScreen() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ fontSize: 14, color: colors.text.secondary }}>Est. 1RM</Text>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
-                  {prs.estimated1RM} kg
+                  {formatWeight(prs.estimated1RM, unit)}
                 </Text>
               </View>
             )}
@@ -272,8 +269,8 @@ export default function ExerciseDetailScreen() {
       <View style={{ padding: spacing.md }}>
         <ProgressChart
           data={volumeData ?? []}
-          title="Weekly Volume (kg)"
-          unit="kg"
+          title={`Weekly Volume (${unit})`}
+          unit={unit}
         />
       </View>
 
@@ -317,7 +314,7 @@ export default function ExerciseDetailScreen() {
                 <View>
                   <Text style={{ fontSize: 12, color: colors.text.muted }}>Volume</Text>
                   <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
-                    {formatVolume(session.volume)} kg
+                    {formatVolume(session.volume, unit)}
                   </Text>
                 </View>
                 <View>

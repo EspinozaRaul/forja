@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 import { useCreateExercise } from '../lib/hooks/useExercises';
 import { useCategories } from '../lib/hooks/useCategories';
+import { useSettings } from '../lib/utils/settings';
 import { EXERCISE_IMAGES } from '../lib/assets/exercise-images';
 import { EXERCISE_NAMES_ES } from '../lib/db/exercise-names-es';
 import type { Exercise } from '../lib/types';
@@ -81,6 +82,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const createExercise = useCreateExercise();
   const { data: categories } = useCategories();
+  const settings = useSettings();
 
   const filtered = useMemo(() => {
     let result = exercises;
@@ -147,6 +149,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
         name: newName.trim(),
         categoryId: selectedCategoryId,
         description: newDescription.trim() || undefined,
+        unit: settings.data.weightUnit,
       });
       onSelect(result[0]);
       setNewName('');

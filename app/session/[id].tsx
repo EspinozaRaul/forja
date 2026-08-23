@@ -1,6 +1,6 @@
-import { Text, View, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation } from 'react-native';
+import { Text, View, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation, BackHandler, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { useState, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
-import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds } from '../../lib/hooks/useExercises';
+import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
 import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
 import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
@@ -28,6 +28,8 @@ import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '
 import { haptics } from '../../lib/utils/haptics';
 import { detectRoutineDiff, summarizeDiff, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
 import { findPreviousSetWeight, shouldCelebrateNewRecord } from '../../lib/utils/session-sets';
+import { useSettings } from '../../lib/utils/settings';
+import { resolveUnit } from '../../lib/utils/weight-unit';
 import type { SessionExercise, Set, Exercise, RoutineExercise } from '../../lib/types';
 import type { SessionExerciseWithSets } from '../../lib/db/queries';
 
@@ -70,6 +72,10 @@ export default function SessionScreen() {
   const { data: maxWeights } = useMaxWeightByExerciseIds(
     sessionExercises?.map((se) => se.exerciseId) ?? []
   );
+  const { data: lastRirByExercise } = useLastRirByRoutineExerciseIds(
+    session?.routineId ?? 0,
+    sessionExercises?.map((se) => se.exerciseId) ?? []
+  );
 
   // Previous values per exerciseId + setNumber from the last completed session
   // of THIS routine. Prefer the drop group parent (isDropGroup === true, the
@@ -81,6 +87,7 @@ export default function SessionScreen() {
   const getPreviousForExercise = (exerciseId: number, setNumber: number) => {
     let weight: number | null = null;
     let reps: number | null = null;
+    let rir: number | null = null;
     const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
     if (prevSets && prevSets.length > 0) {
       const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
@@ -89,11 +96,19 @@ export default function SessionScreen() {
         const chosen = preferred ?? withNumber[0];
         weight = chosen.weight != null ? chosen.weight : null;
         reps = chosen.reps != null ? chosen.reps : null;
+        rir = chosen.rir != null ? chosen.rir : null;
       }
     }
     if (weight == null) weight = lastWeights.data?.[exerciseId]?.weight ?? null;
     if (reps == null) reps = lastReps.data?.[exerciseId]?.reps ?? null;
-    return weight != null || reps != null ? { weight, reps } : undefined;
+    // RIR fallback: use lastRirByExercise from routine-level query
+    if (rir == null) {
+      const bySet = lastRirByExercise?.[exerciseId];
+      if (bySet && bySet[setNumber] != null) {
+        rir = bySet[setNumber];
+      }
+    }
+    return weight != null || reps != null || rir != null ? { weight, reps, rir } : undefined;
   };
 
   const getMaxWeightForExercise = (exerciseId: number) =>
@@ -126,6 +141,39 @@ export default function SessionScreen() {
   const [recordNotif, setRecordNotif] = useState<{ exerciseName: string; weight: number; unit: string; nonce: number } | null>(null);
   const recordNonceRef = useRef(0);
   const [confirmAction, setConfirmAction] = useState<null | 'end' | 'cancel'>(null);
+  const [autoStartTimer, setAutoStartTimer] = useState(false);
+
+  // Android hardware back button — prevent accidental session loss
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Salir de la sesión',
+        'Tu sesión se guardará con el progreso actual.',
+        [
+          { text: 'Seguir entrenando', style: 'cancel' },
+          {
+            text: 'Guardar y salir',
+            onPress: () => {
+              router.back();
+            },
+          },
+          {
+            text: 'Descartar',
+            style: 'destructive',
+            onPress: async () => {
+              await deleteSession.mutateAsync(sessionId);
+              router.back();
+            },
+          },
+        ]
+      );
+      return true;
+    });
+
+    return () => handler.remove();
+  }, [sessionId]);
 
   const handleNewRecord = (exerciseName: string, weight: number, unit: string) => {
     recordNonceRef.current += 1;
@@ -570,6 +618,7 @@ export default function SessionScreen() {
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
                           setRestDuration(restTime);
+                          setAutoStartTimer(false);
                           setRestartKey((k) => k + 1);
                           setShowRestTimer(true);
                         }}
@@ -589,6 +638,7 @@ export default function SessionScreen() {
                       onSetCompleted={(exerciseName, restTime) => {
                         setRestExerciseName(exerciseName);
                         setRestDuration(restTime);
+                        setAutoStartTimer(false);
                         setRestartKey((k) => k + 1);
                         setShowRestTimer(true);
                       }}
@@ -618,7 +668,7 @@ export default function SessionScreen() {
           <RestTimer
             sessionId={id}
             duration={restDuration}
-            autoStart
+            autoStart={autoStartTimer}
             visible={showRestTimer}
             restartKey={restartKey}
             onComplete={() => setShowRestTimer(false)}
@@ -838,7 +888,7 @@ function CollapseChevron({ collapsed, onPress }: { collapsed: boolean; onPress: 
 
 function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
@@ -864,6 +914,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const updateRestTime = useUpdateExerciseRestTime();
   const updateExercise = useUpdateExercise();
   const queryClient = useQueryClient();
+  const settings = useSettings();
   // Synchronous mirror of weights just typed in this session, so the new-record
   // comparison never depends on the async react-query refetch of `sets`.
   const pendingWeightsRef = useRef(new Map<number, number>());
@@ -881,6 +932,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const [collapsed, setCollapsed] = useState(false);
 
   const exercise = exercises?.[0];
+  const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
   const currentRestTime = sessionExercise.restTime ?? DEFAULT_REST_SECONDS;
 
   // Use setNumber for toggle tracking (more stable than ID during optimistic updates)
@@ -909,31 +961,32 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
     });
   };
 
-  const handleUpdateSet = async (set: Set, updates: { reps?: number; weight?: number; completed?: boolean; rir?: number }) => {
-    const mergedSets = (sets ?? []).map((s) =>
-      pendingWeightsRef.current.has(s.id) ? { ...s, weight: pendingWeightsRef.current.get(s.id) ?? null } : s
-    );
-    const prevW = findPreviousSetWeight(mergedSets, set.id);
-    // The visible placeholder ("peso previo") is the mark users actually read,
-    // so beating it must celebrate even when it is below the all-time max.
-    const phW = previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null;
-    const maxW = maxWeightFor?.(sessionExercise.exerciseId) ?? null;
-    if (
-      updates.weight != null &&
-      shouldCelebrateNewRecord(updates.weight, prevW, phW, maxW)
-    ) {
-      void haptics.success();
-      const name = exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio';
-      onNewRecord?.(name, updates.weight, exercise?.unit ?? 'kg');
-    }
+  const handleUpdateSet = async (set: Set, updates: { reps?: number; weight?: number; completed?: boolean; rir?: number | null }) => {
     if (updates.weight !== undefined) {
       if (updates.weight > 0) pendingWeightsRef.current.set(set.id, updates.weight);
       else pendingWeightsRef.current.delete(set.id);
     }
+
     if (updates.completed && !set.completed) {
       await haptics.complete();
       onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
+
+      const finalWeight = updates.weight ?? set.weight ?? pendingWeightsRef.current.get(set.id) ?? null;
+      if (finalWeight != null && finalWeight > 0) {
+        const mergedSets = (sets ?? []).map((s) =>
+          pendingWeightsRef.current.has(s.id) ? { ...s, weight: pendingWeightsRef.current.get(s.id) ?? null } : s
+        );
+        const prevW = findPreviousSetWeight(mergedSets, set.id);
+        const phW = previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null;
+        const maxW = maxWeightFor?.(sessionExercise.exerciseId) ?? null;
+        if (shouldCelebrateNewRecord(finalWeight, prevW, phW, maxW)) {
+          void haptics.success();
+          const name = exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio';
+          onNewRecord?.(name, finalWeight, unit);
+        }
+      }
     }
+
     await updateSet.mutateAsync({
       id: set.id,
       data: updates,
@@ -1391,8 +1444,10 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                       });
                     }
                   });
+                  onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
                 }}
-                unit={exercise?.unit ?? 'kg'}
+                unit={unit}
+                onUnitChange={handleUnitChange}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                 maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
@@ -1422,8 +1477,10 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                     }));
                     // Completing from the editor saves the drop set and exits editing mode
                     handleSaveDropSet(set.id);
+                    onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
                   }}
-                  unit={exercise?.unit ?? 'kg'}
+                  unit={unit}
+                  onUnitChange={handleUnitChange}
                   previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                   previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                   maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
@@ -1457,11 +1514,12 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               set={displaySet}
               onUpdate={(updates) => handleUpdateSet(set, updates)}
               onDelete={() => handleDeleteSet(set.id)}
-              unit={exercise?.unit ?? 'kg'}
+              unit={unit}
               onUnitChange={handleUnitChange}
               onOpenIntensityPicker={() => handleOpenIntensityPicker(set.id, set)}
               previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
               previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+              previousRir={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.rir ?? null}
               maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
             />
           );
@@ -1492,13 +1550,15 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   );
 }
 
-function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps = null, maxWeight = null, onUpdate }: {
+function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps = null, previousRir = null, maxWeight = null, onUnitChange, onUpdate }: {
   set: Set;
   label: string;
   unit: string;
   previousWeight?: number | null;
   previousReps?: number | null;
+  previousRir?: number | null;
   maxWeight?: number | null;
+  onUnitChange?: (unit: string) => void;
   onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
 }) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
@@ -1559,6 +1619,14 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
           onChangeText={handleRepsChange}
         />
       </View>
+      {onUnitChange && (
+        <TouchableOpacity
+          onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
+          style={{ backgroundColor: 'transparent', borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minWidth: 36, alignItems: 'center' }}
+        >
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text.muted }}>{unit}</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         onPress={() => onUpdate({ completed: !set.completed })}
         style={[
@@ -1580,7 +1648,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   exercises: SessionExercise[];
   nameA: string;
   nameB: string;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
@@ -1592,6 +1660,8 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   const createSet = useCreateSet();
   const updateSet = useUpdateSet();
   const deleteSet = useDeleteSet();
+  const updateExercise = useUpdateExercise();
+  const settings = useSettings();
   const pairId = a?.supersetPairId;
 
   // Synchronous mirror of weights just typed in this session, so the new-record
@@ -1611,8 +1681,17 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
 
   const restA = a?.restTime ?? DEFAULT_REST_SECONDS;
   const restB = b?.restTime ?? DEFAULT_REST_SECONDS;
-  const unitA = exA?.[0]?.unit ?? 'kg';
-  const unitB = exB?.[0]?.unit ?? 'kg';
+  const unitA = resolveUnit(exA?.[0]?.unit, settings.data.weightUnit);
+  const unitB = resolveUnit(exB?.[0]?.unit, settings.data.weightUnit);
+
+  const handleUnitChange = async (exercise: Exercise | undefined, unit: string) => {
+    if (exercise) {
+      await updateExercise.mutateAsync({
+        id: exercise.id,
+        data: { unit },
+      });
+    }
+  };
 
   // Filter out grouped-method children per side, same as SessionExerciseItem.
   const visibleSets = (sets: Set[] | undefined) =>
@@ -1782,6 +1861,8 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
             unitB={unitB}
             exerciseIdA={a?.exerciseId ?? 0}
             exerciseIdB={b?.exerciseId ?? 0}
+            onUnitChangeA={(unit) => handleUnitChange(exA?.[0], unit)}
+            onUnitChangeB={(unit) => handleUnitChange(exB?.[0], unit)}
             previousWeightFor={previousWeightFor}
             maxWeightFor={maxWeightFor}
             onUpdateSet={handleUpdateSet}
@@ -1815,7 +1896,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   );
 }
 
-function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exerciseIdB, previousWeightFor, maxWeightFor, onUpdateSet, onDeleteSeries }: {
+function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exerciseIdB, onUnitChangeA, onUnitChangeB, previousWeightFor, maxWeightFor, onUpdateSet, onDeleteSeries }: {
   row: { setNumber: number; a?: Set; b?: Set };
   nameA: string;
   nameB: string;
@@ -1823,7 +1904,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
   unitB: string;
   exerciseIdA: number;
   exerciseIdB: number;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null } | undefined;
+  onUnitChangeA?: (unit: string) => void;
+  onUnitChangeB?: (unit: string) => void;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onUpdateSet: (set: Set, updates: { reps?: number; weight?: number; completed?: boolean }) => void;
   onDeleteSeries: (row: { setNumber: number; a?: Set; b?: Set }) => void;
@@ -1878,7 +1961,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
             unit={unitA}
             previousWeight={prevA?.weight ?? null}
             previousReps={prevA?.reps ?? null}
+            previousRir={prevA?.rir ?? null}
             maxWeight={maxA}
+            onUnitChange={onUnitChangeA}
             onUpdate={(updates) => onUpdateSet(row.a!, updates)}
           />
         ) : null}
@@ -1890,7 +1975,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
             unit={unitB}
             previousWeight={prevB?.weight ?? null}
             previousReps={prevB?.reps ?? null}
+            previousRir={prevB?.rir ?? null}
             maxWeight={maxB}
+            onUnitChange={onUnitChangeB}
             onUpdate={(updates) => onUpdateSet(row.b!, updates)}
           />
         ) : null}

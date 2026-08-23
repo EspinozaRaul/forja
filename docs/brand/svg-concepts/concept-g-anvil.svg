@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FORJA — Concepto G: Yunque con pesa integrada</title>
+  <desc id="desc">Yunque de acero con una mancuerna apoyada sobre su cara: un lado de acero, el otro de brasa.</desc>
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D7DEE4"/>
+      <stop offset="1" stop-color="#A0B0BC"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB86B"/>
+      <stop offset="0.5" stop-color="#C77B45"/>
+      <stop offset="1" stop-color="#9E5A2E"/>
+    </linearGradient>
+    <radialGradient id="hotCore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFB86B" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#C77B45" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#C77B45" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bgGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#C77B45" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#C77B45" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#101316"/>
+  <circle cx="256" cy="250" r="150" fill="url(#bgGlow)"/>
+  <!-- Yunque: mesa superior -->
+  <rect x="140" y="170" width="240" height="40" rx="10" fill="url(#steel)" stroke="#E9EDF0" stroke-opacity="0.3" stroke-width="2"/>
+  <!-- Yunque: cuerno (izquierda) -->
+  <path d="M 140,210 L 92,210 Q 60,212 66,240 L 74,262 Q 78,276 92,270 L 140,244 Z" fill="url(#steel)"/>
+  <!-- Yunque: cintura -->
+  <rect x="200" y="210" width="112" height="60" fill="url(#steel)"/>
+  <!-- Yunque: base -->
+  <rect x="150" y="270" width="212" height="52" rx="10" fill="url(#steel)" stroke="#E9EDF0" stroke-opacity="0.3" stroke-width="2"/>
+  <!-- Mancuerna apoyada: barra -->
+  <rect x="180" y="152" width="150" height="18" rx="9" fill="url(#steel)"/>
+  <!-- Mancuerna: lado acero -->
+  <circle cx="196" cy="161" r="30" fill="url(#steel)" stroke="#E9EDF0" stroke-opacity="0.3" stroke-width="2"/>
+  <circle cx="196" cy="161" r="11" fill="#101316"/>
+  <!-- Mancuerna: lado brasa -->
+  <circle cx="314" cy="161" r="30" fill="url(#ember)" stroke="#FFB86B" stroke-opacity="0.4" stroke-width="2"/>
+  <circle cx="314" cy="161" r="30" fill="url(#hotCore)"/>
+  <circle cx="314" cy="161" r="11" fill="#101316"/>
+</svg>

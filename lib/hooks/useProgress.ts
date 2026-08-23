@@ -3,6 +3,8 @@ import { db } from '../db';
 import { sets, sessionExercises, sessions } from '../db/schema';
 import { eq, sql, and, gte, lte } from 'drizzle-orm';
 import { getWeeklySessions } from '../db/queries';
+import { getSessionsByMonth, getSessionMonthIndex, getSessionWithSets, getSessionCompare, getMostUsedExercises } from '../progress';
+import type { SessionByMonth, SessionMonthIndexEntry, SessionDetail, SessionCompareResult, MostUsedExercise } from '../progress';
 import type { ProgressDataPoint, WeeklyVolume } from '../types';
 import type { WeeklySessionDetail } from '../db/queries';
 
@@ -105,5 +107,43 @@ export function useWeeklySessions(week: string | null, exerciseId?: number) {
     queryKey: [...PROGRESS_KEY, 'weeklySessions', week, exerciseId],
     queryFn: () => getWeeklySessions(week!, exerciseId),
     enabled: !!week,
+  });
+}
+
+export function useSessionsByMonth(yearMonth: string) {
+  return useQuery<SessionByMonth[]>({
+    queryKey: [...PROGRESS_KEY, 'sessionsByMonth', yearMonth],
+    queryFn: () => getSessionsByMonth(yearMonth),
+    enabled: !!yearMonth,
+  });
+}
+
+export function useMostUsedExercises(limit = 6) {
+  return useQuery<MostUsedExercise[]>({
+    queryKey: [...PROGRESS_KEY, 'mostUsed', limit],
+    queryFn: () => getMostUsedExercises(limit),
+  });
+}
+
+export function useSessionMonthIndex() {
+  return useQuery<SessionMonthIndexEntry[]>({
+    queryKey: [...PROGRESS_KEY, 'monthIndex'],
+    queryFn: getSessionMonthIndex,
+  });
+}
+
+export function useSessionWithSets(sessionId: number) {
+  return useQuery<SessionDetail | null>({
+    queryKey: [...PROGRESS_KEY, 'sessionWithSets', sessionId],
+    queryFn: () => getSessionWithSets(sessionId),
+    enabled: !!sessionId,
+  });
+}
+
+export function useSessionCompare(aId: number, bId: number) {
+  return useQuery<SessionCompareResult>({
+    queryKey: [...PROGRESS_KEY, 'compare', aId, bId],
+    queryFn: () => getSessionCompare(aId, bId),
+    enabled: !!aId && !!bId,
   });
 }

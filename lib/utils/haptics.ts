@@ -1,6 +1,8 @@
 import * as Haptics from 'expo-haptics';
+import { getCachedSettings } from './settings';
 
 export async function impactAsync(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Medium) {
+  if (!getCachedSettings().hapticsEnabled) return;
   try {
     await Haptics.impactAsync(style);
   } catch (error) {
@@ -10,6 +12,7 @@ export async function impactAsync(style: Haptics.ImpactFeedbackStyle = Haptics.I
 }
 
 export async function notificationAsync(type: Haptics.NotificationFeedbackType = Haptics.NotificationFeedbackType.Success) {
+  if (!getCachedSettings().hapticsEnabled) return;
   try {
     await Haptics.notificationAsync(type);
   } catch (error) {
@@ -19,6 +22,7 @@ export async function notificationAsync(type: Haptics.NotificationFeedbackType =
 }
 
 export async function selectionAsync() {
+  if (!getCachedSettings().hapticsEnabled) return;
   try {
     await Haptics.selectionAsync();
   } catch (error) {

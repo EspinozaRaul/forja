@@ -114,6 +114,7 @@ export async function createExercise(data: {
   name: string;
   categoryId: number;
   description?: string;
+  unit?: string;
 }) {
   return db
     .insert(exercises)
@@ -459,7 +460,7 @@ export async function updateSet(
     reps?: number;
     weight?: number;
     completed?: boolean;
-    rir?: number;
+    rir?: number | null;
   }
 ) {
   return db.update(sets).set(data).where(eq(sets.id, id)).returning();
@@ -615,6 +616,54 @@ export async function getExerciseStats(exerciseId: number): Promise<ExerciseStat
     totalSessions: sessionCount[0]?.count ?? 0,
     totalSets: result[0]?.totalSets ?? 0,
   };
+}
+
+// ─── Last RIR Per Exercise ─────────────────────────────
+
+/**
+ * Returns the most recent RIR recorded for each exercise+setNumber combination
+ * from the last completed session of the given routine. Used to prefill RIR
+ * defaults when starting a new session from a routine.
+ */
+export async function getLastRirByRoutineExerciseIds(
+  routineId: number,
+  exerciseIds: number[]
+): Promise<Record<number, Record<number, number | null>>> {
+  if (exerciseIds.length === 0 || !routineId) return {};
+
+  // Get the last completed session for this routine
+  const lastSession = await db
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(and(eq(sessions.routineId, routineId), isNotNull(sessions.completedAt)))
+    .orderBy(desc(sessions.completedAt))
+    .limit(1);
+
+  if (lastSession.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      setNumber: sets.setNumber,
+      rir: sets.rir,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(
+      and(
+        eq(sessionExercises.sessionId, lastSession[0].id),
+        inArray(sessionExercises.exerciseId, exerciseIds),
+        isNotNull(sets.rir)
+      )
+    )
+    .orderBy(asc(sets.setNumber));
+
+  const result: Record<number, Record<number, number | null>> = {};
+  for (const row of rows) {
+    if (!result[row.exerciseId]) result[row.exerciseId] = {};
+    result[row.exerciseId][row.setNumber] = row.rir;
+  }
+  return result;
 }
 
 // ─── Last Weight Per Exercise ──────────────────────────
@@ -934,11 +983,14 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     .select({ count: sql<number>`count(*)` })
     .from(sessions);
 
-  // Total volume (sum of all reps × weight)
+  // Total volume: sum of reps × weight over COMPLETED sets only. This mirrors
+  // how volume is tallied per exercise (compare.ts collectExerciseStats excludes
+  // non-completed sets) — planned/skipped sets must not inflate the total.
   const totalVolume = await db
     .select({ total: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)` })
     .from(sets)
-    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id));
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(eq(sets.completed, true));
 
   // Total time (sum of all session durations)
   const totalTime = await db
