@@ -10,8 +10,7 @@ interface SetLoggerProps {
   set: Set;
   onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean; rir?: number | null }) => void;
   onDelete?: () => void;
-  unit?: string; // kg or lbs
-  onUnitChange?: (unit: string) => void;
+  unit?: string;
   onOpenIntensityPicker?: () => void;
   isDropGroup?: boolean;
   dropCount?: number;
@@ -21,7 +20,7 @@ interface SetLoggerProps {
   maxWeight?: number | null;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, previousRir = null, maxWeight = null }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, previousRir = null, maxWeight = null }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
@@ -30,14 +29,11 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
   const isLinear = set.method === 'linear' || set.method === null;
 
   const weightPlaceholder = () => {
-    if (previousWeight == null) return unit;
-    if (maxWeight != null) {
-      return previousWeight >= maxWeight ? `${previousWeight} ▲` : `${previousWeight} ▼`;
-    }
+    if (previousWeight == null) return '0';
     return String(previousWeight);
   };
 
-  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'Reps');
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : '0');
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -67,13 +63,18 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
   const renderRightActions = () => {
     if (!onDelete) return null;
     return (
-      <TouchableOpacity
-        onPress={handleDelete}
-        style={styles.deleteAction}
-      >
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
         <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
     );
+  };
+
+  // Format previous data: "10kg x 15"
+  const previousText = () => {
+    if (previousWeight == null && previousReps == null) return '—';
+    const w = previousWeight != null ? `${previousWeight}${unit}` : '?';
+    const r = previousReps != null ? previousReps : '?';
+    return `${w} x ${r}`;
   };
 
   return (
@@ -85,22 +86,37 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
     >
       <View>
         <View style={styles.container}>
-          {/* Set number with method badge */}
-          <View style={styles.setInfo}>
-            <Text style={styles.setNumber}>
-              #{set.setNumber}
-            </Text>
+          {/* Set number */}
+          <View style={styles.serieCell}>
+            <Text style={styles.serieNumber}>{set.setNumber}</Text>
             {isDropSet && isDropGroup && (
               <View style={styles.dropBadge}>
-                <Text style={styles.dropBadgeText}>⚡ DROP</Text>
+                <Text style={styles.dropBadgeText}>DS</Text>
               </View>
-            )}
-            {isDropSet && !isDropGroup && (
-              <Text style={styles.dropOrderText}>↓{set.dropOrder}</Text>
             )}
           </View>
 
-          <View style={styles.inputContainer}>
+          {/* Previous data */}
+          <View style={styles.anteriorCell}>
+            <Text style={styles.anteriorText} numberOfLines={1}>
+              {previousText()}
+            </Text>
+          </View>
+
+          {/* Weight input */}
+          <View style={styles.inputCell}>
+            <TextInput
+              style={styles.input}
+              keyboardType="decimal-pad"
+              placeholder={weightPlaceholder()}
+              placeholderTextColor={colors.text.muted}
+              value={weight}
+              onChangeText={handleWeightChange}
+            />
+          </View>
+
+          {/* Reps input */}
+          <View style={styles.repsCell}>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
@@ -111,52 +127,31 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onUnitChange, 
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              keyboardType="decimal-pad"
-              placeholder={weightPlaceholder()}
-              placeholderTextColor={colors.text.muted}
-              value={weight}
-              onChangeText={handleWeightChange}
-            />
-          </View>
-          {onUnitChange && (
-            <TouchableOpacity
-              onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
-              style={styles.unitToggle}
-            >
-              <Text style={styles.unitText}>{unit}</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Convert to drop set button (only for linear sets) */}
+          {/* Intensity method button */}
           {isLinear && onOpenIntensityPicker && (
             <TouchableOpacity
               onPress={onOpenIntensityPicker}
-              style={styles.convertButton}
+              style={styles.intensityButton}
             >
-              <Ionicons name="flash" size={14} color={colors.warning} />
+              <Ionicons name="flash" size={12} color={colors.warning} />
             </TouchableOpacity>
           )}
 
+          {/* Check button */}
           <TouchableOpacity
             onPress={() => onUpdate({ completed: !set.completed })}
             style={[
               styles.checkButton,
-              set.completed
-                ? styles.checkButtonCompleted
-                : styles.checkButtonIncomplete,
+              set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
           >
-            <Text style={[
-              styles.checkText,
-              { color: set.completed ? colors.bg.primary : colors.text.secondary }
-            ]}>
-              {set.completed ? '✓' : ''}
-            </Text>
+            {set.completed && (
+              <Ionicons name="checkmark" size={14} color={colors.bg.primary} />
+            )}
           </TouchableOpacity>
         </View>
+
+        {/* RIR picker - shown below the set row */}
         <RirPicker
           value={set.rir}
           onChange={(rir) => onUpdate({ rir })}
@@ -170,23 +165,44 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: 3,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
   },
-  setNumber: {
+  serieCell: {
+    width: 32,
+    alignItems: 'center',
+  },
+  serieNumber: {
     fontSize: 14,
     fontFamily: fonts.display,
-    color: colors.text.muted,
-    width: 28,
-    textAlign: 'center',
+    fontWeight: '600',
+    color: colors.text.secondary,
   },
-  inputContainer: {
+  anteriorCell: {
     flex: 1,
-    maxWidth: 80,
+    alignItems: 'center',
+  },
+  anteriorText: {
+    fontSize: 12,
+    color: colors.text.muted,
+    fontFamily: fonts.body,
+  },
+  inputCell: {
+    width: 64,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    marginHorizontal: 2,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  repsCell: {
+    width: 56,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: borderRadius.sm,
+    marginHorizontal: 2,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   input: {
@@ -197,24 +213,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
   },
-  checkButton: {
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.full,
+  intensityButton: {
+    width: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkButtonCompleted: {
+  checkButton: {
+    width: 28,
+    height: 28,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.xs,
+  },
+  checkCompleted: {
     backgroundColor: colors.accent.primary,
   },
-  checkButtonIncomplete: {
+  checkIncomplete: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: colors.border.primary,
-  },
-  checkText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   deleteAction: {
     backgroundColor: colors.error,
@@ -229,54 +247,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  unitToggle: {
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    minWidth: 36,
-    alignItems: 'center',
-  },
-  unitText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text.muted,
-  },
-  setInfo: {
-    width: 28,
-    alignItems: 'center',
-    gap: 2,
-  },
   dropBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
     backgroundColor: 'rgba(255, 184, 0, 0.15)',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
     paddingVertical: 1,
-    borderRadius: borderRadius.sm,
+    borderRadius: 3,
+    marginTop: 2,
   },
   dropBadgeText: {
     fontSize: 8,
     fontWeight: '800',
-    color: colors.warning,
-  },
-  dropOrderText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.warning,
-  },
-  convertButton: {
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    minWidth: 36,
-    alignItems: 'center',
-  },
-  convertText: {
-    fontSize: 14,
-    fontWeight: '600',
     color: colors.warning,
   },
 });

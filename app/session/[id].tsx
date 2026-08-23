@@ -17,6 +17,7 @@ import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, u
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
+import { SetLoggerHeader } from '../../components/SetLoggerHeader';
 import { DropSetLogger } from '../../components/DropSetLogger';
 import { IntensityMethodPicker, type IntensityMethod } from '../../components/IntensityMethodPicker';
 import { Button } from '../../components/ui/Button';
@@ -1359,7 +1360,9 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           </Text>
         </TouchableOpacity>
       ) : (
-      (() => {
+      <View>
+        <SetLoggerHeader unit={unit} onUnitChange={handleUnitChange} />
+        {(() => {
         // Pre-process: filter to visible items and assign sequential display numbers
         let displayNumber = 0;
         const visibleItems = sets?.filter((s) => {
@@ -1448,7 +1451,6 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                   onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
                 }}
                 unit={unit}
-                onUnitChange={handleUnitChange}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                 maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
@@ -1481,7 +1483,6 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                     onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
                   }}
                   unit={unit}
-                  onUnitChange={handleUnitChange}
                   previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                   previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                   maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
@@ -1516,7 +1517,6 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               onUpdate={(updates) => handleUpdateSet(set, updates)}
               onDelete={() => handleDeleteSet(set.id)}
               unit={unit}
-              onUnitChange={handleUnitChange}
               onOpenIntensityPicker={() => handleOpenIntensityPicker(set.id, set)}
               previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
               previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
@@ -1525,7 +1525,8 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
             />
           );
         });
-      })()
+      })()}
+      </View>
       )}
       {!collapsed && (
       <Button
