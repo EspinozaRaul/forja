@@ -23,6 +23,7 @@ export function SetLoggerHeader({ unit, onUnitChange }: SetLoggerHeaderProps) {
         )}
       </TouchableOpacity>
       <Text style={styles.repsHeader}>REPS</Text>
+      <View style={styles.intensitySpacer} />
       <View style={styles.checkHeader} />
     </View>
   );
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
-    width: 28,
+    width: 30,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -75,7 +76,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
+  intensitySpacer: {
+    width: 24,
+  },
   checkHeader: {
     width: 28,
+    marginLeft: spacing.xs,
   },
 });

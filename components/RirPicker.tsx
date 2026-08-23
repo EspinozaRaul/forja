@@ -6,17 +6,19 @@ const RIR_OPTIONS = [0, 1, 2, 3, 4];
 interface RirPickerProps {
   value: number | null | undefined;
   onChange: (rir: number | null) => void;
+  /** Pixels of padding at the end so chips align with REPS column (not the check button) */
+  endPadding?: number;
 }
 
 /**
  * Compact one-tap RIR selector: chips 0-4, tapping again clears.
  * Lives below the set row so it never crowds the reps/weight inputs.
  */
-export function RirPicker({ value, onChange }: RirPickerProps) {
+export function RirPicker({ value, onChange, endPadding = 0 }: RirPickerProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>RIR</Text>
-      <View style={styles.chips}>
+      <View style={[styles.chips, endPadding > 0 && { marginRight: endPadding }]}>
         {RIR_OPTIONS.map((rir) => {
           const selected = value === rir;
           return (
@@ -43,6 +45,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: spacing.xs + 2,
+    marginLeft: 71,
   },
   label: {
     fontSize: 10,

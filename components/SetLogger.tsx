@@ -155,6 +155,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
         <RirPicker
           value={set.rir}
           onChange={(rir) => onUpdate({ rir })}
+          endPadding={(isLinear && onOpenIntensityPicker) ? 56 : 32}
         />
       </View>
     </Swipeable>
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   serieCell: {
-    width: 28,
+    width: 30,
     alignItems: 'center',
   },
   serieNumber: {
