@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.xs + 2,
     paddingLeft: 36,
+    paddingRight: 64,
   },
   label: {
     fontSize: 10,
