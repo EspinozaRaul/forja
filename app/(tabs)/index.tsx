@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSessions } from '../../lib/hooks/useSessions';
 import { useRoutines, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
-import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
+import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { SessionCard } from '../../components/SessionCard';
 import { Button } from '../../components/ui/Button';
@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(selectedRoutineId ?? 0);
   const { data: allExercises } = useExercises();
   const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
+  const { data: lastSession } = useLastSessionForRoutine(selectedRoutineId ?? 0);
   const settings = useSettings();
   const settingsUnit = settings.data.weightUnit;
   const createSession = useCreateSession();
@@ -67,12 +68,14 @@ export default function HomeScreen() {
 
       // Copy routine exercises to the new session (fresh start) with the
       // planned set template already materialized (empty sets guide the user).
+      // Also copy notes from the last session (seat height, pain notes, etc.)
       if (routineExercises && routineExercises.length > 0) {
         for (const re of routineExercises) {
           const se = await addExerciseToSession.mutateAsync({
             sessionId: session[0].id,
             exerciseId: re.exerciseId,
             order: re.order,
+            notes: lastSession?.exercises?.find((e) => e.exerciseId === re.exerciseId)?.notes ?? undefined,
           });
           const sessionExerciseId = se[0].id;
           const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;

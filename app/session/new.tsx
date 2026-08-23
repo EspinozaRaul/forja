@@ -1,7 +1,7 @@
 import { Text, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCreateSession, useAddExerciseToSession } from '../../lib/hooks/useSessions';
+import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
 import { useCreateSet } from '../../lib/hooks/useSets';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +19,7 @@ export default function NewSessionScreen() {
   const routineIdNum = routineId ? parseInt(routineId, 10) : undefined;
   const { data: routines, isLoading: routineLoading } = useRoutine(routineIdNum ?? 0);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineIdNum ?? 0);
+  const { data: lastSession } = useLastSessionForRoutine(routineIdNum ?? 0);
   const addExerciseToSession = useAddExerciseToSession();
   const createSet = useCreateSet();
 
@@ -35,11 +36,13 @@ export default function NewSessionScreen() {
       if (routineExercises && routineExercises.length > 0) {
         // Copy routine exercises to the new session (fresh start) and
         // materialize the planned set template (empty sets guide the user)
+        // Also copy notes from the last session (seat height, pain notes, etc.)
         for (const re of routineExercises) {
           const se = await addExerciseToSession.mutateAsync({
             sessionId: session[0].id,
             exerciseId: re.exerciseId,
             order: re.order,
+            notes: lastSession?.exercises?.find((e) => e.exerciseId === re.exerciseId)?.notes ?? undefined,
           });
           const sessionExerciseId = se[0].id;
           const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
