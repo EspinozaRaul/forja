@@ -84,7 +84,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
       overshootRight={false}
       friction={2}
     >
-      <View>
+      <View style={styles.outerContainer}>
         <View style={styles.container}>
           {/* Set number */}
           <View style={styles.serieCell}>
@@ -162,11 +162,13 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    paddingHorizontal: spacing.sm,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
   },
   serieCell: {
     width: 28,

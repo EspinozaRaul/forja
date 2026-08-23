@@ -43,8 +43,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: spacing.xs + 2,
-    paddingLeft: 36,
-    paddingRight: 64,
   },
   label: {
     fontSize: 10,
@@ -56,6 +54,7 @@ const styles = StyleSheet.create({
   chips: {
     flexDirection: 'row',
     gap: spacing.xs,
+    flex: 1,
   },
   chip: {
     minWidth: 30,
