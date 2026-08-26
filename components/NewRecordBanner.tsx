@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, shadows } from '../lib/theme/tokens';
 
-const RECORD_TEXT = '¡Nuevo récord!';
 const DISPLAY_MS = 2500;
 const FADE_IN_MS = 200;
 const FADE_OUT_MS = 250;
@@ -18,6 +18,7 @@ interface NewRecordBannerProps {
 
 export function NewRecordBanner({ exerciseName, weight, unit, onDismiss }: NewRecordBannerProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-SLIDE_PX)).current;
   const dismissedRef = useRef(false);
@@ -83,7 +84,7 @@ export function NewRecordBanner({ exerciseName, weight, unit, onDismiss }: NewRe
           numberOfLines={1}
           style={{ color: colors.bg.primary, fontSize: 12, fontWeight: '700', fontFamily: fonts.bodyMedium }}
         >
-          {RECORD_TEXT} {exerciseName} · {weight} {unit}
+          {t('session.newRecord')} {exerciseName} · {weight} {unit}
         </Text>
       </Animated.View>
     </View>

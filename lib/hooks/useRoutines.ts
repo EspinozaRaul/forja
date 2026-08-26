@@ -69,10 +69,11 @@ export function useUpdateRoutine() {
       data,
     }: {
       id: number;
-      data: { name?: string; description?: string; categoryId?: number };
+      data: { name?: string; description?: string; categoryId?: number; folderId?: number | null };
     }) => updateRoutine(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
   });
 }

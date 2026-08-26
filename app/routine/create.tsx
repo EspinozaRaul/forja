@@ -1,7 +1,8 @@
-import { Text, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useExercises } from '../../lib/hooks/useExercises';
 import { useLastWeightByExerciseIds } from '../../lib/hooks/useExercises';
@@ -12,11 +13,15 @@ import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import type { Exercise } from '../../lib/types';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function CreateRoutineScreen() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { dialog, showAlert } = useConfirmDialog();
   const params = useLocalSearchParams<{ folderId?: string }>();
   const folderId = params.folderId ? Number(params.folderId) : undefined;
 
@@ -39,9 +44,9 @@ export default function CreateRoutineScreen() {
   const validate = () => {
     const newErrors: { name?: string } = {};
     if (!name.trim()) {
-      newErrors.name = 'Routine name is required';
+      newErrors.name = t('routine.create.nameRequired');
     } else if (name.trim().length < 2) {
-      newErrors.name = 'Routine name must be at least 2 characters';
+      newErrors.name = t('routine.create.nameMinLength');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -118,29 +123,30 @@ export default function CreateRoutineScreen() {
 
       router.back();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create routine. Please try again.');
+      showAlert(t('common.error'), t('routine.create.createFailed'));
     }
   };
 
   if (exercisesLoading) {
-    return <LoadingSpinner message="Loading exercises..." />;
+    return <LoadingSpinner message={t('routine.create.loading')} />;
   }
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
-      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Create New Routine</Text>
+      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.create.title')}</Text>
 
       <Input
-        label="Routine Name"
-        placeholder="e.g., Push Day"
+        label={t('routine.create.nameLabel')}
+        placeholder={t('routine.create.namePlaceholder')}
         value={name}
         onChangeText={setName}
         error={errors.name}
       />
 
       <Input
-        label="Description (optional)"
-        placeholder="e.g., Chest, shoulders, triceps"
+        label={t('routine.create.descriptionLabel')}
+        placeholder={t('routine.create.descriptionPlaceholder')}
         value={description}
         onChangeText={setDescription}
         multiline
@@ -150,21 +156,21 @@ export default function CreateRoutineScreen() {
       {/* Selected Exercises */}
       <View style={{ marginBottom: spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>Exercises</Text>
-          <Button title="Add Exercise" variant="secondary" onPress={() => setShowPicker(true)} />
+          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('routine.create.exercises')}</Text>
+          <Button title={t('routine.create.addExercise')} variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (
           <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
             <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
-              Tap another exercise to swap positions — or tap the same to cancel
+              {t('routine.create.tapToSwap')}
             </Text>
           </View>
         )}
 
         {selectedExercises.length === 0 ? (
           <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.md, alignItems: 'center' }}>
-            <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>No exercises added yet</Text>
+            <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>{t('routine.create.noExercises')}</Text>
           </View>
         ) : (
           selectedExercises.map((exercise, index) => (
@@ -197,11 +203,11 @@ export default function CreateRoutineScreen() {
                 </TouchableOpacity>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text.muted, width: 20 }}>{index + 1}</Text>
                 <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={1}>
-                  {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
+                  {getExerciseName(exercise.name, i18n.language)}
                 </Text>
                 {lastWeights.data?.[exercise.id] != null && (
                   <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.accent.secondary }}>
-                    último: {formatWeight(lastWeights.data?.[exercise.id]?.weight, resolveUnit(lastWeights.data?.[exercise.id]?.unit, settingsUnit))}
+                    {t('routine.create.lastWeight')}: {formatWeight(lastWeights.data?.[exercise.id]?.weight, resolveUnit(lastWeights.data?.[exercise.id]?.unit, settingsUnit))}
                   </Text>
                 )}
                 <TouchableOpacity
@@ -220,7 +226,7 @@ export default function CreateRoutineScreen() {
       </View>
 
       <Button
-        title="Create Routine"
+        title={t('routine.create.submit')}
         onPress={handleSubmit}
         loading={createRoutine.isPending || addExerciseToRoutine.isPending}
         disabled={createRoutine.isPending || addExerciseToRoutine.isPending}
@@ -231,15 +237,23 @@ export default function CreateRoutineScreen() {
         exercises={exercises ?? []}
         onSelect={replaceIndex !== null ? handleReplaceExercise : handleSelectExercise}
         onMultiSelect={handleMultiSelectExercises}
-        onPreview={(exercise) => {
-          setShowPicker(false);
-          router.push(`/exercise/${exercise.id}`);
-        }}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
         multiSelect={replaceIndex === null}
         state={pickerState}
         onStateChange={setPickerState}
       />
+
+      <ConfirmDialog
+        visible={dialog.visible}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        cancelLabel={dialog.cancelLabel}
+        destructive={dialog.destructive}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+      />
     </ScrollView>
+    </>
   );
 }

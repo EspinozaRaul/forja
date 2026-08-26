@@ -1,18 +1,23 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { supabase } from '../../lib/supabase';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { dialog, showAlert } = useConfirmDialog();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Completá todos los campos');
+      showAlert(t('common.error'), t('auth.login.error.emptyFields'));
       return;
     }
 
@@ -21,27 +26,28 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      showAlert(t('common.error'), error.message);
     } else {
       router.replace('/(tabs)');
     }
   };
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <View style={styles.emberDot} />
           <Text style={styles.brandName}>FORJA</Text>
         </View>
-        <Text style={styles.title}>Tus registros te esperan</Text>
-        <Text style={styles.subtitle}>Iniciá sesión para seguir forjando</Text>
+        <Text style={styles.title}>{t('auth.login.title')}</Text>
+        <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
       </View>
 
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder={t('auth.login.email')}
           placeholderTextColor={colors.text.muted}
           value={email}
           onChangeText={setEmail}
@@ -51,7 +57,7 @@ export default function LoginScreen() {
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Contraseña"
+            placeholder={t('auth.login.password')}
             placeholderTextColor={colors.text.muted}
             value={password}
             onChangeText={setPassword}
@@ -61,7 +67,7 @@ export default function LoginScreen() {
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
           >
-            <Text style={styles.toggleText}>{showPassword ? 'Ocultar' : 'Ver'}</Text>
+            <Text style={styles.toggleText}>{showPassword ? t('common.hidePassword') : t('common.showPassword')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -71,7 +77,7 @@ export default function LoginScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Iniciando...' : 'Iniciar sesión'}
+            {loading ? t('auth.login.loading') : t('auth.login.submit')}
           </Text>
         </TouchableOpacity>
 
@@ -80,11 +86,22 @@ export default function LoginScreen() {
           onPress={() => router.push('/auth/signup')}
         >
           <Text style={styles.linkText}>
-            ¿Sin cuenta? <Text style={styles.linkBold}>Crear cuenta</Text>
+            {t('auth.login.noAccount')} <Text style={styles.linkBold}>{t('auth.login.signUp')}</Text>
           </Text>
         </TouchableOpacity>
       </View>
     </View>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }
 

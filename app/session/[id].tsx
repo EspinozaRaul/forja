@@ -1,4 +1,4 @@
-import { Text, View, Alert, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation, BackHandler, Platform } from 'react-native';
+import { Text, View, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation, BackHandler, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,7 +26,7 @@ import { ExercisePicker } from '../../components/ExercisePicker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { NewRecordBanner } from '../../components/NewRecordBanner';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../../lib/constants/routine-defaults';
 import { haptics } from '../../lib/utils/haptics';
 import { detectRoutineDiff, summarizeDiff, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
@@ -35,6 +35,9 @@ import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit } from '../../lib/utils/weight-unit';
 import type { SessionExercise, Set, Exercise, RoutineExercise } from '../../lib/types';
 import type { SessionExerciseWithSets } from '../../lib/db/queries';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
+import { useTranslation } from 'react-i18next';
 
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,6 +45,7 @@ export default function SessionScreen() {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const sessionId = parseInt(id, 10);
+  const { t, i18n } = useTranslation();
 
   const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
   const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
@@ -117,9 +121,9 @@ export default function SessionScreen() {
   const getMaxWeightForExercise = (exerciseId: number) =>
     maxWeights?.[exerciseId] ?? null;
 
-  const getExerciseName = (se: SessionExercise): string => {
+  const getExerciseNameForSession = (se: SessionExercise): string => {
     const ex = allExercises?.find((e) => e.id === se.exerciseId);
-    return ex ? (EXERCISE_NAMES_ES[ex.name] || ex.name) : 'Ejercicio';
+    return ex ? getExerciseName(ex.name, i18n.language) : t('session.fallbackExercise');
   };
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -145,32 +149,28 @@ export default function SessionScreen() {
   const recordNonceRef = useRef(0);
   const [confirmAction, setConfirmAction] = useState<null | 'end' | 'cancel'>(null);
   const [autoStartTimer, setAutoStartTimer] = useState(false);
+  const { dialog, showAlert, showConfirm, showThreeOption } = useConfirmDialog();
 
   // Android hardware back button — prevent accidental session loss
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      Alert.alert(
-        'Salir de la sesión',
-        'Tu sesión se guardará con el progreso actual.',
-        [
-          { text: 'Seguir entrenando', style: 'cancel' },
-          {
-            text: 'Guardar y salir',
-            onPress: () => {
-              router.back();
-            },
+      showThreeOption(
+        t('session.confirm.exitTitle'),
+        t('session.confirm.exitMessage'),
+        {
+          cancelLabel: t('session.confirm.keepTraining'),
+          thirdLabel: t('session.confirm.saveAndExit'),
+          confirmLabel: t('session.confirm.discard'),
+          onCancel: () => {},
+          onThird: () => { router.back(); },
+          onConfirm: async () => {
+            await deleteSession.mutateAsync(sessionId);
+            router.back();
           },
-          {
-            text: 'Descartar',
-            style: 'destructive',
-            onPress: async () => {
-              await deleteSession.mutateAsync(sessionId);
-              router.back();
-            },
-          },
-        ]
+          destructive: true,
+        }
       );
       return true;
     });
@@ -207,7 +207,7 @@ export default function SessionScreen() {
         await updateOrder.mutateAsync({ id: source.id, order: index + 1 });
       } catch (error) {
         queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
-        Alert.alert('Error', 'Failed to reorder');
+        showAlert(t('common.error'), t('session.error.reorder'));
       }
       setDragIndex(null);
     }
@@ -226,20 +226,20 @@ export default function SessionScreen() {
       await replaceSessionExercise.mutateAsync({ id: replaceId, exerciseId: exercise.id });
     } catch (error) {
       queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
-      Alert.alert('Error', 'Failed to replace exercise');
+      showAlert(t('common.error'), t('session.error.replace'));
     }
     setReplaceId(null);
     setShowPicker(false);
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading session..." />;
+    return <LoadingSpinner message={t('session.loadingMessage')} />;
   }
 
   if (!session) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title="Session not found" />
+        <EmptyState title={t('session.notFound')} />
       </View>
     );
   }
@@ -259,7 +259,7 @@ export default function SessionScreen() {
       router.back();
     } catch (error) {
       await haptics.error();
-      Alert.alert('Error', 'Failed to discard session');
+      showAlert(t('common.error'), t('session.error.discard'));
     }
   };
 
@@ -273,7 +273,7 @@ export default function SessionScreen() {
       router.push(`/session/history/${sessionId}`);
     } catch (error) {
       await haptics.error();
-      Alert.alert('Error', 'Failed to end session');
+      showAlert(t('common.error'), t('session.error.end'));
     }
   };
 
@@ -296,7 +296,7 @@ export default function SessionScreen() {
       for (const exerciseId of exerciseIds) {
         if (exerciseNames[exerciseId] !== undefined) continue;
         const ex = allExercises?.find((e) => e.id === exerciseId);
-        exerciseNames[exerciseId] = ex ? (EXERCISE_NAMES_ES[ex.name] || ex.name) : 'Ejercicio desconocido';
+        exerciseNames[exerciseId] = ex ? getExerciseName(ex.name, i18n.language) : t('session.unknownExercise');
       }
     };
     addNames(routineRows.map((r) => r.exerciseId));
@@ -423,7 +423,7 @@ export default function SessionScreen() {
     } catch (error) {
       await haptics.error();
       setApplyingRoutineUpdate(false);
-      Alert.alert('Error', 'No se pudo actualizar la rutina.');
+      showAlert(t('common.error'), t('session.error.updateRoutine'));
     }
   };
 
@@ -442,7 +442,7 @@ export default function SessionScreen() {
       });
       setShowPicker(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add exercise');
+      showAlert(t('common.error'), t('session.error.addExercise'));
     }
   };
 
@@ -453,7 +453,7 @@ export default function SessionScreen() {
     try {
       await createSuperSetPair.mutateAsync({ firstId, secondId: chosen.id });
     } catch (error) {
-      Alert.alert('Error', 'No se pudo crear el Super Set.');
+      showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
   };
 
@@ -466,7 +466,7 @@ export default function SessionScreen() {
       // Cannot pair an exercise with itself
       const sameExercise = sessionExercises?.find((se) => se.id === firstId);
       if (sameExercise && sameExercise.exerciseId === exercise.id) {
-        Alert.alert('Aviso', 'No podés emparejar un ejercicio consigo mismo.');
+        showAlert(t('session.error.warning'), t('session.error.selfPair'));
         return;
       }
       // If the selected exercise is already in this session and unpaired, pair directly with it
@@ -485,61 +485,50 @@ export default function SessionScreen() {
       });
       const newSe = added[0];
       if (!newSe) {
-        Alert.alert('Error', 'No se pudo crear el Super Set.');
+        showAlert(t('common.error'), t('session.error.createSuperSet'));
         return;
       }
       await createSuperSetPair.mutateAsync({ firstId, secondId: newSe.id });
     } catch (error) {
-      Alert.alert('Error', 'No se pudo crear el Super Set.');
+      showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
   };
 
   const handleDeleteExercise = (se: SessionExercise) => {
-    Alert.alert(
-      'Eliminar ejercicio',
-      `¿Eliminar "${getExerciseName(se)}" de la sesión? Se eliminan sus series.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            await haptics.warning();
-            await deleteSessionExercise.mutateAsync(se.id);
-          },
-        },
-      ]
+    showConfirm(
+      t('session.confirm.deleteExercise'),
+      t('session.confirm.deleteExerciseMessage', { name: getExerciseNameForSession(se) }),
+      async () => {
+        await haptics.warning();
+        await deleteSessionExercise.mutateAsync(se.id);
+      },
+      { confirmLabel: t('session.confirm.delete'), destructive: true }
     );
   };
 
   const handleDeleteSuperSet = (members: SessionExercise[]) => {
     const pairId = members[0]?.supersetPairId;
-    const nameA = getExerciseName(members[0]);
-    const nameB = getExerciseName(members[1]);
-    Alert.alert(
-      'Eliminar Super Set',
-      `¿Eliminar "${nameA}" y "${nameB}" de la sesión? Se eliminan sus series.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            await haptics.warning();
-            if (pairId != null) {
-              await unlinkSuperSet.mutateAsync(pairId);
-            }
-            await deleteSessionExercise.mutateAsync(members[0].id);
-            if (members[1]) {
-              await deleteSessionExercise.mutateAsync(members[1].id);
-            }
-          },
-        },
-      ]
+    const nameA = getExerciseNameForSession(members[0]);
+    const nameB = getExerciseNameForSession(members[1]);
+    showConfirm(
+      t('session.confirm.deleteSuperSet'),
+      t('session.confirm.deleteSuperSetMessage', { nameA, nameB }),
+      async () => {
+        await haptics.warning();
+        if (pairId != null) {
+          await unlinkSuperSet.mutateAsync(pairId);
+        }
+        await deleteSessionExercise.mutateAsync(members[0].id);
+        if (members[1]) {
+          await deleteSessionExercise.mutateAsync(members[1].id);
+        }
+      },
+      { confirmLabel: t('session.confirm.delete'), destructive: true }
     );
   };
 
   return (
+    <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Timer + Header — fixed top */}
       <View style={{ backgroundColor: colors.bg.card, paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
@@ -547,7 +536,7 @@ export default function SessionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
             <Text style={{ fontSize: 20, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>Session</Text>
+          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
         </View>
         <Timer sessionId={id} onTimeUpdate={setElapsedSeconds} autoStart />
       </View>
@@ -570,25 +559,25 @@ export default function SessionScreen() {
       >
         <View style={{ padding: spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Exercises</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('session.exercises')}</Text>
             <TouchableOpacity
               onPress={() => setShowPicker(true)}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}
             >
-              <Text style={{ fontSize: 14, color: colors.accent.primary }}>+ Add</Text>
+              <Text style={{ fontSize: 14, color: colors.accent.primary }}>{t('session.add')}</Text>
             </TouchableOpacity>
           </View>
 
           {dragIndex !== null && (
             <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
               <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
-                Tap another exercise to swap — or tap the same to cancel
+                {t('session.swapInstruction')}
               </Text>
             </View>
           )}
 
           {sortedExercises.length === 0 ? (
-            <EmptyState title="No exercises" message="Add exercises to this session." />
+            <EmptyState title={t('session.noExercises')} message={t('session.noExercisesMessage')} />
           ) : (
             (() => {
               const pairs = new Map<number, SessionExercise[]>();
@@ -612,8 +601,8 @@ export default function SessionScreen() {
                       <SupersetBlock
                         key={members[0].id}
                         exercises={members}
-                        nameA={getExerciseName(members[0])}
-                        nameB={getExerciseName(members[1])}
+                        nameA={getExerciseNameForSession(members[0])}
+                        nameB={getExerciseNameForSession(members[1])}
                         previousWeightFor={getPreviousForExercise}
                         maxWeightFor={getMaxWeightForExercise}
                         onNewRecord={handleNewRecord}
@@ -665,7 +654,7 @@ export default function SessionScreen() {
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm + spacing.xs : 0 }}>
           {showRestTimer && restExerciseName ? (
         <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
-          Descanso: {restExerciseName}
+          {t('session.restLabel', { name: restExerciseName })}
         </Text>
           ) : null}
           <RestTimer
@@ -686,13 +675,13 @@ export default function SessionScreen() {
             onPress={cancelSessionAndLeave}
             style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>Cancel</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>{t('session.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleEndSession}
             style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>End Session</Text>
+            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>{t('session.endButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -701,10 +690,6 @@ export default function SessionScreen() {
         visible={showPicker}
         exercises={allExercises ?? []}
         onSelect={replaceId !== null ? handleReplaceExercise : handleAddExercise}
-        onPreview={(exercise) => {
-          setShowPicker(false);
-          router.push(`/exercise/${exercise.id}`);
-        }}
         onClose={() => { setShowPicker(false); setReplaceId(null); }}
         state={pickerState}
         onStateChange={setPickerState}
@@ -714,10 +699,10 @@ export default function SessionScreen() {
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: 4 }}>
-              Elegí el ejercicio para el Super Set
+              {t('session.superset.title')}
             </Text>
             <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
-              Solo se muestran ejercicios sin emparejar
+              {t('session.superset.subtitle')}
             </Text>
             {supersetPartnerMode &&
               sortedExercises
@@ -728,13 +713,13 @@ export default function SessionScreen() {
                     onPress={() => handlePairSuperset(se)}
                     style={{ paddingVertical: spacing.sm + spacing.xs, paddingHorizontal: spacing.sm, borderRadius: borderRadius.sm }}
                   >
-                    <Text style={{ fontSize: 14, color: colors.text.primary }}>{getExerciseName(se)}</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.primary }}>{getExerciseNameForSession(se)}</Text>
                   </TouchableOpacity>
                 ))}
 {supersetPartnerMode &&
                 sortedExercises.filter((se) => se.id !== supersetPartnerMode.id && se.supersetPairId == null).length === 0 && (
                   <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.sm }}>
-                    No hay ejercicios disponibles para emparejar.
+                    {t('session.superset.noAvailable')}
                   </Text>
                 )}
               <TouchableOpacity
@@ -750,14 +735,14 @@ export default function SessionScreen() {
                 style={{ marginTop: spacing.xs, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ fontSize: 14, fontWeight: '600', color: colors.bg.primary }}>
-                  + Buscar en catálogo
+                  {t('session.superset.searchCatalog')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setSupersetPartnerMode(null)}
                 style={{ marginTop: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.divider }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>Cancelar</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>{t('session.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -786,10 +771,10 @@ export default function SessionScreen() {
           >
             <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
               <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
-                ¿Actualizar la rutina?
+                {t('session.diff.title')}
               </Text>
               <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
-                La sesión tiene cambios estructurales respecto a tu rutina.
+                {t('session.diff.message')}
               </Text>
               <View style={{ marginBottom: spacing.md }}>
                 {(pendingDiff ? summarizeDiff(pendingDiff) : []).map((line) => (
@@ -799,7 +784,7 @@ export default function SessionScreen() {
                 ))}
               </View>
               <Button
-                title="Actualizar rutina"
+                title={t('session.diff.updateRoutine')}
                 variant="primary"
                 onPress={handleUpdateRoutine}
                 loading={applyingRoutineUpdate}
@@ -807,7 +792,7 @@ export default function SessionScreen() {
               />
               <View style={{ height: spacing.sm }} />
               <Button
-                title="Solo guardar sesión"
+                title={t('session.diff.saveOnly')}
                 variant="secondary"
                 onPress={handleSaveSessionOnly}
                 disabled={applyingRoutineUpdate}
@@ -828,24 +813,24 @@ export default function SessionScreen() {
           >
             <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
               <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
-                {confirmAction === 'cancel' ? 'Cancelar sesión' : 'Finalizar sesión'}
+                {confirmAction === 'cancel' ? t('session.confirm.cancelSession') : t('session.confirm.endSession')}
               </Text>
               <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
                 {confirmAction === 'cancel'
-                  ? 'Se descartará la sesión y no se guardará nada. ¿Continuar?'
-                  : '¿Seguro que querés finalizar esta sesión?'}
+                  ? t('session.confirm.cancelSessionMessage')
+                  : t('session.confirm.endSessionMessage')}
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    title="Volver"
+                    title={t('session.confirm.back')}
                     variant="secondary"
                     onPress={() => setConfirmAction(null)}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    title={confirmAction === 'cancel' ? 'Descartar' : 'Finalizar'}
+                    title={confirmAction === 'cancel' ? t('session.confirm.discard') : t('session.confirm.finish')}
                     variant="danger"
                     onPress={() => {
                       const action = confirmAction;
@@ -863,6 +848,20 @@ export default function SessionScreen() {
           </Pressable>
         </Modal>
       </View>
+      <ConfirmDialog
+        visible={dialog.visible}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        cancelLabel={dialog.cancelLabel}
+        destructive={dialog.destructive}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+        thirdLabel={dialog.thirdLabel}
+        onThird={dialog.onThird}
+        thirdDestructive={dialog.thirdDestructive}
+      />
+    </>
     );
   }
 
@@ -901,6 +900,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   onPairSuperset?: () => void;
   onDelete?: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const { data: exercises } = useExercise(sessionExercise.exerciseId);
   const { data: sets } = useSets(sessionExercise.id);
   // Count of visible rows for the collapsed summary (drop children excluded,
@@ -934,6 +934,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const [pendingConversionSet, setPendingConversionSet] = useState<Set | null>(null);
   const [expandedDropSets, setExpandedDropSets] = useState<number[]>([]);
   const [collapsed, setCollapsed] = useState(false);
+  const { dialog: seDialog, showAlert: seShowAlert } = useConfirmDialog();
 
   const exercise = exercises?.[0];
   const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
@@ -973,7 +974,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
 
     if (updates.completed && !set.completed) {
       await haptics.complete();
-      onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
+      onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
 
       const finalWeight = updates.weight ?? set.weight ?? pendingWeightsRef.current.get(set.id) ?? null;
       if (finalWeight != null && finalWeight > 0) {
@@ -985,7 +986,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
         const maxW = maxWeightFor?.(sessionExercise.exerciseId) ?? null;
         if (shouldCelebrateNewRecord(finalWeight, prevW, phW, maxW)) {
           void haptics.success();
-          const name = exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio';
+          const name = exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise');
           onNewRecord?.(name, finalWeight, unit);
         }
       }
@@ -1077,7 +1078,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   const handleSaveDropSet = async (setId: number) => {
     const drops = dropSetDrafts[setId];
     if (!drops || drops.length < 2) {
-      Alert.alert('Método', 'Necesitás al menos 2 segmentos. Agregá otro segmento.');
+      seShowAlert(t('session.dropSet.methodTitle'), t('session.dropSet.minSegments'));
       return;
     }
 
@@ -1086,7 +1087,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
     // Capture everything BEFORE any mutation
     const originalSet = sets?.find((s) => s.id === setId);
     if (!originalSet) {
-      Alert.alert('Error', 'No se encontró la serie original.');
+      seShowAlert(t('common.error'), t('session.error.dropSetNotFound'));
       return;
     }
     const setNumber = originalSet.setNumber;
@@ -1152,7 +1153,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       if (previousSets) {
         queryClient.setQueryData(queryKey, previousSets);
       }
-      Alert.alert('Error', 'Failed to save drop set');
+      seShowAlert(t('common.error'), t('session.error.dropSetSave'));
     }
   };
 
@@ -1186,12 +1187,13 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
         onPress={handleSwipeDelete}
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>Eliminar</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
+    <>
     <Swipeable
       ref={deleteSwipeableRef}
       renderRightActions={renderRightActions}
@@ -1219,7 +1221,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
         </TouchableOpacity>
         <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
-          {exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio desconocido'}
+          {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           {onPairSuperset && (
@@ -1227,7 +1229,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
               onPress={(e) => { e.stopPropagation(); onPairSuperset(); }}
               style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>Super Set</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('session.superSet')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -1299,7 +1301,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                 borderColor: colors.accent.primary,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>Custom</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('session.custom')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1309,7 +1311,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       <Modal visible={showCustomRest} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>Tiempo de descanso</Text>
+            <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: 20 }}>
               <TextInput
                 value={customMinutes}
@@ -1320,7 +1322,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                 maxLength={3}
                 style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
               />
-              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>min</Text>
+              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.minutes')}</Text>
               <Text style={{ fontSize: 20, color: colors.text.muted }}>:</Text>
               <TextInput
                 value={customSeconds}
@@ -1331,14 +1333,14 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                 maxLength={2}
                 style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
               />
-              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>seg</Text>
+              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.seconds')}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
                 onPress={() => setShowCustomRest(false)}
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>Cancelar</Text>
+                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -1352,7 +1354,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                 }}
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>Guardar</Text>
+                <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>{t('session.dropSet.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1364,7 +1366,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
           <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
-            {visibleCount} {visibleCount === 1 ? 'serie' : 'series'} · tocar para expandir
+            {t('session.collapsedSummary', { count: visibleCount, label: visibleCount === 1 ? t('session.set') : t('session.sets') })}
           </Text>
         </TouchableOpacity>
       ) : (
@@ -1456,7 +1458,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                       });
                     }
                   });
-                  onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
+                   onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
                 }}
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
@@ -1488,7 +1490,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                     }));
                     // Completing from the editor saves the drop set and exits editing mode
                     handleSaveDropSet(set.id);
-                    onSetCompleted?.(exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio', currentRestTime);
+      onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
                   }}
                   unit={unit}
                   previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
@@ -1502,14 +1504,14 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                     style={{ flex: 1, backgroundColor: createDropSets.isPending || deleteSet.isPending ? colors.text.muted : colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
                   >
                     <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 13 }}>
-                      {createDropSets.isPending || deleteSet.isPending ? 'Guardando...' : (dropSetMethod[set.id] ?? 'dropset') === 'dropset' ? 'Guardar Drop Set' : 'Guardar Serie'}
+                      {createDropSets.isPending || deleteSet.isPending ? t('session.dropSet.saving') : (dropSetMethod[set.id] ?? 'dropset') === 'dropset' ? t('session.dropSet.saveDropSet') : t('session.dropSet.saveSet')}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleCancelDropSet(set.id)}
                     style={{ flex: 1, backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
                   >
-                    <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>Cancelar</Text>
+                    <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>{t('session.dropSet.cancel')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1538,7 +1540,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       )}
       {!collapsed && (
       <Button
-        title="Add Set"
+        title={t('session.addSet')}
         variant="secondary"
         compact
         onPress={handleAddSet}
@@ -1557,6 +1559,17 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       />
     </View>
     </Swipeable>
+    <ConfirmDialog
+      visible={seDialog.visible}
+      title={seDialog.title}
+      message={seDialog.message}
+      confirmLabel={seDialog.confirmLabel}
+      cancelLabel={seDialog.cancelLabel}
+      destructive={seDialog.destructive}
+      onConfirm={seDialog.onConfirm}
+      onCancel={seDialog.onCancel}
+    />
+    </>
   );
 }
 
@@ -1571,6 +1584,7 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
   onUnitChange?: (unit: string) => void;
   onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
 }) {
+  const { t } = useTranslation();
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
 
@@ -1582,7 +1596,7 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
     return String(previousWeight);
   };
 
-  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'Reps');
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : t('session.reps'));
 
   const handleRepsChange = (text: string) => {
     setReps(text);
@@ -1664,6 +1678,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
   onDeletePair?: () => void;
 }) {
+  const { t } = useTranslation();
   const a = exercises[0];
   const b = exercises[1];
   const unlinkSuperSet = useUnlinkSuperSet();
@@ -1678,6 +1693,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   // comparison never depends on the async react-query refetch of `sets`.
   const pendingWeightsRef = useRef(new Map<number, number>());
   const [collapsed, setCollapsed] = useState(false);
+  const { dialog: sbDialog, showConfirm: sbShowConfirm } = useConfirmDialog();
 
   const toggleCollapsed = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -1777,37 +1793,29 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
   };
 
   const handleDeleteSeries = (row: { setNumber: number; a?: Set; b?: Set }) => {
-    Alert.alert(
-      'Eliminar serie',
-      'Se elimina la serie de ambos ejercicios.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            await haptics.warning();
-            if (row.a) {
-              await deleteSet.mutateAsync({ id: row.a.id, sessionExerciseId: row.a.sessionExerciseId });
-            }
-            if (row.b) {
-              await deleteSet.mutateAsync({ id: row.b.id, sessionExerciseId: row.b.sessionExerciseId });
-            }
-          },
-        },
-      ]
+    sbShowConfirm(
+      t('session.confirm.deleteSet'),
+      t('session.confirm.deleteSetMessage'),
+      async () => {
+        await haptics.warning();
+        if (row.a) {
+          await deleteSet.mutateAsync({ id: row.a.id, sessionExerciseId: row.a.sessionExerciseId });
+        }
+        if (row.b) {
+          await deleteSet.mutateAsync({ id: row.b.id, sessionExerciseId: row.b.sessionExerciseId });
+        }
+      },
+      { confirmLabel: t('session.confirm.delete'), destructive: true }
     );
   };
 
   const handleUnlink = () => {
     if (pairId == null) return;
-    Alert.alert(
-      'Quitar super set',
-      'Se quita la unión entre los ejercicios.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Quitar', style: 'destructive', onPress: () => unlinkSuperSet.mutateAsync(pairId) },
-      ]
+    sbShowConfirm(
+      t('session.confirm.unlinkSuperSet'),
+      t('session.confirm.unlinkSuperSetMessage'),
+      () => unlinkSuperSet.mutateAsync(pairId),
+      { confirmLabel: t('session.confirm.unlink'), destructive: true }
     );
   };
 
@@ -1825,12 +1833,13 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
         onPress={handleSwipeDeletePair}
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>Eliminar</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
+    <>
     <Animated.View layout={LinearTransition.duration(200)}>
       <Swipeable
         ref={supersetSwipeableRef}
@@ -1847,7 +1856,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
         </View>
         {!collapsed && (
         <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
-          Registrá A y luego B: la serie se cierra cuando ambos están ✓
+          {t('session.superset.instruction')}
         </Text>
         )}
 
@@ -1857,7 +1866,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
           <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
-            {seriesRows.length} {seriesRows.length === 1 ? 'serie' : 'series'} · tocar para expandir
+            {t('session.collapsedSummary', { count: seriesRows.length, label: seriesRows.length === 1 ? t('session.set') : t('session.sets') })}
           </Text>
         </TouchableOpacity>
         ) : (
@@ -1890,12 +1899,12 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.xs }}
           >
             <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
-              + Agregar serie
+              {t('session.superset.addSeries')}
             </Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 12, color: colors.text.muted }}>·</Text>
           <TouchableOpacity onPress={handleUnlink} style={{ paddingVertical: spacing.xs }}>
-            <Text style={{ fontSize: 12, color: colors.text.muted }}>Desvincular</Text>
+            <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('session.superset.unlink')}</Text>
           </TouchableOpacity>
           </>
           )}
@@ -1903,6 +1912,17 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
       </View>
       </Swipeable>
     </Animated.View>
+    <ConfirmDialog
+      visible={sbDialog.visible}
+      title={sbDialog.title}
+      message={sbDialog.message}
+      confirmLabel={sbDialog.confirmLabel}
+      cancelLabel={sbDialog.cancelLabel}
+      destructive={sbDialog.destructive}
+      onConfirm={sbDialog.onConfirm}
+      onCancel={sbDialog.onCancel}
+    />
+    </>
   );
 }
 
@@ -1921,6 +1941,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
   onUpdateSet: (set: Set, updates: { reps?: number; weight?: number; completed?: boolean }) => void;
   onDeleteSeries: (row: { setNumber: number; a?: Set; b?: Set }) => void;
 }) {
+  const { t } = useTranslation();
   const swipeableRef = useRef<Swipeable>(null);
 
   const prevA = row.a ? previousWeightFor?.(exerciseIdA, row.a.setNumber) : undefined;
@@ -1939,7 +1960,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
         onPress={handleSwipeDelete}
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>Eliminar</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -1954,7 +1975,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
       <View style={{ marginBottom: spacing.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
-            Serie {row.setNumber}
+            {t('session.superset.setNumber', { number: row.setNumber })}
           </Text>
           <TouchableOpacity
             onPress={() => { swipeableRef.current?.close(); onDeleteSeries(row); }}
@@ -1991,7 +2012,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
             onUpdate={(updates) => onUpdateSet(row.b!, updates)}
           />
         ) : null}
-      </View>
+    </View>
     </Swipeable>
   );
 }

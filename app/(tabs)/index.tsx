@@ -1,6 +1,7 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSessions } from '../../lib/hooks/useSessions';
 import { useRoutines, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
@@ -15,11 +16,14 @@ import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import { DEFAULT_TARGET_SETS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
 import { useCreateSet } from '../../lib/hooks/useSets';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function HomeScreen() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { data: sessions, isLoading: sessionsLoading } = useSessions();
   const { data: routines, isLoading: routinesLoading } = useRoutines();
@@ -35,6 +39,7 @@ export default function HomeScreen() {
   const createSession = useCreateSession();
   const addExerciseToSession = useAddExerciseToSession();
   const createSet = useCreateSet();
+  const { dialog, showAlert } = useConfirmDialog();
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
@@ -51,7 +56,14 @@ export default function HomeScreen() {
   const recentSessions = sessions?.slice(0, 5) ?? [];
 
   const handleStartEmptySession = async () => {
-    router.push('/session/new');
+    try {
+      await haptics.success();
+      const session = await createSession.mutateAsync({});
+      router.push(`/session/${session[0].id}`);
+    } catch (error) {
+      await haptics.error();
+      showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
+    }
   };
 
   const handleRoutinePress = (routineId: number) => {
@@ -92,7 +104,7 @@ export default function HomeScreen() {
       router.push(`/session/${session[0].id}`);
     } catch (error) {
       await haptics.error();
-      Alert.alert('Error', 'Failed to create session');
+      showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
   };
 
@@ -106,23 +118,24 @@ export default function HomeScreen() {
     ?.sort((a, b) => a.order - b.order) ?? [];
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading dashboard..." />;
+    return <LoadingSpinner message={t('tabs.home.loadingDashboard')} />;
   }
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Stats Dashboard */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, marginTop: spacing.md, borderRadius: borderRadius.lg }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Stats</Text>
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.stats')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>Workouts</Text>
+            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>{t('tabs.home.workouts')}</Text>
             <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.accent.primary }}>
               {globalStats?.totalWorkouts ?? 0}
             </Text>
           </View>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>Streak</Text>
+            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>{t('tabs.home.streak')}</Text>
             <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.warning }}>
               {globalStats?.currentStreak ?? 0}d
             </Text>
@@ -130,7 +143,7 @@ export default function HomeScreen() {
         </View>
         {globalStats?.mostFrequentExercise && (
           <View style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 2 }}>Most Frequent</Text>
+            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 2 }}>{t('tabs.home.mostFrequent')}</Text>
             <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
               {globalStats.mostFrequentExercise}
             </Text>
@@ -141,7 +154,7 @@ export default function HomeScreen() {
       {/* Rutinas — up top, the main action */}
       {routines && routines.length > 0 && (
         <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
-          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Rutinas</Text>
+          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.routines')}</Text>
           {routines.slice(0, 3).map((routine) => (
             <TouchableOpacity
               key={routine.id}
@@ -159,17 +172,17 @@ export default function HomeScreen() {
 
       {/* Quick Start — compact, below routines */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>Iniciar sesión</Text>
-        <Button title="Nueva sesión" onPress={handleStartEmptySession} compact />
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{t('tabs.home.quickStart')}</Text>
+        <Button title={t('tabs.home.newSession')} onPress={handleStartEmptySession} compact />
       </View>
 
       {/* Recent Sessions */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 24, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Recent Sessions</Text>
+        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.recentSessions')}</Text>
         {recentSessions.length === 0 ? (
           <EmptyState
-            title="No sessions yet"
-            message="Start your first workout session!"
+            title={t('tabs.home.noSessions')}
+            message={t('tabs.home.noSessionsMessage')}
           />
         ) : (
           recentSessions.map((session, index) => (
@@ -186,7 +199,7 @@ export default function HomeScreen() {
         {recentSessions.length > 0 && (
           <View style={{ marginTop: spacing.sm }}>
             <Button
-              title="View All Sessions"
+              title={t('tabs.home.viewAllSessions')}
               variant="secondary"
               onPress={() => router.push('/session/history')}
             />
@@ -211,7 +224,7 @@ export default function HomeScreen() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
-                {selectedRoutine?.name ?? 'Start Session'}
+                {selectedRoutine?.name ?? t('tabs.home.startSession')}
               </Text>
               <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }}>
                 <Text style={{ fontSize: 18, color: colors.text.muted }}>✕</Text>
@@ -221,24 +234,24 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.sm }}>{selectedRoutine.description}</Text>
             )}
             {exercisesLoading ? (
-              <LoadingSpinner message="Loading exercises..." />
+              <LoadingSpinner message={t('tabs.home.loadingExercises')} />
             ) : (
               <>
                 {routineExercisesWithDetails.length === 0 ? (
                   <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
-                    No exercises in this routine yet.
+                    {t('tabs.home.noExercisesInRoutine')}
                   </Text>
                 ) : (
                   <View style={{ marginBottom: spacing.md }}>
                     {routineExercisesWithDetails.map((re) => {
                       const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
                       const label = entry
-                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
+                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · ${t('tabs.home.lastWeight')}: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
                         : formatSetsRepsLabel(re.targetSets, re.targetReps);
                       return (
                         <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>
                           <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                            {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
+                            {re.exercise ? getExerciseName(re.exercise.name, i18n.language) : t('tabs.home.unknownExercise')}
                           </Text>
                           <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 1 }}>
                             {label}
@@ -248,12 +261,23 @@ export default function HomeScreen() {
                     })}
                   </View>
                 )}
-                <Button title="Start Session" onPress={handleStartRoutineSession} loading={createSession.isPending} />
+                <Button title={t('tabs.home.startSession')} onPress={handleStartRoutineSession} loading={createSession.isPending} />
               </>
             )}
           </Pressable>
         </Pressable>
       </Modal>
     </ScrollView>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }

@@ -14,6 +14,8 @@ import {
   deleteSessionExercise,
   updateSessionExerciseNotes,
   getLastSessionForRoutine,
+  getLastSetsForExercise,
+  getLastSetsPerExercise,
   duplicateSessionData,
   createSuperSetPair,
   unlinkSuperSetPair,
@@ -98,6 +100,22 @@ export function useLastSessionForRoutine(routineId: number) {
     queryKey: ['sessions', 'lastForRoutine', routineId],
     queryFn: () => getLastSessionForRoutine(routineId),
     enabled: !!routineId,
+  });
+}
+
+export function useLastSetsForExercise(exerciseId: number) {
+  return useQuery({
+    queryKey: ['sessions', 'lastSetsForExercise', exerciseId],
+    queryFn: () => getLastSetsForExercise(exerciseId),
+    enabled: !!exerciseId,
+  });
+}
+
+export function useLastSetsPerExercise(exerciseIds: number[]) {
+  return useQuery({
+    queryKey: ['sessions', 'lastSetsPerExercise', [...exerciseIds].sort()],
+    queryFn: () => getLastSetsPerExercise(exerciseIds),
+    enabled: exerciseIds.length > 0,
   });
 }
 

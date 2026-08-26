@@ -161,7 +161,7 @@ export async function createRoutine(data: {
 
 export async function updateRoutine(
   id: number,
-  data: { name?: string; description?: string; categoryId?: number; folderId?: number }
+  data: { name?: string; description?: string; categoryId?: number; folderId?: number | null }
 ) {
   return db
     .update(routines)
@@ -472,6 +472,8 @@ export async function updateSet(
     weight?: number;
     completed?: boolean;
     rir?: number | null;
+    method?: string;
+    isDropGroup?: boolean;
   }
 ) {
   return db.update(sets).set(data).where(eq(sets.id, id)).returning();
@@ -525,6 +527,89 @@ export async function getLastSessionForRoutine(routineId: number) {
   );
 
   return { ...lastSession[0], exercises: exercisesWithSets };
+}
+
+// ─── Last Sets for Exercise (global, any routine) ─────
+
+export async function getLastSetsForExercise(exerciseId: number) {
+  // Find the most recent sessionExercise for this exercise across ALL sessions
+  const lastSE = await db
+    .select({ id: sessionExercises.id })
+    .from(sessionExercises)
+    .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
+    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .orderBy(desc(sessions.completedAt))
+    .limit(1);
+
+  if (lastSE.length === 0) return null;
+
+  // Get all sets from that sessionExercise
+  const setsData = await db
+    .select()
+    .from(sets)
+    .where(eq(sets.sessionExerciseId, lastSE[0].id));
+
+  return setsData;
+}
+
+/**
+ * Batch version: for each exerciseId, returns ALL sets from the most recent
+ * session where that exercise appeared, keyed by exerciseId.
+ * Exercises with no prior sessions map to null.
+ */
+export async function getLastSetsPerExercise(
+  exerciseIds: number[]
+): Promise<Record<number, typeof sets.$inferSelect[] | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  // Find the most recent sessionExercise per exercise across ALL sessions
+  const latestSE = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      seId: sessionExercises.id,
+    })
+    .from(sessionExercises)
+    .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
+    .where(inArray(sessionExercises.exerciseId, exerciseIds))
+    .orderBy(desc(sessions.completedAt));
+
+  // Keep only the first (most recent) per exerciseId
+  const seen = new Set<number>();
+  const seIds: { exerciseId: number; seId: number }[] = [];
+  for (const row of latestSE) {
+    if (!seen.has(row.exerciseId)) {
+      seen.add(row.exerciseId);
+      seIds.push(row);
+    }
+  }
+
+  if (seIds.length === 0) {
+    const empty: Record<number, null> = {};
+    for (const id of exerciseIds) empty[id] = null;
+    return empty;
+  }
+
+  // Fetch all sets for those sessionExercises in one query
+  const seIdList = seIds.map((r) => r.seId);
+  const allSets = await db
+    .select()
+    .from(sets)
+    .where(inArray(sets.sessionExerciseId, seIdList));
+
+  // Index by exerciseId
+  const setsBySE = new Map<number, typeof allSets>();
+  for (const s of allSets) {
+    const arr = setsBySE.get(s.sessionExerciseId) ?? [];
+    arr.push(s);
+    setsBySE.set(s.sessionExerciseId, arr);
+  }
+
+  const result: Record<number, typeof sets.$inferSelect[] | null> = {};
+  for (const id of exerciseIds) result[id] = null;
+  for (const { exerciseId, seId } of seIds) {
+    result[exerciseId] = setsBySE.get(seId) ?? null;
+  }
+  return result;
 }
 
 // ─── Duplicate Session Data ────────────────────────────

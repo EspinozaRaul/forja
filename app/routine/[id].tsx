@@ -1,8 +1,9 @@
-import { Text, View, ScrollView, Alert, Modal, Pressable, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
@@ -16,11 +17,14 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { haptics } from '../../lib/utils/haptics';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, formatSetsRepsLabel } from '../../lib/constants/routine-defaults';
 import { summarizeSets } from '../../lib/utils/session-summary';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function RoutineDetailScreen() {
+  const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -55,6 +59,7 @@ export default function RoutineDetailScreen() {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const replaceExercise = useReplaceRoutineExercise();
+  const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
   const routineExercisesWithDetails = routineExercises
     ?.map((re) => {
@@ -73,7 +78,7 @@ export default function RoutineDetailScreen() {
 
   const handleSaveEdit = async () => {
     if (!editName.trim()) {
-      Alert.alert('Error', 'Name is required');
+      showAlert(t('common.error'), t('routine.detail.nameRequired'));
       return;
     }
     try {
@@ -83,7 +88,7 @@ export default function RoutineDetailScreen() {
       });
       setIsEditing(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update routine');
+      showAlert(t('common.error'), t('routine.detail.updateFailed'));
     }
   };
 
@@ -98,7 +103,7 @@ export default function RoutineDetailScreen() {
       });
       setShowPicker(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add exercise');
+      showAlert(t('common.error'), t('routine.detail.addExerciseFailed'));
     }
   };
 
@@ -115,7 +120,7 @@ export default function RoutineDetailScreen() {
       }
       setShowPicker(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add exercises');
+      showAlert(t('common.error'), t('routine.detail.addExercisesFailed'));
     }
   };
 
@@ -134,7 +139,7 @@ export default function RoutineDetailScreen() {
         await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1 });
         await updateOrder.mutateAsync({ id: source.id, order: index + 1 });
       } catch (error) {
-        Alert.alert('Error', 'Failed to reorder');
+        showAlert(t('common.error'), t('routine.detail.reorderFailed'));
       }
       setDragIndex(null);
     }
@@ -148,57 +153,45 @@ export default function RoutineDetailScreen() {
     try {
       await replaceExercise.mutateAsync({ id: target.id, exerciseId: exercise.id });
     } catch (error) {
-      Alert.alert('Error', 'Failed to replace exercise');
+      showAlert(t('common.error'), t('routine.detail.replaceFailed'));
     }
     setReplaceIndex(null);
     setShowPicker(false);
   };
 
   const handleRemoveExercise = async (routineExerciseId: number) => {
-    Alert.alert(
-      'Remove Exercise',
-      'Are you sure you want to remove this exercise from the routine?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await haptics.warning();
-              await removeExerciseFromRoutine.mutateAsync(routineExerciseId);
-              setDragIndex(null);
-            } catch (error) {
-              await haptics.error();
-              Alert.alert('Error', 'Failed to remove exercise');
-            }
-          }
-        },
-      ]
+    showConfirm(
+      t('routine.detail.removeExerciseTitle'),
+      t('routine.detail.removeExerciseMessage'),
+      async () => {
+        try {
+          await haptics.warning();
+          await removeExerciseFromRoutine.mutateAsync(routineExerciseId);
+          setDragIndex(null);
+        } catch (error) {
+          await haptics.error();
+          showAlert(t('common.error'), t('routine.detail.removeExerciseFailed'));
+        }
+      },
+      { confirmLabel: t('routine.detail.remove'), destructive: true }
     );
   };
 
   const handleDeleteRoutine = async () => {
-    Alert.alert(
-      'Delete Routine',
-      'Are you sure you want to delete this routine? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await haptics.warning();
-              await deleteRoutine.mutateAsync(routineId);
-              router.back();
-            } catch (error) {
-              await haptics.error();
-              Alert.alert('Error', 'Failed to delete routine');
-            }
-          }
-        },
-      ]
+    showConfirm(
+      t('routine.detail.deleteRoutineTitle'),
+      t('routine.detail.deleteRoutineMessage'),
+      async () => {
+        try {
+          await haptics.warning();
+          await deleteRoutine.mutateAsync(routineId);
+          router.back();
+        } catch (error) {
+          await haptics.error();
+          showAlert(t('common.error'), t('routine.detail.deleteRoutineFailed'));
+        }
+      },
+      { confirmLabel: t('common.delete'), destructive: true }
     );
   };
 
@@ -234,7 +227,7 @@ export default function RoutineDetailScreen() {
       router.push(`/session/${session[0].id}`);
     } catch (error) {
       await haptics.error();
-      Alert.alert('Error', 'Failed to start session');
+      showAlert(t('common.error'), t('routine.detail.startSessionFailed'));
     }
   };
 
@@ -247,28 +240,29 @@ export default function RoutineDetailScreen() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading routine..." />;
+    return <LoadingSpinner message={t('routine.detail.loading')} />;
   }
 
   if (!routine) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title="Routine not found" />
+        <EmptyState title={t('routine.detail.notFound')} />
       </View>
     );
   }
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Routine Info */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         {isEditing ? (
           <>
-            <Input label="Routine Name" value={editName} onChangeText={setEditName} placeholder="Routine name" />
-            <Input label="Description" value={editDescription} onChangeText={setEditDescription} placeholder="Description (optional)" multiline />
+            <Input label={t('routine.detail.nameLabel')} value={editName} onChangeText={setEditName} placeholder={t('routine.detail.namePlaceholder')} />
+            <Input label={t('routine.detail.descriptionLabel')} value={editDescription} onChangeText={setEditDescription} placeholder={t('routine.detail.descriptionPlaceholder')} multiline />
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button title="Save" onPress={handleSaveEdit} loading={updateRoutine.isPending} />
-              <Button title="Cancel" variant="secondary" onPress={() => setIsEditing(false)} />
+              <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
+              <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
             </View>
           </>
         ) : (
@@ -276,8 +270,8 @@ export default function RoutineDetailScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: 20, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <Button title="Edit" variant="secondary" onPress={handleStartEdit} />
-                <Button title="Delete" variant="danger" onPress={handleDeleteRoutine} />
+                <Button title={t('common.edit')} variant="secondary" onPress={handleStartEdit} />
+                <Button title={t('common.delete')} variant="danger" onPress={handleDeleteRoutine} />
               </View>
             </View>
             {routine.description && (
@@ -290,20 +284,20 @@ export default function RoutineDetailScreen() {
       {/* Exercises List */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
-          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Exercises</Text>
-          <Button title="Add Exercise" variant="secondary" onPress={() => setShowPicker(true)} />
+          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('routine.detail.exercises')}</Text>
+          <Button title={t('routine.detail.addExercise')} variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (
           <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
             <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
-              Tap another exercise to swap — or tap the same to cancel
+              {t('routine.detail.tapToSwap')}
             </Text>
           </View>
         )}
 
         {routineExercisesWithDetails.length === 0 ? (
-          <EmptyState title="No exercises" message="Add exercises to this routine." />
+          <EmptyState title={t('routine.detail.noExercises')} message={t('routine.detail.noExercisesMessage')} />
         ) : (
           routineExercisesWithDetails.map((re, index) => (
             <Animated.View
@@ -338,7 +332,7 @@ export default function RoutineDetailScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                    {re.exercise ? (EXERCISE_NAMES_ES[re.exercise.name] || re.exercise.name) : 'Ejercicio desconocido'}
+                    {re.exercise ? getExerciseName(re.exercise.name, i18n.language) : t('routine.detail.unknownExercise')}
                   </Text>
                   <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>
                     {(() => {
@@ -370,7 +364,7 @@ export default function RoutineDetailScreen() {
       {/* Start Session Button */}
       <View style={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <Button
-          title="Start Session"
+          title={t('routine.detail.startSession')}
           onPress={handleStartPress}
           loading={createSession.isPending}
           disabled={routineExercisesWithDetails.length === 0}
@@ -382,10 +376,6 @@ export default function RoutineDetailScreen() {
         exercises={allExercises ?? []}
         onSelect={replaceIndex !== null ? handleReplaceExercise : handleAddExercise}
         onMultiSelect={handleMultiAddExercises}
-        onPreview={(exercise) => {
-          setShowPicker(false);
-          router.push(`/exercise/${exercise.id}`);
-        }}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
         multiSelect={replaceIndex === null}
         state={pickerState}
@@ -395,13 +385,13 @@ export default function RoutineDetailScreen() {
       <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
           <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>Start Session</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
             <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
-              You have a previous session for this routine. Want to continue with your last numbers?
+              {t('routine.detail.previousSessionMessage')}
             </Text>
             {lastSession && (
               <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
-                <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>Last session</Text>
+                <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
                 {lastSession.exercises?.map((se: any) => {
                   const unit = resolveUnit(
                     allExercises?.find((e) => e.id === se.exerciseId)?.unit ?? null,
@@ -409,7 +399,7 @@ export default function RoutineDetailScreen() {
                   );
                   return (
                   <View key={se.id} style={{ marginBottom: spacing.xs }}>
-                    <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{EXERCISE_NAMES_ES[se.exerciseName] || se.exerciseName || `Exercise ${se.order}`}</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{getExerciseName(se.exerciseName, i18n.language) || se.exerciseName || t('routine.detail.exerciseNumber', { order: se.order })}</Text>
                     {summarizeSets(se.sets ?? []).map((line) => (
                       line.type === 'group' ? (
                         <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: 12, color: colors.accent.primary, fontFamily: fonts.bodyMedium, marginLeft: spacing.sm }}>
@@ -427,12 +417,23 @@ export default function RoutineDetailScreen() {
               </View>
             )}
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button title="Start Fresh" variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
-              <Button title="Continue Last" onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
+              <Button title={t('routine.detail.startFresh')} variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
+              <Button title={t('routine.detail.continueLast')} onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
             </View>
           </Pressable>
         </Pressable>
       </Modal>
     </ScrollView>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }

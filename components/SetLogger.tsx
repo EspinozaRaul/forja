@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Set, SetMethod } from '../lib/types';
 import { RirPicker } from './RirPicker';
@@ -24,6 +25,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
+  const { t } = useTranslation();
 
   const isDropSet = set.method === 'dropset';
   const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';
@@ -64,7 +66,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
     if (!onDelete) return null;
     return (
       <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
-        <Text style={styles.deleteText}>Delete</Text>
+        <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -133,7 +135,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               onPress={onOpenIntensityPicker}
               style={styles.intensityButton}
             >
-              <Ionicons name="flash" size={12} color={colors.warning} />
+              <Ionicons name="flash" size={12} color={colors.text.muted} />
             </TouchableOpacity>
           )}
 

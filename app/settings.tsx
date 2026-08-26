@@ -1,0 +1,240 @@
+import { Text, View, ScrollView, TouchableOpacity, Switch, Modal, Pressable } from 'react-native';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import i18n from '../lib/i18n';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { useSettings, type WeightUnit, type AppLanguage } from '../lib/utils/settings';
+import { useAuth } from '../lib/hooks/useAuth';
+import { Button } from '../components/ui/Button';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { haptics } from '../lib/utils/haptics';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../lib/hooks/useConfirmDialog';
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 13,
+        fontFamily: fonts.bodySemiBold,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        marginBottom: spacing.sm,
+        marginTop: spacing.lg,
+        marginHorizontal: spacing.md,
+      }}
+    >
+      {title}
+    </Text>
+  );
+}
+
+function Row({ children, first }: { children: React.ReactNode; first?: boolean }) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        borderTopWidth: first ? 0 : 1,
+        borderTopColor: colors.border.divider,
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { t } = useTranslation();
+  const { data: settings, isLoading, update } = useSettings();
+  const { user, signOut } = useAuth();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const { dialog, showAlert } = useConfirmDialog();
+
+  if (isLoading) {
+    return <LoadingSpinner message={t('common.loading')} />;
+  }
+
+  const handleLanguageChange = async (lang: AppLanguage) => {
+    if (lang === settings.language) return;
+    await haptics.select();
+    i18n.changeLanguage(lang);
+    await update({ language: lang });
+  };
+
+  const handleUnitChange = async (unit: WeightUnit) => {
+    if (unit === settings.weightUnit) return;
+    await haptics.select();
+    await update({ weightUnit: unit });
+  };
+
+  const handleToggle = async (patch: Partial<{ hapticsEnabled: boolean; soundEnabled: boolean }>) => {
+    await haptics.select();
+    await update(patch);
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    const { error } = await signOut();
+    if (error) {
+      setSigningOut(false);
+      setConfirmSignOut(false);
+      await haptics.error();
+      showAlert('Error', 'No se pudo cerrar sesión.');
+      return;
+    }
+    router.replace('/auth/login');
+  };
+
+  return (
+    <>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} contentContainerStyle={{ paddingBottom: spacing.xl }}>
+      <SectionHeader title={t('settings.title')} />
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
+        <Row first>
+          <View style={{ flex: 1, marginRight: spacing.md }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.language')}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
+            {(['es', 'en'] as const).map((lang) => {
+              const active = settings.language === lang;
+              return (
+                <TouchableOpacity
+                  key={lang}
+                  onPress={() => handleLanguageChange(lang)}
+                  style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
+                >
+                  <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                    {t(`settings.languageOptions.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Row>
+        <Row>
+          <View style={{ flex: 1, marginRight: spacing.md }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.weightUnit')}</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Por defecto para ejercicios nuevos.</Text>
+          </View>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
+            {(['kg', 'lbs'] as const).map((unit) => {
+              const active = settings.weightUnit === unit;
+              return (
+                <TouchableOpacity
+                  key={unit}
+                  onPress={() => handleUnitChange(unit)}
+                  style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
+                >
+                  <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                    {unit}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Row>
+        <Row>
+          <View style={{ flex: 1, marginRight: spacing.md }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Vibración</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Feedback táctil al tocar.</Text>
+          </View>
+          <Switch
+            value={settings.hapticsEnabled}
+            onValueChange={(value) => handleToggle({ hapticsEnabled: value })}
+            trackColor={{ true: colors.accent.primary, false: colors.border.primary }}
+            thumbColor={colors.text.primary}
+          />
+        </Row>
+        <Row>
+          <View style={{ flex: 1, marginRight: spacing.md }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Sonido</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Sonido del timer de descanso.</Text>
+          </View>
+          <Switch
+            value={settings.soundEnabled}
+            onValueChange={(value) => handleToggle({ soundEnabled: value })}
+            trackColor={{ true: colors.accent.primary, false: colors.border.primary }}
+            thumbColor={colors.text.primary}
+          />
+        </Row>
+      </View>
+
+      <SectionHeader title="Cuenta" />
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
+        <Row first>
+          <View style={{ flex: 1, marginRight: spacing.md }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Email</Text>
+          </View>
+          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, flexShrink: 1 }} numberOfLines={1}>
+            {user?.email ?? '—'}
+          </Text>
+        </Row>
+        <Row>
+          <TouchableOpacity onPress={() => setConfirmSignOut(true)} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>Cerrar sesión</Text>
+          </TouchableOpacity>
+        </Row>
+      </View>
+
+      <Modal
+        visible={confirmSignOut}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!signingOut) setConfirmSignOut(false);
+        }}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+          onPress={() => {
+            if (!signingOut) setConfirmSignOut(false);
+          }}
+        >
+          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
+            <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
+              Cerrar sesión
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+              ¿Seguro que querés cerrar sesión?
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Volver"
+                  variant="secondary"
+                  onPress={() => setConfirmSignOut(false)}
+                  disabled={signingOut}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Cerrar sesión"
+                  variant="danger"
+                  onPress={handleSignOut}
+                  loading={signingOut}
+                  disabled={signingOut}
+                />
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </ScrollView>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
+  );
+}

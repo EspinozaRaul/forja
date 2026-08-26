@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { ProgressDataPoint } from '../lib/types';
 
@@ -19,6 +20,7 @@ function formatValue(value: number): string {
 }
 
 export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress, embedded = false }: ProgressChartProps) {
+  const { t } = useTranslation();
   const containerStyle = embedded
     ? { backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }
     : { backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs };
@@ -30,7 +32,7 @@ export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress
           <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
         )}
         <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>Sin datos todavía</Text>
+          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
         </View>
       </View>
     );

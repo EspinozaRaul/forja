@@ -1,19 +1,23 @@
-import { Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
-import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder } from '../../../lib/hooks/useRoutines';
+import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine } from '../../../lib/hooks/useRoutines';
 import { useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
 import { Button } from '../../../components/ui/Button';
 import { haptics } from '../../../lib/utils/haptics';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../../lib/hooks/useConfirmDialog';
 
 const FOLDER_COLORS = ['#4A6FA5', '#7A9AB5', '#6E9C8A', '#C2A05C', '#9AA4AE', '#3A587F', '#C96F6F', '#22344A'];
 
 export default function FolderDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -24,6 +28,8 @@ export default function FolderDetailScreen() {
   const deleteRoutine = useDeleteRoutine();
   const deleteFolder = useDeleteFolder();
   const updateFolder = useUpdateFolder();
+  const updateRoutine = useUpdateRoutine();
+  const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
@@ -59,63 +65,71 @@ export default function FolderDetailScreen() {
   };
 
   const handleDeleteFolder = () => {
-    Alert.alert(
-      'Eliminar carpeta',
-      `¿Eliminar "${folder?.name}"? Las rutinas no se eliminarán, solo se desvincularán de esta carpeta.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await haptics.warning();
-              await deleteFolder.mutateAsync(folderId);
-              router.back();
-            } catch {
-              await haptics.error();
-            }
-          },
-        },
-      ]
+    showConfirm(
+      t('routine.folder.deleteFolderTitle'),
+      t('routine.folder.deleteFolderMessage', { name: folder?.name }),
+      async () => {
+        try {
+          await haptics.warning();
+          await deleteFolder.mutateAsync(folderId);
+          router.back();
+        } catch {
+          await haptics.error();
+        }
+      },
+      { confirmLabel: t('common.delete'), destructive: true }
     );
   };
 
   const handleDeleteRoutine = (routineId: number, routineName: string) => {
-    Alert.alert(
-      'Eliminar rutina',
-      `¿Eliminar "${routineName}"? Esta acción no se puede deshacer.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await haptics.warning();
-              await deleteRoutine.mutateAsync(routineId);
-            } catch {
-              await haptics.error();
-            }
-          },
-        },
-      ]
+    showConfirm(
+      t('routine.folder.deleteRoutineTitle'),
+      t('routine.folder.deleteRoutineMessage', { name: routineName }),
+      async () => {
+        try {
+          await haptics.warning();
+          await deleteRoutine.mutateAsync(routineId);
+        } catch {
+          await haptics.error();
+        }
+      },
+      { confirmLabel: t('common.delete'), destructive: true }
+    );
+  };
+
+  const handleUnlinkRoutine = (routineId: number, routineName: string) => {
+    showConfirm(
+      t('routine.folder.unlinkTitle'),
+      t('routine.folder.unlinkMessage', { name: routineName }),
+      async () => {
+        try {
+          await haptics.press();
+          await updateRoutine.mutateAsync({
+            id: routineId,
+            data: { folderId: null },
+          });
+        } catch {
+          await haptics.error();
+        }
+      },
+      { confirmLabel: t('routine.folder.remove') }
     );
   };
 
   if (loadingFolder || loadingRoutines) {
-    return <LoadingSpinner message="Cargando carpeta..." />;
+    return <LoadingSpinner message={t('routine.folder.loading')} />;
   }
 
   if (!folder) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: 16 }}>Carpeta no encontrada</Text>
+        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('routine.folder.notFound')}</Text>
       </View>
     );
   }
 
   return (
+    <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Header */}
       <View style={{ backgroundColor: colors.bg.card, paddingTop: insets.top + spacing.sm + spacing.xs, paddingBottom: spacing.sm + spacing.xs, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
@@ -133,10 +147,10 @@ export default function FolderDetailScreen() {
           </View>
           <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }}>
-              <Text style={{ fontSize: 14, color: colors.text.link, fontFamily: fonts.bodyMedium }}>Edit</Text>
+              <Text style={{ fontSize: 14, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: spacing.sm }}>
-              <Text style={{ fontSize: 14, color: colors.error, fontFamily: fonts.bodyMedium }}>Delete</Text>
+              <Text style={{ fontSize: 14, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -146,8 +160,8 @@ export default function FolderDetailScreen() {
       <ScrollView style={{ flex: 1, padding: spacing.md }}>
         {!routines || routines.length === 0 ? (
           <EmptyState
-            title="Sin rutinas"
-            message="Creá rutinas y vinculalas a esta carpeta."
+            title={t('routine.folder.emptyTitle')}
+            message={t('routine.folder.emptyMessage')}
           />
         ) : (
           routines.map((routine, index) => (
@@ -165,10 +179,10 @@ export default function FolderDetailScreen() {
                     )}
                   </View>
                   <TouchableOpacity
-                    onPress={() => handleDeleteRoutine(routine.id, routine.name)}
+                    onPress={() => handleUnlinkRoutine(routine.id, routine.name)}
                     style={{ padding: spacing.sm }}
                   >
-                    <Text style={{ fontSize: 18, color: colors.error }}>✕</Text>
+                    <Text style={{ fontSize: 18, color: colors.text.muted }}>✕</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -183,13 +197,13 @@ export default function FolderDetailScreen() {
           onPress={() => router.push(`/routine/create?folderId=${folderId}`)}
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ Rutina</Text>
+          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ {t('routine.folder.newRoutine')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>Sin carpeta</Text>
+          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>{t('routine.folder.noFolder')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -197,27 +211,27 @@ export default function FolderDetailScreen() {
       <Modal visible={showEditModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>Editar Carpeta</Text>
+            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>{t('routine.folder.editTitle')}</Text>
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Nombre</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.name')}</Text>
             <TextInput
               value={editName}
               onChangeText={setEditName}
-              placeholder="Nombre de la carpeta"
+              placeholder={t('routine.folder.namePlaceholder')}
               placeholderTextColor={colors.text.muted}
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Descripción (opcional)</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.descriptionOptional')}</Text>
             <TextInput
               value={editDescription}
               onChangeText={setEditDescription}
-              placeholder="Descripción"
+              placeholder={t('routine.folder.descriptionPlaceholder')}
               placeholderTextColor={colors.text.muted}
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>Color</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.color')}</Text>
             <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
               {FOLDER_COLORS.map((color) => (
                 <TouchableOpacity
@@ -240,18 +254,29 @@ export default function FolderDetailScreen() {
                 onPress={() => setShowEditModal(false)}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>Cancelar</Text>
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveEdit}
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>Guardar</Text>
+                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
     </View>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }

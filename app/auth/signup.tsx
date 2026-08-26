@@ -1,30 +1,35 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { supabase } from '../../lib/supabase';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function SignupScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { dialog, showAlert } = useConfirmDialog();
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Completá todos los campos');
+      showAlert(t('common.error'), t('auth.signup.error.emptyFields'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      showAlert(t('common.error'), t('auth.signup.error.passwordMismatch'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      showAlert(t('common.error'), t('auth.signup.error.passwordTooShort'));
       return;
     }
 
@@ -33,28 +38,29 @@ export default function SignupScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      showAlert(t('common.error'), error.message);
     } else {
-      Alert.alert('Éxito', 'Cuenta creada! Verificá tu email para confirmar.');
+      showAlert(t('common.success'), t('auth.signup.success.created'));
       router.replace('/auth/login');
     }
   };
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <View style={styles.emberDot} />
           <Text style={styles.brandName}>FORJA</Text>
         </View>
-        <Text style={styles.title}>Empezá a forjar</Text>
-        <Text style={styles.subtitle}>Creá tu cuenta y registrá tu primer entrenamiento</Text>
+        <Text style={styles.title}>{t('auth.signup.title')}</Text>
+        <Text style={styles.subtitle}>{t('auth.signup.subtitle')}</Text>
       </View>
 
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder={t('auth.signup.email')}
           placeholderTextColor={colors.text.muted}
           value={email}
           onChangeText={setEmail}
@@ -64,7 +70,7 @@ export default function SignupScreen() {
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Contraseña"
+            placeholder={t('auth.signup.password')}
             placeholderTextColor={colors.text.muted}
             value={password}
             onChangeText={setPassword}
@@ -74,13 +80,13 @@ export default function SignupScreen() {
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
           >
-            <Text style={styles.toggleText}>{showPassword ? 'Ocultar' : 'Ver'}</Text>
+            <Text style={styles.toggleText}>{showPassword ? t('common.hidePassword') : t('common.showPassword')}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Confirmar contraseña"
+            placeholder={t('auth.signup.confirmPassword')}
             placeholderTextColor={colors.text.muted}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -90,7 +96,7 @@ export default function SignupScreen() {
             onPress={() => setShowConfirmPassword((p) => !p)}
             style={styles.toggleButton}
           >
-            <Text style={styles.toggleText}>{showConfirmPassword ? 'Ocultar' : 'Ver'}</Text>
+            <Text style={styles.toggleText}>{showConfirmPassword ? t('common.hidePassword') : t('common.showPassword')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -100,7 +106,7 @@ export default function SignupScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+            {loading ? t('auth.signup.loading') : t('auth.signup.submit')}
           </Text>
         </TouchableOpacity>
 
@@ -109,11 +115,22 @@ export default function SignupScreen() {
           onPress={() => router.push('/auth/login')}
         >
           <Text style={styles.linkText}>
-            ¿Ya tenés cuenta? <Text style={styles.linkBold}>Iniciar sesión</Text>
+            {t('auth.signup.hasAccount')} <Text style={styles.linkBold}>{t('auth.signup.signIn')}</Text>
           </Text>
         </TouchableOpacity>
       </View>
     </View>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }
 

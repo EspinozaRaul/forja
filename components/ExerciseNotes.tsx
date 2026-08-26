@@ -1,6 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 
 interface ExerciseNotesProps {
@@ -15,6 +16,7 @@ interface ExerciseNotesProps {
 export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState(notes ?? '');
+  const { t } = useTranslation();
 
   const hasNotes = notes !== null && notes.trim().length > 0;
 
@@ -52,7 +54,7 @@ export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
         value={text}
         onChangeText={setText}
         onBlur={handleBlur}
-        placeholder="Nota (altura del asiento, molestia, etc.)"
+        placeholder={t('session.exerciseNotesPlaceholder')}
         placeholderTextColor={colors.text.muted}
         autoFocus
         multiline

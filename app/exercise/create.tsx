@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Alert } from 'react-native';
+import { Text, View, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useCategories } from '../../lib/hooks/useCategories';
@@ -8,12 +8,15 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { colors, spacing, fonts } from '../../lib/theme/tokens';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function CreateExerciseScreen() {
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const createExercise = useCreateExercise();
   const settings = useSettings();
+  const { dialog, showAlert } = useConfirmDialog();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -46,7 +49,7 @@ export default function CreateExerciseScreen() {
       });
       router.back();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create exercise. Please try again.');
+      showAlert('Error', 'Failed to create exercise. Please try again.');
     }
   };
 
@@ -55,6 +58,7 @@ export default function CreateExerciseScreen() {
   }
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} className="flex-1 bg-dark-bg p-4">
       <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">Create New Exercise</Text>
 
@@ -98,5 +102,16 @@ export default function CreateExerciseScreen() {
         disabled={createExercise.isPending}
       />
     </ScrollView>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }

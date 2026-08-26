@@ -1,13 +1,20 @@
-import { View, Text, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Modal, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useMemo } from 'react';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
-import { useCreateExercise } from '../lib/hooks/useExercises';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { useCreateExercise, useExerciseStats, useExercisePRs } from '../lib/hooks/useExercises';
 import { useCategories } from '../lib/hooks/useCategories';
 import { useSettings } from '../lib/utils/settings';
+import { resolveUnit, formatWeight } from '../lib/utils/weight-unit';
+import { formatVolume } from '../lib/utils/format';
 import { EXERCISE_IMAGES } from '../lib/assets/exercise-images';
 import { EXERCISE_NAMES_ES } from '../lib/db/exercise-names-es';
+import { getExerciseName } from '../lib/utils/exercise-names';
 import type { Exercise } from '../lib/types';
+import { ConfirmDialog } from './ui/ConfirmDialog';
+import { useConfirmDialog } from '../lib/hooks/useConfirmDialog';
 
 interface ExercisePickerState {
   search: string;
@@ -20,7 +27,6 @@ interface ExercisePickerProps {
   exercises: Exercise[];
   onSelect: (exercise: Exercise) => void;
   onMultiSelect?: (exercises: Exercise[]) => void;
-  onPreview?: (exercise: Exercise) => void;
   onClose: () => void;
   multiSelect?: boolean;
   // Controlled state (optional): when provided with onStateChange, the parent
@@ -30,33 +36,35 @@ interface ExercisePickerProps {
   onStateChange?: (state: ExercisePickerState) => void;
 }
 
-const EMPTY_STATE: ExercisePickerState = { search: '', selectedMuscle: 'Todos', selectedIds: [] };
+const EMPTY_STATE: ExercisePickerState = { search: '', selectedMuscle: 'all', selectedIds: [] };
 
 // Muscle group filters — uses dataset "target" field (more accurate than muscle_group)
 const MUSCLE_FILTERS = [
-  { label: 'Todos', dbValues: null },
-  { label: 'Pecho', dbValues: ['pectorals'] },
-  { label: 'Espalda', dbValues: ['upper back', 'lats', 'spine', 'traps'] },
-  { label: 'Hombros', dbValues: ['delts'] },
-  { label: 'Bíceps', dbValues: ['biceps'] },
-  { label: 'Tríceps', dbValues: ['triceps'] },
-  { label: 'Antebrazos', dbValues: ['forearms'] },
-  { label: 'Core', dbValues: ['abs'] },
-  { label: 'Cuádriceps', dbValues: ['quads'] },
-  { label: 'Isquiotibiales', dbValues: ['hamstrings'] },
-  { label: 'Glúteos', dbValues: ['glutes'] },
-  { label: 'Pantorrillas', dbValues: ['calves'] },
-  { label: 'Cardio', dbValues: ['cardiovascular system'] },
+  { key: 'all', label: 'Todos', dbValues: null },
+  { key: 'pectorals', label: 'Pecho', dbValues: ['pectorals'] },
+  { key: 'back', label: 'Espalda', dbValues: ['upper back', 'lats', 'spine', 'traps'] },
+  { key: 'delts', label: 'Hombros', dbValues: ['delts'] },
+  { key: 'biceps', label: 'Bíceps', dbValues: ['biceps'] },
+  { key: 'triceps', label: 'Tríceps', dbValues: ['triceps'] },
+  { key: 'forearms', label: 'Antebrazos', dbValues: ['forearms'] },
+  { key: 'abs', label: 'Core', dbValues: ['abs'] },
+  { key: 'quads', label: 'Cuádriceps', dbValues: ['quads'] },
+  { key: 'hamstrings', label: 'Isquiotibiales', dbValues: ['hamstrings'] },
+  { key: 'glutes', label: 'Glúteos', dbValues: ['glutes'] },
+  { key: 'calves', label: 'Pantorrillas', dbValues: ['calves'] },
+  { key: 'cardio', label: 'Cardio', dbValues: ['cardiovascular system'] },
 ];
 
-function getExerciseName(exercise: Exercise): string {
-  return EXERCISE_NAMES_ES[exercise.name] || exercise.name;
+function getExerciseNameFromExercise(exercise: Exercise, lang: string): string {
+  return getExerciseName(exercise.name, lang);
 }
 
-export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onPreview, onClose, multiSelect = false, state: controlledState, onStateChange }: ExercisePickerProps) {
+export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onClose, multiSelect = false, state: controlledState, onStateChange }: ExercisePickerProps) {
+  const { dialog, showAlert } = useConfirmDialog();
+  const { t, i18n } = useTranslation();
   // Internal fallback state — used only when the parent does not control state
   const [internalSearch, setInternalSearch] = useState('');
-  const [internalMuscle, setInternalMuscle] = useState('Todos');
+  const [internalMuscle, setInternalMuscle] = useState('all');
   const [internalIds, setInternalIds] = useState<Set<number>>(new Set());
 
   const isControlled = !!controlledState && !!onStateChange;
@@ -77,6 +85,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
   };
 
   const [showCreate, setShowCreate] = useState(false);
+  const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -102,8 +111,8 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
     }
 
     // Muscle group filter — match against target field (more accurate)
-    if (selectedMuscle !== 'Todos') {
-      const filter = MUSCLE_FILTERS.find(m => m.label === selectedMuscle);
+    if (selectedMuscle !== 'all') {
+      const filter = MUSCLE_FILTERS.find(m => m.key === selectedMuscle);
       if (filter?.dbValues) {
         const values = filter.dbValues.map(v => v.toLowerCase());
         result = result.filter((e) => {
@@ -137,11 +146,11 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
 
   const handleCreateExercise = async () => {
     if (!newName.trim()) {
-      Alert.alert('Error', 'El nombre del ejercicio es obligatorio');
+      showAlert(t('common.error'), t('exercisePicker.error.nameRequired'));
       return;
     }
     if (!selectedCategoryId) {
-      Alert.alert('Error', 'Seleccioná una categoría');
+      showAlert(t('common.error'), t('exercisePicker.error.categoryRequired'));
       return;
     }
     try {
@@ -157,7 +166,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
       setSelectedCategoryId(null);
       setShowCreate(false);
     } catch (error) {
-      Alert.alert('Error', 'No se pudo crear el ejercicio');
+      showAlert(t('common.error'), t('exercisePicker.error.createFailed'));
     }
   };
 
@@ -170,41 +179,42 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
 
   if (showCreate) {
     return (
+      <>
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
             <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <TouchableOpacity onPress={handleCancelCreate} style={{ width: 80 }}>
-                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>Cancelar</Text>
+                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>Nuevo Ejercicio</Text>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>{t('exercisePicker.newExercise')}</Text>
               <TouchableOpacity onPress={handleCreateExercise} style={{ width: 80, alignItems: 'flex-end' }}>
-                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>Guardar</Text>
+                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView style={{ flex: 1, padding: spacing.md }}>
-              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>Nombre *</Text>
+              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>{t('exercisePicker.nameLabel')}</Text>
               <TextInput
                 style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md }}
-                placeholder="Ej: Press con mancuerna"
+                placeholder={t('exercisePicker.namePlaceholder')}
                 placeholderTextColor={colors.text.muted}
                 value={newName}
                 onChangeText={setNewName}
                 autoFocus
               />
 
-              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>Descripción (opcional)</Text>
+              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>{t('exercisePicker.descriptionLabel')}</Text>
               <TextInput
                 style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary, marginBottom: spacing.md, minHeight: 80, textAlignVertical: 'top' }}
-                placeholder="Breve descripción del ejercicio"
+                placeholder={t('exercisePicker.descriptionPlaceholder')}
                 placeholderTextColor={colors.text.muted}
                 value={newDescription}
                 onChangeText={setNewDescription}
                 multiline
               />
 
-              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>Categoría *</Text>
+              <Text style={{ fontSize: 14, color: colors.text.secondary, marginBottom: spacing.sm }}>{t('exercisePicker.categoryLabel')}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: 24 }}>
                 {categories?.map((cat) => (
                   <TouchableOpacity
@@ -222,24 +232,36 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           </View>
         </SafeAreaView>
       </Modal>
+      <ConfirmDialog
+        visible={dialog.visible}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        cancelLabel={dialog.cancelLabel}
+        destructive={dialog.destructive}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+      />
+      </>
     );
   }
 
   return (
+    <>
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
         <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           {/* Header */}
           <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <TouchableOpacity onPress={onClose} style={{ width: 80 }}>
-              <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>Cancelar</Text>
+              <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>
-              {multiSelect ? `Seleccionar (${selectedIds.size})` : 'Seleccionar Ejercicio'}
+              {multiSelect ? t('exercisePicker.selectCount', { count: selectedIds.size }) : t('exercisePicker.selectTitle')}
             </Text>
             {multiSelect && selectedIds.size > 0 ? (
               <TouchableOpacity onPress={handleConfirmMultiSelect} style={{ width: 80, alignItems: 'flex-end' }}>
-                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '700' }}>Listo</Text>
+                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '700' }}>{t('exercisePicker.done')}</Text>
               </TouchableOpacity>
             ) : (
               <View style={{ width: 80 }} />
@@ -250,7 +272,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs }}>
             <TextInput
               style={{ backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 16, color: colors.text.primary }}
-              placeholder="Buscar ejercicios..."
+              placeholder={t('exercisePicker.searchPlaceholder')}
               placeholderTextColor={colors.text.muted}
               value={search}
               onChangeText={setSearch}
@@ -263,12 +285,12 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {MUSCLE_FILTERS.map((muscle) => (
                 <TouchableOpacity
-                  key={muscle.label}
-                  onPress={() => setSelectedMuscle(muscle.label)}
+                  key={muscle.key}
+                  onPress={() => setSelectedMuscle(muscle.key)}
                   style={{
-                    backgroundColor: selectedMuscle === muscle.label ? colors.accent.primary : 'transparent',
+                    backgroundColor: selectedMuscle === muscle.key ? colors.accent.primary : 'transparent',
                     borderWidth: 1,
-                    borderColor: selectedMuscle === muscle.label ? colors.accent.primary : colors.border.primary,
+                    borderColor: selectedMuscle === muscle.key ? colors.accent.primary : colors.border.primary,
                     paddingHorizontal: spacing.sm + spacing.xs,
                     paddingVertical: spacing.xs,
                     borderRadius: borderRadius.full,
@@ -277,10 +299,10 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 >
                   <Text style={{
                     fontSize: 12,
-                    fontWeight: selectedMuscle === muscle.label ? '700' : '500',
-                    color: selectedMuscle === muscle.label ? colors.bg.primary : colors.text.muted,
+                    fontWeight: selectedMuscle === muscle.key ? '700' : '500',
+                    color: selectedMuscle === muscle.key ? colors.bg.primary : colors.text.muted,
                   }}>
-                    {muscle.label}
+                    {t(`exercisePicker.muscle.${muscle.key}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -290,8 +312,8 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           {/* Results count */}
           <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.sm }}>
             <Text style={{ fontSize: 12, color: colors.text.muted }}>
-              {filtered.length + ' ejercicio' + (filtered.length !== 1 ? 's' : '')}
-              {multiSelect && selectedIds.size > 0 ? ' · ' + selectedIds.size + ' seleccionado' + (selectedIds.size !== 1 ? 's' : '') : ''}
+              {t('exercisePicker.resultCount', { count: filtered.length })}
+              {multiSelect && selectedIds.size > 0 ? ' · ' + t('exercisePicker.selectedCount', { count: selectedIds.size }) : ''}
             </Text>
           </View>
 
@@ -300,7 +322,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             onPress={() => setShowCreate(true)}
             style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm + spacing.xs, backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.bg.primary }}>+ Crear Ejercicio Nuevo</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.bg.primary }}>{t('exercisePicker.createNew')}</Text>
           </TouchableOpacity>
 
           {/* Exercise List */}
@@ -310,7 +332,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: 24 }}
             ListEmptyComponent={
               <View style={{ paddingVertical: spacing.xxl, alignItems: 'center' }}>
-                <Text style={{ color: colors.text.muted, fontSize: 14 }}>No se encontraron ejercicios</Text>
+                <Text style={{ color: colors.text.muted, fontSize: 14 }}>{t('exercisePicker.noResults')}</Text>
               </View>
             }
             renderItem={({ item }) => {
@@ -329,9 +351,9 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   alignItems: 'center',
                   gap: 10,
                 }}>
-                  {/* Thumbnail — tap to preview */}
+                  {/* Thumbnail — tap to preview inline */}
                   <TouchableOpacity
-                    onPress={() => onPreview?.(item)}
+                    onPress={() => setPreviewExercise(item)}
                     style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
                   >
                     {exerciseImage ? (
@@ -345,7 +367,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       </View>
                     )}
                     <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: colors.text.primary }} numberOfLines={1}>
-                      {getExerciseName(item)}
+                      {getExerciseNameFromExercise(item, i18n.language)}
                     </Text>
                   </TouchableOpacity>
 
@@ -379,6 +401,132 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             }}
           />
         </View>
+      </SafeAreaView>
+
+      {/* Exercise Detail Preview — inline overlay */}
+      {previewExercise && (
+        <ExercisePreview
+          exercise={previewExercise}
+          visible={!!previewExercise}
+          onClose={() => setPreviewExercise(null)}
+          onAdd={(exercise) => {
+            onSelect(exercise);
+            setPreviewExercise(null);
+          }}
+        />
+      )}
+    </Modal>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
+  );
+}
+
+// ─── Exercise Preview Overlay ─────────────────────────────
+function ExercisePreview({ exercise, visible, onClose, onAdd }: {
+  exercise: Exercise;
+  visible: boolean;
+  onClose: () => void;
+  onAdd: (exercise: Exercise) => void;
+}) {
+  const settings = useSettings();
+  const { t, i18n } = useTranslation();
+  const { data: stats } = useExerciseStats(exercise.id);
+  const { data: prs } = useExercisePRs(exercise.id);
+  const unit = resolveUnit(exercise.unit, settings.data.weightUnit);
+  const exerciseImage = exercise.originalId ? EXERCISE_IMAGES[exercise.originalId] : null;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+        {/* Header */}
+        <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <TouchableOpacity onPress={onClose} style={{ width: 80 }}>
+            <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>{t('common.back')}</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>
+            {t('exercisePicker.exercise')}
+          </Text>
+          <TouchableOpacity onPress={() => onAdd(exercise)} style={{ width: 80, alignItems: 'flex-end' }}>
+            <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '700' }}>{t('exercisePicker.add')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+          {/* Exercise Image */}
+          {exerciseImage && (
+            <View style={{ backgroundColor: colors.bg.card, alignItems: 'center', paddingVertical: spacing.lg }}>
+              <Image
+                source={exerciseImage}
+                style={{ width: 180, height: 180, borderRadius: borderRadius.md, resizeMode: 'contain' }}
+              />
+            </View>
+          )}
+
+          {/* Exercise Name + Tags */}
+          <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.xs }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text.primary }}>
+              {getExerciseName(exercise.name, i18n.language)}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm }}>
+              {exercise.muscleGroup && (
+                <View style={{ backgroundColor: colors.tag.muscle, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
+                  <Text style={{ fontSize: 12, color: colors.tag.text }}>{exercise.muscleGroup}</Text>
+                </View>
+              )}
+              {exercise.equipment && (
+                <View style={{ backgroundColor: colors.tag.equipment, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
+                  <Text style={{ fontSize: 12, color: colors.tag.equipmentText }}>{exercise.equipment}</Text>
+                </View>
+              )}
+            </View>
+            {exercise.instructionsEs && (
+              <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.md, lineHeight: 20 }}>
+                {exercise.instructionsEs}
+              </Text>
+            )}
+          </View>
+
+          {/* Quick Stats */}
+          <View style={{ flexDirection: 'row', padding: spacing.md, gap: spacing.sm }}>
+            <View style={{ flex: 1, backgroundColor: colors.bg.card, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: colors.text.muted }}>{t('progress.max')}</Text>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.accent.primary }}>
+                {stats?.maxWeight ? formatWeight(stats.maxWeight, unit) : '-'}
+              </Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: colors.bg.card, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: colors.text.muted }}>{t('progress.volume')}</Text>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.accent.primary }}>
+                {stats?.totalVolume ? formatVolume(stats.totalVolume, unit) : '0'}
+              </Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: colors.bg.card, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: colors.text.muted }}>{t('progress.exercises')}</Text>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.accent.primary }}>
+                {stats?.totalSessions ?? 0}
+              </Text>
+            </View>
+          </View>
+
+          {/* Add Button */}
+          <View style={{ padding: spacing.md }}>
+            <TouchableOpacity
+              onPress={() => onAdd(exercise)}
+              style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.bg.primary }}>{t('exercisePicker.addExercise')}</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </Modal>
   );

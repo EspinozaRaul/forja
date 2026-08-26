@@ -70,7 +70,7 @@ export function useUpdateSet() {
       data,
     }: {
       id: number;
-      data: { reps?: number; weight?: number; completed?: boolean; rir?: number | null };
+      data: { reps?: number; weight?: number; completed?: boolean; rir?: number | null; method?: string; isDropGroup?: boolean };
       sessionExerciseId: number;
     }) => updateSet(id, data),
     onSuccess: (_, variables) => {

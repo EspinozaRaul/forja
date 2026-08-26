@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useExercises, useExerciseSessions } from '../../lib/hooks/useExercises';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import {
@@ -20,7 +21,7 @@ import { formatDuration, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import { buildMonthGrid, monthLabel, addMonths, compareSessions } from '../../lib/progress';
 import type { SessionByMonth, SessionDetail, SessionComparison, ExerciseComparison, MostUsedExercise } from '../../lib/progress';
 import type { ProgressDataPoint } from '../../lib/types';
@@ -55,20 +56,65 @@ function currentWeekKey(): string {
   return `${year}-${String(week).padStart(2, '0')}`;
 }
 
-// ─── Spanish formatting helpers ────────────────────────
-const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const MONTHS_ES_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const WEEKDAY_HEADER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+// ─── Locale-aware date helpers ─────────────────────────
+// Uses Intl.DateTimeFormat which is fully supported in Hermes (Expo SDK 57+).
+// Falls back to hardcoded Spanish short names if Intl is unavailable.
 
-function formatDayShort(date: Date | string): string {
+const FALLBACK_DAYS_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const FALLBACK_MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const FALLBACK_WEEKDAY_HEADER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+/** Returns short day names starting from Sunday (matching Date.getDay() ordering). */
+function getDaysShort(locale: string): string[] {
+  try {
+    const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(Date.UTC(2024, 0, 7 + i)); // Jan 7 2024 = Sunday
+      return fmt.format(d);
+    });
+  } catch {
+    return FALLBACK_DAYS_SHORT;
+  }
+}
+
+/** Returns short month names, January through December. */
+function getMonthsShort(locale: string): string[] {
+  try {
+    const fmt = new Intl.DateTimeFormat(locale, { month: 'short' });
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(Date.UTC(2024, i, 1));
+      return fmt.format(d);
+    });
+  } catch {
+    return FALLBACK_MONTHS_SHORT;
+  }
+}
+
+/** Returns single-letter weekday headers starting from Monday (calendar grid). */
+function getWeekdayHeader(locale: string): string[] {
+  try {
+    const fmt = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(Date.UTC(2024, 0, 8 + i)); // Jan 8 2024 = Monday
+      return fmt.format(d);
+    });
+  } catch {
+    return FALLBACK_WEEKDAY_HEADER;
+  }
+}
+
+/** Format a short day label. Returns a sentinel that callers resolve via t(). */
+function formatDayShort(date: Date | string, locale: string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.round((startOfToday.getTime() - startOfDay.getTime()) / 86400000);
-  if (diffDays === 0) return 'Hoy';
-  if (diffDays === 1) return 'Ayer';
-  return `${DAYS_ES[d.getDay()]} ${d.getDate()} ${MONTHS_ES_SHORT[d.getMonth()]}`;
+  if (diffDays === 0) return '__TODAY__';
+  if (diffDays === 1) return '__YESTERDAY__';
+  const days = getDaysShort(locale);
+  const months = getMonthsShort(locale);
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 function formatTotalTime(seconds: number): string {
@@ -135,6 +181,12 @@ function StatCard({ label, value, valueColor }: { label: string; value: string; 
   );
 }
 
+function DayLabel({ sentry, t, locale }: { sentry: string; t: (key: string) => string; locale: string }) {
+  if (sentry === '__TODAY__') return <>{t('progress.today')}</>;
+  if (sentry === '__YESTERDAY__') return <>{t('progress.yesterday')}</>;
+  return <>{sentry}</>;
+}
+
 function SessionRow({
   session,
   unit,
@@ -142,6 +194,8 @@ function SessionRow({
   isCompareB,
   onOpen,
   onCompare,
+  locale,
+  t,
 }: {
   session: SessionByMonth;
   unit: WeightUnit;
@@ -149,6 +203,8 @@ function SessionRow({
   isCompareB: boolean;
   onOpen: () => void;
   onCompare: () => void;
+  locale: string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   const compareActive = isCompareA || isCompareB;
   return (
@@ -165,10 +221,10 @@ function SessionRow({
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-            {formatDayShort(session.startedAt)}
+            <DayLabel sentry={formatDayShort(session.startedAt, locale)} t={t} locale={locale} />
           </Text>
           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
-            {session.exerciseCount} ejercicios
+            {t('progress.exerciseCount', { count: session.exerciseCount })}
             {session.duration != null ? ` · ${formatDuration(session.duration)}` : ''}
             {' · '}
             {formatVolume(session.totalVolume, unit)}
@@ -186,7 +242,7 @@ function SessionRow({
           }}
         >
           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: compareActive ? colors.accent.primary : colors.text.muted }}>
-            Comparar
+            {t('progress.compare')}
           </Text>
         </Pressable>
         <Text style={{ fontSize: 18, color: colors.text.muted }}>›</Text>
@@ -203,6 +259,7 @@ function MostUsedExerciseRow({
   unit,
   onPress,
   isLast,
+  t,
 }: {
   name: string;
   sessionCount: number;
@@ -211,6 +268,7 @@ function MostUsedExerciseRow({
   unit: WeightUnit;
   onPress: () => void;
   isLast: boolean;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
     <Pressable
@@ -229,14 +287,14 @@ function MostUsedExerciseRow({
           {name}
         </Text>
         <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
-          {sessionCount} sesiones · {setCount} series
+          {t('progress.sessionsAndSets', { sessions: sessionCount, sets: setCount })}
         </Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
         <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.display, color: colors.text.primary }}>
           {formatWeight(maxWeight, unit)}
         </Text>
-        <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>máx</Text>
+        <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>{t('progress.max')}</Text>
       </View>
       <Text style={{ fontSize: 16, color: colors.text.muted }}>›</Text>
     </Pressable>
@@ -252,6 +310,8 @@ function CalendarCard({
   sessionCount,
   onDayPress,
   onMonthChange,
+  locale,
+  t,
 }: {
   year: number;
   month: number;
@@ -261,6 +321,8 @@ function CalendarCard({
   sessionCount: number;
   onDayPress: (day: number) => void;
   onMonthChange: (delta: number) => void;
+  locale: string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   const cellWidth = `${100 / 7}%` as `${number}%`;
   const cell = {
@@ -270,6 +332,7 @@ function CalendarCard({
     justifyContent: 'center' as const,
     gap: 3,
   };
+  const weekdayHeader = getWeekdayHeader(locale);
 
   return (
     <View style={cardStyle}>
@@ -286,7 +349,7 @@ function CalendarCard({
             {monthLabel(year, month)}
           </Text>
           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>
-            {sessionCount} entrenamientos
+            {t('progress.trainingCount', { count: sessionCount })}
           </Text>
         </View>
         <Pressable
@@ -299,8 +362,8 @@ function CalendarCard({
       </View>
 
       <View style={{ flexDirection: 'row', marginBottom: spacing.xs }}>
-        {WEEKDAY_HEADER.map((d) => (
-          <Text key={d} style={{ width: cellWidth, textAlign: 'center', fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
+        {weekdayHeader.map((d, i) => (
+          <Text key={`${d}-${i}`} style={{ width: cellWidth, textAlign: 'center', fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
             {d}
           </Text>
         ))}
@@ -409,7 +472,7 @@ function Tag({ text, color }: { text: string; color: string }) {
   );
 }
 
-function CompareExerciseRow({ cmp, unit }: { cmp: ExerciseComparison; unit: WeightUnit }) {
+function CompareExerciseRow({ cmp, unit, t }: { cmp: ExerciseComparison; unit: WeightUnit; t: (key: string) => string }) {
   const onlyInB = cmp.presentInB && !cmp.presentInA;
   const onlyInA = cmp.presentInA && !cmp.presentInB;
   return (
@@ -427,13 +490,13 @@ function CompareExerciseRow({ cmp, unit }: { cmp: ExerciseComparison; unit: Weig
         <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={1}>
           {cmp.name}
         </Text>
-        {onlyInB ? <Tag text="nuevo" color={colors.success} /> : null}
-        {onlyInA ? <Tag text="quitado" color={colors.error} /> : null}
+        {onlyInB ? <Tag text={t('progress.new')} color={colors.success} /> : null}
+        {onlyInA ? <Tag text={t('progress.removed')} color={colors.error} /> : null}
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <Metric label="Peso máx" a={cmp.bestWeightA} b={cmp.bestWeightB} delta={cmp.weightDelta} unit={unit} mode="weight" />
-        <Metric label="Reps máx" a={cmp.bestRepsA} b={cmp.bestRepsB} delta={cmp.repsDelta} mode="reps" />
-        <Metric label="Volumen" delta={cmp.volumeDelta} unit={unit} mode="volume" />
+        <Metric label={t('progress.maxWeight')} a={cmp.bestWeightA} b={cmp.bestWeightB} delta={cmp.weightDelta} unit={unit} mode="weight" />
+        <Metric label={t('progress.maxReps')} a={cmp.bestRepsA} b={cmp.bestRepsB} delta={cmp.repsDelta} mode="reps" />
+        <Metric label={t('progress.volume')} delta={cmp.volumeDelta} unit={unit} mode="volume" />
       </View>
     </View>
   );
@@ -449,6 +512,7 @@ function ComparePanel({
   expanded,
   onToggleExpanded,
   onClose,
+  t,
 }: {
   aId: number | null;
   bId: number | null;
@@ -459,6 +523,7 @@ function ComparePanel({
   expanded: boolean;
   onToggleExpanded: () => void;
   onClose: () => void;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   const selectedCount = (aId != null ? 1 : 0) + (bId != null ? 1 : 0);
 
@@ -466,14 +531,14 @@ function ComparePanel({
     <View style={cardStyle}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
         <Pressable onPress={onToggleExpanded} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Comparar sesiones</Text>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('progress.compareSessions')}</Text>
           <Text style={{ fontSize: 14, color: colors.text.muted }}>{expanded ? '▾' : '▸'}</Text>
         </Pressable>
         <Pressable
           onPress={onClose}
           style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
         >
-          <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>Cerrar comparación</Text>
+          <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>{t('progress.closeComparison')}</Text>
         </Pressable>
       </View>
 
@@ -481,12 +546,12 @@ function ComparePanel({
         <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
           {selectedCount < 2 ? (
             <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-              Tocá Comparar en dos sesiones para compararlas.
+              {t('progress.compareInstruction')}
             </Text>
           ) : null}
 
           {aId != null && bId != null && (!sessionA || !sessionB || !comparison) ? (
-            <LoadingSpinner message="Comparando sesiones…" />
+            <LoadingSpinner message={t('progress.comparing')} />
           ) : sessionA && sessionB && comparison ? (
             <>
               <View
@@ -501,19 +566,19 @@ function ComparePanel({
                 }}
               >
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>Δ Volumen</Text>
+                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>{t('progress.deltaVolume')}</Text>
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: deltaMeta(comparison.summary.volumeDelta).color }}>
                     {deltaMeta(comparison.summary.volumeDelta).arrow} {signedDelta(comparison.summary.volumeDelta, unit)}
                   </Text>
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>Δ Series</Text>
+                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>{t('progress.deltaSets')}</Text>
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: deltaMeta(comparison.summary.setsDelta).color }}>
                     {deltaMeta(comparison.summary.setsDelta).arrow} {signedNumber(comparison.summary.setsDelta)}
                   </Text>
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>Ejercicios</Text>
+                  <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>{t('progress.exercises')}</Text>
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
                     {comparison.summary.exercisesCount}
                   </Text>
@@ -521,7 +586,7 @@ function ComparePanel({
               </View>
 
               {comparison.perExercise.map((cmp) => (
-                <CompareExerciseRow key={cmp.exerciseId} cmp={cmp} unit={cmp.unit === 'lbs' ? 'lbs' : 'kg'} />
+                <CompareExerciseRow key={cmp.exerciseId} cmp={cmp} unit={cmp.unit === 'lbs' ? 'lbs' : 'kg'} t={t} />
               ))}
             </>
           ) : null}
@@ -538,6 +603,8 @@ function WeekDetailPanel({
   unit,
   onClose,
   onOpenSession,
+  locale,
+  t,
 }: {
   week: string;
   sessions: WeeklySessionDetail[] | undefined;
@@ -545,21 +612,23 @@ function WeekDetailPanel({
   unit: WeightUnit;
   onClose: () => void;
   onOpenSession: (sessionId: number) => void;
+  locale: string;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
     <View style={cardStyle}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
-        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Semana {week}</Text>
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('progress.weekTitle', { week })}</Text>
         <Pressable onPress={onClose} hitSlop={8}>
-          <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>Cerrar</Text>
+          <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('progress.close')}</Text>
         </Pressable>
       </View>
 
       {loading ? (
-        <LoadingSpinner message="Cargando semana…" />
+        <LoadingSpinner message={t('progress.loadingWeek')} />
       ) : !sessions || sessions.length === 0 ? (
         <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-          Sin sesiones esta semana
+          {t('progress.noSessionsWeek')}
         </Text>
       ) : (
         sessions.map((session) => (
@@ -577,7 +646,7 @@ function WeekDetailPanel({
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
               <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                {formatDayShort(session.startedAt)}
+                <DayLabel sentry={formatDayShort(session.startedAt, locale)} t={t} locale={locale} />
               </Text>
               {session.duration != null ? (
                 <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{formatDuration(session.duration)}</Text>
@@ -585,13 +654,13 @@ function WeekDetailPanel({
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.lg }}>
               <View>
-                <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>Volumen</Text>
+                <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.weekVolume')}</Text>
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>
                   {formatVolume(session.totalVolume, unit)}
                 </Text>
               </View>
               <View>
-                <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>Ejercicios</Text>
+                <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.weekExercises')}</Text>
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>
                   {session.exerciseCount}
                 </Text>
@@ -606,6 +675,8 @@ function WeekDetailPanel({
 
 // ─── Main screen ───────────────────────────────────────
 export default function ProgressScreen() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   const router = useRouter();
   const settings = useSettings();
   const unit = settings.data.weightUnit;
@@ -673,7 +744,7 @@ export default function ProgressScreen() {
   const exerciseNameMap: Record<number, string> = {};
   const exerciseUnitMap: Record<number, string> = {};
   for (const exercise of exercises ?? []) {
-    exerciseNameMap[exercise.id] = EXERCISE_NAMES_ES[exercise.name] || exercise.name;
+    exerciseNameMap[exercise.id] = getExerciseName(exercise.name, i18n.language);
     exerciseUnitMap[exercise.id] = resolveUnit(exercise.unit, unit);
   }
 
@@ -707,6 +778,12 @@ export default function ProgressScreen() {
 
   const openSession = (id: number) => router.push(`/session/history/${id}`);
 
+  const dateRangeLabel = (range: DateRange): string => {
+    if (range === '4weeks') return t('progress.range4weeks');
+    if (range === '12weeks') return t('progress.range12weeks');
+    return t('progress.rangeAll');
+  };
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bg.primary }}
@@ -714,18 +791,18 @@ export default function ProgressScreen() {
     >
       {/* 1. Global summary */}
       <View style={cardStyle}>
-        <SectionTitle>Resumen</SectionTitle>
+        <SectionTitle>{t('progress.summary')}</SectionTitle>
         {statsLoading ? (
-          <LoadingSpinner message="Cargando estadísticas…" />
+          <LoadingSpinner message={t('progress.loadingStats')} />
         ) : (
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <StatCard
-              label="Volumen total"
-              value={globalStats ? formatVolume(globalStats.totalVolume, unit) : '—'}
+              label={t('progress.sets')}
+              value={globalStats ? `${globalStats.totalCompletedSets}` : '—'}
               valueColor={colors.accent.primary}
             />
             <StatCard
-              label="Tiempo"
+              label={t('progress.time')}
               value={globalStats ? formatTotalTime(globalStats.totalTime) : '—'}
               valueColor={colors.accent.primary}
             />
@@ -743,6 +820,8 @@ export default function ProgressScreen() {
         sessionCount={monthEntry?.sessionCount ?? monthSessions?.length ?? 0}
         onDayPress={setSelectedDay}
         onMonthChange={handleMonthChange}
+        locale={locale}
+        t={t}
       />
 
       {/* Selected day sessions */}
@@ -750,17 +829,17 @@ export default function ProgressScreen() {
         <View style={cardStyle}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-              Entrenamientos del día {selectedDay}
+              {t('progress.daySessionsTitle', { day: selectedDay })}
             </Text>
             <Pressable onPress={() => setSelectedDay(null)} hitSlop={8}>
-              <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>Ver todo el mes</Text>
+              <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('progress.viewAllMonth')}</Text>
             </Pressable>
           </View>
           {monthLoading ? (
-            <LoadingSpinner message="Cargando…" />
+            <LoadingSpinner message={t('progress.loading')} />
           ) : selectedDaySessions.length === 0 ? (
             <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-              Sin entrenamientos este día
+              {t('progress.noSessionsDay')}
             </Text>
           ) : (
             <>
@@ -774,6 +853,8 @@ export default function ProgressScreen() {
                     isCompareB={compare.b === session.id}
                     onOpen={() => openSession(session.id)}
                     onCompare={() => handleCompareToggle(session.id)}
+                    locale={locale}
+                    t={t}
                   />
                 ))}
               </View>
@@ -791,7 +872,7 @@ export default function ProgressScreen() {
                   }}
                 >
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
-                    {dayExpanded ? 'Ver menos' : `Ver más (${selectedDaySessions.length})`}
+                    {dayExpanded ? t('progress.viewLess') : t('progress.viewMoreCount', { count: selectedDaySessions.length })}
                   </Text>
                 </Pressable>
               ) : null}
@@ -802,13 +883,13 @@ export default function ProgressScreen() {
 
       {/* 3. Sessions of the visible month */}
       <View style={cardStyle}>
-        <SectionTitle>Sesiones del mes</SectionTitle>
+        <SectionTitle>{t('progress.monthSessionsTitle')}</SectionTitle>
         {monthLoading ? (
-          <LoadingSpinner message="Cargando sesiones…" />
+          <LoadingSpinner message={t('progress.loadingSessions')} />
         ) : !monthSessions || monthSessions.length === 0 ? (
           <EmptyState
-            title="Sin entrenamientos este mes"
-            message="Entrená para empezar a ver tu progreso aquí."
+            title={t('progress.noSessionsMonth')}
+            message={t('progress.noSessionsMonthMessage')}
           />
         ) : (
           <>
@@ -822,6 +903,8 @@ export default function ProgressScreen() {
                   isCompareB={compare.b === session.id}
                   onOpen={() => openSession(session.id)}
                   onCompare={() => handleCompareToggle(session.id)}
+                  locale={locale}
+                  t={t}
                 />
               ))}
             </View>
@@ -839,7 +922,7 @@ export default function ProgressScreen() {
                 }}
               >
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
-                  Ver más
+                  {t('progress.viewMore')}
                 </Text>
               </Pressable>
             ) : null}
@@ -859,12 +942,13 @@ export default function ProgressScreen() {
           expanded={compareExpanded}
           onToggleExpanded={() => setCompareExpanded((value) => !value)}
           onClose={() => setCompare({ a: null, b: null })}
+          t={t}
         />
       ) : null}
 
       {/* Ejercicios — most used as entry, then per-exercise progression */}
       <View style={cardStyle}>
-        <SectionTitle>Ejercicios</SectionTitle>
+        <SectionTitle>{t('progress.exercises')}</SectionTitle>
 
         {/* Exercise selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
@@ -885,7 +969,7 @@ export default function ProgressScreen() {
               }}
             >
               <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedExerciseId === null ? colors.bg.primary : colors.text.secondary }}>
-                Todos
+                {t('progress.all')}
               </Text>
             </Pressable>
             {(selectorExercises).map((exercise) => (
@@ -906,7 +990,7 @@ export default function ProgressScreen() {
                 }}
               >
                 <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedExerciseId === exercise.exerciseId ? colors.bg.primary : colors.text.secondary }}>
-                  {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
+                  {getExerciseName(exercise.name, i18n.language)}
                 </Text>
               </Pressable>
             ))}
@@ -916,20 +1000,20 @@ export default function ProgressScreen() {
         {selectedExerciseId === null ? (
           <>
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.sm }}>
-              Los más usados — tocá uno para ver su progresión.
+              {t('progress.mostUsedHint')}
             </Text>
             {mostUsedLoading ? (
-              <LoadingSpinner message="Cargando ejercicios…" />
+              <LoadingSpinner message={t('progress.loadingExercises')} />
             ) : !topUsedExercises || topUsedExercises.length === 0 ? (
               <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-                Aún no hay ejercicios entrenados
+                {t('progress.noExercises')}
               </Text>
             ) : (
               <View>
                 {topUsedExercises.map((exercise, index) => (
                   <MostUsedExerciseRow
                     key={exercise.exerciseId}
-                    name={EXERCISE_NAMES_ES[exercise.name] || exercise.name}
+                    name={getExerciseName(exercise.name, i18n.language)}
                     sessionCount={exercise.sessionCount}
                     setCount={exercise.setCount}
                     maxWeight={exercise.maxWeight}
@@ -939,6 +1023,7 @@ export default function ProgressScreen() {
                       setSelectedExerciseId(exercise.exerciseId);
                       setSelectedWeek(null);
                     }}
+                    t={t}
                   />
                 ))}
               </View>
@@ -948,7 +1033,7 @@ export default function ProgressScreen() {
           <>
             {/* Date range */}
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.sm }}>
-              Rango de fechas
+              {t('progress.dateRange')}
             </Text>
             <View style={{ flexDirection: 'row', marginBottom: spacing.md }}>
               {(['4weeks', '12weeks', 'all'] as DateRange[]).map((range) => (
@@ -969,7 +1054,7 @@ export default function ProgressScreen() {
                   }}
                 >
                   <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: dateRange === range ? colors.bg.primary : colors.text.secondary }}>
-                    {range === '4weeks' ? '4 semanas' : range === '12weeks' ? '12 semanas' : 'Todo'}
+                    {dateRangeLabel(range)}
                   </Text>
                 </Pressable>
               ))}
@@ -980,7 +1065,7 @@ export default function ProgressScreen() {
               <ProgressChart
                 embedded
                 data={filteredVolumeData}
-                title={`Volumen semanal (${exerciseUnit})`}
+                title={t('progress.weeklyVolume', { unit: exerciseUnit })}
                 unit={exerciseUnit}
                 selectedWeek={selectedWeek}
                 onBarPress={handleBarPress}
@@ -988,7 +1073,7 @@ export default function ProgressScreen() {
               <ProgressChart
                 embedded
                 data={filteredSessionData}
-                title="Sesiones por semana"
+                title={t('progress.sessionsPerWeek')}
                 selectedWeek={selectedWeek}
                 onBarPress={handleBarPress}
               />
@@ -1003,6 +1088,8 @@ export default function ProgressScreen() {
                   unit={unit}
                   onClose={() => setSelectedWeek(null)}
                   onOpenSession={openSession}
+                  locale={locale}
+                  t={t}
                 />
               </View>
             ) : null}
@@ -1010,13 +1097,13 @@ export default function ProgressScreen() {
             {/* Per-exercise progression */}
             <View style={{ marginTop: spacing.md }}>
               <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
-                Evolución
+                {t('progress.evolution')}
               </Text>
               {evolutionLoading ? (
-                <LoadingSpinner message="Cargando evolución…" />
+                <LoadingSpinner message={t('progress.loadingEvolution')} />
               ) : !exerciseSessions || exerciseSessions.length === 0 ? (
                 <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-                  Sin registros de este ejercicio
+                  {t('progress.noRecords')}
                 </Text>
               ) : (
                 <View>
@@ -1035,10 +1122,10 @@ export default function ProgressScreen() {
                     >
                       <View style={{ flex: 1, gap: 1 }}>
                         <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-                          {formatDayShort(entry.startedAt)}
+                          <DayLabel sentry={formatDayShort(entry.startedAt, locale)} t={t} locale={locale} />
                         </Text>
                         <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
-                          {entry.setCount} series · {entry.completedSets} completadas
+                          {t('progress.setsAndCompleted', { sets: entry.setCount, completed: entry.completedSets })}
                         </Text>
                       </View>
                       <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>

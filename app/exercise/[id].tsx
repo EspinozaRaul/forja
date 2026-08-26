@@ -14,7 +14,8 @@ import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
 import { formatDuration, formatRelativeDate, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_IMAGES } from '../../lib/assets/exercise-images';
-import { EXERCISE_NAMES_ES } from '../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../lib/utils/exercise-names';
+import i18n from '../../lib/i18n';
 
 function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
   const [localUri, setLocalUri] = useState<string | null>(null);
@@ -131,7 +132,7 @@ export default function ExerciseDetailScreen() {
       {/* Exercise Header */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text.primary }}>
-          {EXERCISE_NAMES_ES[exercise.name] || exercise.name}
+          {getExerciseName(exercise.name, i18n.language)}
         </Text>
 
         {/* Tags */}

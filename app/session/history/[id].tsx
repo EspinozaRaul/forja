@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession, useSessionExercises, useCompleteSession } from '../../../lib/hooks/useSessions';
@@ -8,13 +8,16 @@ import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/us
 import { Button } from '../../../components/ui/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { EXERCISE_NAMES_ES } from '../../../lib/db/exercise-names-es';
+import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { formatDuration, formatVolume } from '../../../lib/utils/format';
 import { useSettings } from '../../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
 import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
 import { haptics } from '../../../lib/utils/haptics';
 import type { SessionExercise } from '../../../lib/types';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../../../lib/hooks/useConfirmDialog';
+import { useTranslation } from 'react-i18next';
 
 export default function SessionSummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +29,8 @@ export default function SessionSummaryScreen() {
   const completeSession = useCompleteSession();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
+  const { dialog, showAlert, showConfirm } = useConfirmDialog();
+  const { t, i18n } = useTranslation();
 
   const session = sessions?.[0];
   const isLoading = sessionLoading || exercisesLoading;
@@ -37,13 +42,13 @@ export default function SessionSummaryScreen() {
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading session summary..." />;
+    return <LoadingSpinner message={t('session.history.loadingMessage')} />;
   }
 
   if (!session) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title="Session not found" />
+        <EmptyState title={t('session.history.notFound')} />
       </View>
     );
   }
@@ -59,17 +64,17 @@ export default function SessionSummaryScreen() {
       });
       setIsEditingNotes(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save notes');
+      showAlert(t('common.error'), t('session.history.saveNotesFailed'));
     }
   };
 
   const handleSaveAsRoutine = async () => {
     if (!routineName.trim()) {
-      Alert.alert('Error', 'Ingresá un nombre para la rutina');
+      showAlert(t('common.error'), t('session.history.nameRequired'));
       return;
     }
     if (!sessionExercises || sessionExercises.length === 0) {
-      Alert.alert('Error', 'No hay ejercicios para guardar');
+      showAlert(t('common.error'), t('session.history.noExercisesToSave'));
       return;
     }
 
@@ -90,11 +95,9 @@ export default function SessionSummaryScreen() {
       }
 
       setShowSaveAsRoutine(false);
-      Alert.alert('¡Listo!', `Rutina "${routineName.trim()}" creada`, [
-        { text: 'OK', onPress: () => router.push('/') },
-      ]);
+      showConfirm(t('session.history.routineCreatedTitle'), t('session.history.routineCreatedMessage', { name: routineName.trim() }), () => router.push('/'), { confirmLabel: t('session.history.ok') });
     } catch (error) {
-      Alert.alert('Error', 'Failed to save routine');
+      showAlert(t('common.error'), t('session.history.saveRoutineFailed'));
     } finally {
       setIsSavingRoutine(false);
     }
@@ -103,22 +106,23 @@ export default function SessionSummaryScreen() {
   const canSaveAsRoutine = session?.routineId == null && sessionExercises && sessionExercises.length > 0;
 
   return (
+    <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       {/* Session Info */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
-          Session Summary
+          {t('session.history.title')}
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <View style={{ alignItems: 'center', flex: 1 }}>
             <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>{exerciseCount}</Text>
-            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Exercises</Text>
+            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.exercisesLabel')}</Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
             <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>
               {formatDuration(duration)}
             </Text>
-            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>Duration</Text>
+            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.durationLabel')}</Text>
           </View>
         </View>
       </View>
@@ -126,9 +130,9 @@ export default function SessionSummaryScreen() {
       {/* Notes */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>Notes</Text>
+          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('session.history.notesLabel')}</Text>
           <Button
-            title={isEditingNotes ? 'Save' : 'Edit'}
+            title={isEditingNotes ? t('common.save') : t('common.edit')}
             variant="secondary"
             onPress={() => {
               if (isEditingNotes) {
@@ -159,12 +163,12 @@ export default function SessionSummaryScreen() {
             numberOfLines={3}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Add notes about this session..."
+            placeholder={t('session.history.notesPlaceholder')}
             placeholderTextColor={colors.text.muted}
           />
         ) : (
           <Text style={{ color: colors.text.secondary, fontFamily: fonts.body }}>
-            {session.notes || 'No notes'}
+            {session.notes || t('session.history.noNotes')}
           </Text>
         )}
       </View>
@@ -188,11 +192,11 @@ export default function SessionSummaryScreen() {
             }}
           >
             <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
-              Guardar como rutina
+              {t('session.history.saveAsRoutine')}
             </Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginTop: spacing.xs }}>
-            Convertí esta sesión en una rutina para reusarla
+            {t('session.history.saveAsRoutineSubtitle')}
           </Text>
         </View>
       )}
@@ -202,7 +206,7 @@ export default function SessionSummaryScreen() {
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
-              Guardar como rutina
+              {t('session.history.saveAsRoutine')}
             </Text>
             <TextInput
               style={{
@@ -218,7 +222,7 @@ export default function SessionSummaryScreen() {
               }}
               value={routineName}
               onChangeText={setRoutineName}
-              placeholder="Nombre de la rutina"
+              placeholder={t('session.history.routineNamePlaceholder')}
               placeholderTextColor={colors.text.muted}
               autoFocus
             />
@@ -227,7 +231,7 @@ export default function SessionSummaryScreen() {
                 onPress={() => setShowSaveAsRoutine(false)}
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>Cancelar</Text>
+                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveAsRoutine}
@@ -235,7 +239,7 @@ export default function SessionSummaryScreen() {
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
               >
                 <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>
-                  {isSavingRoutine ? 'Guardando...' : 'Guardar'}
+                  {isSavingRoutine ? t('session.history.saving') : t('common.save')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -246,12 +250,12 @@ export default function SessionSummaryScreen() {
       {/* Exercises and Sets */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>
-          Exercises
+          {t('session.history.exercisesLabel')}
         </Text>
         {!sessionExercises || sessionExercises.length === 0 ? (
           <EmptyState
-            title="No exercises logged"
-            message="This session has no recorded exercises."
+            title={t('session.history.noExercises')}
+            message={t('session.history.noExercisesMessage')}
           />
         ) : (
           sessionExercises.map((se) => (
@@ -263,13 +267,24 @@ export default function SessionSummaryScreen() {
       {/* Back Button */}
       <View style={{ padding: spacing.md, marginTop: spacing.sm }}>
         <Button
-          title="Back to Home"
+          title={t('session.history.backToHome')}
           onPress={() => router.push('/')}
         />
       </View>
 
       <View style={{ height: spacing.xxl }} />
     </ScrollView>
+    <ConfirmDialog
+      visible={dialog.visible}
+      title={dialog.title}
+      message={dialog.message}
+      confirmLabel={dialog.confirmLabel}
+      cancelLabel={dialog.cancelLabel}
+      destructive={dialog.destructive}
+      onConfirm={dialog.onConfirm}
+      onCancel={dialog.onCancel}
+    />
+    </>
   );
 }
 
@@ -278,6 +293,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
   const { data: sets } = useSets(sessionExercise.id);
   const router = useRouter();
   const settings = useSettings();
+  const { t, i18n } = useTranslation();
 
   const exercise = exercises?.[0];
   const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
@@ -291,7 +307,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
         <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)}>
           <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
-            {exercise ? (EXERCISE_NAMES_ES[exercise.name] || exercise.name) : 'Ejercicio desconocido'}
+            {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
           </Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 13, color: colors.text.muted }}>
@@ -311,7 +327,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
                 borderBottomColor: colors.border.primary,
               }}
             >
-              <Text style={{ fontSize: 14, color: colors.text.secondary }}>Set {set.setNumber}</Text>
+              <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
               <Text style={{ fontSize: 14, color: colors.text.primary }}>
                 {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
               </Text>
@@ -322,7 +338,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
           ))}
         </View>
       ) : (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>No sets logged</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>{t('session.history.noSetsLogged')}</Text>
       )}
     </View>
   );

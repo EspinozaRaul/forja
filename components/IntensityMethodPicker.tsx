@@ -1,47 +1,21 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 
 export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
 
 interface IntensityMethodOption {
   id: IntensityMethod;
-  label: string;
-  description: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
 
 const INTENSITY_METHODS: IntensityMethodOption[] = [
-  {
-    id: 'dropset',
-    label: 'Drop Set',
-    description: 'Reducir peso y continuar sin descanso',
-    icon: 'flash',
-  },
-  {
-    id: 'rest_pause',
-    label: 'Rest-Pause',
-    description: 'Pausa corta y continuar con el mismo peso',
-    icon: 'pause',
-  },
-  {
-    id: 'cluster',
-    label: 'Cluster',
-    description: 'Repeticiones agrupadas con micro-descansos',
-    icon: 'ellipse',
-  },
-  {
-    id: 'superset',
-    label: 'Super Set',
-    description: 'Dos ejercicios alternados sin descanso',
-    icon: 'repeat',
-  },
-  {
-    id: 'partial',
-    label: 'Parcial',
-    description: 'Repeticiones parciales con rango limitado',
-    icon: 'resize',
-  },
+  { id: 'dropset', icon: 'flash' },
+  { id: 'rest_pause', icon: 'pause' },
+  { id: 'cluster', icon: 'ellipse' },
+  { id: 'superset', icon: 'repeat' },
+  { id: 'partial', icon: 'resize' },
 ];
 
 interface IntensityMethodPickerProps {
@@ -51,6 +25,8 @@ interface IntensityMethodPickerProps {
 }
 
 export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityMethodPickerProps) {
+  const { t } = useTranslation();
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <TouchableOpacity
@@ -59,8 +35,8 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
         onPress={onClose}
       >
         <View style={styles.container}>
-          <Text style={styles.title}>Método de intensidad</Text>
-          <Text style={styles.subtitle}>Seleccioná cómo querés registrar esta serie</Text>
+          <Text style={styles.title}>{t('methods.title')}</Text>
+          <Text style={styles.subtitle}>{t('methods.subtitle')}</Text>
 
           {INTENSITY_METHODS.map((method) => (
             <TouchableOpacity
@@ -73,15 +49,15 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
             >
               <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />
               <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>{method.label}</Text>
-                <Text style={styles.optionDescription}>{method.description}</Text>
+                <Text style={styles.optionLabel}>{t(`methods.${method.id}.label`)}</Text>
+                <Text style={styles.optionDescription}>{t(`methods.${method.id}.description`)}</Text>
               </View>
               <Text style={styles.optionArrow}>›</Text>
             </TouchableOpacity>
           ))}
 
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
