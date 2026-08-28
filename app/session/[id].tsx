@@ -66,7 +66,7 @@ export default function SessionScreen() {
   const updateRoutineExerciseOrder = useUpdateRoutineExerciseOrder();
   const updateRoutineExerciseTargets = useUpdateRoutineExerciseTargets();
 
-  const sortedExercises = sessionExercises?.sort((a, b) => a.order - b.order) ?? [];
+  const sortedExercises = sessionExercises ? [...sessionExercises].sort((a, b) => a.order - b.order) : [];
 
   // Previous-session data for the "peso previo" placeholders (guidance only).
   const { data: lastSession } = useLastSessionForRoutine(session?.routineId ?? 0);
@@ -83,6 +83,15 @@ export default function SessionScreen() {
     session?.routineId ?? 0,
     sessionExercises?.map((se) => se.exerciseId) ?? []
   );
+
+  // Guard: invalid sessionId — hooks above are safe because queries with NaN return empty
+  if (isNaN(sessionId)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+        <EmptyState title={t('session.notFound')} />
+      </View>
+    );
+  }
 
   // Previous values per exerciseId + setNumber from the last completed session
   // of THIS routine. Prefer the drop group parent (isDropGroup === true, the
@@ -1241,7 +1250,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
           >
             <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>
-              {currentRestTime >= 60 ? `${currentRestTime / 60}m` : `${currentRestTime}s`}
+              {currentRestTime >= 60 ? `${Math.floor(currentRestTime / 60)}m${currentRestTime % 60 > 0 ? ` ${currentRestTime % 60}s` : ''}` : `${currentRestTime}s`}
             </Text>
           </TouchableOpacity>
           {onReplace && (
@@ -1313,7 +1322,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
 
       {/* Custom rest time modal */}
       <Modal visible={showCustomRest} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: 1, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: 20 }}>
