@@ -1,5 +1,5 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
-import { useState } from 'react';
+import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSessions } from '../../lib/hooks/useSessions';
@@ -43,14 +43,17 @@ export default function HomeScreen() {
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
-  // Stats
+  // Stats — compute once per render, not per filter iteration
   const totalSessions = sessions?.length ?? 0;
-  const thisWeekSessions = sessions?.filter((s) => {
+  const thisWeekSessions = useMemo(() => {
+    if (!sessions) return 0;
     const now = new Date();
-    const sessionDate = new Date(s.startedAt);
-    const diffDays = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays <= 7;
-  }).length ?? 0;
+    return sessions.filter((s) => {
+      const sessionDate = new Date(s.startedAt);
+      const diffDays = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays <= 7;
+    }).length;
+  }, [sessions]);
 
   // Recent sessions (last 5)
   const recentSessions = sessions?.slice(0, 5) ?? [];
@@ -66,9 +69,9 @@ export default function HomeScreen() {
     }
   };
 
-  const handleRoutinePress = (routineId: number) => {
+  const handleRoutinePress = useCallback((routineId: number) => {
     setSelectedRoutineId(routineId);
-  };
+  }, []);
 
   const handleStartRoutineSession = async () => {
     if (!selectedRoutineId) return;
@@ -110,12 +113,13 @@ export default function HomeScreen() {
 
   const selectedRoutine = routines?.find((r) => r.id === selectedRoutineId);
 
-  const routineExercisesWithDetails = routineExercises
-    ?.map((re) => {
-      const exercise = allExercises?.find((e) => e.id === re.exerciseId);
-      return { ...re, exercise };
-    })
-    ?.sort((a, b) => a.order - b.order) ?? [];
+  const routineExercisesWithDetails = useMemo(() => {
+    if (!routineExercises) return [];
+    const exerciseMap = new Map(allExercises?.map((e) => [e.id, e]) ?? []);
+    return routineExercises
+      .map((re) => ({ ...re, exercise: exerciseMap.get(re.exerciseId) }))
+      .sort((a, b) => a.order - b.order);
+  }, [routineExercises, allExercises]);
 
   if (isLoading) {
     return <LoadingSpinner message={t('tabs.home.loadingDashboard')} />;
@@ -125,7 +129,7 @@ export default function HomeScreen() {
     <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Stats Dashboard */}
-      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, marginTop: spacing.md, borderRadius: borderRadius.lg }}>
+      <View style={styles.cardWithTopMargin}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.stats')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
@@ -153,7 +157,7 @@ export default function HomeScreen() {
 
       {/* Rutinas — up top, the main action */}
       {routines && routines.length > 0 && (
-        <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
+        <View style={styles.card}>
           <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.routines')}</Text>
           {routines.slice(0, 3).map((routine) => (
             <TouchableOpacity
@@ -171,13 +175,13 @@ export default function HomeScreen() {
       )}
 
       {/* Quick Start — compact, below routines */}
-      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 12, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
+      <View style={styles.card}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{t('tabs.home.quickStart')}</Text>
         <Button title={t('tabs.home.newSession')} onPress={handleStartEmptySession} compact />
       </View>
 
       {/* Recent Sessions */}
-      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, marginBottom: 24, marginHorizontal: spacing.md, borderRadius: borderRadius.lg }}>
+      <View style={styles.cardBottomMargin}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.recentSessions')}</Text>
         {recentSessions.length === 0 ? (
           <EmptyState
@@ -218,7 +222,7 @@ export default function HomeScreen() {
         onRequestClose={() => setSelectedRoutineId(null)}
       >
         <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+          style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
           onPress={() => setSelectedRoutineId(null)}
         >
           <Pressable
@@ -284,3 +288,28 @@ export default function HomeScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.bg.card,
+    padding: spacing.md + spacing.xs,
+    marginBottom: 12,
+    marginHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  cardWithTopMargin: {
+    backgroundColor: colors.bg.card,
+    padding: spacing.md + spacing.xs,
+    marginBottom: 12,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  cardBottomMargin: {
+    backgroundColor: colors.bg.card,
+    padding: spacing.md + spacing.xs,
+    marginBottom: 24,
+    marginHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+});
