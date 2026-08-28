@@ -39,9 +39,9 @@ function RootLayoutNav() {
 
   if (loading || !isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#141210' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg.primary }}>
         <ActivityIndicator size="large" color={colors.accent.primary} />
-        <Text style={{ color: '#7A7265', marginTop: 16 }}>Loading...</Text>
+        <Text style={{ color: colors.text.muted, marginTop: 16 }}>Loading...</Text>
       </View>
     );
   }
@@ -49,10 +49,10 @@ function RootLayoutNav() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#141210' },
-        headerTintColor: '#F2ECE2',
-        headerTitleStyle: { color: '#F2ECE2', fontWeight: '600' },
-        contentStyle: { backgroundColor: '#141210' },
+        headerStyle: { backgroundColor: colors.bg.primary },
+        headerTintColor: colors.text.primary,
+        headerTitleStyle: { color: colors.text.primary, fontWeight: '600' },
+        contentStyle: { backgroundColor: colors.bg.primary },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -76,10 +76,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="settings"
         options={{
-          title: 'Ajustes',
-          headerStyle: { backgroundColor: '#141210' },
-          headerTintColor: '#F2ECE2',
-          headerTitleStyle: { color: '#F2ECE2', fontWeight: '600' },
+          title: 'Settings',
         }}
       />
       <Stack.Screen

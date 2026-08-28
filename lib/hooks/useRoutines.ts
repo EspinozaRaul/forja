@@ -116,7 +116,6 @@ export function useRemoveExerciseFromRoutine() {
     mutationFn: (id: number) => removeExerciseFromRoutine(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
-      queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
   });
 }

@@ -134,6 +134,9 @@ export function useDuplicateSessionData() {
       queryClient.invalidateQueries({
         queryKey: [...SESSION_KEY, variables.targetSessionId, 'exercises'],
       });
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.targetSessionId, 'exercises', 'withSets'],
+      });
     },
   });
 }

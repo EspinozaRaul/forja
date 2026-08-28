@@ -1,5 +1,5 @@
 import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -69,12 +69,13 @@ export default function RoutineDetailScreen() {
   const replaceExercise = useReplaceRoutineExercise();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
-  const routineExercisesWithDetails = routineExercises
-    ?.map((re) => {
-      const exercise = allExercises?.find((e) => e.id === re.exerciseId);
-      return { ...re, exercise };
-    })
-    ?.sort((a, b) => a.order - b.order) ?? [];
+  const routineExercisesWithDetails = useMemo(() => {
+    if (!routineExercises) return [];
+    const exerciseMap = new Map(allExercises?.map((e) => [e.id, e]) ?? []);
+    return routineExercises
+      .map((re) => ({ ...re, exercise: exerciseMap.get(re.exerciseId) }))
+      .sort((a, b) => a.order - b.order);
+  }, [routineExercises, allExercises]);
 
   const handleStartEdit = () => {
     if (routine) {
@@ -400,14 +401,14 @@ export default function RoutineDetailScreen() {
             {lastSession && (
               <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
                 <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
-                {lastSession.exercises?.map((se: any) => {
+                {lastSession.exercises?.map((se) => {
                   const unit = resolveUnit(
                     allExercises?.find((e) => e.id === se.exerciseId)?.unit ?? null,
                     settingsUnit
                   );
                   return (
                   <View key={se.id} style={{ marginBottom: spacing.xs }}>
-                    <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{getExerciseName(se.exerciseName, i18n.language) || se.exerciseName || t('routine.detail.exerciseNumber', { order: se.order })}</Text>
+                    <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{getExerciseName(se.exerciseName ?? '', i18n.language) || se.exerciseName || t('routine.detail.exerciseNumber', { order: se.order })}</Text>
                     {summarizeSets(se.sets ?? []).map((line) => (
                       line.type === 'group' ? (
                         <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: 12, color: colors.accent.primary, fontFamily: fonts.bodyMedium, marginLeft: spacing.sm }}>

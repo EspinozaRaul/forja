@@ -7,7 +7,7 @@ export async function impactAsync(style: Haptics.ImpactFeedbackStyle = Haptics.I
     await Haptics.impactAsync(style);
   } catch (error) {
     // Haptics not available on this device
-    console.log('Haptics not available:', error);
+    if (__DEV__) console.log('Haptics not available:', error);
   }
 }
 
@@ -16,8 +16,7 @@ export async function notificationAsync(type: Haptics.NotificationFeedbackType =
   try {
     await Haptics.notificationAsync(type);
   } catch (error) {
-    // Haptics not available on this device
-    console.log('Haptics not available:', error);
+    if (__DEV__) console.log('Haptics not available:', error);
   }
 }
 
@@ -26,8 +25,7 @@ export async function selectionAsync() {
   try {
     await Haptics.selectionAsync();
   } catch (error) {
-    // Haptics not available on this device
-    console.log('Haptics not available:', error);
+    if (__DEV__) console.log('Haptics not available:', error);
   }
 }
 
