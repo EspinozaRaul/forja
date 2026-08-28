@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,10 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
   const { t } = useTranslation();
+
+  // Sync local state when props change (e.g., undo, server sync)
+  useEffect(() => { setReps(set.reps?.toString() ?? ''); }, [set.reps]);
+  useEffect(() => { setWeight(set.weight?.toString() ?? ''); }, [set.weight]);
 
   const isDropSet = set.method === 'dropset';
   const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';

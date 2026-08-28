@@ -42,8 +42,8 @@ export function useConfirmDialog() {
         visible: true,
         title,
         message,
-        confirmLabel: options?.confirmLabel ?? 'Confirmar',
-        cancelLabel: options?.cancelLabel ?? 'Cancelar',
+        confirmLabel: options?.confirmLabel,
+        cancelLabel: options?.cancelLabel,
         destructive: options?.destructive ?? false,
         onConfirm: () => {
           setDialog((prev) => ({ ...prev, visible: false }));

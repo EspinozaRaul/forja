@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -208,6 +208,10 @@ function DropRow({
 }) {
   const [reps, setReps] = useState(drop.reps?.toString() ?? '');
   const [weight, setWeight] = useState(drop.weight?.toString() ?? '');
+
+  // Sync local state when props change (e.g., undo, server sync)
+  useEffect(() => { setReps(drop.reps?.toString() ?? ''); }, [drop.reps]);
+  useEffect(() => { setWeight(drop.weight?.toString() ?? ''); }, [drop.weight]);
 
   // Per-drop previous data from any past session
   const prevDrop = previousDropFor?.(method, index + 1);

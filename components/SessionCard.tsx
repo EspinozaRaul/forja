@@ -36,7 +36,7 @@ export function SessionCard({ session, exerciseCount, routineName }: SessionCard
 
       {exerciseCount !== undefined && (
         <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>
-          {exerciseCount} ejercicio{exerciseCount !== 1 ? 's' : ''}
+          {t('session.exerciseCount', { count: exerciseCount })}
         </Text>
       )}
 
