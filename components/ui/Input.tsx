@@ -21,7 +21,7 @@ export function Input({ label, error, className = '', ...props }: InputProps) {
   };
 
   return (
-    <View style={{ marginBottom: spacing.md }} className={`mb-4 ${className}`}>
+    <View style={{ marginBottom: spacing.md }} className={className}>
       {label && (
         <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }}>{label}</Text>
       )}

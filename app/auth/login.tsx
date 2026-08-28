@@ -22,6 +22,11 @@ export default function LoginScreen() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showAlert(t('common.error'), t('auth.login.error.invalidEmail'));
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
@@ -180,11 +185,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: spacing.md,
     padding: spacing.xs,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.muted,
   },
   button: {
     backgroundColor: colors.accent.primary,

@@ -10,14 +10,6 @@ interface SessionCardProps {
   routineName?: string;
 }
 
-function formatDurationDisplay(seconds: number | null): string {
-  if (seconds === null) return '--:--';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins === 0) return `${secs}s`;
-  return `${mins}m ${secs}s`;
-}
-
 export function SessionCard({ session, exerciseCount, routineName }: SessionCardProps) {
   const { t } = useTranslation();
   const dateStr = formatRelativeDate(session.startedAt, t);

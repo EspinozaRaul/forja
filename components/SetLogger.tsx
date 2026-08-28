@@ -4,7 +4,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
-import type { Set, SetMethod } from '../lib/types';
+import type { Set } from '../lib/types';
 import { RirPicker } from './RirPicker';
 
 interface SetLoggerProps {

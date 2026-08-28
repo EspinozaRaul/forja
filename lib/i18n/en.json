@@ -12,6 +12,7 @@
       "signUp": "Create account",
       "error": {
         "emptyFields": "Please fill in all fields",
+        "invalidEmail": "Please enter a valid email",
         "invalidCredentials": "Invalid email or password",
         "generic": "Error signing in"
       }
@@ -29,6 +30,7 @@
       "signIn": "Sign in",
       "error": {
         "emptyFields": "Please fill in all fields",
+        "invalidEmail": "Please enter a valid email",
         "passwordMismatch": "Passwords don't match",
         "passwordTooShort": "Password must be at least 6 characters",
         "generic": "Error creating account"

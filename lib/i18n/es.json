@@ -12,6 +12,7 @@
       "signUp": "Crear cuenta",
       "error": {
         "emptyFields": "Completá todos los campos",
+        "invalidEmail": "Ingresá un email válido",
         "invalidCredentials": "Email o contraseña incorrectos",
         "generic": "Error al iniciar sesión"
       }
@@ -29,6 +30,7 @@
       "signIn": "Iniciar sesión",
       "error": {
         "emptyFields": "Completá todos los campos",
+        "invalidEmail": "Ingresá un email válido",
         "passwordMismatch": "Las contraseñas no coinciden",
         "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
         "generic": "Error al crear cuenta"

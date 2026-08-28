@@ -8,6 +8,8 @@ import { supabase } from '../../lib/supabase';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
+const MIN_PASSWORD_LENGTH = 6;
+
 export default function SignupScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -24,12 +26,17 @@ export default function SignupScreen() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showAlert(t('common.error'), t('auth.signup.error.invalidEmail'));
+      return;
+    }
+
     if (password !== confirmPassword) {
       showAlert(t('common.error'), t('auth.signup.error.passwordMismatch'));
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       showAlert(t('common.error'), t('auth.signup.error.passwordTooShort'));
       return;
     }
@@ -214,11 +221,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: spacing.md,
     padding: spacing.xs,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.muted,
   },
   button: {
     backgroundColor: colors.accent.primary,
