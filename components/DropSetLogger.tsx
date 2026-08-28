@@ -25,6 +25,7 @@ interface DropSetLoggerProps {
   onDeleteDrop: (dropIndex: number) => void;
   onDelete?: () => void;
   onCompleteAll: () => void;
+  onUncompleteAll?: () => void;
   onChangeMethod?: () => void;
   unit?: string;
   onUnitChange?: (unit: string) => void;
@@ -45,6 +46,7 @@ export function DropSetLogger({
   onDeleteDrop,
   onDelete,
   onCompleteAll,
+  onUncompleteAll,
   onChangeMethod,
   unit = 'kg',
   onUnitChange,
@@ -105,9 +107,9 @@ export function DropSetLogger({
         </TouchableOpacity>
       )}
 
-      {/* Check button — completely separate from toggle */}
+      {/* Check button — toggle: complete all / uncomplete all */}
       <TouchableOpacity
-        onPress={onCompleteAll}
+        onPress={() => allCompleted ? onUncompleteAll?.() : onCompleteAll()}
         style={[
           styles.checkButton,
           allCompleted ? styles.checkCompleted : styles.checkIncomplete,

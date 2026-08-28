@@ -201,52 +201,6 @@ export default function SessionSummaryScreen() {
         </View>
       )}
 
-      {/* Save as Routine Modal */}
-      {showSaveAsRoutine && (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
-              {t('session.history.saveAsRoutine')}
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: colors.bg.elevated,
-                borderWidth: 1,
-                borderColor: colors.border.primary,
-                borderRadius: borderRadius.sm,
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                fontSize: 16,
-                color: colors.text.primary,
-                marginBottom: spacing.md,
-              }}
-              value={routineName}
-              onChangeText={setRoutineName}
-              placeholder={t('session.history.routineNamePlaceholder')}
-              placeholderTextColor={colors.text.muted}
-              autoFocus
-            />
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <TouchableOpacity
-                onPress={() => setShowSaveAsRoutine(false)}
-                style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
-              >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSaveAsRoutine}
-                disabled={isSavingRoutine}
-                style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
-              >
-                <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>
-                  {isSavingRoutine ? t('session.history.saving') : t('common.save')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
       {/* Exercises and Sets */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>
@@ -274,6 +228,53 @@ export default function SessionSummaryScreen() {
 
       <View style={{ height: spacing.xxl }} />
     </ScrollView>
+
+    {/* Save as Routine Modal — outside ScrollView to prevent clipping */}
+    {showSaveAsRoutine && (
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg, zIndex: 1000 }}>
+        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
+          <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
+            {t('session.history.saveAsRoutine')}
+          </Text>
+          <TextInput
+            style={{
+              backgroundColor: colors.bg.elevated,
+              borderWidth: 1,
+              borderColor: colors.border.primary,
+              borderRadius: borderRadius.sm,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.sm,
+              fontSize: 16,
+              color: colors.text.primary,
+              marginBottom: spacing.md,
+            } as any}
+            value={routineName}
+            onChangeText={setRoutineName}
+            placeholder={t('session.history.routineNamePlaceholder')}
+            placeholderTextColor={colors.text.muted}
+            autoFocus
+          />
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <TouchableOpacity
+              onPress={() => setShowSaveAsRoutine(false)}
+              style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSaveAsRoutine}
+              disabled={isSavingRoutine}
+              style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
+            >
+              <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>
+                {isSavingRoutine ? t('session.history.saving') : t('common.save')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
+
     <ConfirmDialog
       visible={dialog.visible}
       title={dialog.title}

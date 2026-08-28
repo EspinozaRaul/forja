@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Session } from '../lib/types';
 import { formatRelativeDate } from '../lib/utils/format';
@@ -6,6 +7,7 @@ import { formatRelativeDate } from '../lib/utils/format';
 interface SessionCardProps {
   session: Session;
   exerciseCount?: number;
+  routineName?: string;
 }
 
 function formatDurationDisplay(seconds: number | null): string {
@@ -16,26 +18,30 @@ function formatDurationDisplay(seconds: number | null): string {
   return `${mins}m ${secs}s`;
 }
 
-export function SessionCard({ session, exerciseCount }: SessionCardProps) {
+export function SessionCard({ session, exerciseCount, routineName }: SessionCardProps) {
+  const { t } = useTranslation();
+  const dateStr = formatRelativeDate(session.startedAt, t);
+  const displayName = routineName || t('tabs.home.quickRoutine');
+
   return (
-    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }} className="bg-dark-card rounded-2xl p-4">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-semibold text-white">
-          {formatRelativeDate(session.startedAt)}
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} numberOfLines={1}>
+          {displayName}
         </Text>
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary }} className="text-sm font-medium text-dark-text-secondary">
-          {formatDurationDisplay(session.duration)}
+        <Text style={{ fontSize: 12, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
+          {dateStr}
         </Text>
       </View>
 
       {exerciseCount !== undefined && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }} className="text-sm text-dark-text-muted">
-          {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>
+          {exerciseCount} ejercicio{exerciseCount !== 1 ? 's' : ''}
         </Text>
       )}
 
       {session.notes && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.sm }} className="text-sm text-dark-text-muted mt-2" numberOfLines={2}>
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.sm }} numberOfLines={2}>
           {session.notes}
         </Text>
       )}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
@@ -46,7 +47,8 @@ export default function LoginScreen() {
 
       <View style={styles.form}>
         <TextInput
-          style={styles.input}
+          // @ts-ignore — tintColor works at runtime but isn't in RN types yet
+          style={[styles.input, { tintColor: colors.accent.primary }]}
           placeholder={t('auth.login.email')}
           placeholderTextColor={colors.text.muted}
           value={email}
@@ -56,7 +58,8 @@ export default function LoginScreen() {
         />
         <View style={styles.passwordContainer}>
           <TextInput
-            style={styles.input}
+            // @ts-ignore — tintColor works at runtime but isn't in RN types yet
+            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary }]}
             placeholder={t('auth.login.password')}
             placeholderTextColor={colors.text.muted}
             value={password}
@@ -67,7 +70,11 @@ export default function LoginScreen() {
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
           >
-            <Text style={styles.toggleText}>{showPassword ? t('common.hidePassword') : t('common.showPassword')}</Text>
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={20}
+              color={colors.text.muted}
+            />
           </TouchableOpacity>
         </View>
 
@@ -149,12 +156,12 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.bg.card,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     fontSize: 16,
     color: colors.text.primary,
     borderWidth: 1,
     borderColor: colors.border.primary,
-    flex: 1,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -163,6 +170,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border.primary,
+  },
+  passwordInput: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   toggleButton: {
     position: 'absolute',

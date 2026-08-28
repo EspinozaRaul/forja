@@ -8,18 +8,21 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * Format a date to a relative string (e.g., "Today", "Yesterday", "2 days ago")
+ * Format a date to a relative string using i18n
  */
-export function formatRelativeDate(date: Date | string): string {
+export function formatRelativeDate(date: Date | string, t?: (key: string, options?: Record<string, unknown>) => string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  if (diffDays === 0) return t ? t('common.today') : 'Hoy';
+  if (diffDays === 1) return t ? t('common.yesterday') : 'Ayer';
+  if (diffDays < 7) return t ? t('common.daysAgo', { count: diffDays }) : `Hace ${diffDays} días`;
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return t ? t('common.weeksAgo', { count: weeks }) : `Hace ${weeks} semanas`;
+  }
   return d.toLocaleDateString();
 }
 

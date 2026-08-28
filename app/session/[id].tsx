@@ -610,7 +610,7 @@ export default function SessionScreen() {
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
                           setRestDuration(restTime);
-                          setAutoStartTimer(false);
+                          setAutoStartTimer(true);
                           setRestartKey((k) => k + 1);
                           setShowRestTimer(true);
                         }}
@@ -630,7 +630,7 @@ export default function SessionScreen() {
                       onSetCompleted={(exerciseName, restTime) => {
                         setRestExerciseName(exerciseName);
                         setRestDuration(restTime);
-                        setAutoStartTimer(false);
+                        setAutoStartTimer(true);
                         setRestartKey((k) => k + 1);
                         setShowRestTimer(true);
                       }}
@@ -1041,6 +1041,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
           { weight: pendingConversionSet.weight ?? null, reps: pendingConversionSet.reps ?? null, completed: pendingConversionSet.completed, rir: pendingConversionSet.rir ?? null },
         ],
       }));
+
     } else if (method === 'superset') {
       // Super set is per-exercise: bridge into the partner-selection flow for this exercise
       setPendingConversionSetId(null);
@@ -1134,6 +1135,9 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       delete next[setId];
       return next;
     });
+
+    // Auto-expand the saved drop set so toggle works immediately
+    setExpandedDropSets((prev) => prev.includes(setNumber) ? prev : [...prev, setNumber]);
 
     try {
       // Now do the actual DB operations
@@ -1407,6 +1411,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                 method={set.method ?? 'dropset'}
               expanded={expandedDropSets.includes(set.setNumber)}
               onToggle={() => handleToggleDropSet(set.setNumber)}
+                onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
                 onUpdateDrop={(dropIndex, updates) => {
                   const dropSet = drops[dropIndex];
                   if (dropSet?.id) {
@@ -1460,6 +1465,17 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                   });
                    onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
                 }}
+                onUncompleteAll={() => {
+                  drops.forEach((drop) => {
+                    if (drop.id && drop.completed) {
+                      updateSet.mutateAsync({
+                        id: drop.id,
+                        data: { completed: false },
+                        sessionExerciseId: sessionExercise.id,
+                      });
+                    }
+                  });
+                }}
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
@@ -1483,6 +1499,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                   onUpdateDrop={(dropIndex, updates) => handleUpdateDrop(set.id, dropIndex, updates)}
                   onAddDrop={() => handleAddDropToSet(set.id)}
                   onDeleteDrop={(dropIndex) => handleDeleteDrop(set.id, dropIndex)}
+                  onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
                   onCompleteAll={() => {
                     setDropSetDrafts((prev) => ({
                       ...prev,
@@ -1490,30 +1507,19 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
                     }));
                     // Completing from the editor saves the drop set and exits editing mode
                     handleSaveDropSet(set.id);
-      onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                    onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                  }}
+                  onUncompleteAll={() => {
+                    setDropSetDrafts((prev) => ({
+                      ...prev,
+                      [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: false })),
+                    }));
                   }}
                   unit={unit}
                   previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                   previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                   maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
                 />
-                <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs, marginLeft: spacing.md + 16 }}>
-                  <TouchableOpacity
-                    onPress={() => handleSaveDropSet(set.id)}
-                    disabled={createDropSets.isPending || deleteSet.isPending}
-                    style={{ flex: 1, backgroundColor: createDropSets.isPending || deleteSet.isPending ? colors.text.muted : colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
-                  >
-                    <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 13 }}>
-                      {createDropSets.isPending || deleteSet.isPending ? t('session.dropSet.saving') : (dropSetMethod[set.id] ?? 'dropset') === 'dropset' ? t('session.dropSet.saveDropSet') : t('session.dropSet.saveSet')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleCancelDropSet(set.id)}
-                    style={{ flex: 1, backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
-                  >
-                    <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>{t('session.dropSet.cancel')}</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
             );
           }

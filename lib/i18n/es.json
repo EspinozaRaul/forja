@@ -63,7 +63,11 @@
     "success": "Éxito",
     "back": "Volver",
     "showPassword": "Ver",
-    "hidePassword": "Ocultar"
+    "hidePassword": "Ocultar",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "daysAgo": "Hace {{count}} días",
+    "weeksAgo": "Hace {{count}} semanas"
   },
   "tabs": {
     "home": {
@@ -84,6 +88,7 @@
       "startSession": "Iniciar sesión",
       "noExercisesInRoutine": "No hay ejercicios en esta rutina aún.",
       "unknownExercise": "Ejercicio desconocido",
+      "quickRoutine": "Rutina rápida",
       "failedToCreateSession": "Error al crear la sesión",
       "lastWeight": "último"
     },

@@ -145,7 +145,7 @@ export default function HomeScreen() {
           <View style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 2 }}>{t('tabs.home.mostFrequent')}</Text>
             <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-              {globalStats.mostFrequentExercise}
+              {getExerciseName(globalStats.mostFrequentExercise, i18n.language)}
             </Text>
           </View>
         )}
@@ -185,16 +185,19 @@ export default function HomeScreen() {
             message={t('tabs.home.noSessionsMessage')}
           />
         ) : (
-          recentSessions.map((session, index) => (
-            <AnimatedListItem key={session.id} index={index} delay={100}>
-              <TouchableOpacity
-                onPress={() => router.push(`/session/history/${session.id}`)}
-                style={{ marginBottom: spacing.sm }}
-              >
-                <SessionCard session={session} />
-              </TouchableOpacity>
-            </AnimatedListItem>
-          ))
+          recentSessions.map((session, index) => {
+            const routine = routines?.find((r) => r.id === session.routineId);
+            return (
+              <AnimatedListItem key={session.id} index={index} delay={100}>
+                <TouchableOpacity
+                  onPress={() => router.push(`/session/history/${session.id}`)}
+                  style={{ marginBottom: spacing.sm }}
+                >
+                  <SessionCard session={session} routineName={routine?.name} />
+                </TouchableOpacity>
+              </AnimatedListItem>
+            );
+          })
         )}
         {recentSessions.length > 0 && (
           <View style={{ marginTop: spacing.sm }}>
