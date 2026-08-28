@@ -116,7 +116,8 @@
       "folderCreateError": "No se pudo crear la carpeta",
       "moveError": "No se pudo mover la rutina",
       "deleteFolderTitle": "Eliminar carpeta",
-      "deleteFolderMessage": "¿Eliminar \"{{name}}\"? Las rutinas no se eliminarán, solo se desvincularán."
+      "deleteFolderMessage": "¿Eliminar \"{{name}}\"? Las rutinas no se eliminarán, solo se desvincularán.",
+      "deleteFolderError": "No se pudo eliminar la carpeta"
     },
     "progress": {
       "label": "Progreso"

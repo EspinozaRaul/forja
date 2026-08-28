@@ -62,6 +62,7 @@ export default function RoutinesScreen() {
           await deleteFolder.mutateAsync(folderId);
         } catch {
           await haptics.error();
+          showAlert(t('common.error'), t('tabs.routines.deleteFolderError'));
         }
       },
       { confirmLabel: t('common.delete'), destructive: true }

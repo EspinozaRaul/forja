@@ -116,7 +116,8 @@
       "folderCreateError": "Could not create folder",
       "moveError": "Could not move routine",
       "deleteFolderTitle": "Delete folder",
-      "deleteFolderMessage": "Delete \"{{name}}\"? Routines won't be deleted, just unlinked."
+      "deleteFolderMessage": "Delete \"{{name}}\"? Routines won't be deleted, just unlinked.",
+      "deleteFolderError": "Could not delete folder"
     },
     "progress": {
       "label": "Progress"

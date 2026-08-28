@@ -54,7 +54,7 @@ export const routineExercises = sqliteTable('routine_exercises', {
     .references(() => routines.id, { onDelete: 'cascade' })
     .notNull(),
   exerciseId: integer('exercise_id')
-    .references(() => exercises.id)
+    .references(() => exercises.id, { onDelete: 'restrict' })
     .notNull(),
   order: integer('order').notNull(),
   targetSets: integer('target_sets').default(DEFAULT_TARGET_SETS),
@@ -63,7 +63,7 @@ export const routineExercises = sqliteTable('routine_exercises', {
 
 export const sessions = sqliteTable('sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  routineId: integer('routine_id').references(() => routines.id),
+  routineId: integer('routine_id').references(() => routines.id, { onDelete: 'set null' }),
   startedAt: integer('started_at', { mode: 'timestamp' }).notNull(),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
   duration: integer('duration'),
@@ -76,7 +76,7 @@ export const sessionExercises = sqliteTable('session_exercises', {
     .references(() => sessions.id, { onDelete: 'cascade' })
     .notNull(),
   exerciseId: integer('exercise_id')
-    .references(() => exercises.id)
+    .references(() => exercises.id, { onDelete: 'restrict' })
     .notNull(),
   order: integer('order').notNull(),
   restTime: integer('rest_time').default(DEFAULT_REST_SECONDS), // seconds, per-exercise rest duration

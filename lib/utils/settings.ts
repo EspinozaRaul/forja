@@ -25,11 +25,36 @@ export const DEFAULT_SETTINGS: AppSettings = {
 // getSettings, kept fresh by setSettings.
 let cachedSettings: AppSettings = { ...DEFAULT_SETTINGS };
 
+function isWeightUnit(v: unknown): v is WeightUnit {
+  return v === 'kg' || v === 'lbs';
+}
+
+function isAppLanguage(v: unknown): v is AppLanguage {
+  return v === 'es' || v === 'en';
+}
+
+function validateSettings(stored: Record<string, unknown>): Partial<AppSettings> {
+  const result: Partial<AppSettings> = {};
+  if (typeof stored.weightUnit === 'string' && isWeightUnit(stored.weightUnit)) {
+    result.weightUnit = stored.weightUnit;
+  }
+  if (typeof stored.hapticsEnabled === 'boolean') {
+    result.hapticsEnabled = stored.hapticsEnabled;
+  }
+  if (typeof stored.soundEnabled === 'boolean') {
+    result.soundEnabled = stored.soundEnabled;
+  }
+  if (typeof stored.language === 'string' && isAppLanguage(stored.language)) {
+    result.language = stored.language;
+  }
+  return result;
+}
+
 export async function getSettings(): Promise<AppSettings> {
   try {
     const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
-    const stored = raw ? (JSON.parse(raw) as Partial<AppSettings>) : {};
-    cachedSettings = { ...DEFAULT_SETTINGS, ...stored };
+    const stored = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    cachedSettings = { ...DEFAULT_SETTINGS, ...validateSettings(stored) };
     return cachedSettings;
   } catch (error) {
     if (__DEV__) console.warn('Failed to load settings, using defaults:', error);
