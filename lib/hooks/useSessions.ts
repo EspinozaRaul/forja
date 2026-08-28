@@ -163,10 +163,12 @@ export function useUpdateExerciseRestTime() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, restTime }: { id: number; restTime: number }) =>
+    mutationFn: ({ id, restTime }: { id: number; restTime: number; sessionId: number }) =>
       updateSessionExerciseRestTime(id, restTime),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -175,10 +177,12 @@ export function useUpdateSessionExerciseOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, order }: { id: number; order: number }) =>
+    mutationFn: ({ id, order }: { id: number; order: number; sessionId: number }) =>
       updateSessionExerciseOrder(id, order),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -187,10 +191,12 @@ export function useReplaceSessionExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, exerciseId }: { id: number; exerciseId: number }) =>
+    mutationFn: ({ id, exerciseId }: { id: number; exerciseId: number; sessionId: number }) =>
       replaceSessionExercise(id, exerciseId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -199,9 +205,11 @@ export function useDeleteSessionExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteSessionExercise(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    mutationFn: ({ id, sessionId }: { id: number; sessionId: number }) => deleteSessionExercise(id),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -209,10 +217,12 @@ export function useDeleteSessionExercise() {
 export function useCreateSuperSetPair() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ firstId, secondId }: { firstId: number; secondId: number }) =>
+    mutationFn: ({ firstId, secondId, sessionId }: { firstId: number; secondId: number; sessionId: number }) =>
       createSuperSetPair(firstId, secondId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -220,9 +230,11 @@ export function useCreateSuperSetPair() {
 export function useUnlinkSuperSet() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (pairId: number) => unlinkSuperSetPair(pairId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    mutationFn: ({ pairId, sessionId }: { pairId: number; sessionId: number }) => unlinkSuperSetPair(pairId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }
@@ -230,10 +242,12 @@ export function useUnlinkSuperSet() {
 export function useUpdateSessionExerciseNotes() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, notes }: { id: number; notes: string | null }) =>
+    mutationFn: ({ id, notes, sessionId }: { id: number; notes: string | null; sessionId: number }) =>
       updateSessionExerciseNotes(id, notes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
     },
   });
 }

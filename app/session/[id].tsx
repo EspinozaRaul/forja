@@ -212,8 +212,8 @@ export default function SessionScreen() {
       queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], reordered);
 
       try {
-        await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1 });
-        await updateOrder.mutateAsync({ id: source.id, order: index + 1 });
+        await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1, sessionId });
+        await updateOrder.mutateAsync({ id: source.id, order: index + 1, sessionId });
       } catch (error) {
         queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
         showAlert(t('common.error'), t('session.error.reorder'));
@@ -232,7 +232,7 @@ export default function SessionScreen() {
     queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], updated);
     
     try {
-      await replaceSessionExercise.mutateAsync({ id: replaceId, exerciseId: exercise.id });
+      await replaceSessionExercise.mutateAsync({ id: replaceId, exerciseId: exercise.id, sessionId });
     } catch (error) {
       queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
       showAlert(t('common.error'), t('session.error.replace'));
@@ -460,7 +460,7 @@ export default function SessionScreen() {
     const firstId = supersetPartnerMode.id;
     setSupersetPartnerMode(null);
     try {
-      await createSuperSetPair.mutateAsync({ firstId, secondId: chosen.id });
+      await createSuperSetPair.mutateAsync({ firstId, secondId: chosen.id, sessionId });
     } catch (error) {
       showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
@@ -483,7 +483,7 @@ export default function SessionScreen() {
         (se) => se.exerciseId === exercise.id && se.id !== firstId && se.supersetPairId == null
       );
       if (existing) {
-        await createSuperSetPair.mutateAsync({ firstId, secondId: existing.id });
+        await createSuperSetPair.mutateAsync({ firstId, secondId: existing.id, sessionId });
         return;
       }
       // Otherwise add it to the session first, then pair with the new session exercise
@@ -497,7 +497,7 @@ export default function SessionScreen() {
         showAlert(t('common.error'), t('session.error.createSuperSet'));
         return;
       }
-      await createSuperSetPair.mutateAsync({ firstId, secondId: newSe.id });
+      await createSuperSetPair.mutateAsync({ firstId, secondId: newSe.id, sessionId });
     } catch (error) {
       showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
@@ -509,7 +509,7 @@ export default function SessionScreen() {
       t('session.confirm.deleteExerciseMessage', { name: getExerciseNameForSession(se) }),
       async () => {
         await haptics.warning();
-        await deleteSessionExercise.mutateAsync(se.id);
+        await deleteSessionExercise.mutateAsync({ id: se.id, sessionId });
       },
       { confirmLabel: t('session.confirm.delete'), destructive: true }
     );
@@ -525,11 +525,11 @@ export default function SessionScreen() {
       async () => {
         await haptics.warning();
         if (pairId != null) {
-          await unlinkSuperSet.mutateAsync(pairId);
+          await unlinkSuperSet.mutateAsync({ pairId, sessionId });
         }
-        await deleteSessionExercise.mutateAsync(members[0].id);
+        await deleteSessionExercise.mutateAsync({ id: members[0].id, sessionId });
         if (members[1]) {
-          await deleteSessionExercise.mutateAsync(members[1].id);
+          await deleteSessionExercise.mutateAsync({ id: members[1].id, sessionId });
         }
       },
       { confirmLabel: t('session.confirm.delete'), destructive: true }
@@ -610,6 +610,7 @@ export default function SessionScreen() {
                       <SupersetBlock
                         key={members[0].id}
                         exercises={members}
+                        sessionId={sessionId}
                         nameA={getExerciseNameForSession(members[0])}
                         nameB={getExerciseNameForSession(members[1])}
                         previousWeightFor={getPreviousForExercise}
@@ -633,6 +634,7 @@ export default function SessionScreen() {
                   <Animated.View key={se.id} layout={LinearTransition.duration(200)}>
                     <SessionExerciseItem
                       sessionExercise={se}
+                      sessionId={sessionId}
                       previousWeightFor={getPreviousForExercise}
                       maxWeightFor={getMaxWeightForExercise}
                       onNewRecord={handleNewRecord}
@@ -897,8 +899,9 @@ function CollapseChevron({ collapsed, onPress }: { collapsed: boolean; onPress: 
   );
 }
 
-function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
+function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
+  sessionId: number;
   previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
@@ -1017,7 +1020,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
   };
 
   const handleSetRestTime = async (seconds: number) => {
-    await updateRestTime.mutateAsync({ id: sessionExercise.id, restTime: seconds });
+    await updateRestTime.mutateAsync({ id: sessionExercise.id, restTime: seconds, sessionId });
     setShowRestPicker(false);
   };
 
@@ -1268,7 +1271,7 @@ function SessionExerciseItem({ sessionExercise, previousWeightFor, maxWeightFor,
       {/* Exercise notes */}
       <ExerciseNotes
         notes={sessionExercise.notes}
-        onNotesChange={(notes) => updateNotes.mutateAsync({ id: sessionExercise.id, notes })}
+        onNotesChange={(notes) => updateNotes.mutateAsync({ id: sessionExercise.id, notes, sessionId })}
       />
 
       {/* Rest time picker */}
@@ -1683,8 +1686,9 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
   );
 }
 
-function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onDeletePair }: {
+function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onDeletePair }: {
   exercises: SessionExercise[];
+  sessionId: number;
   nameA: string;
   nameB: string;
   previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
@@ -1829,7 +1833,7 @@ function SupersetBlock({ exercises, nameA, nameB, previousWeightFor, maxWeightFo
     sbShowConfirm(
       t('session.confirm.unlinkSuperSet'),
       t('session.confirm.unlinkSuperSetMessage'),
-      () => unlinkSuperSet.mutateAsync(pairId),
+      () => unlinkSuperSet.mutateAsync({ pairId, sessionId }),
       { confirmLabel: t('session.confirm.unlink'), destructive: true }
     );
   };
