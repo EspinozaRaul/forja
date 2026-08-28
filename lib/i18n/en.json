@@ -386,6 +386,7 @@
     "history": {
       "loadingMessage": "Loading session summary...",
       "notFound": "Session not found",
+      "defaultRoutineName": "Routine {{date}}",
       "saveNotesFailed": "Failed to save notes",
       "nameRequired": "Enter a name for the routine",
       "noExercisesToSave": "No exercises to save",

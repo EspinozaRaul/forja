@@ -1,5 +1,5 @@
 import { Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession, useSessionExercises, useCompleteSession } from '../../../lib/hooks/useSessions';
 import { useExercise } from '../../../lib/hooks/useExercises';
@@ -22,15 +22,14 @@ import { useTranslation } from 'react-i18next';
 export default function SessionSummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const sessionId = parseInt(id, 10);
-
   const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
   const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
   const completeSession = useCompleteSession();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
-  const { t, i18n } = useTranslation();
 
   const session = sessions?.[0];
   const isLoading = sessionLoading || exercisesLoading;
@@ -40,6 +39,19 @@ export default function SessionSummaryScreen() {
   const [showSaveAsRoutine, setShowSaveAsRoutine] = useState(false);
   const [routineName, setRoutineName] = useState('');
   const [isSavingRoutine, setIsSavingRoutine] = useState(false);
+
+  // Sync notes when session data arrives
+  useEffect(() => {
+    if (session) setNotes(session.notes ?? '');
+  }, [session?.id]);
+
+  if (isNaN(sessionId)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+        <EmptyState title={t('common.error')} message="Invalid session ID" />
+      </View>
+    );
+  }
 
   if (isLoading) {
     return <LoadingSpinner message={t('session.history.loadingMessage')} />;
@@ -178,7 +190,7 @@ export default function SessionSummaryScreen() {
         <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
           <TouchableOpacity
             onPress={() => {
-              setRoutineName(`Rutina ${new Date().toLocaleDateString('es-AR')}`);
+              setRoutineName(t('session.history.defaultRoutineName', { date: new Date().toLocaleDateString() }));
               setShowSaveAsRoutine(true);
             }}
             style={{

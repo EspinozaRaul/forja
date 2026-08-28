@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../constants/routine-defaults';
 
 export const categories = sqliteTable('categories', {
@@ -82,7 +82,10 @@ export const sessionExercises = sqliteTable('session_exercises', {
   restTime: integer('rest_time').default(DEFAULT_REST_SECONDS), // seconds, per-exercise rest duration
   notes: text('notes'),
   supersetPairId: integer('superset_pair_id'), // shared pair id; both exercises of a super set get the same value
-});
+}, (table) => ({
+  sessionIdx: index('se_session_idx').on(table.sessionId),
+  exerciseIdx: index('se_exercise_idx').on(table.exerciseId),
+}));
 
 export const sets = sqliteTable('sets', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -94,9 +97,11 @@ export const sets = sqliteTable('sets', {
   weight: real('weight'),
   completed: integer('completed', { mode: 'boolean' }).default(false).notNull(),
   // Drop set support
-  method: text('method').default('linear'), // 'linear', 'dropset', 'superset', 'pyramid_up', 'pyramid_down'
+  method: text('method').default('linear'), // SetMethod: 'linear', 'dropset', 'rest_pause', 'cluster', 'superset', 'partial', 'pyramid_up', 'pyramid_down'
   dropOrder: integer('drop_order').default(0), // order within a drop set group (0 = not a drop)
   isDropGroup: integer('is_drop_group', { mode: 'boolean' }).default(false), // true if this set STARTS a drop set
   rir: integer('rir'), // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  sessionExerciseIdx: index('sets_session_exercise_idx').on(table.sessionExerciseId),
+}));

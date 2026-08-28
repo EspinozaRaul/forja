@@ -30,6 +30,14 @@ export default function RoutineDetailScreen() {
   const insets = useSafeAreaInsets();
   const routineId = parseInt(id, 10);
 
+  if (isNaN(routineId)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+        <EmptyState title={t('common.error')} message="Invalid routine ID" />
+      </View>
+    );
+  }
+
   const { data: routines, isLoading: routineLoading } = useRoutine(routineId);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineId);
   const { data: allExercises, isLoading: allExercisesLoading } = useExercises();
@@ -54,7 +62,7 @@ export default function RoutineDetailScreen() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: t('exercise.picker.allMuscles'), selectedIds: [] as number[] });
   const [showStartModal, setShowStartModal] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
@@ -383,7 +391,7 @@ export default function RoutineDetailScreen() {
       />
 
       <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
           <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
             <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
             <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>

@@ -31,7 +31,8 @@ export async function getSettings(): Promise<AppSettings> {
     const stored = raw ? (JSON.parse(raw) as Partial<AppSettings>) : {};
     cachedSettings = { ...DEFAULT_SETTINGS, ...stored };
     return cachedSettings;
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn('Failed to load settings, using defaults:', error);
     cachedSettings = { ...DEFAULT_SETTINGS };
     return cachedSettings;
   }
@@ -39,8 +40,8 @@ export async function getSettings(): Promise<AppSettings> {
 
 export async function setSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const merged = { ...cachedSettings, ...patch };
+  cachedSettings = merged; // sync — no interleaving possible
   await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-  cachedSettings = merged;
   return merged;
 }
 
@@ -65,6 +66,7 @@ export function useSettings() {
         ...(old ?? DEFAULT_SETTINGS),
         ...patch,
       }));
+      cachedSettings = { ...cachedSettings, ...patch }; // keep module cache in sync
       return { previous };
     },
     onError: (_error, _patch, context) => {
