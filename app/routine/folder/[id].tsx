@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
-import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine } from '../../../lib/hooks/useRoutines';
-import { useDeleteRoutine } from '../../../lib/hooks/useRoutines';
+import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine, useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
@@ -22,6 +21,15 @@ export default function FolderDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const folderId = Number(id);
+
+  // Guard against NaN from malformed route params
+  if (isNaN(folderId)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('common.invalidId')}</Text>
+      </View>
+    );
+  }
 
   const { data: folders, isLoading: loadingFolder } = useFolder(folderId);
   const { data: routines, isLoading: loadingRoutines } = useRoutinesByFolder(folderId);
@@ -61,6 +69,7 @@ export default function FolderDetailScreen() {
       setShowEditModal(false);
     } catch {
       await haptics.error();
+      showAlert(t('common.error'), t('routine.folder.saveFailed'));
     }
   };
 
@@ -209,7 +218,7 @@ export default function FolderDetailScreen() {
 
       {/* Edit Modal */}
       <Modal visible={showEditModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
             <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>{t('routine.folder.editTitle')}</Text>
 

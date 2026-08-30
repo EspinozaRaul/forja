@@ -16,17 +16,27 @@ import { useTranslation } from 'react-i18next';
 export default function NewSessionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { routineId } = useLocalSearchParams<{ routineId?: string }>();
   const createSession = useCreateSession();
 
   const routineIdNum = routineId ? parseInt(routineId, 10) : undefined;
+
+  // Guard against NaN from malformed route params
+  if (routineId && isNaN(routineIdNum!)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('common.invalidId')}</Text>
+      </View>
+    );
+  }
+
   const { data: routines, isLoading: routineLoading } = useRoutine(routineIdNum ?? 0);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineIdNum ?? 0);
   const { data: lastSession } = useLastSessionForRoutine(routineIdNum ?? 0);
   const addExerciseToSession = useAddExerciseToSession();
   const createSet = useCreateSet();
   const { dialog, showAlert } = useConfirmDialog();
-  const { t } = useTranslation();
 
   const routine = routines?.[0];
   const isLoading = routineIdNum ? (routineLoading || exercisesLoading) : false;

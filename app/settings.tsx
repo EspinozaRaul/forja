@@ -1,5 +1,4 @@
-import { Text, View, ScrollView, TouchableOpacity, Switch, Modal, Pressable } from 'react-native';
-import { useState } from 'react';
+import { Text, View, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
@@ -51,9 +50,7 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { data: settings, isLoading, update } = useSettings();
   const { user, signOut } = useAuth();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
-  const { dialog, showAlert } = useConfirmDialog();
+  const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
   if (isLoading) {
     return <LoadingSpinner message={t('common.loading')} />;
@@ -78,13 +75,10 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = async () => {
-    setSigningOut(true);
     const { error } = await signOut();
     if (error) {
-      setSigningOut(false);
-      setConfirmSignOut(false);
       await haptics.error();
-      showAlert('Error', 'No se pudo cerrar sesión.');
+      showAlert(t('common.error'), t('settings.signOutFailed'));
       return;
     }
     router.replace('/auth/login');
@@ -119,7 +113,7 @@ export default function SettingsScreen() {
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
             <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.weightUnit')}</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Por defecto para ejercicios nuevos.</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.weightUnitDefault')}</Text>
           </View>
           <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
             {(['kg', 'lbs'] as const).map((unit) => {
@@ -140,8 +134,8 @@ export default function SettingsScreen() {
         </Row>
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Vibración</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Feedback táctil al tocar.</Text>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.vibration')}</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.vibrationDescription')}</Text>
           </View>
           <Switch
             value={settings.hapticsEnabled}
@@ -152,8 +146,8 @@ export default function SettingsScreen() {
         </Row>
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Sonido</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>Sonido del timer de descanso.</Text>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.sound')}</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.soundDescription')}</Text>
           </View>
           <Switch
             value={settings.soundEnabled}
@@ -164,7 +158,7 @@ export default function SettingsScreen() {
         </Row>
       </View>
 
-      <SectionHeader title="Cuenta" />
+      <SectionHeader title={t('settings.account')} />
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
         <Row first>
           <View style={{ flex: 1, marginRight: spacing.md }}>
@@ -175,55 +169,16 @@ export default function SettingsScreen() {
           </Text>
         </Row>
         <Row>
-          <TouchableOpacity onPress={() => setConfirmSignOut(true)} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>Cerrar sesión</Text>
+          <TouchableOpacity onPress={() => showConfirm(
+            t('settings.signOut'),
+            t('settings.signOutConfirm'),
+            handleSignOut,
+            { confirmLabel: t('settings.signOut'), destructive: true }
+          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.signOut')}</Text>
           </TouchableOpacity>
         </Row>
       </View>
-
-      <Modal
-        visible={confirmSignOut}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          if (!signingOut) setConfirmSignOut(false);
-        }}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
-          onPress={() => {
-            if (!signingOut) setConfirmSignOut(false);
-          }}
-        >
-          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
-              Cerrar sesión
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
-              ¿Seguro que querés cerrar sesión?
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Volver"
-                  variant="secondary"
-                  onPress={() => setConfirmSignOut(false)}
-                  disabled={signingOut}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Cerrar sesión"
-                  variant="danger"
-                  onPress={handleSignOut}
-                  loading={signingOut}
-                  disabled={signingOut}
-                />
-              </View>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </ScrollView>
     <ConfirmDialog
       visible={dialog.visible}

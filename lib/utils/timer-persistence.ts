@@ -26,9 +26,14 @@ export async function saveSessionTimer(state: SessionTimerState): Promise<void> 
 export async function loadSessionTimer(sessionId: string): Promise<SessionTimerState | null> {
   const raw = await AsyncStorage.getItem(SESSION_TIMER_KEY);
   if (!raw) return null;
-  const state: SessionTimerState = JSON.parse(raw);
-  if (state.sessionId !== sessionId) return null;
-  return state;
+  try {
+    const state: SessionTimerState = JSON.parse(raw);
+    if (state.sessionId !== sessionId) return null;
+    return state;
+  } catch {
+    await AsyncStorage.removeItem(SESSION_TIMER_KEY);
+    return null;
+  }
 }
 
 export async function clearSessionTimer(): Promise<void> {
@@ -57,9 +62,14 @@ export async function saveRestTimer(state: RestTimerState): Promise<void> {
 export async function loadRestTimer(sessionId: string): Promise<RestTimerState | null> {
   const raw = await AsyncStorage.getItem(REST_TIMER_KEY);
   if (!raw) return null;
-  const state: RestTimerState = JSON.parse(raw);
-  if (state.sessionId !== sessionId) return null;
-  return state;
+  try {
+    const state: RestTimerState = JSON.parse(raw);
+    if (state.sessionId !== sessionId) return null;
+    return state;
+  } catch {
+    await AsyncStorage.removeItem(REST_TIMER_KEY);
+    return null;
+  }
 }
 
 export async function clearRestTimer(): Promise<void> {

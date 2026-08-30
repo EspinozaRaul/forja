@@ -48,9 +48,15 @@
       "en": "English"
     },
     "weightUnit": "Unidad de peso",
+    "weightUnitDefault": "Por defecto para ejercicios nuevos.",
     "vibration": "Vibración",
+    "vibrationDescription": "Feedback táctil al tocar.",
     "sound": "Sonido",
+    "soundDescription": "Sonido del timer de descanso.",
+    "account": "Cuenta",
     "signOut": "Cerrar sesión",
+    "signOutConfirm": "¿Seguro que querés cerrar sesión?",
+    "signOutFailed": "No se pudo cerrar sesión.",
     "deleteAccount": "Eliminar cuenta",
     "version": "Versión"
   },
@@ -69,7 +75,8 @@
     "today": "Hoy",
     "yesterday": "Ayer",
     "daysAgo": "Hace {{count}} días",
-    "weeksAgo": "Hace {{count}} semanas"
+    "weeksAgo": "Hace {{count}} semanas",
+    "invalidId": "ID inválido"
   },
   "tabs": {
     "home": {
@@ -283,7 +290,8 @@
       "deleteRoutineMessage": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
       "unlinkTitle": "Quitar de carpeta",
       "unlinkMessage": "¿Quitar \"{{name}}\" de esta carpeta? La rutina no se elimina.",
-      "remove": "Quitar"
+      "remove": "Quitar",
+      "saveFailed": "No se pudo guardar la carpeta"
     }
   },
   "session": {

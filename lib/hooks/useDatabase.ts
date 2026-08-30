@@ -13,17 +13,19 @@ export function useDatabase() {
       return;
     }
 
+    let cancelled = false;
     async function init() {
       try {
         await initializeDatabase();
         dbInitialized = true;
-        setIsReady(true);
+        if (!cancelled) setIsReady(true);
       } catch (e) {
-        setError(e instanceof Error ? e : new Error(String(e)));
+        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
       }
     }
 
     init();
+    return () => { cancelled = true; };
   }, []);
 
   return { isReady, error };

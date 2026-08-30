@@ -36,25 +36,23 @@ export function findPreviousSetWeight(
   sets: Set[],
   currentSetId: number
 ): number | null {
+  const currentSet = sets.find((s) => s.id === currentSetId);
+  if (!currentSet) return null;
+
   const candidates = sets.filter(
     (s) =>
       s.id !== currentSetId &&
+      (s.setNumber ?? 0) < (currentSet.setNumber ?? 0) &&
       s.weight != null &&
       s.weight > 0 &&
       (s.isDropGroup === true || s.dropOrder == null || s.dropOrder === 0)
   );
   if (candidates.length === 0) return null;
 
+  // Return the heaviest qualifying earlier set (most recent high-water mark)
   let best = candidates[0];
   for (const s of candidates) {
-    if (s.setNumber > best.setNumber) {
-      best = s;
-    } else if (
-      s.setNumber === best.setNumber &&
-      (s.dropOrder == null || s.dropOrder === 0) &&
-      best.dropOrder != null &&
-      best.dropOrder > 0
-    ) {
+    if ((s.weight ?? 0) > (best.weight ?? 0)) {
       best = s;
     }
   }

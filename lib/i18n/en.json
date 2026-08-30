@@ -48,9 +48,15 @@
       "en": "English"
     },
     "weightUnit": "Weight unit",
+    "weightUnitDefault": "Default for new exercises.",
     "vibration": "Vibration",
+    "vibrationDescription": "Haptic feedback on tap.",
     "sound": "Sound",
+    "soundDescription": "Rest timer sound.",
+    "account": "Account",
     "signOut": "Sign out",
+    "signOutConfirm": "Are you sure you want to sign out?",
+    "signOutFailed": "Could not sign out.",
     "deleteAccount": "Delete account",
     "version": "Version"
   },
@@ -69,7 +75,8 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "{{count}} days ago",
-    "weeksAgo": "{{count}} weeks ago"
+    "weeksAgo": "{{count}} weeks ago",
+    "invalidId": "Invalid ID"
   },
   "tabs": {
     "home": {
@@ -283,7 +290,8 @@
       "deleteRoutineMessage": "Delete \"{{name}}\"? This action cannot be undone.",
       "unlinkTitle": "Remove from folder",
       "unlinkMessage": "Remove \"{{name}}\" from this folder? The routine won't be deleted.",
-      "remove": "Remove"
+      "remove": "Remove",
+      "saveFailed": "Could not save folder"
     }
   },
   "session": {
