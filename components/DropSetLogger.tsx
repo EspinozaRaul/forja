@@ -59,7 +59,7 @@ export function DropSetLogger({
   const swipeableRef = useRef<Swipeable>(null);
   const { t } = useTranslation();
 
-  const badgeText = method === 'dropset' ? 'Drop' : method === 'rest_pause' ? 'Rest' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop';
+  const badgeText = method === 'dropset' ? 'Drop Set' : method === 'rest_pause' ? 'Rest Pause' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop Set';
   const segmentCount = drops.length;
   const unitLabel = t(`methods.${method}.unitLabel`);
   const unitLabelPlural = t(`methods.${method}.unitLabelPlural`);
@@ -81,13 +81,13 @@ export function DropSetLogger({
   // Header row: compact summary without inputs
   const renderHeader = () => (
     <View style={styles.container}>
-      {/* Toggle area — number + badge + count flow horizontally */}
+      {/* Toggle area — number + badge stacked, count flows right */}
       <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea}>
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
-        </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badgeText}</Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badgeText}</Text>
+          </View>
         </View>
         <Text style={styles.segmentCount}>{segmentCount}</Text>
       </TouchableOpacity>
@@ -313,8 +313,8 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 24,
-    alignItems: 'center',
+    width: 72,
+    alignItems: 'flex-start',
   },
   serieNumber: {
     fontSize: 14,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
-    marginLeft: spacing.xs,
+    marginTop: 2,
   },
   badgeText: {
     fontSize: 9,
@@ -340,6 +340,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.muted,
     marginLeft: 4,
+    alignSelf: 'center',
   },
   inputCell: {
     flex: 1,

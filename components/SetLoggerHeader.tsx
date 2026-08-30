@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
-    width: 24,
-    textAlign: 'center',
+    width: 72,
+    textAlign: 'left',
     letterSpacing: 0.5,
   },
   anteriorHeader: {

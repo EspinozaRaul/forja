@@ -87,14 +87,12 @@ export function PartialSetLogger({
     >
       <View style={styles.outerContainer}>
         <View style={styles.container}>
-          {/* Set number */}
+          {/* Set number + badge stacked */}
           <View style={styles.serieCell}>
             <Text style={styles.serieNumber}>{set.setNumber}</Text>
-          </View>
-
-          {/* Badge */}
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Partial</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Partial</Text>
+            </View>
           </View>
 
           {/* Previous data */}
@@ -178,8 +176,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   serieCell: {
-    width: 24,
-    alignItems: 'center',
+    width: 72,
+    alignItems: 'flex-start',
   },
   serieNumber: {
     fontSize: 14,
@@ -192,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
-    marginLeft: spacing.xs,
+    marginTop: 2,
   },
   badgeText: {
     fontSize: 9,
