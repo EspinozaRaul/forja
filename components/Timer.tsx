@@ -35,11 +35,16 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
   const startTimestampRef = useRef<number>(0);
   const pausedElapsedRef = useRef<number>(0);
   const sessionIdRef = useRef(sessionId);
+  const runningRef = useRef(running);
 
-  // Keep session ID ref fresh
+  // Keep refs fresh
   useEffect(() => {
     sessionIdRef.current = sessionId;
   }, [sessionId]);
+
+  useEffect(() => {
+    runningRef.current = running;
+  }, [running]);
 
   // Notify parent of elapsed time changes
   useEffect(() => {
@@ -93,7 +98,21 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
       // Restore from saved state
       startTimestampRef.current = saved.startTimestamp;
       pausedElapsedRef.current = saved.pausedElapsed;
-      setRunning(saved.isRunning);
+      
+      // If autoStart, resume from paused state
+      if (autoStart) {
+        const now = Date.now();
+        startTimestampRef.current = now;
+        setRunning(true);
+        saveSessionTimer({
+          sessionId,
+          startTimestamp: now,
+          pausedElapsed: saved.pausedElapsed,
+          isRunning: true,
+        });
+      } else {
+        setRunning(saved.isRunning);
+      }
       setElapsed(calculateSessionElapsed(saved));
     });
   }, [sessionId, autoStart]);
@@ -144,31 +163,42 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
     if (sessionId) clearSessionTimer();
   };
 
-  // Cleanup on unmount
+  // Auto-pause on unmount — save paused state
   useEffect(() => {
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (runningRef.current) {
+        pausedElapsedRef.current = pausedElapsedRef.current +
+          Math.floor((Date.now() - startTimestampRef.current) / 1000);
+        if (sessionIdRef.current) {
+          saveSessionTimer({
+            sessionId: sessionIdRef.current,
+            startTimestamp: startTimestampRef.current,
+            pausedElapsed: pausedElapsedRef.current,
+            isRunning: false,
+          });
+        }
+      }
     };
-  }, []);
+  }, []); // intentionally empty — runs once on unmount
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm }}>
-      <Text style={{ fontSize: 20, fontFamily: fonts.display, fontWeight: '600', color: colors.accent.primary }}>
+      <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: '600', color: colors.accent.primary, fontVariant: ['tabular-nums'] }}>
         {formatTime(elapsed)}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs, alignItems: 'center' }}>
         {!running ? (
           <TouchableOpacity onPress={handleStart} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.accent.primary, fontWeight: '600', fontSize: 13 }}>{t('timer.start')}</Text>
+            <Text style={{ color: colors.accent.primary, fontWeight: '600', fontSize: 14 }}>{t('timer.start')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleStop} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>{t('timer.pause')}</Text>
+            <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 14 }}>{t('timer.pause')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={handleReset} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-          <Text style={{ color: colors.text.muted, fontWeight: '600', fontSize: 13 }}>{t('timer.reset')}</Text>
+          <Text style={{ color: colors.text.muted, fontWeight: '600', fontSize: 14 }}>{t('timer.reset')}</Text>
         </TouchableOpacity>
       </View>
     </View>

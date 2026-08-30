@@ -275,6 +275,16 @@ export async function getSessionById(id: number) {
   return db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
 }
 
+export async function getActiveSession(): Promise<typeof sessions.$inferSelect | null> {
+  const result = await db
+    .select()
+    .from(sessions)
+    .where(isNull(sessions.completedAt))
+    .orderBy(desc(sessions.startedAt))
+    .limit(1);
+  return result[0] ?? null;
+}
+
 export async function createSession(data: {
   routineId?: number;
   startedAt?: Date;

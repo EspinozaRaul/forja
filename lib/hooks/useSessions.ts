@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getAllSessions,
   getSessionById,
+  getActiveSession,
   createSession,
   completeSession,
   deleteSession,
@@ -40,6 +41,14 @@ export function useSession(id: number) {
   });
 }
 
+export function useActiveSession() {
+  return useQuery({
+    queryKey: ['activeSession'],
+    queryFn: getActiveSession,
+    refetchInterval: 60000,
+  });
+}
+
 export function useSessionExercises(sessionId: number) {
   return useQuery<SessionExercise[]>({
     queryKey: [...SESSION_KEY, sessionId, 'exercises'],
@@ -63,6 +72,7 @@ export function useCreateSession() {
     mutationFn: (data: { routineId?: number }) => createSession(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['activeSession'] });
     },
   });
 }
@@ -80,6 +90,7 @@ export function useCompleteSession() {
     }) => completeSession(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['activeSession'] });
     },
   });
 }
@@ -91,6 +102,7 @@ export function useDeleteSession() {
     mutationFn: (id: number) => deleteSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['activeSession'] });
     },
   });
 }

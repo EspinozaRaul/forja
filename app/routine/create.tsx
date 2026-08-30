@@ -238,7 +238,7 @@ export default function CreateRoutineScreen() {
         onSelect={replaceIndex !== null ? handleReplaceExercise : handleSelectExercise}
         onMultiSelect={handleMultiSelectExercises}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
-        multiSelect={replaceIndex === null}
+        mode={replaceIndex === null ? 'multi' : 'single'}
         state={pickerState}
         onStateChange={setPickerState}
       />

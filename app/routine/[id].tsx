@@ -386,7 +386,7 @@ export default function RoutineDetailScreen() {
         onSelect={replaceIndex !== null ? handleReplaceExercise : handleAddExercise}
         onMultiSelect={handleMultiAddExercises}
         onClose={() => { setShowPicker(false); setReplaceIndex(null); }}
-        multiSelect={replaceIndex === null}
+        mode={replaceIndex === null ? 'multi' : 'single'}
         state={pickerState}
         onStateChange={setPickerState}
       />

@@ -546,7 +546,7 @@ export default function SessionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
             <Text style={{ fontSize: 20, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
+           <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
         </View>
         <Timer sessionId={id} onTimeUpdate={setElapsedSeconds} autoStart />
       </View>

@@ -28,7 +28,10 @@ interface ExercisePickerProps {
   onSelect: (exercise: Exercise) => void;
   onMultiSelect?: (exercises: Exercise[]) => void;
   onClose: () => void;
+  mode?: 'single' | 'multi';
+  /** @deprecated Use mode instead. Kept for backward compat. */
   multiSelect?: boolean;
+  initialSelected?: number[];
   // Controlled state (optional): when provided with onStateChange, the parent
   // owns search/filter/selection so they survive navigating to an exercise
   // preview and coming back. Falls back to internal state when omitted.
@@ -59,13 +62,14 @@ function getExerciseNameFromExercise(exercise: Exercise, lang: string): string {
   return getExerciseName(exercise.name, lang);
 }
 
-export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onClose, multiSelect = false, state: controlledState, onStateChange }: ExercisePickerProps) {
+export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, onClose, mode, multiSelect: legacyMultiSelect, initialSelected, state: controlledState, onStateChange }: ExercisePickerProps) {
   const { dialog, showAlert } = useConfirmDialog();
   const { t, i18n } = useTranslation();
+  const isMulti = mode === 'multi' || (!mode && legacyMultiSelect === true);
   // Internal fallback state — used only when the parent does not control state
   const [internalSearch, setInternalSearch] = useState('');
   const [internalMuscle, setInternalMuscle] = useState('all');
-  const [internalIds, setInternalIds] = useState<Set<number>>(new Set());
+  const [internalIds, setInternalIds] = useState<Set<number>>(new Set(initialSelected ?? []));
 
   const isControlled = !!controlledState && !!onStateChange;
   const search = isControlled ? controlledState.search : internalSearch;
@@ -257,15 +261,9 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
               <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '600' }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.primary }}>
-              {multiSelect ? t('exercisePicker.selectCount', { count: selectedIds.size }) : t('exercisePicker.selectTitle')}
+              {isMulti ? t('exercisePicker.selectCount', { count: selectedIds.size }) : t('exercisePicker.selectTitle')}
             </Text>
-            {multiSelect && selectedIds.size > 0 ? (
-              <TouchableOpacity onPress={handleConfirmMultiSelect} style={{ width: 80, alignItems: 'flex-end' }}>
-                <Text style={{ color: colors.accent.primary, fontSize: 16, fontWeight: '700' }}>{t('exercisePicker.done')}</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={{ width: 80 }} />
-            )}
+            <View style={{ width: 80 }} />
           </View>
 
           {/* Search */}
@@ -313,7 +311,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.sm }}>
             <Text style={{ fontSize: 12, color: colors.text.muted }}>
               {t('exercisePicker.resultCount', { count: filtered.length })}
-              {multiSelect && selectedIds.size > 0 ? ' · ' + t('exercisePicker.selectedCount', { count: selectedIds.size }) : ''}
+              {isMulti && selectedIds.size > 0 ? ' · ' + t('exercisePicker.selectedCount', { count: selectedIds.size }) : ''}
             </Text>
           </View>
 
@@ -351,9 +349,36 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   alignItems: 'center',
                   gap: 10,
                 }}>
+                  {/* Checkbox — multi mode only */}
+                  {isMulti && (
+                    <TouchableOpacity
+                      onPress={() => handleToggleSelect(item)}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        borderWidth: 1.5,
+                        borderColor: isSelected ? colors.accent.primary : colors.border.light,
+                        backgroundColor: isSelected ? colors.accent.primary : 'transparent',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {isSelected && (
+                        <Ionicons name="checkmark" size={12} color={colors.bg.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+
                   {/* Thumbnail — tap to preview inline */}
                   <TouchableOpacity
-                    onPress={() => setPreviewExercise(item)}
+                    onPress={() => {
+                      if (isMulti) {
+                        handleToggleSelect(item);
+                      } else {
+                        setPreviewExercise(item);
+                      }
+                    }}
                     style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
                   >
                     {exerciseImage ? (
@@ -371,24 +396,8 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                     </Text>
                   </TouchableOpacity>
 
-                  {/* Add / Select button */}
-                  {multiSelect ? (
-                    <TouchableOpacity
-                      onPress={() => handleToggleSelect(item)}
-                      style={{
-                        backgroundColor: isSelected ? colors.accent.primary : colors.border.primary,
-                        borderRadius: borderRadius.sm,
-                        paddingHorizontal: spacing.sm + spacing.xs,
-                        paddingVertical: spacing.sm,
-                        borderWidth: isSelected ? 0 : 1,
-                        borderColor: colors.border.light,
-                      }}
-                    >
-                      <Text style={{ fontSize: 16, fontWeight: '700', color: isSelected ? colors.bg.primary : colors.text.secondary }}>
-                        {isSelected ? '✓' : '+'}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
+                  {/* Add / Select button — single mode only */}
+                  {!isMulti && (
                     <TouchableOpacity
                       onPress={() => onSelect(item)}
                       style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm + spacing.xs, paddingVertical: spacing.sm }}
@@ -400,6 +409,42 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
               );
             }}
           />
+
+          {/* Bottom bar — multi mode only */}
+          {isMulti && (
+            <View style={{
+              backgroundColor: colors.bg.card,
+              borderTopWidth: 1,
+              borderTopColor: colors.border.primary,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.md,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
+                {t('exercisePicker.selectedCount', { count: selectedIds.size })}
+              </Text>
+              <TouchableOpacity
+                onPress={handleConfirmMultiSelect}
+                disabled={selectedIds.size === 0}
+                style={{
+                  backgroundColor: selectedIds.size > 0 ? colors.accent.primary : colors.bg.elevated,
+                  borderRadius: borderRadius.md,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.sm + spacing.xs,
+                }}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: selectedIds.size > 0 ? colors.bg.primary : colors.text.muted,
+                }}>
+                  {t('exercisePicker.done')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </SafeAreaView>
 

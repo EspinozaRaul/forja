@@ -1,13 +1,15 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
 import { useState, useMemo, useCallback } from 'react';
+import type { Exercise } from '../../lib/types';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSessions } from '../../lib/hooks/useSessions';
 import { useRoutines, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
-import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine } from '../../lib/hooks/useSessions';
+import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useActiveSession, useDeleteSession } from '../../lib/hooks/useSessions';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { SessionCard } from '../../components/SessionCard';
+import { ActiveSessionBar } from '../../components/ActiveSessionBar';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -21,6 +23,7 @@ import { DEFAULT_TARGET_SETS, formatSetsRepsLabel } from '../../lib/constants/ro
 import { useCreateSet } from '../../lib/hooks/useSets';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
+import { ExercisePicker } from '../../components/ExercisePicker';
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -30,6 +33,7 @@ export default function HomeScreen() {
   const { data: globalStats, isLoading: statsLoading } = useGlobalStats();
 
   const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
   const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(selectedRoutineId ?? 0);
   const { data: allExercises } = useExercises();
   const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
@@ -39,7 +43,14 @@ export default function HomeScreen() {
   const createSession = useCreateSession();
   const addExerciseToSession = useAddExerciseToSession();
   const createSet = useCreateSet();
-  const { dialog, showAlert } = useConfirmDialog();
+  const { dialog, showAlert, showConfirm } = useConfirmDialog();
+  const { data: activeSession } = useActiveSession();
+  const deleteSession = useDeleteSession();
+
+  const activeRoutineName = useMemo(() => {
+    if (!activeSession?.routineId || !routines) return null;
+    return routines.find((r) => r.id === activeSession.routineId)?.name ?? null;
+  }, [activeSession?.routineId, routines]);
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
@@ -61,8 +72,26 @@ export default function HomeScreen() {
   const handleStartEmptySession = async () => {
     try {
       await haptics.success();
-      const session = await createSession.mutateAsync({});
-      router.push(`/session/${session[0].id}`);
+      setShowPicker(true);
+    } catch (error) {
+      await haptics.error();
+      showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
+    }
+  };
+
+  const handleNewSessionWithExercises = async (selectedExercises: Exercise[]) => {
+    setShowPicker(false);
+    try {
+      await haptics.success();
+      const newSession = await createSession.mutateAsync({});
+      for (const [index, exercise] of selectedExercises.entries()) {
+        await addExerciseToSession.mutateAsync({
+          sessionId: newSession[0].id,
+          exerciseId: exercise.id,
+          order: index,
+        });
+      }
+      router.push(`/session/${newSession[0].id}`);
     } catch (error) {
       await haptics.error();
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
@@ -109,6 +138,25 @@ export default function HomeScreen() {
       await haptics.error();
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
+  };
+
+  const handleDiscardSession = () => {
+    if (!activeSession) return;
+    showConfirm(
+      'Descartar sesión',
+      '¿Querés eliminar esta sesión y todos sus datos?',
+      async () => {
+        const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
+        await clearSessionTimer();
+        await deleteSession.mutateAsync(activeSession.id);
+      },
+      { confirmLabel: 'Descartar', cancelLabel: 'Cancelar', destructive: true }
+    );
+  };
+
+  const handleResumeSession = () => {
+    if (!activeSession) return;
+    router.push(`/session/${activeSession.id}`);
   };
 
   const selectedRoutine = routines?.find((r) => r.id === selectedRoutineId);
@@ -275,6 +323,14 @@ export default function HomeScreen() {
         </Pressable>
       </Modal>
     </ScrollView>
+    {activeSession && (
+      <ActiveSessionBar
+        session={activeSession}
+        routineName={activeRoutineName}
+        onResume={handleResumeSession}
+        onDiscard={handleDiscardSession}
+      />
+    )}
     <ConfirmDialog
       visible={dialog.visible}
       title={dialog.title}
@@ -284,6 +340,14 @@ export default function HomeScreen() {
       destructive={dialog.destructive}
       onConfirm={dialog.onConfirm}
       onCancel={dialog.onCancel}
+    />
+    <ExercisePicker
+      visible={showPicker}
+      exercises={allExercises ?? []}
+      onSelect={() => {}}
+      onClose={() => setShowPicker(false)}
+      mode="multi"
+      onMultiSelect={handleNewSessionWithExercises}
     />
     </>
   );
