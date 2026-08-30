@@ -46,31 +46,32 @@ export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesP
     setSelectedType(next);
   };
 
-  // Collapsed: show icon + preview + type badge
+  // Collapsed: show type letter or document icon + preview
   if (!expanded) {
+    const typeMeta = noteType ? NOTE_TYPE_META[noteType] : null;
     return (
       <TouchableOpacity
         onPress={() => setExpanded(true)}
         style={styles.trigger}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Ionicons
-          name={hasNotes ? 'document-text' : 'document-text-outline'}
-          size={14}
-          color={hasNotes ? colors.accent.primary : colors.text.muted}
-        />
+        {typeMeta ? (
+          <View style={[styles.typeIcon, { backgroundColor: typeMeta.color + '20' }]}>
+            <Text style={[styles.typeIconText, { color: typeMeta.color }]}>
+              {noteType === 'rendimiento' ? 'R' : 'A'}
+            </Text>
+          </View>
+        ) : (
+          <Ionicons
+            name={hasNotes ? 'document-text' : 'document-text-outline'}
+            size={14}
+            color={hasNotes ? colors.accent.primary : colors.text.muted}
+          />
+        )}
         {hasNotes && (
           <Text style={styles.preview} numberOfLines={1}>
             {notes}
           </Text>
-        )}
-        {typeInfo && (
-          <View style={[styles.typeBadge, { backgroundColor: typeInfo.color + '20' }]}>
-            <Ionicons name={typeInfo.icon} size={9} color={typeInfo.color} />
-            <Text style={[styles.typeBadgeText, { color: typeInfo.color }]}>
-              {typeInfo.key === 'rendimiento' ? 'Rend' : 'Ajuste'}
-            </Text>
-          </View>
         )}
       </TouchableOpacity>
     );
@@ -135,19 +136,18 @@ const styles = StyleSheet.create({
   preview: {
     fontSize: 10,
     color: colors.text.muted,
-    maxWidth: 100,
+    maxWidth: 120,
   },
-  typeBadge: {
-    flexDirection: 'row',
+  typeIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 3,
     alignItems: 'center',
-    gap: 2,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: borderRadius.sm,
+    justifyContent: 'center',
   },
-  typeBadgeText: {
-    fontSize: 9,
-    fontWeight: '600',
+  typeIconText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   container: {
     backgroundColor: colors.bg.elevated,
