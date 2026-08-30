@@ -7,7 +7,7 @@
 
 export interface DiffSetRow {
   setNumber: number;
-  method: string | null | undefined;
+  method: string | null;
   isDropGroup: boolean;
   dropOrder: number;
 }
@@ -61,7 +61,7 @@ export function detectRoutineDiff(params: DetectParams): RoutineDiff {
   const routineByExercise = new Map(routineExercises.map((r) => [r.exerciseId, r]));
   const sessionByExercise = new Map(sessionExercises.map((s) => [s.exerciseId, s]));
 
-  const name = (exerciseId: number) => exerciseNames[exerciseId] ?? 'Ejercicio desconocido';
+  const name = (exerciseId: number) => exerciseNames[exerciseId] ?? 'Unknown exercise';
 
   const removed = [...routineByExercise.keys()]
     .filter((exerciseId) => !sessionByExercise.has(exerciseId))
@@ -126,11 +126,11 @@ export function detectRoutineDiff(params: DetectParams): RoutineDiff {
 
 export function summarizeDiff(diff: RoutineDiff): string[] {
   const lines: string[] = [];
-  for (const item of diff.removed) lines.push(`Eliminado: ${item.name}`);
-  for (const item of diff.added) lines.push(`Agregado: ${item.name}`);
+  for (const item of diff.removed) lines.push(`Removed: ${item.name}`);
+  for (const item of diff.added) lines.push(`Added: ${item.name}`);
   for (const item of diff.volumeChanged) {
-    lines.push(`Volumen: ${item.fromSets}→${item.toSets} series en ${item.name}`);
+    lines.push(`Volume: ${item.fromSets}→${item.toSets} sets for ${item.name}`);
   }
-  if (diff.reordered) lines.push('Orden de ejercicios cambiado');
+  if (diff.reordered) lines.push('Exercise order changed');
   return lines;
 }

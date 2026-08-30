@@ -1,18 +1,3 @@
-const MONTHS_ES = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-];
-
 const GRID_CELLS = 42;
 
 /**
@@ -32,8 +17,9 @@ export function buildMonthGrid(year: number, month: number): (number | null)[] {
   return grid;
 }
 
-export function monthLabel(year: number, month: number): string {
-  return `${MONTHS_ES[month - 1]} ${year}`;
+export function monthLabel(year: number, month: number, locale?: string): string {
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleDateString(locale ?? 'es', { month: 'long', year: 'numeric' });
 }
 
 export function addMonths(

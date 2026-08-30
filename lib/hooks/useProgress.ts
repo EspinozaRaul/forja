@@ -18,11 +18,14 @@ export function useExerciseProgress(exerciseId: number, startDate?: Date, endDat
       
       let whereCondition = eq(sessionExercises.exerciseId, exerciseId);
       
-      if (startDate) {
-        whereCondition = and(whereCondition, gte(sessions.startedAt, startDate))!;
-      }
-      if (endDate) {
-        whereCondition = and(whereCondition, lte(sessions.startedAt, endDate))!;
+      const dateFilters = [
+        startDate ? gte(sessions.startedAt, startDate) : undefined,
+        endDate ? lte(sessions.startedAt, endDate) : undefined,
+      ].filter(Boolean);
+      
+      if (dateFilters.length > 0) {
+        const dateCondition = and(...dateFilters);
+        if (dateCondition) whereCondition = and(whereCondition, dateCondition) ?? whereCondition;
       }
 
       const result = await db
@@ -105,7 +108,10 @@ export function useTotalVolumeByWeek(exerciseId: number) {
 export function useWeeklySessions(week: string | null, exerciseId?: number) {
   return useQuery<WeeklySessionDetail[]>({
     queryKey: [...PROGRESS_KEY, 'weeklySessions', week, exerciseId],
-    queryFn: () => getWeeklySessions(week!, exerciseId),
+    queryFn: async () => {
+      if (!week) return [];
+      return getWeeklySessions(week, exerciseId);
+    },
     enabled: !!week,
   });
 }

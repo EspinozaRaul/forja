@@ -58,10 +58,10 @@ function collectExerciseStats(exercises: SessionExerciseWithSets[]): Map<number,
     for (const set of se.sets) {
       if (!set.completed) continue;
       stats.setCount += 1;
-      if (set.weight != null) {
+      if (set.weight != null && set.weight > 0) {
         stats.bestWeight = Math.max(stats.bestWeight ?? 0, set.weight);
       }
-      if (set.reps != null) {
+      if (set.reps != null && set.reps > 0) {
         stats.bestReps = Math.max(stats.bestReps ?? 0, set.reps);
       }
       if (set.weight != null && set.reps != null) {

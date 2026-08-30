@@ -45,13 +45,13 @@ export function summarizeSets(sets: Set[]): SetSummaryLine[] {
   const lines: SetSummaryLine[] = [];
 
   for (const rows of grouped.values()) {
-    // Keep insertion order stable: sort by setNumber
-    rows.sort((a, b) => (a.setNumber ?? 0) - (b.setNumber ?? 0));
-    const first = rows[0];
+    // Keep insertion order stable: sort by setNumber (copy to avoid mutating input)
+    const sorted = [...rows].sort((a, b) => (a.setNumber ?? 0) - (b.setNumber ?? 0));
+    const first = sorted[0];
     lines.push({
       type: 'group',
-      label: first.method === 'dropset' ? 'Drop' : 'Segmento',
-      count: rows.length,
+      label: first.method === 'dropset' ? 'Drop' : 'Segment',
+      count: sorted.length,
       setNumber: first.setNumber,
       reps: null,
       weight: null,
