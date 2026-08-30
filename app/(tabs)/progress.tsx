@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -712,7 +712,7 @@ export default function ProgressScreen() {
 
   const monthEntry = monthIndex?.find((m) => m.yearMonth === yearMonth);
   const grid = buildMonthGrid(visibleYear, visibleMonth);
-  const daysWithSessions = new Set((monthSessions ?? []).map((s) => s.startedAt.getDate()));
+  const daysWithSessions = useMemo(() => new Set((monthSessions ?? []).map((s) => s.startedAt.getDate())), [monthSessions]);
   const selectedDaySessions =
     selectedDay != null ? (monthSessions ?? []).filter((s) => s.startedAt.getDate() === selectedDay) : [];
 
@@ -720,9 +720,9 @@ export default function ProgressScreen() {
   const visibleDaySessions = dayExpanded ? selectedDaySessions : selectedDaySessions.slice(0, 3);
   const hasMoreDaySessions = selectedDaySessions.length > 3;
 
-  const monthSessionsDesc = [...(monthSessions ?? [])].sort(
+  const monthSessionsDesc = useMemo(() => [...(monthSessions ?? [])].sort(
     (a, b) => b.startedAt.getTime() - a.startedAt.getTime()
-  );
+  ), [monthSessions]);
   const recentMonthSessions = monthSessionsDesc.slice(0, 4);
   const hasMoreMonthSessions = monthSessionsDesc.length > 4;
 
@@ -741,12 +741,21 @@ export default function ProgressScreen() {
   const selectedExercise = exercises?.find((e) => e.id === selectedExerciseId);
   const exerciseUnit = selectedExercise ? resolveUnit(selectedExercise.unit, unit) : unit;
 
-  const exerciseNameMap: Record<number, string> = {};
-  const exerciseUnitMap: Record<number, string> = {};
-  for (const exercise of exercises ?? []) {
-    exerciseNameMap[exercise.id] = getExerciseName(exercise.name, i18n.language);
-    exerciseUnitMap[exercise.id] = resolveUnit(exercise.unit, unit);
-  }
+  const exerciseNameMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    for (const exercise of exercises ?? []) {
+      map[exercise.id] = getExerciseName(exercise.name, i18n.language);
+    }
+    return map;
+  }, [exercises, i18n.language]);
+
+  const exerciseUnitMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    for (const exercise of exercises ?? []) {
+      map[exercise.id] = resolveUnit(exercise.unit, unit);
+    }
+    return map;
+  }, [exercises, unit]);
 
   const comparison =
     compareResult?.a && compareResult.b
