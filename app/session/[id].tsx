@@ -1045,6 +1045,17 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     if (pendingConversionSetId === null || !pendingConversionSet) return;
 
     if (method === 'dropset' || method === 'rest_pause' || method === 'cluster') {
+      // Auto-save previous set if another was being edited
+      if (dropSetMode !== null && dropSetMode !== pendingConversionSetId) {
+        const prevDrafts = dropSetDrafts[dropSetMode];
+        if (prevDrafts && prevDrafts.length >= 2) {
+          handleSaveDropSet(dropSetMode);
+        } else {
+          // Not enough drops — just cancel the previous editing
+          handleCancelDropSet(dropSetMode);
+        }
+      }
+
       // Open grouped method editor — start with parent set values only, user adds drops as needed
       setDropSetMode(pendingConversionSetId);
       setDropSetMethod((prev) => ({ ...prev, [pendingConversionSetId]: method }));
@@ -1136,19 +1147,6 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       }).concat(optimisticDrops.slice(1)); // append remaining drops
     });
 
-    // Clear local state immediately
-    setDropSetMode(null);
-    setDropSetDrafts((prev) => {
-      const next = { ...prev };
-      delete next[setId];
-      return next;
-    });
-    setDropSetMethod((prev) => {
-      const next = { ...prev };
-      delete next[setId];
-      return next;
-    });
-
     // Auto-expand the saved drop set so toggle works immediately
     setExpandedDropSets((prev) => prev.includes(setNumber) ? prev : [...prev, setNumber]);
 
@@ -1189,6 +1187,20 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       }
       seShowAlert(t('common.error'), t('session.error.dropSetSave'));
     }
+
+    // Clear local state AFTER async save — keeps drafts available during save
+    // and prevents clearing drafts of another set being edited concurrently
+    setDropSetMode(null);
+    setDropSetDrafts((prev) => {
+      const next = { ...prev };
+      delete next[setId];
+      return next;
+    });
+    setDropSetMethod((prev) => {
+      const next = { ...prev };
+      delete next[setId];
+      return next;
+    });
   };
 
   const handleCancelDropSet = (setId: number) => {
@@ -1574,13 +1586,15 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       </View>
       )}
       {!collapsed && (
-      <Button
-        title={t('session.addSet')}
-        variant="secondary"
-        compact
-        onPress={handleAddSet}
-        loading={createSet.isPending}
-      />
+      <View style={{ marginTop: spacing.sm }}>
+        <Button
+          title={t('session.addSet')}
+          variant="secondary"
+          compact
+          onPress={handleAddSet}
+          loading={createSet.isPending}
+        />
+      </View>
       )}
 
       <IntensityMethodPicker

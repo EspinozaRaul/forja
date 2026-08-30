@@ -85,7 +85,7 @@ export function DropSetLogger({
       {/* Toggle area — only set number + summary */}
       <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea}>
         <View style={styles.serieCell}>
-          <Text style={styles.serieNumber}>#{parentSet.setNumber}</Text>
+          <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{badgeText}</Text>
           </View>

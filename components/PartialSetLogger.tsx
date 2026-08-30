@@ -74,7 +74,7 @@ export function PartialSetLogger({
     <View style={styles.container}>
       {/* Set number + method badge */}
       <View style={styles.serieCell}>
-        <Text style={styles.serieNumber}>#{parentSet.setNumber}</Text>
+        <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>PS</Text>
         </View>
