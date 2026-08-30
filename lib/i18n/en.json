@@ -491,9 +491,11 @@
     },
     "error": {
       "nameRequired": "Exercise name is required",
+      "nameMinLength": "Exercise name must be at least 2 characters",
       "categoryRequired": "Select a category",
       "createFailed": "Could not create exercise"
-    }
+    },
+    "loadingCategories": "Loading categories..."
   },
   "timer": {
     "start": "Start",

@@ -491,9 +491,11 @@
     },
     "error": {
       "nameRequired": "El nombre del ejercicio es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos 2 caracteres",
       "categoryRequired": "Seleccioná una categoría",
       "createFailed": "No se pudo crear el ejercicio"
-    }
+    },
+    "loadingCategories": "Cargando categorías..."
   },
   "timer": {
     "start": "Iniciar",

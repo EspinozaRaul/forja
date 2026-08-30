@@ -1,6 +1,7 @@
 import { Text, View, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useCategories } from '../../lib/hooks/useCategories';
 import { useCreateExercise } from '../../lib/hooks/useExercises';
 import { useSettings } from '../../lib/utils/settings';
@@ -13,6 +14,7 @@ import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function CreateExerciseScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const createExercise = useCreateExercise();
   const settings = useSettings();
@@ -26,12 +28,12 @@ export default function CreateExerciseScreen() {
   const validate = () => {
     const newErrors: { name?: string; category?: string } = {};
     if (!name.trim()) {
-      newErrors.name = 'Exercise name is required';
+      newErrors.name = t('exercisePicker.error.nameRequired');
     } else if (name.trim().length < 2) {
-      newErrors.name = 'Exercise name must be at least 2 characters';
+      newErrors.name = t('exercisePicker.error.nameMinLength');
     }
     if (!selectedCategoryId) {
-      newErrors.category = 'Please select a category';
+      newErrors.category = t('exercisePicker.error.categoryRequired');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -45,16 +47,16 @@ export default function CreateExerciseScreen() {
         name: name.trim(),
         categoryId: selectedCategoryId!,
         description: description.trim() || undefined,
-        unit: settings.data.weightUnit,
+        unit: settings.data?.weightUnit ?? 'kg',
       });
       router.back();
     } catch (error) {
-      showAlert('Error', 'Failed to create exercise. Please try again.');
+      showAlert(t('common.error'), t('exercisePicker.error.createFailed'));
     }
   };
 
   if (categoriesLoading) {
-    return <LoadingSpinner message="Loading categories..." />;
+    return <LoadingSpinner message={t('exercisePicker.loadingCategories')} />;
   }
 
   return (
