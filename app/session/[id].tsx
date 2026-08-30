@@ -1227,34 +1227,6 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     });
   };
 
-  const handleSavePartialSet = async (setId: number, contractions: number | null, partials: number | null, weight?: number | null) => {
-    const originalSet = sets?.find((s) => s.id === setId);
-    if (!originalSet) return;
-
-    try {
-      await updateSet.mutateAsync({
-        id: setId,
-        data: {
-          method: 'partial',
-          reps: contractions ?? undefined,
-          partialReps: partials,
-          weight: weight ?? undefined,
-        },
-        sessionExerciseId: sessionExercise.id,
-      });
-    } catch (error) {
-      seShowAlert(t('common.error'), t('session.error.dropSetSave'));
-    }
-
-    // Clear editing state
-    setDropSetMode(null);
-    setDropSetMethod((prev) => {
-      const next = { ...prev };
-      delete next[setId];
-      return next;
-    });
-  };
-
   const handleCancelDropSet = (setId: number) => {
     setDropSetMode(null);
     setDropSetDrafts((prev) => {
@@ -1493,21 +1465,23 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
               return (
                 <View key={set.id}>
                    <PartialSetLogger
-                    parentSet={displaySet}
-                    expanded={true}
-                    onToggle={() => {}}
+                    set={displaySet}
                     onUpdate={(updates) => {
-                      // Save partial set on each update
-                      const contractions = updates.reps ?? set.reps ?? null;
-                      const partials = (updates as any).partialReps ?? set.partialReps ?? null;
-                      const weight = updates.weight ?? set.weight ?? null;
-                      handleSavePartialSet(set.id, contractions, partials, weight);
+                      updateSet.mutateAsync({
+                        id: set.id,
+                        data: {
+                          reps: updates.reps,
+                          weight: updates.weight,
+                          partialReps: (updates as any).partialReps,
+                          completed: updates.completed,
+                        },
+                        sessionExerciseId: sessionExercise.id,
+                      });
+                      if (updates.completed && !set.completed) {
+                        onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                      }
                     }}
                     onDelete={() => handleDeleteSet(set.id)}
-                    onComplete={() => {
-                      onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
-                      handleSavePartialSet(set.id, set.reps ?? null, set.partialReps ?? null, set.weight ?? null);
-                    }}
                     onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
                     unit={unit}
                     previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
@@ -1649,33 +1623,29 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
             );
           }
 
-          // Persisted partial set — show C+P breakdown
+          // Persisted partial set — inline like linear, not grouped
           if (set.method === 'partial') {
             const displaySet = { ...set, setNumber: displayNumber };
             return (
               <PartialSetLogger
                 key={set.id}
-                parentSet={displaySet}
-                expanded={expandedDropSets.includes(set.setNumber)}
-                onToggle={() => handleToggleDropSet(set.setNumber)}
+                set={displaySet}
                 onUpdate={(updates) => {
                   updateSet.mutateAsync({
                     id: set.id,
-                    data: { reps: updates.reps, partialReps: (updates as any).partialReps ?? set.partialReps, weight: updates.weight },
+                    data: {
+                      reps: updates.reps,
+                      weight: updates.weight,
+                      partialReps: (updates as any).partialReps,
+                      completed: updates.completed,
+                    },
                     sessionExerciseId: sessionExercise.id,
                   });
-                }}
-                onDelete={() => handleDeleteSet(set.id)}
-                onComplete={() => {
-                  updateSet.mutateAsync({
-                    id: set.id,
-                    data: { completed: !set.completed },
-                    sessionExerciseId: sessionExercise.id,
-                  });
-                  if (!set.completed) {
+                  if (updates.completed && !set.completed) {
                     onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
                   }
                 }}
+                onDelete={() => handleDeleteSet(set.id)}
                 onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
