@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
 import { Directory, File, Paths } from 'expo-file-system';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useExercise } from '../../lib/hooks/useExercises';
 import { useExerciseStats, useExerciseSessions, useExercisePRs } from '../../lib/hooks/useExercises';
 import { useTotalVolumeByWeek } from '../../lib/hooks/useProgress';
@@ -20,6 +21,7 @@ import i18n from '../../lib/i18n';
 function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!visible || !url || localUri) return;
@@ -57,7 +59,7 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
         activeOpacity={1}
         onPress={onClose}
       >
-        <Text style={{ color: '#FFF', fontSize: 14, marginBottom: 12 }}>Toca para cerrar</Text>
+        <Text style={{ color: colors.text.primary, fontSize: 14, marginBottom: 12 }}>{t('exerciseDetail.tapToClose')}</Text>
         {loading ? (
           <ActivityIndicator size="large" color={colors.text.link} />
         ) : localUri ? (
@@ -75,6 +77,7 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
   const exerciseId = parseInt(id, 10);
 
   const { data: exercises, isLoading: exerciseLoading } = useExercise(exerciseId);
@@ -90,13 +93,13 @@ export default function ExerciseDetailScreen() {
   const isLoading = exerciseLoading || statsLoading || prsLoading || sessionsLoading || volumeLoading;
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading exercise..." />;
+    return <LoadingSpinner message={t('exerciseDetail.loading')} />;
   }
 
   if (!exercise) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title="Exercise not found" />
+        <EmptyState title={t('exerciseDetail.notFound')} />
       </View>
     );
   }
@@ -118,7 +121,7 @@ export default function ExerciseDetailScreen() {
               onPress={() => setShowGif(true)}
               style={{ marginTop: spacing.sm, backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.tag.text }}>Ver animacion</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.tag.text }}>{t('exerciseDetail.viewAnimation')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -166,7 +169,7 @@ export default function ExerciseDetailScreen() {
           alignItems: 'center',
         }}>
           <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
-            Max Weight
+            {t('exerciseDetail.maxWeight')}
           </Text>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
             {stats?.maxWeight ? formatWeight(stats.maxWeight, unit) : '-'}
@@ -181,7 +184,7 @@ export default function ExerciseDetailScreen() {
           alignItems: 'center',
         }}>
           <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
-            Total Volume
+            {t('exerciseDetail.totalVolume')}
           </Text>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
             {stats?.totalVolume ? formatVolume(stats.totalVolume, unit) : '0'}
@@ -196,7 +199,7 @@ export default function ExerciseDetailScreen() {
           alignItems: 'center',
         }}>
           <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
-            Sessions
+            {t('exerciseDetail.sessions')}
           </Text>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
             {stats?.totalSessions ?? 0}
@@ -208,13 +211,13 @@ export default function ExerciseDetailScreen() {
       {prs && (prs.maxWeight || prs.bestSet || prs.estimated1RM) && (
         <View style={{ backgroundColor: colors.bg.card, marginHorizontal: spacing.md, borderRadius: borderRadius.md, padding: spacing.lg }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
-            Personal Records
+            {t('exerciseDetail.personalRecords')}
           </Text>
 
           <View style={{ gap: spacing.md }}>
             {prs.maxWeight && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Max Weight</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.maxWeight')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
                     {formatWeight(prs.maxWeight.value, unit)}
@@ -228,7 +231,7 @@ export default function ExerciseDetailScreen() {
 
             {prs.bestSet && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Set</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.bestSet')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
                     {formatWeight(prs.bestSet.weight, unit)} × {prs.bestSet.reps}
@@ -242,7 +245,7 @@ export default function ExerciseDetailScreen() {
 
             {prs.maxVolumeSession && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Best Session</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.bestSession')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
                     {formatVolume(prs.maxVolumeSession.volume, unit)}
@@ -256,7 +259,7 @@ export default function ExerciseDetailScreen() {
 
             {prs.estimated1RM && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>Est. 1RM</Text>
+                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.est1RM')}</Text>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
                   {formatWeight(prs.estimated1RM, unit)}
                 </Text>
@@ -270,7 +273,7 @@ export default function ExerciseDetailScreen() {
       <View style={{ padding: spacing.md }}>
         <ProgressChart
           data={volumeData ?? []}
-          title={`Weekly Volume (${unit})`}
+          title={t('exerciseDetail.weeklyVolume', { unit })}
           unit={unit}
         />
       </View>
@@ -278,13 +281,13 @@ export default function ExerciseDetailScreen() {
       {/* Session History */}
       <View style={{ backgroundColor: colors.bg.card, marginTop: spacing.md, padding: spacing.lg }}>
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
-          Session History
+          {t('exerciseDetail.sessionHistory')}
         </Text>
 
         {!sessions || sessions.length === 0 ? (
           <EmptyState
-            title="No sessions yet"
-            message="Start a session to see your history here."
+            title={t('exerciseDetail.noSessions')}
+            message={t('exerciseDetail.noSessionsMessage')}
           />
         ) : (
           sessions.map((session) => (

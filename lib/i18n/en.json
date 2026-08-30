@@ -504,5 +504,31 @@
     "serie": "SET",
     "anterior": "PREV",
     "reps": "REPS"
+  },
+  "restTimer": {
+    "channelName": "Rest timers",
+    "finished": "Rest finished",
+    "continueBody": "Time to continue with {{label}}!",
+    "nextSet": "your next set",
+    "rest": "REST",
+    "startRest": "Rest",
+    "skip": "Skip"
+  },
+  "exerciseDetail": {
+    "tapToClose": "Tap to close",
+    "loading": "Loading exercise...",
+    "notFound": "Exercise not found",
+    "viewAnimation": "View animation",
+    "maxWeight": "Max weight",
+    "totalVolume": "Total volume",
+    "sessions": "Sessions",
+    "personalRecords": "Personal records",
+    "bestSet": "Best set",
+    "bestSession": "Best session",
+    "est1RM": "Est. 1RM",
+    "weeklyVolume": "Weekly volume ({{unit}})",
+    "sessionHistory": "Session history",
+    "noSessions": "No sessions yet",
+    "noSessionsMessage": "Start a session to see your history here."
   }
 }

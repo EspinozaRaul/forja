@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, AppState, Platform, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import {
   saveRestTimer,
@@ -49,11 +50,11 @@ const PRESET_OPTIONS = [30, 60, 90, 120, 180];
 // channel. Create one channel for rest-timer alerts and always target it.
 const REST_CHANNEL_ID = 'rest-timer';
 
-async function ensureRestChannel(): Promise<void> {
+async function ensureRestChannel(channelName: string): Promise<void> {
   if (Platform.OS !== 'android') return;
   try {
     await Notifications.setNotificationChannelAsync(REST_CHANNEL_ID, {
-      name: 'Descansos',
+      name: channelName,
       importance: Notifications.AndroidImportance.HIGH,
       sound: 'default',
       vibrationPattern: [0, 250, 250, 250],
@@ -86,6 +87,7 @@ export function RestTimer({
   onSkip,
   onDurationChange,
 }: RestTimerProps) {
+  const { t } = useTranslation();
   const [remaining, setRemaining] = useState(duration);
   const [active, setActive] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(duration);
@@ -115,7 +117,7 @@ export function RestTimer({
   const scheduleNotification = useCallback(async (endTs: number, label: string) => {
     // Android 13+ shows the permission prompt only after a channel exists, so
     // create the channel before requesting permission.
-    await ensureRestChannel();
+    await ensureRestChannel(t('restTimer.channelName'));
 
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return;
@@ -129,8 +131,8 @@ export function RestTimer({
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Descanso terminado',
-        body: `¡Hora de continuar con ${label}!`,
+        title: t('restTimer.finished'),
+        body: t('restTimer.continueBody', { label }),
         sound: getCachedSettings().soundEnabled,
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },
@@ -142,7 +144,7 @@ export function RestTimer({
     });
 
     notificationIdRef.current = id;
-  }, []);
+  }, [t]);
 
   // Cancel notification
   const cancelNotification = useCallback(async () => {
@@ -174,7 +176,7 @@ export function RestTimer({
         isRunning: true,
       });
     }
-    scheduleNotification(endTs, 'tu siguiente serie');
+    scheduleNotification(endTs, t('restTimer.nextSet'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restartKey, visible]);
 
@@ -284,7 +286,7 @@ export function RestTimer({
     }
 
     // Schedule notification
-    scheduleNotification(endTs, 'tu siguiente serie');
+    scheduleNotification(endTs, t('restTimer.nextSet'));
   };
 
   const handleSkip = async () => {
@@ -345,7 +347,7 @@ export function RestTimer({
     return (
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>DESCANSO</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('restTimer.rest')}</Text>
           {PRESET_OPTIONS.map((dur) => (
             <TouchableOpacity
               key={dur}
@@ -362,7 +364,7 @@ export function RestTimer({
           onPress={() => handleStart()}
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 12 }}>Descansar</Text>
+          <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 12 }}>{t('restTimer.startRest')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -378,7 +380,7 @@ export function RestTimer({
         <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 13 }}>-15</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', flex: 1 }}>
-        <Text style={{ fontSize: 9, fontWeight: '600', color: colors.accent.primary, marginBottom: 1 }}>DESCANSO</Text>
+        <Text style={{ fontSize: 9, fontWeight: '600', color: colors.accent.primary, marginBottom: 1 }}>{t('restTimer.rest')}</Text>
         <Text style={{ fontSize: 22, fontFamily: fonts.display, fontWeight: '700', color: colors.accent.primary }}>
           {formatCountdown(remaining)}
         </Text>
@@ -394,7 +396,7 @@ export function RestTimer({
           onPress={handleSkip}
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: 32, justifyContent: 'center', borderWidth: 1, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 11 }}>Saltar</Text>
+          <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 11 }}>{t('restTimer.skip')}</Text>
         </TouchableOpacity>
       </View>
     </View>

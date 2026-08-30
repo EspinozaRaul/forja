@@ -9,9 +9,9 @@ interface ExerciseCardProps {
 
 export function ExerciseCard({ exercise }: ExerciseCardProps) {
   return (
-    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }} className="bg-dark-card rounded-2xl p-4">
-      <View className="flex-row items-center justify-between">
-        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} className="text-base font-semibold text-white flex-1">
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
           {exercise.name}
         </Text>
         {exercise.category && (
@@ -19,7 +19,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         )}
       </View>
       {exercise.description && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">{exercise.description}</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }}>{exercise.description}</Text>
       )}
     </View>
   );

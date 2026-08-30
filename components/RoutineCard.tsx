@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import { Badge } from './ui/Badge';
-import { colors, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { RoutineWithExercises } from '../lib/types';
 
 interface RoutineCardProps {
@@ -11,9 +11,9 @@ export function RoutineCard({ routine }: RoutineCardProps) {
   const exerciseCount = routine.exercises.length;
 
   return (
-    <View className="bg-dark-card rounded-2xl p-4">
-      <View className="flex-row items-center justify-between">
-        <Text style={{ fontFamily: fonts.bodySemiBold }} className="text-base font-semibold text-white flex-1">
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={{ fontFamily: fonts.bodySemiBold, fontSize: 16, color: colors.text.primary, flex: 1 }}>
           {routine.name}
         </Text>
         <Badge
@@ -22,7 +22,7 @@ export function RoutineCard({ routine }: RoutineCardProps) {
         />
       </View>
       {routine.description && (
-        <Text style={{ fontFamily: fonts.body }} className="text-sm text-dark-text-secondary mt-2">{routine.description}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text.secondary, marginTop: spacing.sm }}>{routine.description}</Text>
       )}
     </View>
   );

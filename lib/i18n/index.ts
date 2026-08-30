@@ -10,35 +10,31 @@ const resources = {
   en: { translation: en },
 } as const;
 
-// Detect initial language: prefer stored setting, fallback to device locale, then 'es'
-async function detectLanguage(): Promise<string> {
-  try {
-    const settings = await getSettings();
-    if (settings.language) return settings.language;
-  } catch {
-    // ignore — fall through to device detection
-  }
+// Synchronous initial language: device locale → 'es' fallback
+// This prevents the es→en flash on first render for English users
+const deviceLang = Localization.getLocales()[0]?.languageCode;
+const initialLang = deviceLang && deviceLang in resources ? deviceLang : 'es';
 
-  const deviceLang = Localization.getLocales()[0]?.languageCode;
-  if (deviceLang && deviceLang in resources) return deviceLang;
-
-  return 'es';
-}
-
-// Initialize synchronously with default; re-detect async and update if needed
+// Initialize with device locale (synchronous, no flash)
 i18n.use(initReactI18next).init({
   resources,
-  lng: 'es',
+  lng: initialLang,
   fallbackLng: 'es',
   interpolation: { escapeValue: false },
   react: { useSuspense: false },
 });
 
-// Fire-and-forget async language detection
-detectLanguage().then((lang) => {
-  if (lang !== i18n.language) {
-    i18n.changeLanguage(lang);
-  }
-});
+// Async: check stored user preference and override if different
+// This runs after first render, so the user sees their device locale instantly
+// and then switches to their stored preference if it differs
+getSettings()
+  .then((settings) => {
+    if (settings.language && settings.language !== i18n.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  })
+  .catch(() => {
+    // ignore — device locale from init stays
+  });
 
 export default i18n;

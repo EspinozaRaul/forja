@@ -504,5 +504,31 @@
     "serie": "SERIE",
     "anterior": "ANTERIOR",
     "reps": "REPS"
+  },
+  "restTimer": {
+    "channelName": "Descansos",
+    "finished": "Descanso terminado",
+    "continueBody": "¡Hora de continuar con {{label}}!",
+    "nextSet": "tu siguiente serie",
+    "rest": "DESCANSO",
+    "startRest": "Descansar",
+    "skip": "Saltar"
+  },
+  "exerciseDetail": {
+    "tapToClose": "Toca para cerrar",
+    "loading": "Cargando ejercicio...",
+    "notFound": "Ejercicio no encontrado",
+    "viewAnimation": "Ver animación",
+    "maxWeight": "Peso máximo",
+    "totalVolume": "Volumen total",
+    "sessions": "Sesiones",
+    "personalRecords": "Réccords personales",
+    "bestSet": "Mejor serie",
+    "bestSession": "Mejor sesión",
+    "est1RM": "1RM est.",
+    "weeklyVolume": "Volumen semanal ({{unit}})",
+    "sessionHistory": "Historial de sesiones",
+    "noSessions": "Sin sesiones aún",
+    "noSessionsMessage": "Empezá una sesión para ver tu historial acá."
   }
 }
