@@ -87,13 +87,8 @@ export function DropSetLogger({
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badgeText}</Text>
+            <Text style={styles.badgeText}>{badgeText} {segmentCount}</Text>
           </View>
-        </View>
-        <View style={styles.rowCenter}>
-          <Text style={styles.rowSummary}>
-            {segmentCount} {unitLabelPlural}
-          </Text>
         </View>
       </TouchableOpacity>
 
@@ -231,7 +226,7 @@ function DropRow({
   const weightPlaceholder = () => {
     // Per-drop previous first, then parent fallback
     const pw = prevDrop?.weight ?? previousWeight;
-    if (pw == null) return `0${unit}`;
+    if (pw == null) return unit;
     if (maxWeight != null) {
       return pw >= maxWeight ? `${pw} ▲` : `${pw} ▼`;
     }
@@ -240,7 +235,7 @@ function DropRow({
 
   const repsPlaceholder = () => {
     const pr = prevDrop?.reps ?? previousReps;
-    return pr != null ? String(pr) : '0R';
+    return pr != null ? String(pr) : 'R';
   };
 
   // Label: show previous data if available, otherwise "Drop N"
