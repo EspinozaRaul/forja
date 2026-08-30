@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   toggleArea: {
     flex: 1,
@@ -399,13 +399,13 @@ const styles = StyleSheet.create({
   },
   // --- Expanded drops ---
   dropsBlock: {
-    marginTop: spacing.xs,
+    marginTop: 0,
     paddingLeft: 28 + spacing.xs,
   },
   dropRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   dropIndicator: {
     width: 12,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.border.light,
-    marginTop: 6,
+    marginTop: 4,
   },
   dropDotCompleted: {
     backgroundColor: colors.accent.primary,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingVertical: spacing.xs,
+    paddingVertical: 2,
   },
   addDropText: {
     fontSize: 13,
