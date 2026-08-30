@@ -59,7 +59,7 @@ export function DropSetLogger({
   const swipeableRef = useRef<Swipeable>(null);
   const { t } = useTranslation();
 
-  const badgeText = method === 'dropset' ? 'DS' : method === 'rest_pause' ? 'RP' : method === 'cluster' ? 'CL' : method === 'partial' ? 'PS' : 'DS';
+  const badgeText = method === 'dropset' ? 'Drop Set' : method === 'rest_pause' ? 'Rest Pause' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop Set';
   const segmentCount = drops.length;
   const unitLabel = t(`methods.${method}.unitLabel`);
   const unitLabelPlural = t(`methods.${method}.unitLabelPlural`);
