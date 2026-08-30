@@ -81,7 +81,7 @@ export interface Set {
   reps: number | null;
   weight: number | null;
   completed: boolean;
-  method: string | null; // SetMethod values, but DB returns string
+  method: string | null; // DB returns string; use SetMethod type for narrowing at usage sites
   dropOrder: number | null;
   isDropGroup: boolean | null;
   rir: number | null; // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
@@ -141,7 +141,7 @@ export interface WeeklyVolume {
 
 export interface CreateExerciseInput {
   name: string;
-  categoryId: number;
+  categoryId?: number; // optional — DB column is nullable
   description?: string;
 }
 
@@ -168,4 +168,8 @@ export interface CreateSetInput {
   setNumber: number;
   reps?: number;
   weight?: number;
+  method?: SetMethod;
+  rir?: number;
+  dropOrder?: number;
+  isDropGroup?: boolean;
 }
