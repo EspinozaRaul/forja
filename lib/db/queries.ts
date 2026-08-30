@@ -85,18 +85,14 @@ export async function updateFolder(
 }
 
 export async function deleteFolder(id: number) {
-  // Unlink routines from this folder (set folderId to null)
-  await db
-    .update(routines)
-    .set({ folderId: null })
-    .where(eq(routines.folderId, id));
+  // onDelete: 'set null' in the FK handles unlinking routines automatically
   return db.delete(routineFolders).where(eq(routineFolders.id, id));
 }
 
 // ─── Exercises ─────────────────────────────────────────
 
 export async function getAllExercises() {
-  return db.select().from(exercises);
+  return db.select().from(exercises).orderBy(asc(exercises.name));
 }
 
 export async function getExercisesByCategory(categoryId: number) {
@@ -134,13 +130,29 @@ export async function updateExercise(
 }
 
 export async function deleteExercise(id: number) {
+  // Check references first — ON DELETE RESTRICT would throw a cryptic SQLite error
+  const routineRefs = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(routineExercises)
+    .where(eq(routineExercises.exerciseId, id));
+  const sessionRefs = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(sessionExercises)
+    .where(eq(sessionExercises.exerciseId, id));
+
+  if (routineRefs[0].count > 0 || sessionRefs[0].count > 0) {
+    throw new Error(
+      `Cannot delete: exercise is used in ${routineRefs[0].count} routines and ${sessionRefs[0].count} sessions`
+    );
+  }
+
   return db.delete(exercises).where(eq(exercises.id, id));
 }
 
 // ─── Routines ──────────────────────────────────────────
 
 export async function getAllRoutines() {
-  return db.select().from(routines);
+  return db.select().from(routines).orderBy(desc(routines.createdAt));
 }
 
 export async function getRoutineById(id: number) {
@@ -233,22 +245,24 @@ export async function updateRoutineExerciseTargets(
  * null). Reset everything to the intended defaults (3 sets × 10 reps).
  */
 export async function repairRoutineTargetDefaults() {
-  await db
-    .update(routineExercises)
-    .set({ targetSets: DEFAULT_TARGET_SETS })
-    .where(eq(routineExercises.targetSets, 1));
-  await db
-    .update(routineExercises)
-    .set({ targetSets: DEFAULT_TARGET_SETS })
-    .where(isNull(routineExercises.targetSets));
-  await db
-    .update(routineExercises)
-    .set({ targetReps: DEFAULT_TARGET_REPS })
-    .where(isNull(routineExercises.targetReps));
-  await db
-    .update(routineExercises)
-    .set({ targetReps: DEFAULT_TARGET_REPS })
-    .where(lte(routineExercises.targetReps, 0));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(routineExercises)
+      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .where(eq(routineExercises.targetSets, 1));
+    await tx
+      .update(routineExercises)
+      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .where(isNull(routineExercises.targetSets));
+    await tx
+      .update(routineExercises)
+      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .where(isNull(routineExercises.targetReps));
+    await tx
+      .update(routineExercises)
+      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .where(lte(routineExercises.targetReps, 0));
+  });
 }
 
 // ─── Sessions ──────────────────────────────────────────
@@ -305,16 +319,26 @@ export async function getSessionExercisesWithSets(sessionId: number): Promise<Se
     .from(sessionExercises)
     .where(eq(sessionExercises.sessionId, sessionId));
 
-  return Promise.all(
-    rows.map(async (se) => {
-      const setRows = await db
-        .select()
-        .from(sets)
-        .where(eq(sets.sessionExerciseId, se.id))
-        .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
-      return { ...se, sets: setRows };
-    })
-  );
+  if (rows.length === 0) return [];
+
+  const seIds = rows.map((r) => r.id);
+  const allSets = await db
+    .select()
+    .from(sets)
+    .where(inArray(sets.sessionExerciseId, seIds))
+    .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
+
+  const setsBySE = new Map<number, typeof allSets>();
+  for (const s of allSets) {
+    const arr = setsBySE.get(s.sessionExerciseId) ?? [];
+    arr.push(s);
+    setsBySE.set(s.sessionExerciseId, arr);
+  }
+
+  return rows.map((se) => ({
+    ...se,
+    sets: setsBySE.get(se.id) ?? [],
+  }));
 }
 
 export async function addExerciseToSession(data: {
@@ -369,32 +393,40 @@ export async function updateSessionExerciseNotes(
 }
 
 export async function createSuperSetPair(firstId: number, secondId: number) {
-  // Generate a new unique pair id (use a timestamp-based value; enough for local app)
-  const pairId = Date.now();
-  await db.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, firstId));
-  await db.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, secondId));
+  // Use a transaction to ensure atomicity — no half-paired superset on failure
+  return db.transaction(async (tx) => {
+    // Generate pair id from both exercise IDs + timestamp for uniqueness
+    const pairId = firstId * 1000000 + secondId * 1000 + (Date.now() % 1000);
+    await tx.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, firstId));
+    await tx.update(sessionExercises).set({ supersetPairId: pairId }).where(eq(sessionExercises.id, secondId));
 
-  // Balance series between both sides: a super set cycle needs a set on EACH side with the same
-  // setNumber. If one exercise already had sets before pairing (e.g. Press had serie 1 and the
-  // paired Remo has none), create empty matching sets on the side that's missing them.
-  const [setsFirst, setsSecond] = await Promise.all([
-    db.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, firstId)),
-    db.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, secondId)),
-  ]);
-  const firstNumbers = new Set(setsFirst.map((s) => s.setNumber));
-  const secondNumbers = new Set(setsSecond.map((s) => s.setNumber));
-  const allNumbers = new Set([...firstNumbers, ...secondNumbers]);
+    // Balance series between both sides: a super set cycle needs a set on EACH side with the same
+    // setNumber. If one exercise already had sets before pairing (e.g. Press had serie 1 and the
+    // paired Remo has none), create empty matching sets on the side that's missing them.
+    const [setsFirst, setsSecond] = await Promise.all([
+      tx.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, firstId)),
+      tx.select({ setNumber: sets.setNumber }).from(sets).where(eq(sets.sessionExerciseId, secondId)),
+    ]);
+    const firstNumbers = new Set(setsFirst.map((s) => s.setNumber));
+    const secondNumbers = new Set(setsSecond.map((s) => s.setNumber));
+    const allNumbers = new Set([...firstNumbers, ...secondNumbers]);
 
-  for (const setNumber of allNumbers) {
-    if (!firstNumbers.has(setNumber)) {
-      await db.insert(sets).values({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: new Date() });
+    const missingSets: typeof sets.$inferInsert[] = [];
+    for (const setNumber of allNumbers) {
+      if (!firstNumbers.has(setNumber)) {
+        missingSets.push({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: new Date() });
+      }
+      if (!secondNumbers.has(setNumber)) {
+        missingSets.push({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: new Date() });
+      }
     }
-    if (!secondNumbers.has(setNumber)) {
-      await db.insert(sets).values({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: new Date() });
-    }
-  }
 
-  return pairId;
+    if (missingSets.length > 0) {
+      await tx.insert(sets).values(missingSets);
+    }
+
+    return pairId;
+  });
 }
 
 export async function unlinkSuperSetPair(pairId: number) {
@@ -439,30 +471,23 @@ export async function createDropSets(data: {
   setNumber: number;
   method?: string;
   drops: Array<{ reps?: number; weight?: number; rir?: number }>;
-}) {
-  const results: any[] = [];
+}): Promise<typeof sets.$inferSelect[]> {
+  if (data.drops.length === 0) return [];
 
-  for (let i = 0; i < data.drops.length; i++) {
-    const drop = data.drops[i];
-    const result = await db
-      .insert(sets)
-      .values({
-        sessionExerciseId: data.sessionExerciseId,
-        setNumber: data.setNumber,
-        reps: drop.reps,
-        weight: drop.weight,
-        completed: false,
-        method: data.method ?? 'dropset',
-        dropOrder: i + 1,
-        isDropGroup: i === 0,
-        rir: drop.rir,
-        createdAt: new Date(),
-      })
-      .returning();
-    results.push(result[0]);
-  }
+  const values = data.drops.map((drop, i) => ({
+    sessionExerciseId: data.sessionExerciseId,
+    setNumber: data.setNumber,
+    reps: drop.reps,
+    weight: drop.weight,
+    completed: false,
+    method: data.method ?? 'dropset',
+    dropOrder: i + 1,
+    isDropGroup: i === 0,
+    rir: drop.rir,
+    createdAt: new Date(),
+  }));
 
-  return results;
+  return db.insert(sets).values(values).returning();
 }
 
 export async function updateSet(
@@ -516,15 +541,27 @@ export async function getLastSessionForRoutine(routineId: number) {
     .leftJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
     .where(eq(sessionExercises.sessionId, lastSession[0].id));
 
-  const exercisesWithSets = await Promise.all(
-    sessionExercisesData.map(async (se) => {
-      const setsData = await db
-        .select()
-        .from(sets)
-        .where(eq(sets.sessionExerciseId, se.id));
-      return { ...se, sets: setsData };
-    })
-  );
+  const seIds = sessionExercisesData.map((se) => se.id);
+  let allSets: typeof sets.$inferSelect[] = [];
+  if (seIds.length > 0) {
+    allSets = await db
+      .select()
+      .from(sets)
+      .where(inArray(sets.sessionExerciseId, seIds))
+      .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
+  }
+
+  const setsBySE = new Map<number, typeof allSets>();
+  for (const s of allSets) {
+    const arr = setsBySE.get(s.sessionExerciseId) ?? [];
+    arr.push(s);
+    setsBySE.set(s.sessionExerciseId, arr);
+  }
+
+  const exercisesWithSets = sessionExercisesData.map((se) => ({
+    ...se,
+    sets: setsBySE.get(se.id) ?? [],
+  }));
 
   return { ...lastSession[0], exercises: exercisesWithSets };
 }
@@ -618,43 +655,48 @@ export async function duplicateSessionData(
   sourceSessionId: number,
   targetSessionId: number
 ) {
-  const sourceExercises = await db
-    .select()
-    .from(sessionExercises)
-    .where(eq(sessionExercises.sessionId, sourceSessionId));
-
-  for (const se of sourceExercises) {
-    const newExercise = await db
-      .insert(sessionExercises)
-      .values({
-        sessionId: targetSessionId,
-        exerciseId: se.exerciseId,
-        order: se.order,
-        notes: se.notes,
-        supersetPairId: se.supersetPairId,
-      })
-      .returning();
-
-    const sourceSets = await db
+  return db.transaction(async (tx) => {
+    const sourceExercises = await tx
       .select()
-      .from(sets)
-      .where(eq(sets.sessionExerciseId, se.id));
+      .from(sessionExercises)
+      .where(eq(sessionExercises.sessionId, sourceSessionId));
 
-    for (const s of sourceSets) {
-      await db.insert(sets).values({
-        sessionExerciseId: newExercise[0].id,
-        setNumber: s.setNumber,
-        reps: s.reps,
-        weight: s.weight,
-        completed: false,
-        method: s.method,
-        dropOrder: s.dropOrder,
-        isDropGroup: s.isDropGroup,
-        rir: s.rir,
-        createdAt: new Date(),
-      });
+    for (const se of sourceExercises) {
+      const newExercise = await tx
+        .insert(sessionExercises)
+        .values({
+          sessionId: targetSessionId,
+          exerciseId: se.exerciseId,
+          order: se.order,
+          notes: se.notes,
+          supersetPairId: se.supersetPairId,
+          restTime: se.restTime,
+        })
+        .returning();
+
+      const sourceSets = await tx
+        .select()
+        .from(sets)
+        .where(eq(sets.sessionExerciseId, se.id));
+
+      if (sourceSets.length > 0) {
+        await tx.insert(sets).values(
+          sourceSets.map((s) => ({
+            sessionExerciseId: newExercise[0].id,
+            setNumber: s.setNumber,
+            reps: s.reps,
+            weight: s.weight,
+            completed: false,
+            method: s.method,
+            dropOrder: s.dropOrder,
+            isDropGroup: s.isDropGroup,
+            rir: s.rir,
+            createdAt: new Date(),
+          }))
+        );
+      }
     }
-  }
+  });
 }
 
 // ─── Exercise History ──────────────────────────────────
@@ -696,20 +738,16 @@ export async function getExerciseStats(exerciseId: number): Promise<ExerciseStat
       maxWeight: sql<number | null>`max(${sets.weight})`,
       totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
       totalSets: sql<number>`count(${sets.id})`,
+      totalSessions: sql<number>`count(distinct ${sessionExercises.sessionId})`,
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
     .where(eq(sessionExercises.exerciseId, exerciseId));
 
-  const sessionCount = await db
-    .select({ count: sql<number>`count(distinct ${sessionExercises.sessionId})` })
-    .from(sessionExercises)
-    .where(eq(sessionExercises.exerciseId, exerciseId));
-
   return {
     maxWeight: result[0]?.maxWeight ?? null,
     totalVolume: result[0]?.totalVolume ?? 0,
-    totalSessions: sessionCount[0]?.count ?? 0,
+    totalSessions: result[0]?.totalSessions ?? 0,
     totalSets: result[0]?.totalSets ?? 0,
   };
 }
@@ -1101,11 +1139,12 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     .from(sessions);
 
   // Current streak — consecutive days with at least one session
+  // Increased from 30 to 100 to support longer streaks (~3 months)
   const recentSessions = await db
     .select({ startedAt: sessions.startedAt })
     .from(sessions)
     .orderBy(desc(sessions.startedAt))
-    .limit(30);
+    .limit(100);
 
   let streak = 0;
   if (recentSessions.length > 0) {
@@ -1119,15 +1158,15 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     const uniqueDates = [...new Set(sessionDates)].sort((a, b) => b - a);
 
     // Check if today or yesterday has a session (streak can start from today or yesterday)
-    const dayMs = 86400000;
+    const DAY_MS = 24 * 60 * 60 * 1000;
     const latestDate = uniqueDates[0];
     const diffFromToday = today.getTime() - latestDate;
 
-    if (diffFromToday <= dayMs) {
+    if (diffFromToday <= DAY_MS) {
       streak = 1;
       for (let i = 1; i < uniqueDates.length; i++) {
         const prevDiff = uniqueDates[i - 1] - uniqueDates[i];
-        if (prevDiff === dayMs) {
+        if (prevDiff === DAY_MS) {
           streak++;
         } else {
           break;
