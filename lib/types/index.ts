@@ -69,6 +69,7 @@ export interface SessionExercise {
   order: number;
   restTime: number | null; // seconds
   notes: string | null;
+  noteType: string | null; // 'rendimiento' | 'ajuste' | null
   supersetPairId: number | null; // shared pair id; both exercises of a super set get the same value
 }
 

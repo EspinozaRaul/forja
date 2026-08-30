@@ -197,6 +197,13 @@ export async function initializeDatabase() {
     // Column already exists, ignore
   }
 
+  // Migration: add note_type for exercise notes categorization
+  try {
+    expoDb.execSync("ALTER TABLE session_exercises ADD COLUMN note_type TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+
   // Check if exercises already imported
   const exerciseCount = await db.select({ count: sql<number>`count(*)` }).from(exercises);
   if (exerciseCount[0].count > 0) {

@@ -393,11 +393,14 @@ export async function deleteSessionExercise(id: number) {
 
 export async function updateSessionExerciseNotes(
   id: number,
-  notes: string | null
+  notes: string | null,
+  noteType?: string | null
 ) {
+  const update: { notes: string | null; noteType?: string | null } = { notes };
+  if (noteType !== undefined) update.noteType = noteType;
   return db
     .update(sessionExercises)
-    .set({ notes })
+    .set(update)
     .where(eq(sessionExercises.id, id))
     .returning();
 }

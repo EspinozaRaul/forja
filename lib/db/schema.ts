@@ -81,6 +81,7 @@ export const sessionExercises = sqliteTable('session_exercises', {
   order: integer('order').notNull(),
   restTime: integer('rest_time').default(DEFAULT_REST_SECONDS), // seconds, per-exercise rest duration
   notes: text('notes'),
+  noteType: text('note_type'), // 'rendimiento' | 'ajuste' | null
   supersetPairId: integer('superset_pair_id'), // shared pair id; both exercises of a super set get the same value
 }, (table) => ({
   sessionIdx: index('se_session_idx').on(table.sessionId),

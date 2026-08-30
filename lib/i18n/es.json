@@ -420,7 +420,11 @@
       "noSetsLogged": "Sin series registradas"
     },
     "newRecord": "¡Nuevo récord!",
-    "exerciseNotesPlaceholder": "Nota (altura del asiento, molestia, etc.)"
+    "exerciseNotesPlaceholder": "Nota (altura del asiento, molestia, etc.)",
+    "noteType": {
+      "rendimiento": "Rendimiento",
+      "ajuste": "Ajuste"
+    }
   },
   "methods": {
     "title": "Método de intensidad",

@@ -2,34 +2,51 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes } from '../lib/theme/tokens';
+
+type NoteType = 'rendimiento' | 'ajuste' | null;
 
 interface ExerciseNotesProps {
   notes: string | null;
-  onNotesChange: (notes: string | null) => void;
+  noteType?: string | null;
+  onNotesChange: (notes: string | null, noteType?: string | null) => void;
 }
 
-/**
- * Discreet exercise notes — small notepad icon that expands to show a text input.
- * Used in session view for seat height, shoulder pain notes, etc.
- */
-export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
+const NOTE_TYPE_META: Record<string, { icon: 'trending-up' | 'options'; color: string }> = {
+  rendimiento: { icon: 'trending-up', color: colors.accent.primary },
+  ajuste: { icon: 'options', color: colors.warning },
+};
+
+function getNoteTypeInfo(type: string | null | undefined) {
+  if (!type || !NOTE_TYPE_META[type]) return null;
+  return { key: type, ...NOTE_TYPE_META[type] };
+}
+
+export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesProps) {
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState(notes ?? '');
+  const [selectedType, setSelectedType] = useState<NoteType>((noteType as NoteType) ?? null);
   const { t } = useTranslation();
 
-  // Sync local state when notes prop changes externally (e.g. undo, server sync)
   useEffect(() => {
     setText(notes ?? '');
-  }, [notes]);
+    setSelectedType((noteType as NoteType) ?? null);
+  }, [notes, noteType]);
 
   const hasNotes = notes !== null && notes.trim().length > 0;
+  const typeInfo = getNoteTypeInfo(noteType);
 
   const handleBlur = () => {
-    onNotesChange(text.trim() || null);
+    onNotesChange(text.trim() || null, selectedType);
     setExpanded(false);
   };
 
+  const handleTypeSelect = (type: NoteType) => {
+    const next = selectedType === type ? null : type;
+    setSelectedType(next);
+  };
+
+  // Collapsed: show icon + preview + type badge
   if (!expanded) {
     return (
       <TouchableOpacity
@@ -47,10 +64,19 @@ export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
             {notes}
           </Text>
         )}
+        {typeInfo && (
+          <View style={[styles.typeBadge, { backgroundColor: typeInfo.color + '20' }]}>
+            <Ionicons name={typeInfo.icon} size={9} color={typeInfo.color} />
+            <Text style={[styles.typeBadgeText, { color: typeInfo.color }]}>
+              {typeInfo.key === 'rendimiento' ? 'Rend' : 'Ajuste'}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   }
 
+  // Expanded: text input + type selector
   return (
     <View style={styles.container}>
       <Ionicons name="document-text" size={14} color={colors.accent.primary} />
@@ -64,6 +90,36 @@ export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
         autoFocus
         multiline
       />
+      <View style={styles.typeRow}>
+        {(['rendimiento', 'ajuste'] as const).map((typeKey) => {
+          const meta = NOTE_TYPE_META[typeKey];
+          const label = typeKey === 'rendimiento' ? t('session.noteType.rendimiento') : t('session.noteType.ajuste');
+          return (
+            <TouchableOpacity
+              key={typeKey}
+              onPress={() => handleTypeSelect(typeKey)}
+              style={[
+                styles.typeChip,
+                selectedType === typeKey && { backgroundColor: meta.color + '25', borderColor: meta.color },
+              ]}
+            >
+              <Ionicons
+                name={meta.icon}
+                size={11}
+                color={selectedType === typeKey ? meta.color : colors.text.muted}
+              />
+              <Text
+                style={[
+                  styles.typeChipText,
+                  selectedType === typeKey && { color: meta.color },
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -79,22 +135,50 @@ const styles = StyleSheet.create({
   preview: {
     fontSize: 10,
     color: colors.text.muted,
-    maxWidth: 120,
+    maxWidth: 100,
   },
-  container: {
+  typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: borderRadius.sm,
+  },
+  typeBadgeText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  container: {
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     marginTop: 4,
+    gap: 4,
   },
   input: {
-    flex: 1,
     fontSize: 11,
     color: colors.text.primary,
     padding: 0,
+  },
+  typeRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  typeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  typeChipText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: colors.text.muted,
   },
 });

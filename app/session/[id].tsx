@@ -1325,7 +1325,8 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       {/* Exercise notes */}
       <ExerciseNotes
         notes={sessionExercise.notes}
-        onNotesChange={(notes) => updateNotes.mutateAsync({ id: sessionExercise.id, notes, sessionId })}
+        noteType={sessionExercise.noteType}
+        onNotesChange={(notes, noteType) => updateNotes.mutateAsync({ id: sessionExercise.id, notes, noteType, sessionId })}
       />
 
       {/* Rest time picker */}

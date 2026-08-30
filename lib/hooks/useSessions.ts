@@ -254,8 +254,8 @@ export function useUnlinkSuperSet() {
 export function useUpdateSessionExerciseNotes() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, notes, sessionId }: { id: number; notes: string | null; sessionId: number }) =>
-      updateSessionExerciseNotes(id, notes),
+    mutationFn: ({ id, notes, noteType, sessionId }: { id: number; notes: string | null; noteType?: string | null; sessionId: number }) =>
+      updateSessionExerciseNotes(id, notes, noteType),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],

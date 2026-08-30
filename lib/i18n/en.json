@@ -420,7 +420,11 @@
       "noSetsLogged": "No sets logged"
     },
     "newRecord": "New record!",
-    "exerciseNotesPlaceholder": "Note (seat height, discomfort, etc.)"
+    "exerciseNotesPlaceholder": "Note (seat height, discomfort, etc.)",
+    "noteType": {
+      "rendimiento": "Performance",
+      "ajuste": "Adjustment"
+    }
   },
   "methods": {
     "title": "Intensity method",
