@@ -178,10 +178,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   serieCell: {
-    width: 38,
-    flexDirection: 'row',
+    width: 24,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   serieNumber: {
     fontSize: 14,

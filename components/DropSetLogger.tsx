@@ -84,9 +84,9 @@ export function DropSetLogger({
       <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea}>
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badgeText}</Text>
-          </View>
+        </View>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badgeText}</Text>
         </View>
         <Text style={styles.segmentCount}>{segmentCount}</Text>
       </TouchableOpacity>
@@ -312,10 +312,8 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 38,
-    flexDirection: 'row',
+    width: 24,
     alignItems: 'center',
-    gap: 4,
   },
   serieNumber: {
     fontSize: 14,
@@ -325,12 +323,13 @@ const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: colors.accent.muted,
-    paddingHorizontal: spacing.xs + 2,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
+    marginLeft: spacing.xs,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '800',
     color: colors.accent.primary,
     letterSpacing: 0.3,
