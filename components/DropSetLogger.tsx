@@ -59,7 +59,7 @@ export function DropSetLogger({
   const swipeableRef = useRef<Swipeable>(null);
   const { t } = useTranslation();
 
-  const badgeText = method === 'dropset' ? 'Drop Set' : method === 'rest_pause' ? 'Rest Pause' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop Set';
+  const badgeText = method === 'dropset' ? 'Drop' : method === 'rest_pause' ? 'Rest' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop';
   const segmentCount = drops.length;
   const unitLabel = t(`methods.${method}.unitLabel`);
   const unitLabelPlural = t(`methods.${method}.unitLabelPlural`);
@@ -79,17 +79,17 @@ export function DropSetLogger({
   };
 
   // Header row: compact summary without inputs
-  // Check button is OUTSIDE the toggle TouchableOpacity to avoid conflict
   const renderHeader = () => (
     <View style={styles.container}>
-      {/* Toggle area — only set number + summary */}
+      {/* Toggle area — number + badge + count flow horizontally */}
       <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea}>
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badgeText} {segmentCount}</Text>
-          </View>
         </View>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badgeText}</Text>
+        </View>
+        <Text style={styles.segmentCount}>{segmentCount}</Text>
       </TouchableOpacity>
 
       {/* Intensity method change button */}
@@ -313,10 +313,8 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 38,
-    flexDirection: 'row',
+    width: 24,
     alignItems: 'center',
-    gap: 4,
   },
   serieNumber: {
     fontSize: 14,
@@ -324,26 +322,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.secondary,
   },
-  rowCenter: {
-    flex: 1,
-    marginLeft: spacing.xs,
-  },
-  rowSummary: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
   badge: {
     backgroundColor: colors.accent.muted,
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
+    marginLeft: spacing.xs,
   },
   badgeText: {
     fontSize: 9,
     fontWeight: '800',
     color: colors.accent.primary,
     letterSpacing: 0.3,
+  },
+  segmentCount: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.text.muted,
+    marginLeft: 4,
   },
   inputCell: {
     flex: 1,
