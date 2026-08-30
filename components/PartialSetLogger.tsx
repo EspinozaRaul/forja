@@ -86,17 +86,18 @@ export function PartialSetLogger({
       friction={2}
     >
       <View style={styles.outerContainer}>
-        <View style={styles.container}>
-          {/* Set number */}
+        {/* Row 1: number + badge */}
+        <View style={styles.headerRow}>
           <View style={styles.serieCell}>
             <Text style={styles.serieNumber}>{set.setNumber}</Text>
           </View>
-
-          {/* Badge — flows horizontally */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>Partial</Text>
           </View>
+        </View>
 
+        {/* Row 2: inputs */}
+        <View style={styles.container}>
           {/* Previous data */}
           <View style={styles.anteriorCell}>
             <Text style={styles.anteriorText} numberOfLines={1}>
@@ -171,6 +172,11 @@ export function PartialSetLogger({
 const styles = StyleSheet.create({
   outerContainer: {
     paddingHorizontal: spacing.sm,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
   },
   container: {
     flexDirection: 'row',
