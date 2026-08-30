@@ -514,6 +514,41 @@ export async function deleteDropSetGroup(sessionExerciseId: number, setNumber: n
     .where(and(eq(sets.sessionExerciseId, sessionExerciseId), eq(sets.setNumber, setNumber)));
 }
 
+/** Delete all drops in a group and recreate them in one transaction.
+ *  Returns the new entries — use this instead of deleteDropSetGroup + createDropSets
+ *  to avoid a render gap between the two operations. */
+export async function replaceDropSetGroup(data: {
+  sessionExerciseId: number;
+  setNumber: number;
+  method?: string;
+  drops: Array<{ reps?: number; weight?: number; rir?: number; completed?: boolean }>;
+}): Promise<typeof sets.$inferSelect[]> {
+  return db.transaction(async (tx) => {
+    // Delete all existing drops in this group
+    await tx
+      .delete(sets)
+      .where(and(eq(sets.sessionExerciseId, data.sessionExerciseId), eq(sets.setNumber, data.setNumber)));
+
+    if (data.drops.length === 0) return [];
+
+    // Create fresh drops
+    const values = data.drops.map((drop, i) => ({
+      sessionExerciseId: data.sessionExerciseId,
+      setNumber: data.setNumber,
+      reps: drop.reps,
+      weight: drop.weight,
+      completed: drop.completed ?? false,
+      method: data.method ?? 'dropset',
+      dropOrder: i + 1,
+      isDropGroup: i === 0,
+      rir: drop.rir,
+      createdAt: new Date(),
+    }));
+
+    return tx.insert(sets).values(values).returning();
+  });
+}
+
 // ─── Last Session for Routine ──────────────────────────
 
 export async function getLastSessionForRoutine(routineId: number) {

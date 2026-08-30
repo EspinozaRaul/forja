@@ -13,7 +13,7 @@ import { useSession, useSessionExercises, useSessionExercisesWithSets, useComple
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
 import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
-import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup } from '../../lib/hooks/useSets';
+import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup, useReplaceDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
@@ -926,6 +926,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
   const updateSet = useUpdateSet();
   const deleteSet = useDeleteSet();
   const deleteDropSetGroup = useDeleteDropSetGroup();
+  const replaceDropSetGroup = useReplaceDropSetGroup();
   const updateRestTime = useUpdateExerciseRestTime();
   const updateExercise = useUpdateExercise();
   const updateNotes = useUpdateSessionExerciseNotes();
@@ -1152,18 +1153,26 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     setExpandedDropSets((prev) => prev.includes(setNumber) ? prev : [...prev, setNumber]);
 
     try {
-      // Now do the actual DB operations
-      // deleteSet + createDropSets both invalidate the exact ['sets', seId] key via onSuccess
-      await deleteSet.mutateAsync({
-        id: setId,
-        sessionExerciseId: seId,
-      });
-      await createDropSets.mutateAsync({
+      // Single atomic operation: delete old drops + create new ones
+      const newDrops = await replaceDropSetGroup.mutateAsync({
         sessionExerciseId: seId,
         setNumber,
         method,
-        drops: drops.map((d) => ({ reps: d.reps ?? undefined, weight: d.weight ?? undefined, rir: d.rir ?? undefined })),
+        drops: drops.map((d) => ({
+          reps: d.reps ?? undefined,
+          weight: d.weight ?? undefined,
+          rir: d.rir ?? undefined,
+          completed: d.completed,
+        })),
       });
+      // Update cache with real data — no refetch gap
+      if (newDrops && newDrops.length > 0) {
+        queryClient.setQueryData<Set[]>(queryKey, (old) => {
+          if (!old) return old;
+          // Remove any entries with this setNumber and insert real drops
+          return old.filter((s) => s.setNumber !== setNumber).concat(newDrops);
+        });
+      }
     } catch (error) {
       // On failure, revert to previous state
       if (previousSets) {
@@ -1517,9 +1526,9 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                       ...prev,
                       [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: true })),
                     }));
-                    // Completing from the editor saves the drop set and exits editing mode
-                    handleSaveDropSet(set.id);
+                    // Start rest timer BEFORE save — handleSaveDropSet unmounts this component
                     onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                    handleSaveDropSet(set.id);
                   }}
                   onUncompleteAll={() => {
                     setDropSetDrafts((prev) => ({

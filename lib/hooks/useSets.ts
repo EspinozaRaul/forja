@@ -6,6 +6,7 @@ import {
   updateSet,
   deleteSet,
   deleteDropSetGroup,
+  replaceDropSetGroup,
 } from '../db/queries';
 import type { Set } from '../types';
 
@@ -113,6 +114,25 @@ export function useDeleteDropSetGroup() {
       sessionExerciseId: number;
       setNumber: number;
     }) => deleteDropSetGroup(sessionExerciseId, setNumber),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...SET_KEY, variables.sessionExerciseId],
+      });
+      queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+    },
+  });
+}
+
+export function useReplaceDropSetGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      sessionExerciseId: number;
+      setNumber: number;
+      method?: string;
+      drops: Array<{ reps?: number; weight?: number; rir?: number; completed?: boolean }>;
+    }) => replaceDropSetGroup(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: [...SET_KEY, variables.sessionExerciseId],
