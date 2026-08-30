@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, AppState, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import {
   saveSessionTimer,
@@ -27,6 +28,7 @@ function formatTime(totalSeconds: number): string {
 }
 
 export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps) {
+  const { t } = useTranslation();
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -158,15 +160,15 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
       <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs, alignItems: 'center' }}>
         {!running ? (
           <TouchableOpacity onPress={handleStart} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.accent.primary, fontWeight: '600', fontSize: 13 }}>Start</Text>
+            <Text style={{ color: colors.accent.primary, fontWeight: '600', fontSize: 13 }}>{t('timer.start')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleStop} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>Pause</Text>
+            <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 13 }}>{t('timer.pause')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={handleReset} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-          <Text style={{ color: colors.text.muted, fontWeight: '600', fontSize: 13 }}>Reset</Text>
+          <Text style={{ color: colors.text.muted, fontWeight: '600', fontSize: 13 }}>{t('timer.reset')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { useTranslation } from 'react-i18next';
+import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 
 interface SetLoggerHeaderProps {
   unit: string;
@@ -8,10 +9,11 @@ interface SetLoggerHeaderProps {
 }
 
 export function SetLoggerHeader({ unit, onUnitChange }: SetLoggerHeaderProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
-      <Text style={styles.serieHeader}>SERIE</Text>
-      <Text style={styles.anteriorHeader}>ANTERIOR</Text>
+      <Text style={styles.serieHeader}>{t('setLogger.serie')}</Text>
+      <Text style={styles.anteriorHeader}>{t('setLogger.anterior')}</Text>
       <TouchableOpacity
         onPress={() => onUnitChange?.(unit === 'kg' ? 'lbs' : 'kg')}
         style={styles.unitHeader}
@@ -22,7 +24,7 @@ export function SetLoggerHeader({ unit, onUnitChange }: SetLoggerHeaderProps) {
           <Ionicons name="swap-vertical" size={10} color={colors.text.muted} />
         )}
       </TouchableOpacity>
-      <Text style={styles.repsHeader}>REPS</Text>
+      <Text style={styles.repsHeader}>{t('setLogger.reps')}</Text>
       <View style={styles.intensitySpacer} />
       <View style={styles.checkHeader} />
     </View>

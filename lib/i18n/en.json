@@ -494,5 +494,15 @@
       "categoryRequired": "Select a category",
       "createFailed": "Could not create exercise"
     }
+  },
+  "timer": {
+    "start": "Start",
+    "pause": "Pause",
+    "reset": "Reset"
+  },
+  "setLogger": {
+    "serie": "SET",
+    "anterior": "PREV",
+    "reps": "REPS"
   }
 }

@@ -494,5 +494,15 @@
       "categoryRequired": "Seleccioná una categoría",
       "createFailed": "No se pudo crear el ejercicio"
     }
+  },
+  "timer": {
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "reset": "Reiniciar"
+  },
+  "setLogger": {
+    "serie": "SERIE",
+    "anterior": "ANTERIOR",
+    "reps": "REPS"
   }
 }

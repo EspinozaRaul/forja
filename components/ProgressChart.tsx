@@ -54,7 +54,7 @@ export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress
 
           return (
             <TouchableOpacity
-              key={index}
+              key={point.date}
               style={{ flex: 1, alignItems: 'center' }}
               onPress={() => onBarPress?.(point.date)}
               activeOpacity={0.7}
@@ -73,7 +73,7 @@ export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress
                 }}
               />
               <Text style={{ fontSize: 10, fontFamily: fonts.body, color: isSelected ? colors.warning : colors.text.muted, marginTop: 4, fontWeight: isSelected ? '700' : '400' }} numberOfLines={1}>
-                {point.date.slice(-2)}
+                {point.date.split('-')[2] ?? point.date.slice(-2)}
               </Text>
             </TouchableOpacity>
           );

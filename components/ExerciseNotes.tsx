@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius } from '../lib/theme/tokens';
@@ -17,6 +17,11 @@ export function ExerciseNotes({ notes, onNotesChange }: ExerciseNotesProps) {
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState(notes ?? '');
   const { t } = useTranslation();
+
+  // Sync local state when notes prop changes externally (e.g. undo, server sync)
+  useEffect(() => {
+    setText(notes ?? '');
+  }, [notes]);
 
   const hasNotes = notes !== null && notes.trim().length > 0;
 

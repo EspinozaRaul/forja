@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 import { useCreateExercise, useExerciseStats, useExercisePRs } from '../lib/hooks/useExercises';
 import { useCategories } from '../lib/hooks/useCategories';
 import { useSettings } from '../lib/utils/settings';
@@ -40,19 +40,19 @@ const EMPTY_STATE: ExercisePickerState = { search: '', selectedMuscle: 'all', se
 
 // Muscle group filters — uses dataset "target" field (more accurate than muscle_group)
 const MUSCLE_FILTERS = [
-  { key: 'all', label: 'Todos', dbValues: null },
-  { key: 'pectorals', label: 'Pecho', dbValues: ['pectorals'] },
-  { key: 'back', label: 'Espalda', dbValues: ['upper back', 'lats', 'spine', 'traps'] },
-  { key: 'delts', label: 'Hombros', dbValues: ['delts'] },
-  { key: 'biceps', label: 'Bíceps', dbValues: ['biceps'] },
-  { key: 'triceps', label: 'Tríceps', dbValues: ['triceps'] },
-  { key: 'forearms', label: 'Antebrazos', dbValues: ['forearms'] },
-  { key: 'abs', label: 'Core', dbValues: ['abs'] },
-  { key: 'quads', label: 'Cuádriceps', dbValues: ['quads'] },
-  { key: 'hamstrings', label: 'Isquiotibiales', dbValues: ['hamstrings'] },
-  { key: 'glutes', label: 'Glúteos', dbValues: ['glutes'] },
-  { key: 'calves', label: 'Pantorrillas', dbValues: ['calves'] },
-  { key: 'cardio', label: 'Cardio', dbValues: ['cardiovascular system'] },
+  { key: 'all', dbValues: null },
+  { key: 'pectorals', dbValues: ['pectorals'] },
+  { key: 'back', dbValues: ['upper back', 'lats', 'spine', 'traps'] },
+  { key: 'delts', dbValues: ['delts'] },
+  { key: 'biceps', dbValues: ['biceps'] },
+  { key: 'triceps', dbValues: ['triceps'] },
+  { key: 'forearms', dbValues: ['forearms'] },
+  { key: 'abs', dbValues: ['abs'] },
+  { key: 'quads', dbValues: ['quads'] },
+  { key: 'hamstrings', dbValues: ['hamstrings'] },
+  { key: 'glutes', dbValues: ['glutes'] },
+  { key: 'calves', dbValues: ['calves'] },
+  { key: 'cardio', dbValues: ['cardiovascular system'] },
 ];
 
 function getExerciseNameFromExercise(exercise: Exercise, lang: string): string {
