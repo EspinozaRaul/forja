@@ -71,7 +71,7 @@ export function useUpdateSet() {
       data,
     }: {
       id: number;
-      data: { reps?: number; weight?: number; completed?: boolean; rir?: number | null; method?: string; isDropGroup?: boolean };
+      data: { reps?: number; weight?: number; completed?: boolean; rir?: number | null; method?: string; isDropGroup?: boolean; partialReps?: number | null };
       sessionExerciseId: number;
     }) => updateSet(id, data),
     onSuccess: (_, variables) => {

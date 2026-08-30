@@ -484,6 +484,7 @@ export async function createDropSets(data: {
     dropOrder: i + 1,
     isDropGroup: i === 0,
     rir: drop.rir,
+    partialReps: null,
     createdAt: new Date(),
   }));
 
@@ -499,6 +500,7 @@ export async function updateSet(
     rir?: number | null;
     method?: string;
     isDropGroup?: boolean;
+    partialReps?: number | null;
   }
 ) {
   return db.update(sets).set(data).where(eq(sets.id, id)).returning();
@@ -542,6 +544,7 @@ export async function replaceDropSetGroup(data: {
       dropOrder: i + 1,
       isDropGroup: i === 0,
       rir: drop.rir,
+      partialReps: null,
       createdAt: new Date(),
     }));
 

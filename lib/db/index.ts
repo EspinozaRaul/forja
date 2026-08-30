@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS sets (
   drop_order INTEGER DEFAULT 0,
   is_drop_group INTEGER DEFAULT 0,
   rir INTEGER,
+  partial_reps INTEGER,
   created_at INTEGER NOT NULL
 );
 `;
@@ -185,6 +186,13 @@ export async function initializeDatabase() {
   // Migration: add RIR (Reps In Reserve) to sets table
   try {
     expoDb.execSync("ALTER TABLE sets ADD COLUMN rir INTEGER");
+  } catch {
+    // Column already exists, ignore
+  }
+
+  // Migration: add partial_reps for 'partial' intensity method
+  try {
+    expoDb.execSync("ALTER TABLE sets ADD COLUMN partial_reps INTEGER");
   } catch {
     // Column already exists, ignore
   }

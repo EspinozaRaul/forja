@@ -101,6 +101,7 @@ export const sets = sqliteTable('sets', {
   dropOrder: integer('drop_order').default(0), // order within a drop set group (0 = not a drop)
   isDropGroup: integer('is_drop_group', { mode: 'boolean' }).default(false), // true if this set STARTS a drop set
   rir: integer('rir'), // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
+  partialReps: integer('partial_reps'), // Partial reps for 'partial' method (C+P format)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({
   sessionExerciseIdx: index('sets_session_exercise_idx').on(table.sessionExerciseId),

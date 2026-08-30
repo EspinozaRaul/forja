@@ -9,9 +9,10 @@ interface PartialSetLoggerProps {
   parentSet: Set;
   expanded: boolean;
   onToggle: () => void;
-  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean }) => void;
+  onUpdate: (updates: { reps?: number; weight?: number; completed?: boolean; partialReps?: number }) => void;
   onDelete?: () => void;
   onComplete: () => void;
+  onChangeMethod?: () => void;
   unit?: string;
   previousWeight?: number | null;
   previousReps?: number | null;
@@ -24,6 +25,7 @@ export function PartialSetLogger({
   onUpdate,
   onDelete,
   onComplete,
+  onChangeMethod,
   unit = 'kg',
   previousWeight = null,
   previousReps = null,
@@ -56,6 +58,7 @@ export function PartialSetLogger({
   // Local state for weight input
   const [weight, setWeight] = useState(parentSet.weight?.toString() ?? '');
   const [reps, setReps] = useState(parentSet.reps?.toString() ?? '');
+  const [partialReps, setPartialReps] = useState(parentSet.partialReps?.toString() ?? '');
 
   const handleWeightChange = (text: string) => {
     setWeight(text);
@@ -67,6 +70,12 @@ export function PartialSetLogger({
     setReps(text);
     const value = parseInt(text, 10);
     onUpdate({ reps: isNaN(value) || value < 0 ? undefined : value });
+  };
+
+  const handlePartialRepsChange = (text: string) => {
+    setPartialReps(text);
+    const value = parseInt(text, 10);
+    onUpdate({ partialReps: isNaN(value) || value < 0 ? undefined : value });
   };
 
   // Header row: compact summary without inputs
@@ -87,6 +96,19 @@ export function PartialSetLogger({
           {previousReps != null ? ` × ${previousReps}r` : ''}
         </Text>
       </View>
+
+      {/* Intensity method change button */}
+      {onChangeMethod && (
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            onChangeMethod();
+          }}
+          style={styles.intensityButton}
+        >
+          <Ionicons name="flash" size={12} color={colors.accent.primary} />
+        </TouchableOpacity>
+      )}
 
       {/* Check button */}
       <TouchableOpacity
@@ -154,8 +176,8 @@ export function PartialSetLogger({
               keyboardType="numeric"
               placeholder="0"
               placeholderTextColor={colors.text.muted}
-              value=""
-              onChangeText={() => {}}
+              value={partialReps}
+              onChangeText={handlePartialRepsChange}
             />
             <Text style={styles.cpUnit}>{unit}</Text>
           </View>

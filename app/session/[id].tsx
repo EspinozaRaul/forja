@@ -19,6 +19,7 @@ import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
 import { SetLoggerHeader } from '../../components/SetLoggerHeader';
 import { DropSetLogger } from '../../components/DropSetLogger';
+import { PartialSetLogger } from '../../components/PartialSetLogger';
 import { ExerciseNotes } from '../../components/ExerciseNotes';
 import { IntensityMethodPicker, type IntensityMethod } from '../../components/IntensityMethodPicker';
 import { Button } from '../../components/ui/Button';
@@ -940,7 +941,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
   const [customMinutes, setCustomMinutes] = useState('');
   const [customSeconds, setCustomSeconds] = useState('');
   const [dropSetMode, setDropSetMode] = useState<number | null>(null); // set ID being converted to drop set
-  const [dropSetMethod, setDropSetMethod] = useState<Record<number, 'dropset' | 'rest_pause' | 'cluster'>>({});
+  const [dropSetMethod, setDropSetMethod] = useState<Record<number, 'dropset' | 'rest_pause' | 'cluster' | 'partial'>>({});
   const [dropSetDrafts, setDropSetDrafts] = useState<Record<number, Array<{ weight: number | null; reps: number | null; completed: boolean; rir: number | null }>>>({});
   const [showIntensityPicker, setShowIntensityPicker] = useState(false);
   const [pendingConversionSetId, setPendingConversionSetId] = useState<number | null>(null);
@@ -1066,6 +1067,16 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
         ],
       }));
 
+    } else if (method === 'partial') {
+      // Partial is a single set with C+P — open partial editor
+      // Auto-save previous set if another was being edited
+      if (dropSetMode !== null && dropSetMode !== pendingConversionSetId) {
+        handleCancelDropSet(dropSetMode);
+      }
+
+      setDropSetMode(pendingConversionSetId);
+      setDropSetMethod((prev) => ({ ...prev, [pendingConversionSetId]: method }));
+
     } else if (method === 'superset') {
       // Super set is per-exercise: bridge into the partner-selection flow for this exercise
       setPendingConversionSetId(null);
@@ -1131,6 +1142,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       dropOrder: i + 1,
       isDropGroup: i === 0,
       rir: d.rir ?? null,
+      partialReps: null,
       createdAt: new Date(),
     }));
 
@@ -1196,6 +1208,33 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       delete next[setId];
       return next;
     });
+    setDropSetMethod((prev) => {
+      const next = { ...prev };
+      delete next[setId];
+      return next;
+    });
+  };
+
+  const handleSavePartialSet = async (setId: number, contractions: number | null, partials: number | null) => {
+    const originalSet = sets?.find((s) => s.id === setId);
+    if (!originalSet) return;
+
+    try {
+      await updateSet.mutateAsync({
+        id: setId,
+        data: {
+          method: 'partial',
+          reps: contractions ?? undefined,
+          partialReps: partials,
+        },
+        sessionExerciseId: sessionExercise.id,
+      });
+    } catch (error) {
+      seShowAlert(t('common.error'), t('session.error.dropSetSave'));
+    }
+
+    // Clear editing state
+    setDropSetMode(null);
     setDropSetMethod((prev) => {
       const next = { ...prev };
       delete next[setId];
@@ -1433,8 +1472,39 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
           // PRIORITY: editing mode takes precedence over persisted drop group
           // This allows changing method on an existing drop group
           if (dropSetMode === set.id) {
-            const drops = dropSetDrafts[set.id] ?? [];
             const displaySet = { ...set, setNumber: displayNumber };
+            const isPartial = dropSetMethod[set.id] === 'partial';
+
+            if (isPartial) {
+              // Partial set editor — C+P breakdown
+              return (
+                <View key={set.id}>
+                  <PartialSetLogger
+                    parentSet={displaySet}
+                    expanded={true}
+                    onToggle={() => {}}
+                    onUpdate={(updates) => {
+                      // Save partial set on each update
+                      const contractions = updates.reps ?? set.reps ?? null;
+                      const partials = (updates as any).partialReps ?? set.partialReps ?? null;
+                      handleSavePartialSet(set.id, contractions, partials);
+                    }}
+                    onDelete={() => handleDeleteSet(set.id)}
+                    onComplete={() => {
+                      onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                      handleSavePartialSet(set.id, set.reps ?? null, set.partialReps ?? null);
+                    }}
+                    onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
+                    unit={unit}
+                    previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                    previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                  />
+                </View>
+              );
+            }
+
+            // Drop set / cluster / rest-pause editor
+            const drops = dropSetDrafts[set.id] ?? [];
             return (
               <View key={set.id}>
                 <DropSetLogger
@@ -1561,6 +1631,41 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                 maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
+              />
+            );
+          }
+
+          // Persisted partial set — show C+P breakdown
+          if (set.method === 'partial') {
+            const displaySet = { ...set, setNumber: displayNumber };
+            return (
+              <PartialSetLogger
+                key={set.id}
+                parentSet={displaySet}
+                expanded={expandedDropSets.includes(set.setNumber)}
+                onToggle={() => handleToggleDropSet(set.setNumber)}
+                onUpdate={(updates) => {
+                  updateSet.mutateAsync({
+                    id: set.id,
+                    data: { reps: updates.reps, partialReps: (updates as any).partialReps ?? set.partialReps },
+                    sessionExerciseId: sessionExercise.id,
+                  });
+                }}
+                onDelete={() => handleDeleteSet(set.id)}
+                onComplete={() => {
+                  updateSet.mutateAsync({
+                    id: set.id,
+                    data: { completed: !set.completed },
+                    sessionExerciseId: sessionExercise.id,
+                  });
+                  if (!set.completed) {
+                    onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                  }
+                }}
+                onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
+                unit={unit}
+                previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
               />
             );
           }

@@ -85,6 +85,7 @@ export interface Set {
   dropOrder: number | null;
   isDropGroup: boolean | null;
   rir: number | null; // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
+  partialReps?: number | null; // Partial reps for 'partial' method (C+P format)
   createdAt: Date;
 }
 
