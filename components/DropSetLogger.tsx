@@ -81,7 +81,6 @@ export function DropSetLogger({
   // Header row: compact summary without inputs
   const renderHeader = () => (
     <View style={styles.container}>
-      {/* Toggle area — number + badge stacked, count flows right */}
       <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea}>
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
@@ -313,8 +312,10 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 72,
-    alignItems: 'flex-start',
+    width: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   serieNumber: {
     fontSize: 14,
@@ -327,7 +328,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
-    marginTop: 2,
   },
   badgeText: {
     fontSize: 9,
@@ -340,7 +340,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.muted,
     marginLeft: 4,
-    alignSelf: 'center',
   },
   inputCell: {
     flex: 1,

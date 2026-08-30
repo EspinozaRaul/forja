@@ -176,8 +176,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   serieCell: {
-    width: 72,
-    alignItems: 'flex-start',
+    width: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   serieNumber: {
     fontSize: 14,
@@ -190,7 +192,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
-    marginTop: 2,
   },
   badgeText: {
     fontSize: 9,
