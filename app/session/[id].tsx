@@ -1089,8 +1089,8 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     });
   };
 
-  const handleSaveDropSet = async (setId: number) => {
-    const drops = dropSetDrafts[setId];
+  const handleSaveDropSet = async (setId: number, dropsOverride?: Array<{ weight: number | null; reps: number | null; completed: boolean; rir: number | null }>) => {
+    const drops = dropsOverride ?? dropSetDrafts[setId];
     if (!drops || drops.length < 2) {
       seShowAlert(t('session.dropSet.methodTitle'), t('session.dropSet.minSegments'));
       return;
@@ -1165,12 +1165,21 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
           completed: d.completed,
         })),
       });
-      // Update cache with real data — no refetch gap
+      // Update cache with real data — preserve original position
       if (newDrops && newDrops.length > 0) {
         queryClient.setQueryData<Set[]>(queryKey, (old) => {
           if (!old) return old;
-          // Remove any entries with this setNumber and insert real drops
-          return old.filter((s) => s.setNumber !== setNumber).concat(newDrops);
+          // Find the original index to preserve position
+          const originalIndex = old.findIndex((s) => s.setNumber === setNumber);
+          const withoutDrops = old.filter((s) => s.setNumber !== setNumber);
+          if (originalIndex === -1 || originalIndex >= withoutDrops.length) {
+            // Original not found or was at the end — append
+            return [...withoutDrops, ...newDrops];
+          }
+          // Insert at original position
+          const result = [...withoutDrops];
+          result.splice(originalIndex, 0, ...newDrops);
+          return result;
         });
       }
     } catch (error) {
@@ -1409,7 +1418,46 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
         return visibleItems.map((set) => {
           displayNumber++;
 
-          // If this set is a drop group, show DropSetLogger
+          // PRIORITY: editing mode takes precedence over persisted drop group
+          // This allows changing method on an existing drop group
+          if (dropSetMode === set.id) {
+            const drops = dropSetDrafts[set.id] ?? [];
+            const displaySet = { ...set, setNumber: displayNumber };
+            return (
+              <View key={set.id}>
+                <DropSetLogger
+                  parentSet={displaySet}
+                  drops={drops}
+                  method={dropSetMethod[set.id] ?? 'dropset'}
+                  expanded={true}
+                  onToggle={() => {}}
+                  onUpdateDrop={(dropIndex, updates) => handleUpdateDrop(set.id, dropIndex, updates)}
+                  onAddDrop={() => handleAddDropToSet(set.id)}
+                  onDeleteDrop={(dropIndex) => handleDeleteDrop(set.id, dropIndex)}
+                  onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
+                  onCompleteAll={() => {
+                    const completedDrops = (dropSetDrafts[set.id] ?? []).map((d) => ({ ...d, completed: true }));
+                    // Start rest timer BEFORE save — handleSaveDropSet unmounts this component
+                    onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
+                    // Pass completed drops directly — setDropSetDrafts state hasn't updated yet
+                    handleSaveDropSet(set.id, completedDrops);
+                  }}
+                  onUncompleteAll={() => {
+                    setDropSetDrafts((prev) => ({
+                      ...prev,
+                      [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: false })),
+                    }));
+                  }}
+                  unit={unit}
+                  previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                  previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                  maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
+                />
+              </View>
+            );
+          }
+
+          // Persisted drop group — show with toggle and check
           if (set.isDropGroup === true && (set.method === 'dropset' || set.method === 'rest_pause' || set.method === 'cluster')) {
             const drops = sets
               ?.filter((s) => (s.method === 'dropset' || s.method === 'rest_pause' || s.method === 'cluster') && s.setNumber === set.setNumber)
@@ -1502,46 +1550,6 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
                 maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
               />
-            );
-          }
-
-          // If we're in drop set editing mode for this set
-          if (dropSetMode === set.id) {
-            const drops = dropSetDrafts[set.id] ?? [];
-            const displaySet = { ...set, setNumber: displayNumber };
-            return (
-              <View key={set.id}>
-                <DropSetLogger
-                  parentSet={displaySet}
-                  drops={drops}
-                  method={dropSetMethod[set.id] ?? 'dropset'}
-                  expanded={true}
-                  onToggle={() => {}}
-                  onUpdateDrop={(dropIndex, updates) => handleUpdateDrop(set.id, dropIndex, updates)}
-                  onAddDrop={() => handleAddDropToSet(set.id)}
-                  onDeleteDrop={(dropIndex) => handleDeleteDrop(set.id, dropIndex)}
-                  onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
-                  onCompleteAll={() => {
-                    setDropSetDrafts((prev) => ({
-                      ...prev,
-                      [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: true })),
-                    }));
-                    // Start rest timer BEFORE save — handleSaveDropSet unmounts this component
-                    onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
-                    handleSaveDropSet(set.id);
-                  }}
-                  onUncompleteAll={() => {
-                    setDropSetDrafts((prev) => ({
-                      ...prev,
-                      [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: false })),
-                    }));
-                  }}
-                  unit={unit}
-                  previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
-                  previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
-                  maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
-                />
-              </View>
             );
           }
 
