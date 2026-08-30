@@ -1045,6 +1045,18 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
   const handleSelectIntensityMethod = (method: IntensityMethod) => {
     if (pendingConversionSetId === null || !pendingConversionSet) return;
 
+    // Save method to DB immediately — prevents revert when switching to another set
+    const isDropMethod = method === 'dropset' || method === 'rest_pause' || method === 'cluster';
+    updateSet.mutateAsync({
+      id: pendingConversionSetId,
+      data: {
+        method,
+        // Drop methods need isDropGroup=true on the parent set
+        isDropGroup: isDropMethod ? true : undefined,
+      },
+      sessionExerciseId: sessionExercise.id,
+    });
+
     if (method === 'dropset' || method === 'rest_pause' || method === 'cluster') {
       // Auto-save previous set if another was being edited
       if (dropSetMode !== null && dropSetMode !== pendingConversionSetId) {
@@ -1215,7 +1227,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     });
   };
 
-  const handleSavePartialSet = async (setId: number, contractions: number | null, partials: number | null) => {
+  const handleSavePartialSet = async (setId: number, contractions: number | null, partials: number | null, weight?: number | null) => {
     const originalSet = sets?.find((s) => s.id === setId);
     if (!originalSet) return;
 
@@ -1226,6 +1238,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
           method: 'partial',
           reps: contractions ?? undefined,
           partialReps: partials,
+          weight: weight ?? undefined,
         },
         sessionExerciseId: sessionExercise.id,
       });
@@ -1479,7 +1492,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
               // Partial set editor — C+P breakdown
               return (
                 <View key={set.id}>
-                  <PartialSetLogger
+                   <PartialSetLogger
                     parentSet={displaySet}
                     expanded={true}
                     onToggle={() => {}}
@@ -1487,12 +1500,13 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                       // Save partial set on each update
                       const contractions = updates.reps ?? set.reps ?? null;
                       const partials = (updates as any).partialReps ?? set.partialReps ?? null;
-                      handleSavePartialSet(set.id, contractions, partials);
+                      const weight = updates.weight ?? set.weight ?? null;
+                      handleSavePartialSet(set.id, contractions, partials, weight);
                     }}
                     onDelete={() => handleDeleteSet(set.id)}
                     onComplete={() => {
                       onSetCompleted?.(exercise ? getExerciseName(exercise.name, i18n.language) : t('session.fallbackExercise'), currentRestTime);
-                      handleSavePartialSet(set.id, set.reps ?? null, set.partialReps ?? null);
+                      handleSavePartialSet(set.id, set.reps ?? null, set.partialReps ?? null, set.weight ?? null);
                     }}
                     onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
                     unit={unit}
@@ -1647,7 +1661,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 onUpdate={(updates) => {
                   updateSet.mutateAsync({
                     id: set.id,
-                    data: { reps: updates.reps, partialReps: (updates as any).partialReps ?? set.partialReps },
+                    data: { reps: updates.reps, partialReps: (updates as any).partialReps ?? set.partialReps, weight: updates.weight },
                     sessionExerciseId: sessionExercise.id,
                   });
                 }}

@@ -89,11 +89,12 @@ export function PartialSetLogger({
         </View>
       </View>
 
-      {/* Summary — previous data */}
+      {/* Summary — weight + C+P */}
       <View style={styles.rowCenter}>
         <Text style={styles.rowSummary}>
-          {previousWeight != null ? `${previousWeight}${unit}` : ''}
-          {previousReps != null ? ` × ${previousReps}r` : ''}
+          {parentSet.weight != null ? `${parentSet.weight}${unit} ` : ''}
+          {parentSet.reps != null ? `${parentSet.reps}C` : ''}
+          {parentSet.partialReps != null ? `+${parentSet.partialReps}P` : ''}
         </Text>
       </View>
 
@@ -157,7 +158,7 @@ export function PartialSetLogger({
           {renderHeader()}
         </TouchableOpacity>
 
-        {/* Expanded: C+P breakdown — indented below the set number */}
+        {/* Expanded: C+P+Weight breakdown — indented below the set number */}
         <View style={styles.expandedBlock}>
           <View style={styles.cpRow}>
             <Text style={styles.cpLabel}>C</Text>
@@ -178,6 +179,15 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={partialReps}
               onChangeText={handlePartialRepsChange}
+            />
+            <Text style={styles.plusSign}>+</Text>
+            <TextInput
+              style={styles.cpInput}
+              keyboardType="numeric"
+              placeholder="0"
+              placeholderTextColor={colors.text.muted}
+              value={weight}
+              onChangeText={handleWeightChange}
             />
             <Text style={styles.cpUnit}>{unit}</Text>
           </View>
