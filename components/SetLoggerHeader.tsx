@@ -6,9 +6,10 @@ import { colors, spacing, borderRadius } from '../lib/theme/tokens';
 interface SetLoggerHeaderProps {
   unit: string;
   onUnitChange?: (unit: string) => void;
+  hasPartial?: boolean;
 }
 
-export function SetLoggerHeader({ unit, onUnitChange }: SetLoggerHeaderProps) {
+export function SetLoggerHeader({ unit, onUnitChange, hasPartial = false }: SetLoggerHeaderProps) {
   const { t } = useTranslation();
   return (
     <View style={styles.container}>
@@ -25,6 +26,9 @@ export function SetLoggerHeader({ unit, onUnitChange }: SetLoggerHeaderProps) {
         )}
       </TouchableOpacity>
       <Text style={styles.repsHeader}>{t('setLogger.reps')}</Text>
+      {hasPartial && (
+        <Text style={styles.partialHeader}>R/P</Text>
+      )}
       <View style={styles.intensitySpacer} />
       <View style={styles.checkHeader} />
     </View>
@@ -71,6 +75,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   repsHeader: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.text.muted,
+    flex: 1,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  partialHeader: {
     fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,

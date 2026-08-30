@@ -35,11 +35,11 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';
 
   const weightPlaceholder = () => {
-    if (previousWeight == null) return '0';
+    if (previousWeight == null) return `0${unit}`;
     return String(previousWeight);
   };
 
-  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : '0');
+  const repsPlaceholder = () => (previousReps != null ? String(previousReps) : '0R');
 
   const handleRepsChange = (text: string) => {
     setReps(text);

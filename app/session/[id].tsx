@@ -1441,7 +1441,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
         </TouchableOpacity>
       ) : (
       <View>
-        <SetLoggerHeader unit={unit} onUnitChange={handleUnitChange} />
+        <SetLoggerHeader unit={unit} onUnitChange={handleUnitChange} hasPartial={sets?.some((s) => s.method === 'partial') ?? false} />
         {(() => {
         // Pre-process: filter to visible items and assign sequential display numbers
         let displayNumber = 0;

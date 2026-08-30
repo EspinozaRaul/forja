@@ -75,8 +75,8 @@ export function PartialSetLogger({
     return `${w} × ${r}`;
   };
 
-  const weightPlaceholder = previousWeight != null ? String(previousWeight) : '0';
-  const repsPlaceholder = previousReps != null ? String(previousReps) : '0';
+  const weightPlaceholder = previousWeight != null ? String(previousWeight) : `0${unit}`;
+  const repsPlaceholder = previousReps != null ? String(previousReps) : '0R';
 
   return (
     <Swipeable
@@ -131,7 +131,7 @@ export function PartialSetLogger({
             <TextInput
               style={styles.input}
               keyboardType="numeric"
-              placeholder="0"
+              placeholder="0R/P"
               placeholderTextColor={colors.text.muted}
               value={partialReps}
               onChangeText={handlePartialRepsChange}
