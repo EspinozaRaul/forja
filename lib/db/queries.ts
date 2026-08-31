@@ -307,6 +307,14 @@ export async function completeSession(
 }
 
 export async function deleteSession(id: number) {
+  // Delete child records first in case old DB lacks CASCADE
+  const seIds = (
+    await db.select({ id: sessionExercises.id }).from(sessionExercises).where(eq(sessionExercises.sessionId, id))
+  ).map((r) => r.id);
+  if (seIds.length > 0) {
+    await db.delete(sets).where(inArray(sets.sessionExerciseId, seIds));
+  }
+  await db.delete(sessionExercises).where(eq(sessionExercises.sessionId, id));
   return db.delete(sessions).where(eq(sessions.id, id));
 }
 

@@ -146,9 +146,13 @@ export default function HomeScreen() {
       'Descartar sesión',
       '¿Querés eliminar esta sesión y todos sus datos?',
       async () => {
-        const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
-        await clearSessionTimer();
-        await deleteSession.mutateAsync(activeSession.id);
+        try {
+          const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
+          await clearSessionTimer();
+          await deleteSession.mutateAsync(activeSession.id);
+        } catch (e) {
+          console.error('Failed to discard session:', e);
+        }
       },
       { confirmLabel: 'Descartar', cancelLabel: 'Cancelar', destructive: true }
     );
