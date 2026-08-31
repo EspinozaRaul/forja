@@ -1290,32 +1290,32 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+        <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={2} ellipsizeMode="tail">
           {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 }}>
           {onPairSuperset && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onPairSuperset(); }}
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + 2, paddingVertical: 2 }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('session.superSet')}</Text>
+              <Text style={{ fontSize: 10, fontWeight: '600', color: colors.text.secondary }}>{t('session.superSet')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
             onPress={() => setShowRestPicker(!showRestPicker)}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + 2, paddingVertical: 2 }}
           >
-            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: colors.text.secondary }}>
               {currentRestTime >= 60 ? `${Math.floor(currentRestTime / 60)}m${currentRestTime % 60 > 0 ? ` ${currentRestTime % 60}s` : ''}` : `${currentRestTime}s`}
             </Text>
           </TouchableOpacity>
           {onReplace && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onReplace(); }}
-              style={{ padding: spacing.xs }}
+              style={{ padding: 2 }}
             >
-              <Ionicons name="repeat" size={16} color={colors.accent.primary} />
+              <Ionicons name="repeat" size={14} color={colors.accent.primary} />
             </TouchableOpacity>
           )}
           <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />

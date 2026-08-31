@@ -270,8 +270,12 @@ export default function RoutineDetailScreen() {
             <Input label={t('routine.detail.nameLabel')} value={editName} onChangeText={setEditName} placeholder={t('routine.detail.namePlaceholder')} />
             <Input label={t('routine.detail.descriptionLabel')} value={editDescription} onChangeText={setEditDescription} placeholder={t('routine.detail.descriptionPlaceholder')} multiline />
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
-              <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
+              <View style={{ flex: 1 }}>
+                <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
+              </View>
             </View>
           </>
         ) : (
@@ -279,8 +283,12 @@ export default function RoutineDetailScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: 20, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <Button title={t('common.edit')} variant="secondary" onPress={handleStartEdit} />
-                <Button title={t('common.delete')} variant="danger" onPress={handleDeleteRoutine} />
+                <View style={{ flex: 1 }}>
+                  <Button title={t('common.edit')} variant="secondary" onPress={handleStartEdit} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button title={t('common.delete')} variant="danger" onPress={handleDeleteRoutine} />
+                </View>
               </View>
             </View>
             {routine.description && (
@@ -426,8 +434,12 @@ export default function RoutineDetailScreen() {
               </View>
             )}
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button title={t('routine.detail.startFresh')} variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
-              <Button title={t('routine.detail.continueLast')} onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
+              <View style={{ flex: 1 }}>
+                <Button title={t('routine.detail.startFresh')} variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button title={t('routine.detail.continueLast')} onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
+              </View>
             </View>
           </Pressable>
         </Pressable>

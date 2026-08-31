@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   serieCell: {
-    width: 24,
+    width: 32,
     alignItems: 'center',
   },
   serieNumber: {

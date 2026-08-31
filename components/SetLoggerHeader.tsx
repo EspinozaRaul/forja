@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: colors.text.muted,
-    width: 24,
+    width: 32,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   intensitySpacer: {
-    width: 24,
+    width: 28,
   },
   checkHeader: {
     width: 28,

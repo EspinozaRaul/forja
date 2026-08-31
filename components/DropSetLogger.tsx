@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 24,
+    width: 32,
     alignItems: 'center',
   },
   serieNumber: {
