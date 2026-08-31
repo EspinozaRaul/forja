@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Forja",
-    "slug": "forja",
+    "slug": "fitness-tracker",
     "version": "1.0.0",
     "scheme": "forja",
     "orientation": "portrait",
