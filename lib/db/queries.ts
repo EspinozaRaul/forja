@@ -1079,6 +1079,54 @@ export async function getExerciseSessions(exerciseId: number): Promise<ExerciseS
   }));
 }
 
+// ─── Exercise Progression Data ──────────────────────────
+
+export interface ExerciseProgressionDataPoint {
+  sessionId: number;
+  date: Date;
+  avgWeight: number | null;
+  avgReps: number | null;
+  avgRir: number | null;
+  setCount: number;
+}
+
+/**
+ * Returns per-session aggregated progression data for a single exercise.
+ * Joins sets → sessionExercises → sessions, filters by exerciseId and
+ * completed sets, groups by session, and computes AVG(weight), AVG(reps),
+ * AVG(rir), COUNT(*). Ordered by session date ascending, limited to 52 rows.
+ * Powers the progression bubble chart.
+ */
+export async function getExerciseProgressionData(
+  exerciseId: number
+): Promise<ExerciseProgressionDataPoint[]> {
+  const rows = await db
+    .select({
+      sessionId: sessions.id,
+      date: sessions.startedAt,
+      avgWeight: sql<number | null>`avg(${sets.weight})`,
+      avgReps: sql<number | null>`avg(${sets.reps})`,
+      avgRir: sql<number | null>`avg(${sets.rir})`,
+      setCount: sql<number>`count(*)`,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), eq(sets.completed, true)))
+    .groupBy(sessions.id)
+    .orderBy(asc(sessions.startedAt))
+    .limit(52);
+
+  return rows.map((row) => ({
+    sessionId: row.sessionId,
+    date: row.date,
+    avgWeight: row.avgWeight ?? null,
+    avgReps: row.avgReps ?? null,
+    avgRir: row.avgRir ?? null,
+    setCount: row.setCount,
+  }));
+}
+
 // ─── Exercise Personal Records ─────────────────────────
 
 export interface ExercisePRs {

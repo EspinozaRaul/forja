@@ -15,8 +15,10 @@ import {
 } from '../../lib/hooks/useProgress';
 import { useSettings } from '../../lib/utils/settings';
 import { ProgressChart } from '../../components/ProgressChart';
+import { ProgressionBubble } from '../../components/ProgressionBubble';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { useExerciseProgressionData } from '../../lib/hooks/useProgressionBubble';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
@@ -704,6 +706,7 @@ export default function ProgressScreen() {
   const { data: compareResult } = useSessionCompare(compare.a ?? 0, compare.b ?? 0);
   const { data: exerciseSessions, isLoading: evolutionLoading } = useExerciseSessions(selectedExerciseId ?? 0);
   const { data: mostUsedExercises, isLoading: mostUsedLoading } = useMostUsedExercises(100);
+  const { data: progressionData, isLoading: progressionLoading } = useExerciseProgressionData(selectedExerciseId);
 
   // Selector chips: only exercises with actual session usage, ordered by usage
   // desc (never the full catalog). The entry list shows the top 6.
@@ -1102,6 +1105,22 @@ export default function ProgressScreen() {
                 />
               </View>
             ) : null}
+
+            {/* Progression bubble chart */}
+            <View style={{ marginTop: spacing.md }}>
+              <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
+                {t('progress.bubbleTitle', { defaultValue: 'Progresión' })}
+              </Text>
+              {progressionLoading ? (
+                <LoadingSpinner message={t('progress.loadingProgression', { defaultValue: 'Cargando progresión...' })} />
+              ) : (
+                <ProgressionBubble
+                  data={progressionData ?? []}
+                  exerciseName={selectedExercise?.name ?? ''}
+                  unit={exerciseUnit}
+                />
+              )}
+            </View>
 
             {/* Per-exercise progression */}
             <View style={{ marginTop: spacing.md }}>
