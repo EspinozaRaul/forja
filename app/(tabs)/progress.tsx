@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useExercises, useExerciseSessions } from '../../lib/hooks/useExercises';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
@@ -957,6 +958,43 @@ export default function ProgressScreen() {
           t={t}
         />
       ) : null}
+
+      {/* 4b. Routine comparison link */}
+      <Pressable
+        onPress={() => router.push('/progress/routine-compare')}
+        style={{
+          backgroundColor: colors.bg.card,
+          borderRadius: borderRadius.lg,
+          borderWidth: 1,
+          borderColor: colors.border.primary,
+          padding: spacing.md,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+        }}
+      >
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: borderRadius.md,
+            backgroundColor: colors.accent.muted,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="git-compare" size={18} color={colors.accent.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+            Comparar por rutina
+          </Text>
+          <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
+            Analiza cambios entre meses
+          </Text>
+        </View>
+        <Text style={{ fontSize: 16, color: colors.text.muted }}>&#8250;</Text>
+      </Pressable>
 
       {/* Ejercicios — most used as entry, then per-exercise progression */}
       <View style={cardStyle}>

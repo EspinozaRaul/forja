@@ -99,6 +99,10 @@ function RootLayoutNav() {
         name="session/history"
         options={{ title: 'Session History' }}
       />
+      <Stack.Screen
+        name="progress/routine-compare"
+        options={{ title: 'Comparar Rutina', headerShown: false }}
+      />
     </Stack>
   );
 }
