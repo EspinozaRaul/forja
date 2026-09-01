@@ -107,3 +107,25 @@ export const sets = sqliteTable('sets', {
 }, (table) => ({
   sessionExerciseIdx: index('sets_session_exercise_idx').on(table.sessionExerciseId),
 }));
+
+export const bodyMeasurements = sqliteTable('body_measurements', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  date: integer('date', { mode: 'timestamp' }).notNull(),
+  weight: real('weight'),           // kg
+  bodyFat: real('body_fat'),        // percentage
+  chest: real('chest'),             // cm
+  waist: real('waist'),             // cm
+  hips: real('hips'),               // cm
+  arms: real('arms'),               // cm (per arm)
+  thighs: real('thighs'),           // cm (per thigh)
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const progressPhotos = sqliteTable('progress_photos', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  date: integer('date', { mode: 'timestamp' }).notNull(),
+  uri: text('uri').notNull(),       // local file URI
+  bodyPart: text('body_part'),      // optional: 'front', 'back', 'side', etc.
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});

@@ -15,6 +15,13 @@
       "when": 1784579877284,
       "tag": "0001_high_the_initiative",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788279443615,
+      "tag": "0002_faithful_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
