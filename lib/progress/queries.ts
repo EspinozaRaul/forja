@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, inArray } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';
@@ -102,19 +102,58 @@ export interface MostUsedExercise {
 // how volume is tallied elsewhere (compare.ts collectExerciseStats). leftJoin on
 // sets keeps exercises that were added but never completed.
 export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[]> {
-  return db
+  // Step 1: get exercises ranked by session count (no set aggregation in SQL
+  // to avoid drizzle CASE WHEN interpolation issues with the boolean column).
+  const exercisesRanked = await db
     .select({
       exerciseId: sessionExercises.exerciseId,
       name: exercises.name,
       unit: exercises.unit,
       sessionCount: sql<number>`count(distinct ${sessions.id})`,
-      setCount: sql<number>`sum(case when ${sets.completed} = 1 then 1 else 0 end)`,
-      maxWeight: sql<number | null>`max(case when ${sets.completed} = 1 then ${sets.weight} else null end)`,
     })
     .from(sessionExercises)
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-    .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
+    .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
     .groupBy(sessionExercises.exerciseId)
-    .orderBy(desc(sql`count(distinct ${sessions.id})`), desc(sql`count(${sets.id})`))
+    .orderBy(desc(sql`count(distinct ${sessions.id})`))
     .limit(limit);
+
+  if (exercisesRanked.length === 0) return [];
+
+  // Step 2: fetch all completed sets for those exercises in one query.
+  const exerciseIds = exercisesRanked.map((e) => e.exerciseId);
+  const completedSets = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      weight: sets.weight,
+    })
+    .from(sets)
+    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(and(inArray(sessionExercises.exerciseId, exerciseIds), eq(sets.completed, true)));
+
+  // Step 3: aggregate setCount and maxWeight in JS.
+  const setsByExercise = new Map<number, { count: number; maxWeight: number | null }>();
+  for (const s of completedSets) {
+    const entry = setsByExercise.get(s.exerciseId);
+    if (entry) {
+      entry.count += 1;
+      if (s.weight != null && (entry.maxWeight == null || s.weight > entry.maxWeight)) {
+        entry.maxWeight = s.weight;
+      }
+    } else {
+      setsByExercise.set(s.exerciseId, { count: 1, maxWeight: s.weight ?? null });
+    }
+  }
+
+  return exercisesRanked.map((e) => {
+    const stats = setsByExercise.get(e.exerciseId);
+    return {
+      exerciseId: e.exerciseId,
+      name: e.name,
+      unit: e.unit,
+      sessionCount: e.sessionCount,
+      setCount: stats?.count ?? 0,
+      maxWeight: stats?.maxWeight ?? null,
+    };
+  });
 }

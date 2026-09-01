@@ -128,6 +128,9 @@ export function useMostUsedExercises(limit = 6) {
   return useQuery<MostUsedExercise[]>({
     queryKey: [...PROGRESS_KEY, 'mostUsed', limit],
     queryFn: () => getMostUsedExercises(limit),
+    refetchOnMount: true,
+    staleTime: 0,
+    gcTime: 0,
   });
 }
 

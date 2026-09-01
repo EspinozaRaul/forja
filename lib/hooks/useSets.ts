@@ -11,6 +11,7 @@ import {
 import type { Set } from '../types';
 
 const SET_KEY = ['sets'];
+const PROGRESS_KEY = ['progress'];
 
 export function useSets(sessionExerciseId: number) {
   return useQuery<Set[]>({
@@ -39,6 +40,7 @@ export function useCreateSet() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
@@ -58,6 +60,7 @@ export function useCreateDropSets() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
@@ -79,6 +82,7 @@ export function useUpdateSet() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
@@ -99,6 +103,7 @@ export function useDeleteSet() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
@@ -119,6 +124,7 @@ export function useDeleteDropSetGroup() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
@@ -138,6 +144,7 @@ export function useReplaceDropSetGroup() {
         queryKey: [...SET_KEY, variables.sessionExerciseId],
       });
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
+      queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
   });
 }
