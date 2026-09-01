@@ -201,7 +201,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
-    paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     alignItems: 'center',
   },
@@ -210,7 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     marginHorizontal: 2,
-    paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     alignItems: 'center',
   },
@@ -220,6 +218,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.primary,
     textAlign: 'center',
+    textAlignVertical: 'center',
     width: '100%',
   },
   intensityButton: {

@@ -147,11 +147,17 @@ export default function HomeScreen() {
       '¿Querés eliminar esta sesión y todos sus datos?',
       async () => {
         try {
-          const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
-          await clearSessionTimer();
+          try {
+            const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
+            await clearSessionTimer();
+          } catch (_) {
+            // timer persistence may not exist yet — safe to ignore
+          }
           await deleteSession.mutateAsync(activeSession.id);
         } catch (e) {
           console.error('Failed to discard session:', e);
+          await haptics.error();
+          showAlert(t('common.error'), t('session.new.createFailed'));
         }
       },
       { confirmLabel: 'Descartar', cancelLabel: 'Cancelar', destructive: true }

@@ -66,7 +66,7 @@ export function Button({
       ) : children ? (
         children
       ) : (
-        <Text style={[{ fontSize: compact ? 14 : 16, fontFamily: fonts.bodySemiBold }, styles.text]} className={`text-base font-bold`}>{title}</Text>
+        <Text style={[{ fontSize: compact ? 14 : 16, fontFamily: fonts.bodySemiBold, flexShrink: 0 }, styles.text]} className={`text-base font-bold`}>{title}</Text>
       )}
     </TouchableOpacity>
   );
