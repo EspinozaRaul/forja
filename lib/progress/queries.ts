@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, inArray } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, inArray, gte, lte } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';
@@ -156,4 +156,75 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
       maxWeight: stats?.maxWeight ?? null,
     };
   });
+}
+
+// ─── Routine Period Comparison ────────────────────────
+
+export interface RoutineSessionRow {
+  sessionId: number;
+  exerciseId: number;
+  exerciseName: string;
+  order: number;
+  date: string; // "YYYY-MM"
+  weight: number | null;
+  reps: number | null;
+  rir: number | null;
+  method: string | null;
+}
+
+/**
+ * Fetch all session-exercise-set rows for a routine across the given period
+ * keys (format "YYYY-MM"). Results are grouped by month.
+ */
+export async function getRoutineSessionsByPeriods(
+  routineId: number,
+  periods: string[]
+): Promise<RoutineSessionRow[]> {
+  if (periods.length === 0) return [];
+
+  // Build WHERE conditions for each period (YYYY-MM)
+  const periodConditions = periods.map((p) =>
+    sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch') = ${p}`
+  );
+
+  const whereClause = and(
+    eq(sessions.routineId, routineId),
+    ...[sql`(${sql.join(periodConditions, sql` OR `)})`]
+  );
+
+  const rows = await db
+    .select({
+      sessionId: sessions.id,
+      exerciseId: sessionExercises.exerciseId,
+      exerciseName: exercises.name,
+      order: sessionExercises.order,
+      date: sql<string>`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`,
+      weight: sets.weight,
+      reps: sets.reps,
+      rir: sets.rir,
+      method: sets.method,
+    })
+    .from(sessions)
+    .innerJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
+    .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+    .innerJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(whereClause)
+    .orderBy(
+      asc(sessions.startedAt),
+      asc(sessionExercises.order),
+      asc(sets.setNumber),
+      asc(sets.dropOrder)
+    );
+
+  return rows.map((r) => ({
+    sessionId: r.sessionId,
+    exerciseId: r.exerciseId,
+    exerciseName: r.exerciseName,
+    order: r.order,
+    date: r.date,
+    weight: r.weight,
+    reps: r.reps,
+    rir: r.rir,
+    method: r.method,
+  }));
 }
