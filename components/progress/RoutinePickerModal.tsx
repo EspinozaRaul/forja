@@ -1,0 +1,255 @@
+import { useState, useMemo } from 'react';
+import { View, Text, Pressable, TextInput, ScrollView, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+
+interface RoutineOption {
+  id: number;
+  name: string;
+  sessionCount: number;
+}
+
+interface RoutinePickerModalProps {
+  visible: boolean;
+  routines: RoutineOption[];
+  onSelect: (routineId: number) => void;
+  onClose: () => void;
+}
+
+/**
+ * Bottom-sheet-style modal listing routines with radio selection.
+ * Includes search filter and "Seleccionar" confirm button.
+ */
+export function RoutinePickerModal({
+  visible,
+  routines,
+  onSelect,
+  onClose,
+}: RoutinePickerModalProps) {
+  const [query, setQuery] = useState('');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return routines;
+    const lower = query.toLowerCase();
+    return routines.filter((r) => r.name.toLowerCase().includes(lower));
+  }, [routines, query]);
+
+  const handleConfirm = () => {
+    if (selectedId != null) {
+      onSelect(selectedId);
+      onClose();
+      setQuery('');
+      setSelectedId(null);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    setQuery('');
+    setSelectedId(null);
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={handleClose}
+    >
+      {/* Backdrop */}
+      <Pressable
+        onPress={handleClose}
+        style={{
+          flex: 1,
+          backgroundColor: colors.overlay,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Pressable
+          onPress={(e) => e.stopPropagation()}
+          style={{
+            backgroundColor: colors.bg.card,
+            borderTopLeftRadius: borderRadius.xl,
+            borderTopRightRadius: borderRadius.xl,
+            maxHeight: '70%',
+            paddingBottom: spacing.xl,
+          }}
+        >
+          {/* Handle bar */}
+          <View
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: colors.border.light,
+              alignSelf: 'center',
+              marginTop: spacing.sm,
+              marginBottom: spacing.md,
+            }}
+          />
+
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: spacing.lg,
+              marginBottom: spacing.md,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: fontSizes.lg,
+                fontFamily: fonts.bodySemiBold,
+                color: colors.text.primary,
+              }}
+            >
+              Seleccionar rutina
+            </Text>
+            <Pressable onPress={handleClose} hitSlop={8}>
+              <Ionicons name="close" size={22} color={colors.text.muted} />
+            </Pressable>
+          </View>
+
+          {/* Search */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.bg.elevated,
+              borderRadius: borderRadius.md,
+              borderWidth: 1,
+              borderColor: colors.border.primary,
+              marginHorizontal: spacing.lg,
+              marginBottom: spacing.md,
+              paddingHorizontal: spacing.sm,
+            }}
+          >
+            <Ionicons name="search" size={18} color={colors.text.muted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Buscar..."
+              placeholderTextColor={colors.text.muted}
+              style={{
+                flex: 1,
+                paddingVertical: spacing.sm + 2,
+                paddingHorizontal: spacing.sm,
+                fontSize: fontSizes.sm,
+                fontFamily: fonts.body,
+                color: colors.text.primary,
+              }}
+            />
+          </View>
+
+          {/* Routine list */}
+          <ScrollView style={{ maxHeight: 360 }}>
+            {filtered.length === 0 ? (
+              <Text
+                style={{
+                  fontSize: fontSizes.sm,
+                  color: colors.text.muted,
+                  textAlign: 'center',
+                  paddingVertical: spacing.lg,
+                }}
+              >
+                No se encontraron rutinas
+              </Text>
+            ) : (
+              filtered.map((routine) => {
+                const isSelected = selectedId === routine.id;
+                return (
+                  <Pressable
+                    key={routine.id}
+                    onPress={() => setSelectedId(routine.id)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.sm,
+                      paddingHorizontal: spacing.lg,
+                      paddingVertical: spacing.sm + 4,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border.divider,
+                    }}
+                  >
+                    {/* Radio indicator */}
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        borderWidth: 2,
+                        borderColor: isSelected ? colors.accent.primary : colors.border.light,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {isSelected && (
+                        <View
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: 5,
+                            backgroundColor: colors.accent.primary,
+                          }}
+                        />
+                      )}
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: fontSizes.sm,
+                          fontFamily: fonts.bodySemiBold,
+                          color: colors.text.primary,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {routine.name}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: fontSizes.xs,
+                          fontFamily: fonts.body,
+                          color: colors.text.muted,
+                        }}
+                      >
+                        {routine.sessionCount} {routine.sessionCount === 1 ? 'sesion' : 'sesiones'}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+
+          {/* Confirm button */}
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
+            <Pressable
+              onPress={handleConfirm}
+              disabled={selectedId == null}
+              style={{
+                backgroundColor: selectedId != null ? colors.accent.primary : colors.bg.elevated,
+                borderRadius: borderRadius.md,
+                paddingVertical: spacing.sm + 4,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: fontSizes.sm,
+                  fontFamily: fonts.bodySemiBold,
+                  color: selectedId != null ? colors.bg.primary : colors.text.muted,
+                }}
+              >
+                Seleccionar
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
