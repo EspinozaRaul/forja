@@ -3,8 +3,8 @@ import { db } from '../db';
 import { sets, sessionExercises, sessions } from '../db/schema';
 import { eq, sql, and, gte, lte } from 'drizzle-orm';
 import { getWeeklySessions } from '../db/queries';
-import { getSessionsByMonth, getSessionMonthIndex, getSessionWithSets, getSessionCompare, getMostUsedExercises } from '../progress';
-import type { SessionByMonth, SessionMonthIndexEntry, SessionDetail, SessionCompareResult, MostUsedExercise } from '../progress';
+import { getSessionsByMonth, getSessionMonthIndex, getSessionWithSets, getSessionCompare, getMostUsedExercises, getRoutineSessionsByPeriods, buildRoutineComparison } from '../progress';
+import type { SessionByMonth, SessionMonthIndexEntry, SessionDetail, SessionCompareResult, MostUsedExercise, RoutineComparisonData } from '../progress';
 import type { ProgressDataPoint, WeeklyVolume } from '../types';
 import type { WeeklySessionDetail } from '../db/queries';
 
@@ -154,5 +154,23 @@ export function useSessionCompare(aId: number, bId: number) {
     queryKey: [...PROGRESS_KEY, 'compare', aId, bId],
     queryFn: () => getSessionCompare(aId, bId),
     enabled: !!aId && !!bId,
+  });
+}
+
+// ─── Routine Period Comparison ────────────────────────
+
+export function useRoutineCompare(
+  routineId: number | null,
+  routineName: string,
+  periods: string[]
+) {
+  return useQuery<RoutineComparisonData>({
+    queryKey: [...PROGRESS_KEY, 'routineCompare', routineId, periods],
+    queryFn: async () => {
+      if (!routineId) throw new Error('routineId required');
+      const rows = await getRoutineSessionsByPeriods(routineId, periods);
+      return buildRoutineComparison(routineId, routineName, rows, periods);
+    },
+    enabled: !!routineId && periods.length > 0,
   });
 }
