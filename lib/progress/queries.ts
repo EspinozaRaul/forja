@@ -165,7 +165,8 @@ export interface RoutineSessionRow {
   exerciseId: number;
   exerciseName: string;
   order: number;
-  date: string; // "YYYY-MM"
+  date: string; // Full date: "YYYY-MM-DD"
+  periodKey: string; // Month only: "YYYY-MM"
   weight: number | null;
   reps: number | null;
   rir: number | null;
@@ -198,7 +199,8 @@ export async function getRoutineSessionsByPeriods(
       exerciseId: sessionExercises.exerciseId,
       exerciseName: exercises.name,
       order: sessionExercises.order,
-      date: sql<string>`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`,
+      date: sql<string>`strftime('%Y-%m-%d', ${sessions.startedAt}, 'unixepoch')`,
+      periodKey: sql<string>`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`,
       weight: sets.weight,
       reps: sets.reps,
       rir: sets.rir,
@@ -222,6 +224,7 @@ export async function getRoutineSessionsByPeriods(
     exerciseName: r.exerciseName,
     order: r.order,
     date: r.date,
+    periodKey: r.periodKey,
     weight: r.weight,
     reps: r.reps,
     rir: r.rir,

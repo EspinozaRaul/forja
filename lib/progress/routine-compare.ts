@@ -65,7 +65,8 @@ interface RawSessionRow {
   exerciseId: number;
   exerciseName: string;
   order: number;
-  date: string;
+  date: string; // Full date: "2026-07-06"
+  periodKey: string; // Month only: "2026-07"
   weight: number | null;
   reps: number | null;
   rir: number | null;
@@ -88,10 +89,10 @@ export function buildRoutineComparison(
   const sessionsByPeriod = new Map<string, Map<number, RoutineSessionExercise>>();
 
   for (const row of rows) {
-    let periodMap = sessionsByPeriod.get(row.date);
+    let periodMap = sessionsByPeriod.get(row.periodKey);
     if (!periodMap) {
       periodMap = new Map();
-      sessionsByPeriod.set(row.date, periodMap);
+      sessionsByPeriod.set(row.periodKey, periodMap);
     }
 
     let exerciseEntry = periodMap.get(row.sessionId);
