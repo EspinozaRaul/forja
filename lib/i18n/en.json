@@ -217,7 +217,40 @@
       "sat": "S",
       "sun": "S"
     },
-    "noDataYet": "No data yet"
+    "noDataYet": "No data yet",
+    "statistics": {
+      "title": "Statistics",
+      "noData": "No statistics",
+      "startTraining": "Start training to see your statistics here.",
+      "totalWorkouts": "Workouts",
+      "totalVolume": "Total volume",
+      "totalTime": "Total time",
+      "currentStreak": "Current streak",
+      "mostFrequent": "Most frequent exercise",
+      "sessionFrequency": "Session frequency",
+      "sessions": "sessions",
+      "topExercises": "Top exercises",
+      "muscleGroups": "Muscle groups"
+    },
+    "exercises": {
+      "title": "Exercises",
+      "search": "Search exercise...",
+      "noExercises": "No exercises yet",
+      "startTraining": "Start training to see your exercises here.",
+      "sessions": "sessions",
+      "sets": "sets",
+      "maxWeight": "Max weight",
+      "lastUsed": "Last used",
+      "progression": "Progression",
+      "personalRecords": "Personal records",
+      "maxWeightRecord": "Max weight",
+      "bestSet": "Best set",
+      "bestSession": "Best session",
+      "estimated1RM": "Est. 1RM",
+      "sessionHistory": "Session history",
+      "volume": "Volume",
+      "noData": "No data for this exercise"
+    }
   },
   "routine": {
     "detail": {

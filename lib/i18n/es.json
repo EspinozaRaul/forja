@@ -217,7 +217,40 @@
       "sat": "S",
       "sun": "D"
     },
-    "noDataYet": "Sin datos todavía"
+    "noDataYet": "Sin datos todavía",
+    "statistics": {
+      "title": "Estadísticas",
+      "noData": "Sin estadísticas",
+      "startTraining": "Empezá a entrenar para ver tus estadísticas aquí.",
+      "totalWorkouts": "Entrenamientos",
+      "totalVolume": "Volumen total",
+      "totalTime": "Tiempo total",
+      "currentStreak": "Racha actual",
+      "mostFrequent": "Ejercicio más frecuente",
+      "sessionFrequency": "Frecuencia de sesiones",
+      "sessions": "sesiones",
+      "topExercises": "Ejercicios más usados",
+      "muscleGroups": "Grupos musculares"
+    },
+    "exercises": {
+      "title": "Ejercicios",
+      "search": "Buscar ejercicio...",
+      "noExercises": "Aún no hay ejercicios",
+      "startTraining": "Empezá a entrenar para ver tus ejercicios aquí.",
+      "sessions": "sesiones",
+      "sets": "series",
+      "maxWeight": "Peso máx",
+      "lastUsed": "Último uso",
+      "progression": "Progresión",
+      "personalRecords": "Records personales",
+      "maxWeightRecord": "Peso máximo",
+      "bestSet": "Mejor set",
+      "bestSession": "Mejor sesión",
+      "estimated1RM": "1RM estimado",
+      "sessionHistory": "Historial de sesiones",
+      "volume": "Volumen",
+      "noData": "Sin datos de este ejercicio"
+    }
   },
   "routine": {
     "detail": {
