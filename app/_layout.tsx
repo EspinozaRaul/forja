@@ -1,7 +1,7 @@
 import '../global.css';
 import '../lib/i18n';
 import { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Text, Image } from 'react-native';
 import { Stack, router, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -135,9 +135,11 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
   if (!isReady) {
     return (
-      <View className="flex-1 items-center justify-center bg-dark-bg">
-        <ActivityIndicator size="large" color={colors.accent.primary} />
-        <Text className="text-sm text-dark-text-secondary mt-4">Initializing database...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0A0A0A' }}>
+        <Image 
+          source={require('../assets/splash-icon.png')} 
+          style={{ width: 120, height: 120, resizeMode: 'contain' }}
+        />
       </View>
     );
   }
