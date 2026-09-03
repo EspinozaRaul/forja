@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '../db';
 import { progressPhotos } from '../db/schema';
 import { desc, eq } from 'drizzle-orm';
-import * as ImagePicker from 'expo-image-picker';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -78,6 +77,7 @@ export function useDeletePhoto() {
 
 export function usePickPhoto() {
   return async (bodyPart?: string) => {
+    const ImagePicker = await import('expo-image-picker');
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -98,6 +98,7 @@ export function usePickPhoto() {
 
 export function useTakePhoto() {
   return async (bodyPart?: string) => {
+    const ImagePicker = await import('expo-image-picker');
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     
     if (!permissionResult.granted) {
