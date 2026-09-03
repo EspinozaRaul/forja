@@ -5,15 +5,18 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../lib/hooks/useAuth';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
+  const { signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { dialog, showAlert } = useConfirmDialog();
 
   const handleLogin = async () => {
@@ -38,6 +41,18 @@ export default function LoginScreen() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    const { error } = await signInWithGoogle();
+    setGoogleLoading(false);
+
+    if (error) {
+      showAlert(t('common.error'), error.message);
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <>
     <View style={styles.container}>
@@ -51,6 +66,26 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.form}>
+        {/* Google Sign-In Button */}
+        <TouchableOpacity
+          style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+          onPress={handleGoogleLogin}
+          disabled={googleLoading || loading}
+        >
+          <Ionicons name="logo-google" size={20} color={colors.text.primary} />
+          <Text style={styles.googleButtonText}>
+            {googleLoading ? t('auth.login.loading') : t('auth.login.continueWithGoogle')}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t('auth.login.or')}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Email/Password Form */}
         <TextInput
           // @ts-ignore — tintColor works at runtime but isn't in RN types yet
           style={[styles.input, { tintColor: colors.accent.primary }]}
@@ -86,7 +121,7 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleLogin}
-          disabled={loading}
+          disabled={loading || googleLoading}
         >
           <Text style={styles.buttonText}>
             {loading ? t('auth.login.loading') : t('auth.login.submit')}
@@ -157,6 +192,37 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.md,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.bg.card,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.primary,
+  },
+  googleButtonText: {
+    color: colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginVertical: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border.primary,
+  },
+  dividerText: {
+    color: colors.text.muted,
+    fontSize: 12,
   },
   input: {
     backgroundColor: colors.bg.card,

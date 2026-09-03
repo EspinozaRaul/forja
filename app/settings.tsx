@@ -84,6 +84,17 @@ export default function SettingsScreen() {
     router.replace('/auth/login');
   };
 
+  const handleDeleteAccount = async () => {
+    const { deleteAccount } = useAuth();
+    const { error } = await deleteAccount();
+    if (error) {
+      await haptics.error();
+      showAlert(t('common.error'), t('settings.deleteAccountFailed'));
+      return;
+    }
+    router.replace('/auth/login');
+  };
+
   return (
     <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} contentContainerStyle={{ paddingBottom: spacing.xl }}>
@@ -176,6 +187,21 @@ export default function SettingsScreen() {
             { confirmLabel: t('settings.signOut'), destructive: true }
           )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
             <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.signOut')}</Text>
+          </TouchableOpacity>
+        </Row>
+      </View>
+
+      <SectionHeader title={t('settings.dangerZone')} />
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.error }}>
+        <Row first>
+          <TouchableOpacity onPress={() => showConfirm(
+            t('settings.deleteAccount'),
+            t('settings.deleteAccountConfirm'),
+            handleDeleteAccount,
+            { confirmLabel: t('settings.deleteAccount'), destructive: true }
+          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
+            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.deleteAccount')}</Text>
+            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.deleteAccountDescription')}</Text>
           </TouchableOpacity>
         </Row>
       </View>

@@ -7,6 +7,8 @@
       "password": "Contraseña",
       "forgotPassword": "¿Olvidaste tu contraseña?",
       "submit": "Iniciar sesión",
+      "continueWithGoogle": "Continuar con Google",
+      "or": "o",
       "loading": "Iniciando...",
       "noAccount": "¿Sin cuenta?",
       "signUp": "Crear cuenta",
@@ -57,7 +59,11 @@
     "signOut": "Cerrar sesión",
     "signOutConfirm": "¿Seguro que querés cerrar sesión?",
     "signOutFailed": "No se pudo cerrar sesión.",
+    "dangerZone": "Zona de peligro",
     "deleteAccount": "Eliminar cuenta",
+    "deleteAccountConfirm": "¿Eliminar tu cuenta permanentemente? Se borrarán todos tus datos, entrenamientos y configuración. Esta acción no se puede deshacer.",
+    "deleteAccountDescription": "Elimina permanentemente tu cuenta y todos los datos asociados.",
+    "deleteAccountFailed": "No se pudo eliminar la cuenta.",
     "version": "Versión"
   },
   "common": {

@@ -7,6 +7,8 @@
       "password": "Password",
       "forgotPassword": "Forgot your password?",
       "submit": "Sign in",
+      "continueWithGoogle": "Continue with Google",
+      "or": "or",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
       "signUp": "Create account",
@@ -57,7 +59,11 @@
     "signOut": "Sign out",
     "signOutConfirm": "Are you sure you want to sign out?",
     "signOutFailed": "Could not sign out.",
+    "dangerZone": "Danger Zone",
     "deleteAccount": "Delete account",
+    "deleteAccountConfirm": "Permanently delete your account? All your data, workouts, and settings will be erased. This action cannot be undone.",
+    "deleteAccountDescription": "Permanently delete your account and all associated data.",
+    "deleteAccountFailed": "Could not delete account.",
     "version": "Version"
   },
   "common": {
