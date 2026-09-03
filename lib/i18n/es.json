@@ -532,9 +532,28 @@
     "bestSet": "Mejor serie",
     "bestSession": "Mejor sesión",
     "est1RM": "1RM est.",
-    "weeklyVolume": "Volumen semanal ({{unit}})",
+    "weeklyVolume": "Volumen semanal",
+    "progression": "Progresión",
+    "totalSessions": "Sesiones",
     "sessionHistory": "Historial de sesiones",
     "noSessions": "Sin sesiones aún",
     "noSessionsMessage": "Empezá una sesión para ver tu historial acá."
+  },
+  "exercises": {
+    "title": "Ejercicios",
+    "loading": "Cargando ejercicios...",
+    "error": "Error",
+    "errorMessage": "No se pudieron cargar los ejercicios",
+    "empty": "Sin ejercicios",
+    "emptyMessage": "Empezá una sesión para ver tus ejercicios",
+    "noResults": "Sin resultados",
+    "noResultsMessage": "No se encontraron ejercicios",
+    "searchPlaceholder": "Buscar ejercicio...",
+    "sessionCount": "{{count}} sesiones",
+    "setCount": "{{count}} series",
+    "maxWeight": "Max",
+    "volume": "Volumen",
+    "sets": "Series",
+    "volumeChange": "Volumen {{direction}} {{percent}}%"
   }
 }
