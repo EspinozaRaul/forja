@@ -232,6 +232,27 @@
       "topExercises": "Top exercises",
       "muscleGroups": "Muscle groups"
     },
+    "measurements": {
+      "title": "Measurements",
+      "newMeasurement": "New measurement",
+      "weight": "Weight",
+      "bodyFat": "Body fat",
+      "chest": "Chest",
+      "waist": "Waist",
+      "hips": "Hips",
+      "arms": "Arms",
+      "thighs": "Thighs",
+      "latestMeasurement": "Latest measurement",
+      "progressPhotos": "Progress photos",
+      "gallery": "Gallery",
+      "camera": "Camera",
+      "noPhotos": "No photos yet",
+      "history": "History",
+      "deleteMeasurement": "Delete measurement",
+      "deleteMeasurementConfirm": "Are you sure you want to delete this measurement?",
+      "deletePhoto": "Delete photo",
+      "deletePhotoConfirm": "Are you sure you want to delete this photo?"
+    },
     "exercises": {
       "title": "Exercises",
       "search": "Search exercise...",

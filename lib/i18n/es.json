@@ -232,6 +232,27 @@
       "topExercises": "Ejercicios más usados",
       "muscleGroups": "Grupos musculares"
     },
+    "measurements": {
+      "title": "Medidas",
+      "newMeasurement": "Nueva medida",
+      "weight": "Peso",
+      "bodyFat": "% Grasa",
+      "chest": "Pecho",
+      "waist": "Cintura",
+      "hips": "Caderas",
+      "arms": "Brazos",
+      "thighs": "Muslos",
+      "latestMeasurement": "Última medida",
+      "progressPhotos": "Fotos de progreso",
+      "gallery": "Galería",
+      "camera": "Cámara",
+      "noPhotos": "Sin fotos aún",
+      "history": "Historial",
+      "deleteMeasurement": "Eliminar medida",
+      "deleteMeasurementConfirm": "¿Estás seguro de que querés eliminar esta medida?",
+      "deletePhoto": "Eliminar foto",
+      "deletePhotoConfirm": "¿Estás seguro de que querés eliminar esta foto?"
+    },
     "exercises": {
       "title": "Ejercicios",
       "search": "Buscar ejercicio...",
