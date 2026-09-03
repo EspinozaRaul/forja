@@ -103,6 +103,34 @@ export default function StatisticsScreen() {
     });
   }, [sessionCount, period]);
 
+  // Group exercises by muscle group (simplified - using exercise name patterns)
+  const muscleGroupFrequency = useMemo(() => {
+    if (!exercises) return [];
+    
+    const groups: Record<string, number> = {};
+    
+    exercises.forEach((ex) => {
+      // Simple grouping based on common exercise name patterns
+      const name = ex.name.toLowerCase();
+      let group = 'Otros';
+      
+      if (name.includes('press') || name.includes('chest') || name.includes('pecho')) group = 'Pecho';
+      else if (name.includes('squat') || name.includes('sentadilla') || name.includes('leg')) group = 'Piernas';
+      else if (name.includes('curl') || name.includes('bicep')) group = 'Bíceps';
+      else if (name.includes('row') || name.includes('back') || name.includes('espalda')) group = 'Espalda';
+      else if (name.includes('shoulder') || name.includes('press militar')) group = 'Hombros';
+      else if (name.includes('tricep') || name.includes('extension')) group = 'Tríceps';
+      else if (name.includes('lunge') || name.includes('zancada')) group = 'Piernas';
+      
+      groups[group] = (groups[group] || 0) + ex.sessionCount;
+    });
+    
+    return Object.entries(groups)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [exercises]);
+
   const isLoading = statsLoading || exercisesLoading || sessionLoading;
 
   if (isLoading) {
@@ -121,34 +149,6 @@ export default function StatisticsScreen() {
 
   // Calculate total sessions for the period
   const totalSessionsPeriod = filteredSessionCount.reduce((sum, p) => sum + p.value, 0);
-
-  // Group exercises by muscle group (simplified - using exercise name patterns)
-  const muscleGroupFrequency = useMemo(() => {
-    if (!exercises) return [];
-    
-    const groups: Record<string, number> = {};
-    
-      exercises.forEach((ex) => {
-        // Simple grouping based on common exercise name patterns
-        const name = ex.name.toLowerCase();
-        let group = 'Otros';
-        
-        if (name.includes('press') || name.includes('chest') || name.includes('pecho')) group = 'Pecho';
-        else if (name.includes('squat') || name.includes('sentadilla') || name.includes('leg')) group = 'Piernas';
-        else if (name.includes('curl') || name.includes('bicep')) group = 'Bíceps';
-        else if (name.includes('row') || name.includes('back') || name.includes('espalda')) group = 'Espalda';
-        else if (name.includes('shoulder') || name.includes('press militar')) group = 'Hombros';
-        else if (name.includes('tricep') || name.includes('extension')) group = 'Tríceps';
-        else if (name.includes('lunge') || name.includes('zancada')) group = 'Piernas';
-        
-        groups[group] = (groups[group] || 0) + ex.sessionCount;
-      });
-    
-    return Object.entries(groups)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-  }, [exercises]);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
