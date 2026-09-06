@@ -68,7 +68,6 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
         height={180}
         yAxisSuffix={unit}
         yAxisLabel=""
-        decimalPlaces={decimalPlaces}
         chartConfig={{
           backgroundColor: 'transparent',
           backgroundGradientFrom: colors.bg.elevated,
