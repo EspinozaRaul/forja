@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, Dimensions } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { ProgressDataPoint } from '../lib/types';
@@ -19,8 +20,11 @@ function formatValue(value: number): string {
   return value.toString();
 }
 
-export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress, embedded = false }: ProgressChartProps) {
+export function ProgressChart({ data, title, unit = '', embedded = false }: ProgressChartProps) {
   const { t } = useTranslation();
+  const screenWidth = Dimensions.get('window').width;
+  const chartWidth = embedded ? screenWidth - spacing.md * 4 : screenWidth - spacing.lg * 2 - spacing.xs * 2;
+
   const containerStyle = embedded
     ? { backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }
     : { backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs };
@@ -38,47 +42,67 @@ export function ProgressChart({ data, title, unit = '', selectedWeek, onBarPress
     );
   }
 
-  const maxValue = Math.max(...data.map((d) => d.value));
+  const labels = data.map((d) => {
+    const day = d.date.split('-')[2] ?? d.date.slice(-2);
+    return day;
+  });
+
+  const values = data.map((d) => d.value);
+
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  const decimalPlaces = maxValue >= 100 ? 0 : maxValue >= 10 ? 1 : 1;
 
   return (
     <View style={containerStyle}>
       {title && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 16 }}>{title}</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 12 }}>{title}</Text>
       )}
 
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 140, gap: 4 }}>
-        {data.map((point, index) => {
-          const heightPercent = maxValue > 0 ? (point.value / maxValue) * 100 : 0;
-          const isSelected = selectedWeek === point.date;
-          const barColor = isSelected ? colors.warning : colors.accent.primary;
-
-          return (
-            <TouchableOpacity
-              key={point.date}
-              style={{ flex: 1, alignItems: 'center' }}
-              onPress={() => onBarPress?.(point.date)}
-              activeOpacity={0.7}
-            >
-              <Text style={{ fontSize: 10, fontFamily: fonts.body, color: isSelected ? colors.warning : colors.text.secondary, marginBottom: 4, fontWeight: isSelected ? '700' : '400' }}>
-                {formatValue(point.value)}{unit}
-              </Text>
-              <View
-                style={{
-                  backgroundColor: barColor,
-                  borderTopLeftRadius: 4,
-                  borderTopRightRadius: 4,
-                  width: '80%',
-                  height: `${Math.max(heightPercent, 4)}%`,
-                  opacity: selectedWeek && !isSelected ? 0.4 : 1,
-                }}
-              />
-              <Text style={{ fontSize: 10, fontFamily: fonts.body, color: isSelected ? colors.warning : colors.text.muted, marginTop: 4, fontWeight: isSelected ? '700' : '400' }} numberOfLines={1}>
-                {point.date.split('-')[2] ?? point.date.slice(-2)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <LineChart
+        data={{
+          labels,
+          datasets: [{ data: values }],
+        }}
+        width={chartWidth}
+        height={180}
+        yAxisSuffix={unit}
+        yAxisLabel=""
+        decimalPlaces={decimalPlaces}
+        chartConfig={{
+          backgroundColor: 'transparent',
+          backgroundGradientFrom: colors.bg.elevated,
+          backgroundGradientTo: colors.bg.elevated,
+          decimalPlaces,
+          color: (opacity = 1) => `rgba(74, 111, 165, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(158, 165, 180, ${opacity})`,
+          style: {
+            borderRadius: borderRadius.md,
+          },
+          propsForDots: {
+            r: '4',
+            strokeWidth: '2',
+            stroke: colors.accent.primary,
+            fill: colors.bg.elevated,
+          },
+          propsForBackgroundLines: {
+            stroke: colors.border.primary,
+            strokeDasharray: '4 4',
+          },
+        }}
+        bezier
+        style={{
+          marginVertical: spacing.sm,
+          borderRadius: borderRadius.md,
+          marginLeft: -spacing.md,
+        }}
+        formatYLabel={(value) => formatValue(parseFloat(value))}
+        withInnerLines={true}
+        withOuterLines={false}
+        withVerticalLines={false}
+        withHorizontalLines={true}
+        segments={4}
+      />
     </View>
   );
 }
