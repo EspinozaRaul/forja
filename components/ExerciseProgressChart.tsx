@@ -61,7 +61,6 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
         height={160}
         yAxisSuffix={` ${unit}`}
         yAxisLabel=""
-        decimalPlaces={weightDecimals}
         chartConfig={{
           backgroundColor: 'transparent',
           backgroundGradientFrom: colors.bg.elevated,
@@ -107,7 +106,6 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
         height={160}
         yAxisSuffix=" reps"
         yAxisLabel=""
-        decimalPlaces={repDecimals}
         chartConfig={{
           backgroundColor: 'transparent',
           backgroundGradientFrom: colors.bg.elevated,
