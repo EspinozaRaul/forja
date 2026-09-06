@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useExercise, useExerciseStats, useExerciseSessions, useExercisePRs } from '../../../lib/hooks/useExercises';
 import { useExerciseProgress, useTotalVolumeByWeek } from '../../../lib/hooks/useProgress';
 import { getExerciseProgressionData } from '../../../lib/db/queries';
-import { ProgressionBubble } from '../../../components/ProgressionBubble';
+import { ExerciseProgressChart } from '../../../components/ExerciseProgressChart';
 import { ProgressChart } from '../../../components/ProgressChart';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -406,7 +406,7 @@ export default function ExerciseDetailScreen() {
           </View>
         )}
 
-        {/* Progression Bubble Chart */}
+        {/* Progression Chart */}
         <View
           style={{
             backgroundColor: colors.bg.card,
@@ -426,9 +426,8 @@ export default function ExerciseDetailScreen() {
           >
             {t('exerciseDetail.progression')}
           </Text>
-          <ProgressionBubble
+          <ExerciseProgressChart
             data={filteredProgression}
-            exerciseName={exercise.name}
             unit={exerciseUnit}
           />
         </View>
