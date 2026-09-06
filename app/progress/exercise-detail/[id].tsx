@@ -13,6 +13,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../../lib/theme/tokens';
 import { formatRelativeDate, formatDuration, formatVolume } from '../../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
+import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { useSettings } from '../../../lib/utils/settings';
 import type { ExerciseProgressionDataPoint } from '../../../lib/db/queries';
 import { useQuery } from '@tanstack/react-query';
@@ -235,7 +236,7 @@ function PRRow({
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const settings = useSettings();
   const unit = settings.data.weightUnit;
 
@@ -344,7 +345,7 @@ export default function ExerciseDetailScreen() {
           }}
           numberOfLines={1}
         >
-          {exercise.name}
+          {getExerciseName(exercise.name, i18n.language)}
         </Text>
       </View>
 

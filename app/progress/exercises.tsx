@@ -10,10 +10,11 @@ import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme
 import { formatRelativeDate } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { useSettings } from '../../lib/utils/settings';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import type { MostUsedExercise } from '../../lib/progress/queries';
 
 export default function ExercisesScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const settings = useSettings();
   const unit = settings.data.weightUnit;
@@ -74,7 +75,7 @@ export default function ExercisesScreen() {
               }}
               numberOfLines={1}
             >
-              {item.name}
+              {getExerciseName(item.name, i18n.language)}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <Text
