@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, View, type ViewStyle } from 'react-native';
 import { type ReactNode } from 'react';
 import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 
@@ -13,6 +13,7 @@ interface ButtonProps {
   children?: ReactNode;
   className?: string;
   compact?: boolean;
+  style?: ViewStyle;
 }
 
 const variantStyles: Record<ButtonVariant, { container: any; text: any }> = {
@@ -43,6 +44,7 @@ export function Button({
   children,
   className = '',
   compact = false,
+  style,
 }: ButtonProps) {
   const styles = variantStyles[variant];
   const isDisabled = disabled || loading;
@@ -59,6 +61,7 @@ export function Button({
         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: compact ? borderRadius.sm : borderRadius.md, paddingHorizontal: compact ? spacing.md : spacing.lg, paddingVertical: compact ? spacing.sm : spacing.md },
         styles.container,
         isDisabled && { opacity: 0.4 },
+        style,
       ]}
       className={`flex-row items-center justify-center rounded-xl px-6 py-4 ${
         isDisabled ? 'opacity-40' : ''

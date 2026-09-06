@@ -188,12 +188,14 @@ export default function RoutinesScreen() {
           onPress={() => setShowCreateModal(true)}
           variant="primary"
           compact
+          style={{ flex: 1 }}
         />
         <Button
           title={`+ ${t('tabs.routines.newRoutine')}`}
           onPress={() => router.push('/routine/create')}
           variant="secondary"
           compact
+          style={{ flex: 1 }}
         />
       </View>
 
