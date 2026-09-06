@@ -31,6 +31,8 @@ interface DropSetLoggerProps {
   onUnitChange?: (unit: string) => void;
   previousWeight?: number | null;
   previousReps?: number | null;
+  previousRir?: number | null;
+  previousMethod?: string | null;
   previousDropFor?: (method: string, dropOrder: number) => { weight: number | null; reps: number | null } | undefined;
   maxWeight?: number | null;
 }
@@ -52,6 +54,8 @@ export function DropSetLogger({
   onUnitChange,
   previousWeight = null,
   previousReps = null,
+  previousRir = null,
+  previousMethod = null,
   previousDropFor,
   maxWeight = null,
 }: DropSetLoggerProps) {
@@ -237,10 +241,11 @@ function DropRow({
     return pr != null ? String(pr) : 'R';
   };
 
-  // Label: show previous data if available, otherwise "Drop N"
+  // Label: show previous data if available, otherwise "Drop N" / "CL 1" etc.
+  const dropLabel = method === 'cluster' ? 'CL' : method === 'rest_pause' ? 'RP' : method === 'partial' ? 'P' : 'Drop';
   const labelText = prevDrop
     ? `${prevDrop.weight ?? '?'}${unit} × ${prevDrop.reps ?? '?'}r`
-    : `Drop ${index + 1}`;
+    : `${dropLabel} ${index + 1}`;
 
   return (
     <View style={styles.dropRow}>

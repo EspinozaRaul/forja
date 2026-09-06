@@ -105,6 +105,8 @@ export default function SessionScreen() {
     let weight: number | null = null;
     let reps: number | null = null;
     let rir: number | null = null;
+    let method: string | null = null;
+    let partialReps: number | null = null;
     const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
     if (prevSets && prevSets.length > 0) {
       const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
@@ -114,6 +116,8 @@ export default function SessionScreen() {
         weight = chosen.weight != null ? chosen.weight : null;
         reps = chosen.reps != null ? chosen.reps : null;
         rir = chosen.rir != null ? chosen.rir : null;
+        method = chosen.method ?? null;
+        partialReps = chosen.partialReps ?? null;
       }
     }
     if (weight == null) weight = lastWeights.data?.[exerciseId]?.weight ?? null;
@@ -125,7 +129,7 @@ export default function SessionScreen() {
         rir = bySet[setNumber];
       }
     }
-    return weight != null || reps != null || rir != null ? { weight, reps, rir } : undefined;
+    return weight != null || reps != null || rir != null ? { weight, reps, rir, method, partialReps } : undefined;
   };
 
   const getMaxWeightForExercise = (exerciseId: number) =>
@@ -903,7 +907,7 @@ function CollapseChevron({ collapsed, onPress }: { collapsed: boolean; onPress: 
 function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDragTap, isDragging, onPairSuperset, onDelete }: {
   sessionExercise: SessionExercise;
   sessionId: number;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null; method: string | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
@@ -1487,6 +1491,8 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                     unit={unit}
                     previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                     previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                    previousPartialReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.partialReps ?? null}
+                    previousMethod={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.method ?? null}
                   />
                 </View>
               );
@@ -1519,11 +1525,13 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                       [set.id]: (prev[set.id] ?? []).map((d) => ({ ...d, completed: false })),
                     }));
                   }}
-                  unit={unit}
-                  previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
-                  previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
-                  maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
-                />
+                unit={unit}
+                previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
+                previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                previousRir={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.rir ?? null}
+                previousMethod={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.method ?? null}
+                maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
+              />
               </View>
             );
           }
@@ -1619,6 +1627,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                previousMethod={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.method ?? null}
                 maxWeight={maxWeightFor?.(sessionExercise.exerciseId) ?? null}
               />
             );
@@ -1651,6 +1660,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
+                previousPartialReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.partialReps ?? null}
               />
             );
           }
@@ -1812,7 +1822,7 @@ function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, 
   sessionId: number;
   nameA: string;
   nameB: string;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null; method: string | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
@@ -2076,7 +2086,7 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
   exerciseIdB: number;
   onUnitChangeA?: (unit: string) => void;
   onUnitChangeB?: (unit: string) => void;
-  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null } | undefined;
+  previousWeightFor?: (exerciseId: number, setNumber: number) => { weight: number | null; reps: number | null; rir: number | null; method: string | null } | undefined;
   maxWeightFor?: (exerciseId: number) => number | null;
   onUpdateSet: (set: Set, updates: { reps?: number; weight?: number; completed?: boolean }) => void;
   onDeleteSeries: (row: { setNumber: number; a?: Set; b?: Set }) => void;

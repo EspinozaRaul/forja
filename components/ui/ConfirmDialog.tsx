@@ -42,18 +42,18 @@ export function ConfirmDialog({
           <Text style={styles.title}>{title}</Text>
           {message && <Text style={styles.message}>{message}</Text>}
 
-          {/* 3-button layout */}
+          {/* 3-button layout — vertical stack for better readability */}
           {hasThird ? (
             <View style={styles.actionsThree}>
               <TouchableOpacity
                 onPress={onCancel}
-                style={styles.cancelButton}
+                style={styles.cancelButtonVertical}
               >
                 <Text style={styles.cancelText}>{resolvedCancelLabel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onThird}
-                style={[styles.confirmButton, thirdDestructive && styles.confirmDestructive]}
+                style={[styles.confirmButtonVertical, thirdDestructive && styles.confirmDestructive]}
               >
                 <Text style={[styles.confirmText, thirdDestructive && styles.confirmTextDestructive]}>
                   {thirdLabel}
@@ -61,7 +61,7 @@ export function ConfirmDialog({
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onConfirm}
-                style={[styles.confirmButton, destructive && styles.confirmDestructive]}
+                style={[styles.confirmButtonVertical, destructive && styles.confirmDestructive]}
               >
                 <Text style={[styles.confirmText, destructive && styles.confirmTextDestructive]}>
                   {resolvedConfirmLabel}
@@ -135,8 +135,20 @@ const styles = {
     gap: spacing.sm,
   },
   actionsThree: {
-    flexDirection: 'row' as const,
-    gap: spacing.xs,
+    flexDirection: 'column' as const,
+    gap: spacing.sm,
+  },
+  cancelButtonVertical: {
+    paddingVertical: spacing.sm + spacing.xs,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.border.primary,
+    alignItems: 'center' as const,
+  },
+  confirmButtonVertical: {
+    paddingVertical: spacing.sm + spacing.xs,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.accent.primary,
+    alignItems: 'center' as const,
   },
   cancelButton: {
     flex: 1,

@@ -204,33 +204,20 @@ export default function HomeScreen() {
           </View>
         </View>
         {globalStats?.mostFrequentExercise && (
-          <View style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
+          <TouchableOpacity
+            onPress={() => {
+              const ex = allExercises?.find((e) => e.name === globalStats.mostFrequentExercise);
+              if (ex) router.push(`/progress/exercise-detail/${ex.id}`);
+            }}
+            style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}
+          >
             <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 2 }}>{t('tabs.home.mostFrequent')}</Text>
-            <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-              {getExerciseName(globalStats.mostFrequentExercise, i18n.language)}
+            <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+              {getExerciseName(globalStats.mostFrequentExercise, i18n.language)} →
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
       </View>
-
-      {/* Rutinas — up top, the main action */}
-      {routines && routines.length > 0 && (
-        <View style={styles.card}>
-          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.routines')}</Text>
-          {routines.slice(0, 3).map((routine) => (
-            <TouchableOpacity
-              key={routine.id}
-              onPress={() => handleRoutinePress(routine.id)}
-              style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.sm }}
-            >
-              <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
-              {routine.description && (
-                <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
 
       {/* Quick Start — compact, below routines */}
       <View style={styles.card}>

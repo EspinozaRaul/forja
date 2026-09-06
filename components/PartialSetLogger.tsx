@@ -13,6 +13,8 @@ interface PartialSetLoggerProps {
   onChangeMethod?: () => void;
   previousWeight?: number | null;
   previousReps?: number | null;
+  previousPartialReps?: number | null;
+  previousMethod?: string | null;
 }
 
 export function PartialSetLogger({
@@ -23,6 +25,8 @@ export function PartialSetLogger({
   onChangeMethod,
   previousWeight = null,
   previousReps = null,
+  previousPartialReps = null,
+  previousMethod = null,
 }: PartialSetLoggerProps) {
   const swipeableRef = useRef<Swipeable>(null);
 
@@ -153,7 +157,19 @@ export function PartialSetLogger({
 
           {/* Check button */}
           <TouchableOpacity
-            onPress={() => onUpdate({ completed: !set.completed })}
+            onPress={() => {
+              // Bug fix: when completing a set without explicit values, copy ALL previous values including partialReps
+              if (!set.completed && weight === '' && reps === '' && partialReps === '' && (previousWeight != null || previousReps != null)) {
+                if (previousWeight != null) {
+                  setWeight(String(previousWeight));
+                  if (previousReps != null) setReps(String(previousReps));
+                  if (previousPartialReps != null) setPartialReps(String(previousPartialReps));
+                  onUpdate({ completed: true, weight: previousWeight, reps: previousReps ?? undefined, partialReps: previousPartialReps ?? undefined });
+                  return;
+                }
+              }
+              onUpdate({ completed: !set.completed });
+            }}
             style={[
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
