@@ -9,11 +9,19 @@ interface ExerciseProgressChartProps {
   unit?: string;
 }
 
+const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
 function formatDate(date: Date): string {
   const d = date instanceof Date ? date : new Date(date);
-  const day = String(d.getDate()).padStart(2, '0');
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  return `${day}/${months[d.getMonth()]}`;
+  const day = d.getDate();
+  return `${day} ${MONTHS_ES[d.getMonth()]}`;
+}
+
+// Show fewer labels when there are many data points to avoid overlap
+function filterLabels(labels: string[], maxVisible: number): string[] {
+  if (labels.length <= maxVisible) return labels;
+  const step = Math.ceil(labels.length / maxVisible);
+  return labels.map((label, i) => (i % step === 0 ? label : ''));
 }
 
 export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressChartProps) {
@@ -35,7 +43,8 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
   // Sort by date ascending
   const sorted = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const labels = sorted.map((d) => formatDate(d.date));
+  const allLabels = sorted.map((d) => formatDate(d.date));
+  const labels = filterLabels(allLabels, 6); // Show max 6 labels to avoid overlap
   const weightValues = sorted.map((d) => d.avgWeight ?? 0);
   const repValues = sorted.map((d) => d.avgReps ?? 0);
 
@@ -49,8 +58,14 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
   return (
     <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
       {/* Weight Chart */}
-      <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>
-        Peso promedio por sesión
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent.primary, marginRight: 8 }} />
+        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+          Peso promedio por sesión
+        </Text>
+      </View>
+      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
+        Cada punto = una sesión de entrenamiento
       </Text>
       <LineChart
         data={{
@@ -94,8 +109,14 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       />
 
       {/* Reps Chart */}
-      <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginTop: spacing.md, marginBottom: 8 }}>
-        Repeticiones promedio por sesión
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 8 }}>
+        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#82c896', marginRight: 8 }} />
+        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+          Repeticiones promedio por sesión
+        </Text>
+      </View>
+      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
+        Cada punto = una sesión de entrenamiento
       </Text>
       <LineChart
         data={{
