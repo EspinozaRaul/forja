@@ -11,9 +11,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// AsyncStorage adapter for Supabase auth — works in both Expo Go and dev builds
+// When migrating to a dev build, swap to expo-secure-store for encrypted tokens
+const storage = {
+  getItem: async (key: string) => AsyncStorage.getItem(key),
+  setItem: async (key: string, value: string) => AsyncStorage.setItem(key, value),
+  removeItem: async (key: string) => AsyncStorage.removeItem(key),
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
