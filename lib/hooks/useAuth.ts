@@ -1,47 +1,24 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { User, Session } from '@supabase/supabase-js';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
-import * as Crypto from 'expo-crypto';
 
-// Complete any pending auth sessions
-WebBrowser.maybeCompleteAuthSession();
+// expo-web-browser is a native module — only available in dev builds, not Expo Go
+// Google Sign-In is deferred to the Supabase migration week (Sept 8)
+let WebBrowser: typeof import('expo-web-browser') | null = null;
+try {
+  WebBrowser = require('expo-web-browser');
+  WebBrowser.maybeCompleteAuthSession();
+} catch {
+  // Running in Expo Go — WebBrowser not available
+}
 
-// ─── Google OAuth Config ────────────────────────────────
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
-
-// ─── Discovery ──────────────────────────────────────────
-const discovery = {
-  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-};
+// This is the Supabase callback URL - it will redirect back to the app
+const REDIRECT_URL = 'https://tvhirldahraymahvthfq.supabase.co/auth/v1/callback';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Google OAuth request
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'forja',
-    path: 'auth/callback',
-  });
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_WEB_CLIENT_ID,
-      redirectUri,
-      scopes: ['openid', 'profile', 'email'],
-      usePKCE: true,
-      extraParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-      },
-    },
-    discovery
-  );
 
   useEffect(() => {
     // Get initial session
@@ -61,28 +38,6 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Handle Google OAuth response
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      exchangeCodeForSession(code);
-    }
-  }, [response]);
-
-  const exchangeCodeForSession = async (code: string) => {
-    if (!request?.codeVerifier) return;
-
-    try {
-      // Exchange the authorization code with Supabase
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) throw error;
-      
-      // Session is automatically set via onAuthStateChange
-    } catch (err) {
-      console.error('Google sign-in error:', err);
-    }
-  };
-
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });
     return { error };
@@ -95,12 +50,35 @@ export function useAuth() {
 
   const signInWithGoogle = async () => {
     try {
-      const result = await promptAsync();
-      if (result.type !== 'success') {
-        return { error: new Error('Google sign-in was cancelled') };
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: REDIRECT_URL,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Open the OAuth URL in the browser
+        if (!WebBrowser) {
+          return { error: new Error('Google Sign-In requires a development build, not Expo Go') };
+        }
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          REDIRECT_URL
+        );
+
+        if (result.type === 'success') {
+          // The session will be set via onAuthStateChange
+          return { error: null };
+        } else {
+          return { error: new Error('Login cancelled') };
+        }
       }
-      // Session will be set via onAuthStateChange after code exchange
-      return { error: null };
+
+      return { error: new Error('No OAuth URL returned') };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error(String(err)) };
     }
@@ -113,11 +91,8 @@ export function useAuth() {
 
   const deleteAccount = async () => {
     try {
-      // Delete the Supabase account
       const { error } = await supabase.rpc('delete_user_account');
       if (error) throw error;
-      
-      // Sign out after deletion
       await supabase.auth.signOut();
       return { error: null };
     } catch (err) {
@@ -134,6 +109,5 @@ export function useAuth() {
     signInWithGoogle,
     signOut,
     deleteAccount,
-    googleRequest: request,
   };
 }
