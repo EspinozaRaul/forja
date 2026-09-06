@@ -66,7 +66,7 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
         }}
         width={chartWidth}
         height={180}
-        yAxisSuffix={unit}
+        yAxisSuffix=""
         yAxisLabel=""
         chartConfig={{
           backgroundColor: 'transparent',
