@@ -10,7 +10,13 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, message }: EmptyStateProps) {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg, backgroundColor: colors.bg.primary }} className="flex-1 items-center justify-center py-12 px-6 bg-dark-bg">
+    <View 
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg, backgroundColor: colors.bg.primary }} 
+      className="flex-1 items-center justify-center py-12 px-6 bg-dark-bg"
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={`${title}${message ? `. ${message}` : ''}`}
+    >
       {icon && <View style={{ marginBottom: spacing.md }} className="mb-4">{icon}</View>}
       <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-lg font-semibold text-dark-text-secondary mb-2">{title}</Text>
       {message && (

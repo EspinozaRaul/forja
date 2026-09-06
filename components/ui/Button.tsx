@@ -52,6 +52,9 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: compact ? borderRadius.sm : borderRadius.md, paddingHorizontal: compact ? spacing.md : spacing.lg, paddingVertical: compact ? spacing.sm : spacing.md },
         styles.container,
