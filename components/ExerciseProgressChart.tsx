@@ -1,6 +1,6 @@
 import { View, Text, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { SimpleLineChart } from './SimpleLineChart';
 import { EmptyState } from './ui/EmptyState';
 import type { ExerciseProgressionDataPoint } from '../lib/db/queries';
 
@@ -17,17 +17,7 @@ function formatDate(date: Date): string {
   return `${day} ${MONTHS_ES[d.getMonth()]}`;
 }
 
-// Show fewer labels when there are many data points to avoid overlap
-function filterLabels(labels: string[], maxVisible: number): string[] {
-  if (labels.length <= maxVisible) return labels;
-  const step = Math.ceil(labels.length / maxVisible);
-  return labels.map((label, i) => (i % step === 0 ? label : ''));
-}
-
 export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressChartProps) {
-  const screenWidth = Dimensions.get('window').width;
-  const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;
-
   if (data.length === 0) {
     return (
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
@@ -43,22 +33,21 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
   // Sort by date ascending
   const sorted = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const allLabels = sorted.map((d) => formatDate(d.date));
-  const labels = filterLabels(allLabels, 6); // Show max 6 labels to avoid overlap
-  const weightValues = sorted.map((d) => d.avgWeight ?? 0);
-  const repValues = sorted.map((d) => d.avgReps ?? 0);
+  // Format for charts
+  const weightData = sorted.map(d => ({
+    date: formatDate(d.date),
+    value: d.avgWeight ?? 0,
+  }));
 
-  const maxWeight = Math.max(...weightValues);
-  const maxReps = Math.max(...repValues);
-
-  // Determine decimal places based on data range
-  const weightDecimals = maxWeight >= 100 ? 0 : maxWeight >= 10 ? 1 : 1;
-  const repDecimals = 0; // Reps are always whole numbers
+  const repData = sorted.map(d => ({
+    date: formatDate(d.date),
+    value: d.avgReps ?? 0,
+  }));
 
   return (
     <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
       {/* Weight Chart */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
         <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent.primary, marginRight: 8 }} />
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           Peso promedio por sesión
@@ -67,49 +56,15 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
         Cada punto = una sesión de entrenamiento
       </Text>
-      <LineChart
-        data={{
-          labels,
-          datasets: [{ data: weightValues }],
-        }}
-        width={chartWidth}
+      <SimpleLineChart
+        data={weightData}
+        unit={unit}
+        color={colors.accent.primary}
         height={160}
-        yAxisSuffix={` ${unit}`}
-        yAxisLabel=""
-        chartConfig={{
-          backgroundColor: 'transparent',
-          backgroundGradientFrom: colors.bg.elevated,
-          backgroundGradientTo: colors.bg.elevated,
-          decimalPlaces: weightDecimals,
-          color: (opacity = 1) => `rgba(74, 111, 165, ${opacity})`, // steel blue
-          labelColor: (opacity = 1) => `rgba(158, 165, 180, ${opacity})`,
-          style: { borderRadius: borderRadius.md },
-          propsForDots: {
-            r: '4',
-            strokeWidth: '2',
-            stroke: colors.accent.primary,
-            fill: colors.bg.elevated,
-          },
-          propsForBackgroundLines: {
-            stroke: colors.border.primary,
-            strokeDasharray: '4 4',
-          },
-        }}
-        bezier
-        style={{ marginVertical: spacing.sm, borderRadius: borderRadius.md, marginLeft: -spacing.md }}
-        formatYLabel={(value) => {
-          const num = parseFloat(value);
-          return num >= 1000 ? `${(num / 1000).toFixed(1)}k` : value;
-        }}
-        withInnerLines={true}
-        withOuterLines={false}
-        withVerticalLines={false}
-        withHorizontalLines={true}
-        segments={4}
       />
 
       {/* Reps Chart */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 4 }}>
         <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#82c896', marginRight: 8 }} />
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           Repeticiones promedio por sesión
@@ -118,41 +73,11 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
         Cada punto = una sesión de entrenamiento
       </Text>
-      <LineChart
-        data={{
-          labels,
-          datasets: [{ data: repValues }],
-        }}
-        width={chartWidth}
+      <SimpleLineChart
+        data={repData}
+        unit="reps"
+        color="#82c896"
         height={160}
-        yAxisSuffix=" reps"
-        yAxisLabel=""
-        chartConfig={{
-          backgroundColor: 'transparent',
-          backgroundGradientFrom: colors.bg.elevated,
-          backgroundGradientTo: colors.bg.elevated,
-          decimalPlaces: repDecimals,
-          color: (opacity = 1) => `rgba(130, 200, 150, ${opacity})`, // green accent
-          labelColor: (opacity = 1) => `rgba(158, 165, 180, ${opacity})`,
-          style: { borderRadius: borderRadius.md },
-          propsForDots: {
-            r: '4',
-            strokeWidth: '2',
-            stroke: '#82c896',
-            fill: colors.bg.elevated,
-          },
-          propsForBackgroundLines: {
-            stroke: colors.border.primary,
-            strokeDasharray: '4 4',
-          },
-        }}
-        bezier
-        style={{ marginVertical: spacing.sm, borderRadius: borderRadius.md, marginLeft: -spacing.md }}
-        withInnerLines={true}
-        withOuterLines={false}
-        withVerticalLines={false}
-        withHorizontalLines={true}
-        segments={4}
       />
     </View>
   );
