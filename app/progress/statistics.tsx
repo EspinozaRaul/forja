@@ -256,7 +256,6 @@ export default function StatisticsScreen() {
         <ProgressChart
           data={filteredSessionCount}
           title={t('progress.statistics.sessionFrequency')}
-          unit={t('progress.statistics.sessions')}
         />
       </View>
 

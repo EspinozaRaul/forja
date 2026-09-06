@@ -62,9 +62,9 @@ export function SimpleLineChart({
   // Create path
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
-  // Y-axis labels
+  // Y-axis labels — round to whole numbers for discrete counts
   const yLabels = [0, 0.25, 0.5, 0.75, 1].map(pct => ({
-    value: minValue + range * pct,
+    value: Math.round(minValue + range * pct),
     y: padding.top + innerHeight - pct * innerHeight,
   }));
 
