@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, StyleSheet, RefreshControl } from 'react-native';
 import { useState, useMemo, useCallback } from 'react';
 import type { Exercise } from '../../lib/types';
 import { useRouter } from 'expo-router';
@@ -24,6 +24,7 @@ import { useCreateSet } from '../../lib/hooks/useSets';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 import { ExercisePicker } from '../../components/ExercisePicker';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -46,6 +47,18 @@ export default function HomeScreen() {
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
   const { data: activeSession } = useActiveSession();
   const deleteSession = useDeleteSession();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['sessions'] }),
+      queryClient.invalidateQueries({ queryKey: ['routines'] }),
+      queryClient.invalidateQueries({ queryKey: ['globalStats'] }),
+    ]);
+    setRefreshing(false);
+  }, [queryClient]);
 
   const activeRoutineName = useMemo(() => {
     if (!activeSession?.routineId || !routines) return null;
@@ -185,7 +198,17 @@ export default function HomeScreen() {
 
   return (
     <>
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: colors.bg.primary }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.accent.primary}
+          colors={[colors.accent.primary]}
+        />
+      }
+    >
       {/* Stats Dashboard */}
       <View style={styles.cardWithTopMargin}>
         <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.stats')}</Text>
