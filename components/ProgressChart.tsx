@@ -49,9 +49,8 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
 
   const values = data.map((d) => d.value);
 
-  const maxValue = Math.max(...values);
-  const minValue = Math.min(...values);
-  const decimalPlaces = maxValue >= 100 ? 0 : maxValue >= 10 ? 1 : 1;
+  // Always use whole numbers — session counts, volume, etc. are discrete
+  const decimalPlaces = 0;
 
   return (
     <View style={containerStyle}>
