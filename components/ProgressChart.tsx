@@ -43,8 +43,9 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
   }
 
   const labels = data.map((d) => {
-    const day = d.date.split('-')[2] ?? d.date.slice(-2);
-    return day;
+    // Format: "S34" = semana 34
+    const week = d.date.split('-')[1] ?? d.date.slice(-2);
+    return `S${week.replace('W', '')}`;
   });
 
   const values = data.map((d) => d.value);
@@ -55,8 +56,11 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
   return (
     <View style={containerStyle}>
       {title && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 12 }}>{title}</Text>
+        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 4 }}>{title}</Text>
       )}
+      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 12 }}>
+        Cada punto = una semana del año
+      </Text>
 
       <LineChart
         data={{
