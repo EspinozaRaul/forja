@@ -560,6 +560,15 @@
     "exercise": "Exercise",
     "add": "Add",
     "addExercise": "Add exercise",
+    "createScreen": {
+      "title": "Create New Exercise",
+      "nameLabel": "Exercise name",
+      "namePlaceholder": "e.g., Bench Press",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "e.g., Barbell bench press for chest",
+      "categoryLabel": "Category *",
+      "submit": "Create exercise"
+    },
     "muscle": {
       "all": "All",
       "pectorals": "Chest",

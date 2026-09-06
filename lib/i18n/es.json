@@ -560,6 +560,15 @@
     "exercise": "Ejercicio",
     "add": "Agregar",
     "addExercise": "Agregar ejercicio",
+    "createScreen": {
+      "title": "Crear Nuevo Ejercicio",
+      "nameLabel": "Nombre del ejercicio",
+      "namePlaceholder": "Ej: Press con banca",
+      "descriptionLabel": "Descripción (opcional)",
+      "descriptionPlaceholder": "Ej: Press con barra para pecho",
+      "categoryLabel": "Categoría *",
+      "submit": "Crear ejercicio"
+    },
     "muscle": {
       "all": "Todos",
       "pectorals": "Pecho",

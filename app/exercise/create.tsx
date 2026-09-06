@@ -62,26 +62,26 @@ export default function CreateExerciseScreen() {
   return (
     <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} className="flex-1 bg-dark-bg p-4">
-      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">Create New Exercise</Text>
+      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('exercisePicker.createScreen.title')}</Text>
 
       <Input
-        label="Exercise Name"
-        placeholder="e.g., Bench Press"
+        label={t('exercisePicker.createScreen.nameLabel')}
+        placeholder={t('exercisePicker.createScreen.namePlaceholder')}
         value={name}
         onChangeText={setName}
         error={errors.name}
       />
 
       <Input
-        label="Description (optional)"
-        placeholder="e.g., Barbell bench press for chest"
+        label={t('exercisePicker.createScreen.descriptionLabel')}
+        placeholder={t('exercisePicker.createScreen.descriptionPlaceholder')}
         value={description}
         onChangeText={setDescription}
         multiline
         numberOfLines={3}
       />
 
-      <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-sm font-medium text-dark-text-secondary mb-2">Category *</Text>
+      <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-sm font-medium text-dark-text-secondary mb-2">{t('exercisePicker.createScreen.categoryLabel')}</Text>
       {errors.category && (
         <Text style={{ color: colors.error, fontSize: 14, marginBottom: spacing.sm }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
       )}
@@ -98,7 +98,7 @@ export default function CreateExerciseScreen() {
       </View>
 
       <Button
-        title="Create Exercise"
+        title={t('exercisePicker.createScreen.submit')}
         onPress={handleSubmit}
         loading={createExercise.isPending}
         disabled={createExercise.isPending}
