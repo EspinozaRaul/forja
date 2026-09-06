@@ -3,6 +3,7 @@ import { openDatabaseSync } from 'expo-sqlite';
 import { categories, exercises, routineFolders } from './schema';
 import { sql } from 'drizzle-orm';
 import exercisesData from './exercises-data.json';
+import { getExerciseNameEs } from '../i18n/exercise-translations';
 
 const DATABASE_NAME = 'fitness-tracker.db';
 
@@ -43,8 +44,10 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS exercises (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
+  name_es TEXT,
   category_id INTEGER REFERENCES categories(id),
   description TEXT,
+  description_es TEXT,
   equipment TEXT,
   target_muscle TEXT,
   muscle_group TEXT,
@@ -204,6 +207,18 @@ export async function initializeDatabase() {
     // Column already exists, ignore
   }
 
+  // Migration: add name_es and description_es for Spanish translations
+  try {
+    expoDb.execSync("ALTER TABLE exercises ADD COLUMN name_es TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE exercises ADD COLUMN description_es TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+
   // Check if exercises already imported
   const exerciseCount = await db.select({ count: sql<number>`count(*)` }).from(exercises);
   if (exerciseCount[0].count > 0) {
@@ -271,8 +286,10 @@ export async function initializeDatabase() {
 
       await db.insert(exercises).values({
         name: ex.n,
+        nameEs: getExerciseNameEs(ex.n),
         categoryId,
         description: ex.en,
+        descriptionEs: ex.es,
         equipment: ex.e,
         targetMuscle: ex.t,
         muscleGroup: ex.m,

@@ -12,8 +12,10 @@ export const categories = sqliteTable('categories', {
 export const exercises = sqliteTable('exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
+  nameEs: text('name_es'), // Spanish translation of exercise name
   categoryId: integer('category_id').references(() => categories.id),
   description: text('description'),
+  descriptionEs: text('description_es'), // Spanish translation of description
   // New fields from exercises-dataset
   equipment: text('equipment'),
   targetMuscle: text('target_muscle'),

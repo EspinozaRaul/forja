@@ -10,6 +10,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
+import { getExerciseName } from '../../lib/utils/exercise-names';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
 
 // ─── Types ──────────────────────────────────────────────
@@ -72,7 +73,7 @@ function StatCard({
 
 export default function StatisticsScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [period, setPeriod] = useState<Period>('12w');
 
   const { data: stats, isLoading: statsLoading } = useGlobalStats();
@@ -304,7 +305,7 @@ export default function StatisticsScreen() {
                 </Text>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.primary }}>
-                    {ex.name}
+                    {getExerciseName(ex.name, i18n.language)}
                   </Text>
                   <View style={{
                     height: 4,

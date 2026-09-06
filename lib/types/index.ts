@@ -11,8 +11,10 @@ export interface Category {
 export interface Exercise {
   id: number;
   name: string;
+  nameEs: string | null; // Spanish translation of exercise name
   categoryId: number | null;
   description: string | null;
+  descriptionEs: string | null; // Spanish translation of description
   equipment: string | null;
   targetMuscle: string | null;
   muscleGroup: string | null;
