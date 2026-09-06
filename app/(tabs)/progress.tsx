@@ -423,26 +423,26 @@ export default function ProgressScreen() {
       <View style={{ gap: spacing.sm }}>
         <NavigationButton
           icon="bar-chart"
-          label="Estadisticas"
-          description="Analiza tu progreso global"
+          label={t('progress.nav.statistics')}
+          description={t('progress.nav.statisticsDescription')}
           onPress={() => router.push('/progress/statistics')}
         />
         <NavigationButton
           icon="body"
-          label="Medidas"
-          description="Registra medidas corporales"
+          label={t('progress.nav.measurements')}
+          description={t('progress.nav.measurementsDescription')}
           onPress={() => router.push('/progress/measurements')}
         />
         <NavigationButton
           icon="barbell"
-          label="Ejercicios"
-          description="Evolucion de ejercicios"
+          label={t('progress.nav.exercises')}
+          description={t('progress.nav.exercisesDescription')}
           onPress={() => router.push('/progress/exercises')}
         />
         <NavigationButton
           icon="git-compare"
-          label="Comparar"
-          description="Compara sesiones"
+          label={t('progress.nav.compare')}
+          description={t('progress.nav.compareDescription')}
           onPress={() => router.push('/progress/routine-compare')}
         />
       </View>

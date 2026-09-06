@@ -143,8 +143,8 @@ export default function HomeScreen() {
   const handleDiscardSession = () => {
     if (!activeSession) return;
     showConfirm(
-      'Descartar sesión',
-      '¿Querés eliminar esta sesión y todos sus datos?',
+      t('session.confirm.discardSessionTitle'),
+      t('session.confirm.discardSessionMessage'),
       async () => {
         try {
           try {
@@ -160,7 +160,7 @@ export default function HomeScreen() {
           showAlert(t('common.error'), t('session.new.createFailed'));
         }
       },
-      { confirmLabel: 'Descartar', cancelLabel: 'Cancelar', destructive: true }
+      { confirmLabel: t('common.delete'), cancelLabel: t('common.cancel'), destructive: true }
     );
   };
 

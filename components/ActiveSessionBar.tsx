@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fontSizes, fonts } from '../lib/theme/tokens';
 
 interface ActiveSessionBarProps {
@@ -19,19 +20,20 @@ export function ActiveSessionBar({
   onResume,
   onDiscard,
 }: ActiveSessionBarProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
         <Text style={styles.label} numberOfLines={1}>
-          {routineName ?? 'Sesión en curso'}
+          {routineName ?? t('session.activeBar.active')}
         </Text>
         <View style={styles.actions}>
           <TouchableOpacity onPress={onResume} style={styles.resumeBtn}>
             <Ionicons name="arrow-forward" size={13} color={colors.bg.primary} />
-            <Text style={styles.resumeText}>Reanudar</Text>
+            <Text style={styles.resumeText}>{t('session.activeBar.resume')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onDiscard} style={styles.discardBtn}>
-            <Text style={styles.discardText}>Descartar</Text>
+            <Text style={styles.discardText}>{t('session.activeBar.discard')}</Text>
           </TouchableOpacity>
         </View>
       </View>

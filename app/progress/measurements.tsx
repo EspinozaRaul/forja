@@ -190,22 +190,22 @@ export default function MeasurementsScreen() {
   
   const handleDeleteMeasurement = (id: number) => {
     Alert.alert(
-      'Eliminar medida',
-      '¿Estás seguro de que querés eliminar esta medida?',
+      t('progress.measurements.deleteMeasurement'),
+      t('progress.measurements.deleteMeasurementConfirm'),
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => deleteMeasurement.mutateAsync(id) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => deleteMeasurement.mutateAsync(id) },
       ]
     );
   };
   
   const handleDeletePhoto = (id: number) => {
     Alert.alert(
-      'Eliminar foto',
-      '¿Estás seguro de que querés eliminar esta foto?',
+      t('progress.measurements.deletePhoto'),
+      t('progress.measurements.deletePhotoConfirm'),
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => deletePhoto.mutateAsync(id) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => deletePhoto.mutateAsync(id) },
       ]
     );
   };

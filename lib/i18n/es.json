@@ -82,7 +82,12 @@
     "yesterday": "Ayer",
     "daysAgo": "Hace {{count}} días",
     "weeksAgo": "Hace {{count}} semanas",
-    "invalidId": "ID inválido"
+    "invalidId": "ID inválido",
+    "errorBoundary": {
+      "title": "Algo salió mal",
+      "message": "Ocurrió un error inesperado",
+      "retry": "Reintentar"
+    }
   },
   "tabs": {
     "home": {
@@ -151,6 +156,16 @@
     "viewLess": "Ver menos",
     "close": "Cerrar",
     "loading": "Cargando…",
+    "nav": {
+      "statistics": "Estadísticas",
+      "statisticsDescription": "Analiza tu progreso global",
+      "measurements": "Medidas",
+      "measurementsDescription": "Registra medidas corporales",
+      "exercises": "Ejercicios",
+      "exercisesDescription": "Evolución de ejercicios",
+      "compare": "Comparar",
+      "compareDescription": "Compara sesiones"
+    },
     "loadingStats": "Cargando estadísticas…",
     "loadingWeek": "Cargando semana…",
     "loadingSessions": "Cargando sesiones…",
@@ -399,7 +414,9 @@
       "deleteSetMessage": "Se elimina la serie de ambos ejercicios.",
       "unlinkSuperSet": "Quitar super set",
       "unlinkSuperSetMessage": "Se quita la unión entre los ejercicios.",
-      "unlink": "Quitar"
+      "unlink": "Quitar",
+      "discardSessionTitle": "Descartar sesión",
+      "discardSessionMessage": "¿Querés eliminar esta sesión y todos sus datos?"
     },
     "superset": {
       "title": "Elegí el ejercicio para el Super Set",
@@ -410,6 +427,11 @@
       "addSeries": "+ Agregar serie",
       "unlink": "Desvincular",
       "setNumber": "Serie {{number}}"
+    },
+    "activeBar": {
+      "active": "Sesión en curso",
+      "resume": "Reanudar",
+      "discard": "Descartar"
     },
     "diff": {
       "title": "¿Actualizar la rutina?",
