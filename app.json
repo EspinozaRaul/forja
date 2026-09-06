@@ -50,7 +50,9 @@
         }
       ],
       "expo-font",
-      "expo-localization"
+      "expo-localization",
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "extra": {
       "router": {},

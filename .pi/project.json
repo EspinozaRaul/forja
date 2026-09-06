@@ -1,0 +1,32 @@
+{
+  "name": "forja",
+  "previousName": "fitness-tracker",
+  "description": "Forja - Fitness & Workout Tracking Application",
+  "type": "expo-react-native",
+  "gentlePi": {
+    "enabled": true,
+    "version": "0.14.0",
+    "persona": "gentleman",
+    "sddMode": "multi",
+    "strictTDD": true,
+    "rddMode": "on"
+  },
+  "memory": {
+    "engram": {
+      "enabled": true,
+      "projectAlias": ["forja", "fitness-tracker"],
+      "globalPath": "~/.engram"
+    }
+  },
+  "intelligence": {
+    "codegraph": {
+      "enabled": true,
+      "projectPath": ".codegraph"
+    }
+  },
+  "migratedFrom": {
+    "platform": "opencode",
+    "date": "2026-08-31",
+    "preserved": ["engram-memory", "codegraph-index", "skills", "agents", "configuration"]
+  }
+}

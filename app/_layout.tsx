@@ -100,6 +100,18 @@ function RootLayoutNav() {
         options={{ title: 'Session History' }}
       />
       <Stack.Screen
+        name="progress/statistics"
+        options={{ title: 'Statistics', headerShown: false }}
+      />
+      <Stack.Screen
+        name="progress/exercises"
+        options={{ title: 'Exercises', headerShown: false }}
+      />
+      <Stack.Screen
+        name="progress/exercise-detail/[id]"
+        options={{ title: 'Exercise Detail', headerShown: false }}
+      />
+      <Stack.Screen
         name="progress/routine-compare"
         options={{ title: 'Comparar Rutina', headerShown: false }}
       />

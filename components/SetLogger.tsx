@@ -18,10 +18,11 @@ interface SetLoggerProps {
   previousWeight?: number | null;
   previousReps?: number | null;
   previousRir?: number | null;
+  previousMethod?: string | null;
   maxWeight?: number | null;
 }
 
-export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, previousRir = null, maxWeight = null }: SetLoggerProps) {
+export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensityPicker, isDropGroup, dropCount, previousWeight = null, previousReps = null, previousRir = null, previousMethod = null, maxWeight = null }: SetLoggerProps) {
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const swipeableRef = useRef<Swipeable>(null);
@@ -35,8 +36,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';
 
   const weightPlaceholder = () => {
-    if (previousWeight == null) return unit;
-    return String(previousWeight);
+    if (previousWeight == null) return unit.toUpperCase();
+    return `${previousWeight} ${unit.toUpperCase()}`;
   };
 
   const repsPlaceholder = () => (previousReps != null ? String(previousReps) : 'R');
@@ -75,12 +76,26 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
     );
   };
 
-  // Format previous data: "10kg x 15"
+  // Format previous data: "10KG x 15" or "10KG x 15 [CL]" for intensity methods
   const previousText = () => {
     if (previousWeight == null && previousReps == null) return '—';
-    const w = previousWeight != null ? `${previousWeight}${unit}` : '?';
+    const w = previousWeight != null ? `${previousWeight}${unit.toUpperCase()}` : '?';
     const r = previousReps != null ? previousReps : '?';
-    return `${w} x ${r}`;
+    const base = `${w} x ${r}`;
+    // Show intensity method label if it's not linear
+    if (previousMethod && previousMethod !== 'linear' && previousMethod !== 'partial') {
+      const methodLabels: Record<string, string> = {
+        dropset: 'DS',
+        rest_pause: 'RP',
+        cluster: 'CL',
+        pyramid_up: '↑',
+        pyramid_down: '↓',
+        superset: 'SS',
+      };
+      const label = methodLabels[previousMethod] ?? previousMethod;
+      return `${base} [${label}]`;
+    }
+    return base;
   };
 
   return (
@@ -145,7 +160,17 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
 
           {/* Check button */}
           <TouchableOpacity
-            onPress={() => onUpdate({ completed: !set.completed })}
+            onPress={() => {
+              // Bug #3 fix: when completing a set without explicit values, copy previous values
+              if (!set.completed && weight === '' && reps === '' && (previousWeight != null || previousReps != null)) {
+                if (previousWeight != null) {
+                  setWeight(String(previousWeight));
+                  onUpdate({ completed: true, weight: previousWeight, reps: previousReps ?? undefined });
+                  return;
+                }
+              }
+              onUpdate({ completed: !set.completed });
+            }}
             style={[
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,

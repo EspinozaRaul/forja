@@ -645,6 +645,7 @@
     "maxWeight": "Max",
     "volume": "Volume",
     "sets": "Sets",
-    "volumeChange": "Volume {{direction}} {{percent}}%"
+    "volumeChange": "Volume {{direction}} {{percent}}%",
+    "noSessions": "No sessions yet"
   }
 }

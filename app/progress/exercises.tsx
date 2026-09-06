@@ -3,7 +3,9 @@ import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useMostUsedExercises } from '../../lib/hooks/useProgress';
+import { useExercises } from '../../lib/hooks/useExercises';
+import { useQuery } from '@tanstack/react-query';
+import { getAllExercises } from '../../lib/db/queries';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
@@ -11,7 +13,13 @@ import { formatRelativeDate } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { useSettings } from '../../lib/utils/settings';
 import { getExerciseName } from '../../lib/utils/exercise-names';
-import type { MostUsedExercise } from '../../lib/progress/queries';
+import type { Exercise } from '../../lib/types';
+
+interface ExerciseWithStats extends Exercise {
+  sessionCount: number;
+  setCount: number;
+  maxWeight: number | null;
+}
 
 export default function ExercisesScreen() {
   const { t, i18n } = useTranslation();
@@ -19,27 +27,47 @@ export default function ExercisesScreen() {
   const settings = useSettings();
   const unit = settings.data.weightUnit;
 
-  const { data: exercises, isLoading, isError } = useMostUsedExercises(100);
+  // Fetch all exercises from the database
+  const { data: allExercises, isLoading: exercisesLoading } = useQuery({
+    queryKey: ['exercises', 'all'],
+    queryFn: getAllExercises,
+  });
+
   const [search, setSearch] = useState('');
 
+  // For now, show all exercises with placeholder stats
+  // TODO: Join with session data to get actual stats
+  const exercisesWithStats: ExerciseWithStats[] = useMemo(() => {
+    if (!allExercises) return [];
+    return allExercises.map((ex) => ({
+      ...ex,
+      sessionCount: 0,
+      setCount: 0,
+      maxWeight: null,
+    }));
+  }, [allExercises]);
+
   const filteredExercises = useMemo(() => {
-    if (!exercises) return [];
-    if (!search.trim()) return exercises;
+    if (!exercisesWithStats) return [];
+    if (!search.trim()) return exercisesWithStats;
 
     const query = search.toLowerCase().trim();
-    return exercises.filter((ex) => ex.name.toLowerCase().includes(query));
-  }, [exercises, search]);
+    return exercisesWithStats.filter((ex) => {
+      const name = getExerciseName(ex.name, i18n.language).toLowerCase();
+      return name.includes(query);
+    });
+  }, [exercisesWithStats, search, i18n.language]);
 
   const formatDate = (date: Date) => {
     return formatRelativeDate(date);
   };
 
-  const renderExercise = ({ item }: { item: MostUsedExercise }) => {
+  const renderExercise = ({ item }: { item: ExerciseWithStats }) => {
     const exerciseUnit = resolveUnit(item.unit, unit);
 
     return (
       <Pressable
-        onPress={() => router.push(`/progress/exercise-detail/${item.exerciseId}`)}
+        onPress={() => router.push(`/progress/exercise-detail/${item.id}`)}
         style={{
           backgroundColor: colors.bg.card,
           borderRadius: borderRadius.lg,
@@ -85,18 +113,24 @@ export default function ExercisesScreen() {
                   color: colors.text.muted,
                 }}
               >
-                {t('exercises.sessionCount', { count: item.sessionCount })}
+                {item.sessionCount > 0
+                  ? t('exercises.sessionCount', { count: item.sessionCount })
+                  : t('exercises.noSessions')}
               </Text>
-              <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{'·'}</Text>
-              <Text
-                style={{
-                  fontSize: fontSizes.xs,
-                  fontFamily: fonts.body,
-                  color: colors.text.muted,
-                }}
-              >
-                {t('exercises.setCount', { count: item.setCount })}
-              </Text>
+              {item.setCount > 0 && (
+                <>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{'·'}</Text>
+                  <Text
+                    style={{
+                      fontSize: fontSizes.xs,
+                      fontFamily: fonts.body,
+                      color: colors.text.muted,
+                    }}
+                  >
+                    {t('exercises.setCount', { count: item.setCount })}
+                  </Text>
+                </>
+              )}
             </View>
           </View>
 
@@ -132,20 +166,8 @@ export default function ExercisesScreen() {
     );
   };
 
-  if (isLoading) {
+  if (exercisesLoading) {
     return <LoadingSpinner message={t('exercises.loading')} />;
-  }
-
-  if (isError) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-        <EmptyState
-          icon={<Ionicons name="alert-circle-outline" size={48} color={colors.error} />}
-          title={t('exercises.error')}
-          message={t('exercises.errorMessage')}
-        />
-      </View>
-    );
   }
 
   return (
@@ -236,7 +258,7 @@ export default function ExercisesScreen() {
       ) : (
         <FlatList
           data={filteredExercises}
-          keyExtractor={(item) => item.exerciseId.toString()}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={renderExercise}
           contentContainerStyle={{
             padding: spacing.md,
