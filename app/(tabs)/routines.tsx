@@ -183,18 +183,18 @@ export default function RoutinesScreen() {
 
       {/* Bottom Buttons */}
       <View style={{ padding: spacing.md, paddingTop: spacing.sm, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, flexDirection: 'row', gap: spacing.sm }}>
-        <TouchableOpacity
+        <Button
+          title={`+ ${t('tabs.routines.newFolder')}`}
           onPress={() => setShowCreateModal(true)}
-          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
-        >
-          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ {t('tabs.routines.newFolder')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+          variant="primary"
+          compact
+        />
+        <Button
+          title={`+ ${t('tabs.routines.newRoutine')}`}
           onPress={() => router.push('/routine/create')}
-          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
-        >
-          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ {t('tabs.routines.newRoutine')}</Text>
-        </TouchableOpacity>
+          variant="secondary"
+          compact
+        />
       </View>
 
       {/* Create Folder Modal */}
