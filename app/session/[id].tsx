@@ -1,5 +1,5 @@
 import { Text, View, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation, BackHandler, Platform } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -666,12 +666,12 @@ export default function SessionScreen() {
       </KeyboardAwareScrollView>
 
       {/* Bottom — fixed: rest timer + end session */}
-      <View style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
+      <KeyboardStickyView style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm + spacing.xs : 0 }}>
           {showRestTimer && restExerciseName ? (
-        <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
-          {t('session.restLabel', { name: restExerciseName })}
-        </Text>
+            <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
+              {t('session.restLabel', { name: restExerciseName })}
+            </Text>
           ) : null}
           <RestTimer
             sessionId={id}
@@ -700,7 +700,7 @@ export default function SessionScreen() {
             <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>{t('session.endButton')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardStickyView>
 
       <ExercisePicker
         visible={showPicker}
