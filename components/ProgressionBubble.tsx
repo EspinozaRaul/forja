@@ -10,6 +10,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../lib/theme/tokens';
 import { EmptyState } from './ui/EmptyState';
 import { mapWeightToY, mapRepsToSize, mapRirToOpacity } from '../lib/utils/progression-mapping';
@@ -62,6 +63,7 @@ export interface ProgressionBubbleProps {
 }
 
 export function ProgressionBubble({ data, exerciseName, unit = 'kg' }: ProgressionBubbleProps) {
+  const { t } = useTranslation();
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
 
   const handleLongPress = useCallback((index: number) => {
@@ -84,8 +86,8 @@ export function ProgressionBubble({ data, exerciseName, unit = 'kg' }: Progressi
     return (
       <EmptyState
         icon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
-        title="Progresión no disponible"
-        message="Necesitás al menos 2 sesiones con datos para ver la progresión"
+        title={t('progress.exercises.noProgression')}
+        message={t('progress.exercises.needAtLeast2Sessions')}
       />
     );
   }
@@ -315,10 +317,10 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
       >
         {formatDateLong(point.date)}
       </Text>
-      <TooltipRow label="Peso" value={`${formatWeightValue(point.avgWeight)} ${unit}`} />
-      <TooltipRow label="Reps" value={formatRepsValue(point.avgReps)} />
+      <TooltipRow label={t('progress.maxWeight')} value={`${formatWeightValue(point.avgWeight)} ${unit}`} />
+      <TooltipRow label={t('session.reps')} value={formatRepsValue(point.avgReps)} />
       <TooltipRow label="RIR" value={formatRirValue(point.avgRir)} />
-      <TooltipRow label="Sets" value={`${point.setCount}`} />
+      <TooltipRow label={t('progress.sets')} value={`${point.setCount}`} />
     </Pressable>
   );
 }

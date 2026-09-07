@@ -411,7 +411,9 @@
       "error": "Error al cargar datos",
       "selectAtLeast2": "Selecciona al menos 2 meses para comparar",
       "selectRoutineTitle": "Selecciona una rutina",
-      "selectRoutineMessage": "Elegí una rutina y los meses que quieras comparar para ver los cambios."
+      "selectRoutineMessage": "Elegí una rutina y los meses que quieras comparar para ver los cambios.",
+      "searchPlaceholder": "Buscar...",
+      "noRoutines": "No se encontraron rutinas"
     },
     "exercises": {
       "title": "Ejercicios",
@@ -430,9 +432,15 @@
       "estimated1RM": "1RM estimado",
       "sessionHistory": "Historial de sesiones",
       "volume": "Volumen",
-      "noData": "Sin datos de este ejercicio"
-    }
-  },
+      "noData": "Sin datos de este ejercicio",
+      "noDataProgress": "Sin datos de progreso",
+      "completeSessions": "Completá sesiones para ver tu evolución",
+      "avgWeightPerSession": "Peso promedio por sesión",
+      "avgRepsPerSession": "Repeticiones promedio por sesión",
+      "eachPointOneSession": "Cada punto = una sesión de entrenamiento",
+      "noProgression": "Progresión no disponible",
+      "needAtLeast2Sessions": "Necesitás al menos 2 sesiones con datos para ver la progresión"
+    },
   "routine": {
     "detail": {
       "loading": "Cargando rutina...",

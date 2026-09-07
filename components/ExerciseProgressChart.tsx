@@ -1,4 +1,5 @@
 import { View, Text, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import { SimpleLineChart } from './SimpleLineChart';
 import { EmptyState } from './ui/EmptyState';
@@ -18,13 +19,15 @@ function formatDate(date: Date): string {
 }
 
 export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressChartProps) {
+  const { t } = useTranslation();
+  
   if (data.length === 0) {
     return (
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
         <EmptyState
           icon="trending-up"
-          title="Sin datos de progreso"
-          message="Completá sesiones para ver tu evolución"
+          title={t('progress.exercises.noData')}
+          message={t('progress.exercises.startTraining')}
         />
       </View>
     );
@@ -50,11 +53,11 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
         <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent.primary, marginRight: 8 }} />
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-          Peso promedio por sesión
+          {t('progress.exercises.avgWeightPerSession')}
         </Text>
       </View>
       <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
-        Cada punto = una sesión de entrenamiento
+        {t('progress.exercises.eachPointOneSession')}
       </Text>
       <SimpleLineChart
         data={weightData}
@@ -67,11 +70,11 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 4 }}>
         <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#82c896', marginRight: 8 }} />
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-          Repeticiones promedio por sesión
+          {t('progress.exercises.avgRepsPerSession')}
         </Text>
       </View>
       <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
-        Cada punto = una sesión de entrenamiento
+        {t('progress.exercises.eachPointOneSession')}
       </Text>
       <SimpleLineChart
         data={repData}

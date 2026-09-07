@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { View, Text, Pressable, TextInput, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 
 interface RoutineOption {
@@ -26,6 +27,7 @@ export function RoutinePickerModal({
   onSelect,
   onClose,
 }: RoutinePickerModalProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -131,7 +133,7 @@ export function RoutinePickerModal({
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Buscar..."
+              placeholder={t('progress.routineCompare.searchPlaceholder')}
               placeholderTextColor={colors.text.muted}
               style={{
                 flex: 1,
@@ -155,7 +157,7 @@ export function RoutinePickerModal({
                   paddingVertical: spacing.lg,
                 }}
               >
-                No se encontraron rutinas
+                {t('progress.routineCompare.noRoutines')}
               </Text>
             ) : (
               filtered.map((routine) => {

@@ -432,7 +432,9 @@
       "error": "Error loading data",
       "selectAtLeast2": "Select at least 2 months to compare",
       "selectRoutineTitle": "Select a routine",
-      "selectRoutineMessage": "Choose a routine and the months you want to compare to see changes."
+      "selectRoutineMessage": "Choose a routine and the months you want to compare to see changes.",
+      "searchPlaceholder": "Search...",
+      "noRoutines": "No routines found"
     },
     "exercises": {
       "title": "Exercises",
@@ -451,9 +453,15 @@
       "estimated1RM": "Est. 1RM",
       "sessionHistory": "Session history",
       "volume": "Volume",
-      "noData": "No data for this exercise"
-    }
-  },
+      "noData": "No data for this exercise",
+      "noDataProgress": "No progress data",
+      "completeSessions": "Complete sessions to see your evolution",
+      "avgWeightPerSession": "Average weight per session",
+      "avgRepsPerSession": "Average reps per session",
+      "eachPointOneSession": "Each point = one training session",
+      "noProgression": "Progression not available",
+      "needAtLeast2Sessions": "You need at least 2 sessions with data to see progression"
+    },
   "routine": {
     "detail": {
       "loading": "Loading routine...",
