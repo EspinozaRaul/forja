@@ -290,7 +290,7 @@ export default function HomeScreen() {
         onRequestClose={() => setSelectedRoutineId(null)}
       >
         <Pressable
-          style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+          style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
           onPress={() => setSelectedRoutineId(null)}
         >
           <Pressable

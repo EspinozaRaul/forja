@@ -714,7 +714,7 @@ export default function SessionScreen() {
       />
 
       <Modal visible={supersetPartnerMode !== null} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.xs }}>
               {t('session.superset.title')}
@@ -782,7 +782,7 @@ export default function SessionScreen() {
           }}
         >
           <Pressable
-            style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+            style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
             onPress={() => {
               if (!applyingRoutineUpdate) setShowRoutineDiffModal(false);
             }}
@@ -826,7 +826,7 @@ export default function SessionScreen() {
           onRequestClose={() => setConfirmAction(null)}
         >
           <Pressable
-            style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+            style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
             onPress={() => setConfirmAction(null)}
           >
             <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
@@ -1385,7 +1385,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
 
       {/* Custom rest time modal */}
       <Modal visible={showCustomRest} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.md + spacing.xs }}>

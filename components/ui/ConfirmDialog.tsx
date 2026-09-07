@@ -103,7 +103,7 @@ export function ConfirmDialog({
 const styles = {
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: colors.overlay.default,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     padding: spacing.lg,

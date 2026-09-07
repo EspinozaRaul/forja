@@ -65,7 +65,7 @@ export function RoutinePickerModal({
         onPress={handleClose}
         style={{
           flex: 1,
-          backgroundColor: colors.overlay,
+          backgroundColor: colors.overlay.default,
           justifyContent: 'flex-end',
         }}
       >

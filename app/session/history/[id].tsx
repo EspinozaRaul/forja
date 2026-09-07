@@ -245,7 +245,7 @@ export default function SessionSummaryScreen() {
 
     {/* Save as Routine Modal — outside ScrollView to prevent clipping */}
     {showSaveAsRoutine && (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg, zIndex: 1000 }}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg, zIndex: 1000 }}>
         <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
             {t('session.history.saveAsRoutine')}

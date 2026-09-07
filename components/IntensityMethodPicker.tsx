@@ -69,7 +69,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: colors.overlay.default,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,

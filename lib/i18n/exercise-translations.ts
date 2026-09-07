@@ -156,12 +156,6 @@ export const EXERCISE_NAME_TRANSLATIONS: Record<string, string> = {
   'rowing': 'Remo',
   'elliptical': 'Elíptica',
   'treadmill': 'Cinta de correr',
-
-  // ─── COMMON PATTERNS ────────────────────────────────────
-  // These catch variations that follow standard patterns
-  'barbell curl': 'Curl con barra',
-  'dumbbell curl': 'Curl con mancuernas',
-  'cable curl': 'Curl en polea',
 };
 
 /**

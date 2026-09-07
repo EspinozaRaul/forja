@@ -7,16 +7,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "assetBundlePatterns": [
       "assets/exercises/images/**/*",
       "assets/exercises/gifs/**/*"
     ],
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A0A0A"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.espinozar.fitnesstracker"
@@ -52,7 +46,15 @@
       "expo-font",
       "expo-localization",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0A0A0A"
+        }
+      ]
     ],
     "extra": {
       "router": {},

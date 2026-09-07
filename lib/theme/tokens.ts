@@ -44,8 +44,6 @@ export const colors = {
     light: '#353D45',     // secondary borders, button outlines
     divider: '#232930',   // thin dividers, separator lines
   },
-  // Overlay
-  overlay: 'rgba(0, 0, 0, 0.7)',
   // Tags
   tag: {
     muscle: '#22344A',    // muscle group tag background (steel blue family)

@@ -218,29 +218,6 @@
     "deleteAccountFailed": "Could not delete account.",
     "version": "Version"
   },
-  "common": {
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "back": "Back",
-    "showPassword": "Show",
-    "hidePassword": "Hide",
-    "today": "Today",
-    "yesterday": "Yesterday",
-    "daysAgo": "{{count}} days ago",
-    "weeksAgo": "{{count}} weeks ago",
-    "invalidId": "Invalid ID",
-    "errorBoundary": {
-      "title": "Something went wrong",
-      "message": "An unexpected error occurred",
-      "retry": "Try Again"
-    }
-  },
   "tabs": {
     "home": {
       "label": "Home",
@@ -392,20 +369,6 @@
       "thu": "Thu",
       "fri": "Fri",
       "sat": "Sat"
-    },
-    "months": {
-      "jan": "Jan",
-      "feb": "Feb",
-      "mar": "Mar",
-      "apr": "Apr",
-      "may": "May",
-      "jun": "Jun",
-      "jul": "Jul",
-      "aug": "Aug",
-      "sep": "Sep",
-      "oct": "Oct",
-      "nov": "Nov",
-      "dec": "Dec"
     },
     "weekdayHeader": {
       "mon": "M",

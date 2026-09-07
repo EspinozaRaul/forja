@@ -199,7 +199,7 @@ export default function RoutinesScreen() {
 
       {/* Create Folder Modal */}
       <Modal visible={showCreateModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.newFolderTitle')}</Text>
 
@@ -259,7 +259,7 @@ export default function RoutinesScreen() {
 
       {/* Move to Folder Modal */}
       <Modal visible={showMoveModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.moveToFolder')}</Text>
 
