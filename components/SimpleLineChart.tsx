@@ -1,6 +1,8 @@
 import { View, Text, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
+import { CHART } from '../lib/constants/layout';
+import { CHART_CONFIG } from '../lib/constants/config';
 
 interface DataPoint {
   date: string;
@@ -31,18 +33,18 @@ export function SimpleLineChart({
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;
   const chartHeight = height;
-  const padding = { top: 20, right: 10, bottom: 30, left: 40 };
+  const padding = CHART_CONFIG.PADDING;
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
   if (data.length === 0) {
     return (
-      <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         {title && (
-          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
+          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{title}</Text>
         )}
-        <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
+        <View style={{ height: CHART.HEIGHT_EMPTY, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: colors.text.muted, fontSize: fontSizes.sm, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
         </View>
       </View>
     );
@@ -71,7 +73,7 @@ export function SimpleLineChart({
   }));
 
   // X-axis labels (show max 5)
-  const xStep = Math.max(1, Math.floor(data.length / 5));
+  const xStep = Math.max(1, Math.floor(data.length / CHART_CONFIG.MAX_X_LABELS));
   const xLabels = data.filter((_, i) => i % xStep === 0 || i === data.length - 1).map((d, i, arr) => {
     const idx = data.indexOf(d);
     return {
@@ -81,9 +83,9 @@ export function SimpleLineChart({
   });
 
   return (
-    <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
+    <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
       {title && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{title}</Text>
       )}
       
       {/* Chart */}
@@ -135,9 +137,9 @@ export function SimpleLineChart({
               top: point.y - 4,
               width: 8,
               height: 8,
-              borderRadius: 4,
+              borderRadius: borderRadius.sm,
               backgroundColor: color,
-              borderWidth: 2,
+              borderWidth: borderWidths.thick,
               borderColor: colors.bg.elevated,
             }}
           />
@@ -151,8 +153,7 @@ export function SimpleLineChart({
               position: 'absolute',
               left: 0,
               top: label.y - 6,
-              fontSize: 10,
-              fontFamily: fonts.body,
+              fontSize: fontSizes.xs2, fontFamily: fonts.body,
               color: colors.text.muted,
               width: padding.left - 4,
               textAlign: 'right',
@@ -170,8 +171,7 @@ export function SimpleLineChart({
               position: 'absolute',
               left: label.x - 15,
               bottom: 5,
-              fontSize: 10,
-              fontFamily: fonts.body,
+              fontSize: fontSizes.xs2, fontFamily: fonts.body,
               color: colors.text.muted,
               width: 30,
               textAlign: 'center',
@@ -185,7 +185,7 @@ export function SimpleLineChart({
 
       {/* Unit label */}
       {unit && (
-        <Text style={{ fontSize: 10, fontFamily: fonts.body, color: colors.text.muted, marginTop: 4, textAlign: 'center' }}>
+        <Text style={{ fontSize: fontSizes.xs2, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, textAlign: 'center' }}>
           {unit}
         </Text>
       )}

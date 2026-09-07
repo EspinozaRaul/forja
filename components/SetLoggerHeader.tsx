@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { SET_LOGGER } from '../lib/constants/layout';
 
 interface SetLoggerHeaderProps {
   unit: string;
@@ -46,55 +47,50 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   serieHeader: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
     color: colors.text.muted,
-    width: 32,
+    width: SET_LOGGER.SERIE_WIDTH,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   anteriorHeader: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
     color: colors.text.muted,
-    width: 65,
+    width: SET_LOGGER.PREVIOUS_WIDTH,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   unitHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: spacing.xxs,
     flex: 1,
     justifyContent: 'center',
   },
   unitHeaderText: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     letterSpacing: 0.5,
   },
   repsHeader: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     flex: 1,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   partialHeader: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     flex: 1,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   intensitySpacer: {
-    width: 28,
+    width: SET_LOGGER.CHECK_SIZE,
   },
   checkHeader: {
-    width: 28,
+    width: SET_LOGGER.CHECK_SIZE,
     marginLeft: spacing.xs,
   },
 });

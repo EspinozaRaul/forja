@@ -2,7 +2,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fontSizes } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { ICON } from '../lib/constants/layout';
 
 type NoteType = 'rendimiento' | 'ajuste' | null;
 
@@ -129,37 +130,34 @@ const styles = StyleSheet.create({
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
+    gap: spacing.xs,
+    paddingVertical: spacing.xxs,
+    paddingHorizontal: spacing.xs,
   },
   preview: {
-    fontSize: 10,
-    color: colors.text.muted,
+    fontSize: fontSizes.xs2, color: colors.text.muted,
     maxWidth: 120,
   },
   typeIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 3,
+    width: ICON.SIZE_SM,
+    height: ICON.SIZE_SM,
+    borderRadius: borderRadius.xs,
     alignItems: 'center',
     justifyContent: 'center',
   },
   typeIconText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: fontSizes.xs2, fontWeight: fontWeights.bold,
   },
   container: {
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    marginTop: 4,
-    gap: 4,
+    paddingVertical: spacing.xs,
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
   input: {
-    fontSize: 11,
-    color: colors.text.primary,
+    fontSize: fontSizes.xs, color: colors.text.primary,
     padding: 0,
   },
   typeRow: {
@@ -169,16 +167,15 @@ const styles = StyleSheet.create({
   typeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
     borderRadius: borderRadius.sm,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.light,
   },
   typeChipText: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: fontSizes.xs2, fontWeight: fontWeights.medium,
     color: colors.text.muted,
   },
 });

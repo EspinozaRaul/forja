@@ -11,7 +11,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
+import { CHART } from '../lib/constants/layout';
+import { ANIMATION_CONFIG, CHART_CONFIG } from '../lib/constants/config';
 import { EmptyState } from './ui/EmptyState';
 import { mapWeightToY, mapRepsToSize, mapRirToOpacity } from '../lib/utils/progression-mapping';
 import type { ExerciseProgressionDataPoint } from '../lib/db/queries';
@@ -74,7 +76,7 @@ export function ProgressionBubble({ data, exerciseName, unit = 'kg' }: Progressi
     setTooltipIndex(null);
   }, []);
 
-  const needsScroll = data.length >= 8;
+  const needsScroll = data.length >= CHART_CONFIG.SCROLL_THRESHOLD;
   const contentWidth = Math.max(data.length * BUBBLE_COLUMN_WIDTH, needsScroll ? 0 : '100%' as any);
 
   const maxWeight = useMemo(() => {
@@ -113,10 +115,10 @@ export function ProgressionBubble({ data, exerciseName, unit = 'kg' }: Progressi
             {/* Y-axis labels column */}
             <View
               style={{
-                width: 40,
+                width: CHART.Y_AXIS_WIDTH,
                 height: CHART_HEIGHT,
                 justifyContent: 'space-between',
-                paddingBottom: 4,
+                paddingBottom: spacing.xs,
               }}
             >
               {[100, 50, 0].map((pct) => (
@@ -219,8 +221,8 @@ function BubbleColumn({
 
   useMemo(() => {
     scale.value = withDelay(
-      index * 50,
-      withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) })
+      index * ANIMATION_CONFIG.LIST_ITEM_DELAY,
+      withTiming(1, { duration: ANIMATION_CONFIG.LIST_ITEM_DURATION, easing: Easing.out(Easing.cubic) })
     );
   }, [point.sessionId]);
 
@@ -233,7 +235,7 @@ function BubbleColumn({
   const opacity = point.avgWeight == null ? 0.4 : mapRirToOpacity(point.avgRir);
 
   const longPress = Gesture.LongPress()
-    .minDuration(500)
+    .minDuration(ANIMATION_CONFIG.LONG_PRESS_DURATION)
     .onEnd(() => {
       runOnJS(onLongPress)(index);
     });
@@ -304,7 +306,7 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
         width: TOOLTIP_WIDTH,
         backgroundColor: colors.bg.elevated,
         borderRadius: borderRadius.md,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
         padding: spacing.sm,
         zIndex: 10,
@@ -330,7 +332,7 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
 
 function TooltipRow({ label, value }: { label: string; value: string }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xxs }}>
       <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
         {label}
       </Text>

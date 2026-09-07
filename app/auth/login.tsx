@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
+import { EMBER_DOT } from '../../lib/constants/layout';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: spacing.xl,
   },
   brandRow: {
     flexDirection: 'row',
@@ -173,8 +174,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   emberDot: {
-    width: 10,
-    height: 10,
+    width: EMBER_DOT.SIZE,
+    height: EMBER_DOT.SIZE,
     borderRadius: borderRadius.full,
     backgroundColor: colors.ember.primary,
   },
@@ -185,13 +186,13 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: fontSizes.xxl,
+    fontWeight: fontWeights.bold,
     color: colors.text.primary,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSizes.md,
     color: colors.text.secondary,
   },
   form: {
@@ -205,13 +206,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.card,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
   },
   googleButtonText: {
     color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.semibold,
   },
   divider: {
     flexDirection: 'row',
@@ -226,16 +227,16 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: colors.text.muted,
-    fontSize: 12,
+    fontSize: fontSizes.sm,
   },
   input: {
     backgroundColor: colors.bg.card,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    fontSize: 16,
+    fontSize: fontSizes.md,
     color: colors.text.primary,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
   },
   passwordContainer: {
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.bg.card,
     borderRadius: borderRadius.md,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
   },
   passwordInput: {
@@ -268,8 +269,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.bg.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.semibold,
   },
   linkButton: {
     alignItems: 'center',
@@ -277,10 +278,10 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: colors.text.secondary,
-    fontSize: 14,
+    fontSize: fontSizes.md,
   },
   linkBold: {
     color: colors.accent.primary,
-    fontWeight: '600',
+    fontWeight: fontWeights.semibold,
   },
 });

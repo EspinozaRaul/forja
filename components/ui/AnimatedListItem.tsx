@@ -1,4 +1,5 @@
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { ANIMATION_CONFIG } from '../../lib/constants/config';
 
 interface AnimatedListItemProps {
   children: React.ReactNode;
@@ -18,8 +19,8 @@ interface AnimatedListItemProps {
 export function AnimatedListItem({
   children,
   index = 0,
-  delay = 50,
-  duration = 300,
+  delay = ANIMATION_CONFIG.LIST_ITEM_DELAY,
+  duration = ANIMATION_CONFIG.LIST_ITEM_DURATION,
   className = '',
 }: AnimatedListItemProps) {
   const entering = FadeInDown.delay(index * delay).duration(duration);

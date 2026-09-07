@@ -1,6 +1,6 @@
 import { ScrollView, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 
 interface PeriodChipsProps {
   /** Available period keys (e.g. ["2026-01", "2026-02"]). */
@@ -60,10 +60,10 @@ export function PeriodChips({
             onPress={() => toggle(periodKey)}
             style={{
               paddingHorizontal: spacing.md,
-              paddingVertical: spacing.xs + 2,
+              paddingVertical: spacing.xs + spacing.xxs,
               borderRadius: borderRadius.full,
               backgroundColor: isSelected ? colors.accent.primary : 'transparent',
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: isSelected ? colors.accent.primary : colors.border.primary,
             }}
           >

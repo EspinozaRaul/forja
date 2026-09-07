@@ -8,7 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllExercises } from '../../lib/db/queries';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { THUMBNAIL } from '../../lib/constants/layout';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { formatRelativeDate } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { useSettings } from '../../lib/utils/settings';
@@ -71,7 +72,7 @@ export default function ExercisesScreen() {
         style={{
           backgroundColor: colors.bg.card,
           borderRadius: borderRadius.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
           padding: spacing.md,
           marginBottom: spacing.sm,
@@ -81,8 +82,8 @@ export default function ExercisesScreen() {
           {/* Exercise Icon */}
           <View
             style={{
-              width: 44,
-              height: 44,
+              width: THUMBNAIL.SIZE_MD,
+              height: THUMBNAIL.SIZE_MD,
               borderRadius: borderRadius.md,
               backgroundColor: colors.accent.muted,
               alignItems: 'center',
@@ -99,7 +100,7 @@ export default function ExercisesScreen() {
                 fontSize: fontSizes.md,
                 fontFamily: fonts.bodySemiBold,
                 color: colors.text.primary,
-                marginBottom: 2,
+                marginBottom: spacing.xxs,
               }}
               numberOfLines={1}
             >
@@ -151,7 +152,7 @@ export default function ExercisesScreen() {
                   fontSize: fontSizes.xs,
                   fontFamily: fonts.body,
                   color: colors.text.muted,
-                  marginTop: 2,
+                   marginTop: spacing.xxs,
                 }}
               >
                 {t('exercises.maxWeight')}
@@ -218,7 +219,7 @@ export default function ExercisesScreen() {
             alignItems: 'center',
             backgroundColor: colors.bg.card,
             borderRadius: borderRadius.md,
-            borderWidth: 1,
+            borderWidth: borderWidths.thin,
             borderColor: colors.border.primary,
             paddingHorizontal: spacing.sm,
           }}

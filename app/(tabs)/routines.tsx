@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { Button } from '../../components/ui/Button';
 import { haptics } from '../../lib/utils/haptics';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
@@ -100,14 +100,14 @@ export default function RoutinesScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Header */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md + spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('tabs.routines.title')}</Text>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('tabs.routines.title')}</Text>
       </View>
 
       <ScrollView style={{ flex: 1, padding: spacing.md }}>
         {/* Folders Section */}
         {folders && folders.length > 0 && (
           <View style={{ marginBottom: spacing.lg }}>
-            <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
               {t('tabs.routines.folders')}
             </Text>
             {folders.map((folder, index) => (
@@ -127,14 +127,14 @@ export default function RoutinesScreen() {
                     borderLeftColor: folder.color || colors.accent.primary,
                   }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
+                      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
                       {folder.description && (
-                        <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }} numberOfLines={1}>
+                        <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} numberOfLines={1}>
                           {folder.description}
                         </Text>
                       )}
                     </View>
-                    <Text style={{ fontSize: 20, color: colors.text.muted }}>›</Text>
+                    <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>›</Text>
                   </View>
                 </TouchableOpacity>
               </AnimatedListItem>
@@ -145,7 +145,7 @@ export default function RoutinesScreen() {
         {/* Unlinked Routines Section */}
         {unlinkedRoutines.length > 0 && (
           <View style={{ marginBottom: spacing.lg }}>
-            <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm, textTransform: 'uppercase', letterSpacing: 1 }}>
               {t('tabs.routines.noFolder')}
             </Text>
             {unlinkedRoutines.map((routine, index) => (
@@ -157,12 +157,12 @@ export default function RoutinesScreen() {
                 >
                   <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
+                      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
                       {routine.description && (
-                        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 4 }}>{routine.description}</Text>
+                        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
                       )}
                     </View>
-                    <Text style={{ fontSize: 20, color: colors.text.muted }}>›</Text>
+                    <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>›</Text>
                   </View>
                 </TouchableOpacity>
               </AnimatedListItem>
@@ -201,9 +201,9 @@ export default function RoutinesScreen() {
       <Modal visible={showCreateModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>{t('tabs.routines.newFolderTitle')}</Text>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.newFolderTitle')}</Text>
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>{t('tabs.routines.name')}</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('tabs.routines.name')}</Text>
             <TextInput
               value={newFolderName}
               onChangeText={setNewFolderName}
@@ -212,7 +212,7 @@ export default function RoutinesScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>{t('tabs.routines.descriptionOptional')}</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('tabs.routines.descriptionOptional')}</Text>
             <TextInput
               value={newFolderDescription}
               onChangeText={setNewFolderDescription}
@@ -221,8 +221,8 @@ export default function RoutinesScreen() {
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>{t('tabs.routines.color')}</Text>
-            <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('tabs.routines.color')}</Text>
+            <View style={{ flexDirection: 'row', marginBottom: spacing.md + spacing.xs, flexWrap: 'wrap', gap: spacing.sm }}>
               {colors.folders.map((color) => (
                 <TouchableOpacity
                   key={color}
@@ -261,11 +261,11 @@ export default function RoutinesScreen() {
       <Modal visible={showMoveModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>{t('tabs.routines.moveToFolder')}</Text>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.moveToFolder')}</Text>
 
             {folders && folders.length > 0 && (
               <View style={{ marginBottom: spacing.md }}>
-                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>{t('tabs.routines.selectFolder')}</Text>
+                <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('tabs.routines.selectFolder')}</Text>
                 {folders.map((folder) => (
                   <TouchableOpacity
                     key={folder.id}
@@ -282,8 +282,8 @@ export default function RoutinesScreen() {
                       borderLeftColor: folder.color || colors.accent.primary,
                     }}
                   >
-                    <Text style={{ flex: 1, fontSize: 15, color: colors.text.primary }}>{folder.name}</Text>
-                    <Text style={{ fontSize: 14, color: colors.text.muted }}>›</Text>
+                    <Text style={{ flex: 1, fontSize: fontSizes.md, color: colors.text.primary }}>{folder.name}</Text>
+                    <Text style={{ fontSize: fontSizes.md, color: colors.text.muted }}>›</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -298,7 +298,7 @@ export default function RoutinesScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleSelectFolder(null)}
-                style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
+                style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
               >
                 <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.noFolder')}</Text>
               </TouchableOpacity>

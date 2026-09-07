@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
 
 const RIR_OPTIONS = [0, 1, 2, 3, 4];
 
@@ -44,12 +44,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.xs + 2,
+    marginTop: spacing.xs + spacing.xxs,
     marginLeft: 71,
   },
   label: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: fontSizes.xs2, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     letterSpacing: 0.4,
     width: 24,
@@ -64,19 +63,18 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.bg.elevated,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: spacing.sm,
   },
   chipSelected: {
     backgroundColor: colors.accent.muted,
     borderColor: colors.accent.primary,
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: fontSizes.xs, fontWeight: fontWeights.bold,
     color: colors.text.secondary,
   },
   chipTextSelected: {

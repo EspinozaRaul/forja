@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, shadows } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, shadows, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { ANIMATION_CONFIG } from '../lib/constants/config';
 
-const DISPLAY_MS = 2500;
-const FADE_IN_MS = 200;
-const FADE_OUT_MS = 250;
-const SLIDE_PX = 16;
+const DISPLAY_MS = ANIMATION_CONFIG.BANNER_DISPLAY;
+const FADE_IN_MS = ANIMATION_CONFIG.BANNER_FADE_IN;
+const FADE_OUT_MS = ANIMATION_CONFIG.BANNER_FADE_OUT;
+const SLIDE_PX = ANIMATION_CONFIG.BANNER_SLIDE;
 
 interface NewRecordBannerProps {
   exerciseName: string;
@@ -82,7 +83,7 @@ export function NewRecordBanner({ exerciseName, weight, unit, onDismiss }: NewRe
       >
         <Text
           numberOfLines={1}
-          style={{ color: colors.bg.primary, fontSize: 12, fontWeight: '700', fontFamily: fonts.bodyMedium }}
+          style={{ color: colors.bg.primary, fontSize: fontSizes.sm, fontWeight: fontWeights.bold, fontFamily: fonts.bodyMedium }}
         >
           {t('session.newRecord')} {exerciseName} · {weight} {unit}
         </Text>

@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
 import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
@@ -281,7 +281,7 @@ export default function RoutineDetailScreen() {
         ) : (
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-              <Text style={{ fontSize: 20, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
+              <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <Button title={t('common.edit')} variant="secondary" onPress={handleStartEdit} />
@@ -301,13 +301,13 @@ export default function RoutineDetailScreen() {
       {/* Exercises List */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
-          <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('routine.detail.exercises')}</Text>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('routine.detail.exercises')}</Text>
           <Button title={t('routine.detail.addExercise')} variant="secondary" onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (
-          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
-            <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
+          <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary, textAlign: 'center' }}>
               {t('routine.detail.tapToSwap')}
             </Text>
           </View>
@@ -330,28 +330,28 @@ export default function RoutineDetailScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: spacing.sm,
-                  borderWidth: 1,
+                  borderWidth: borderWidths.thin,
                   borderColor: dragIndex === index ? colors.accent.primary : 'transparent',
                 }}
               >
                 <TouchableOpacity
                   onPress={() => handleDragHandleTap(index)}
                   activeOpacity={0.7}
-                  style={{ gap: 3, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
+                  style={{ gap: spacing.xs, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
                 >
-                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
-                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
-                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
+                  <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); re.exercise && router.push(`/exercise/${re.exercise.id}`); }}
                   style={{ flex: 1 }}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+                  <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
                     {re.exercise ? getExerciseName(re.exercise.name, i18n.language) : t('routine.detail.unknownExercise')}
                   </Text>
-                  <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>
                     {(() => {
                       const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
                       return entry
@@ -364,13 +364,13 @@ export default function RoutineDetailScreen() {
                   onPress={(e) => { e.stopPropagation(); setReplaceIndex(index); setShowPicker(true); }}
                   style={{ padding: spacing.sm }}
                 >
-                  <Text style={{ fontSize: 14, color: colors.accent.primary }}>↻</Text>
+                  <Text style={{ fontSize: fontSizes.md, color: colors.accent.primary }}>↻</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); handleRemoveExercise(re.id); }}
                   style={{ padding: spacing.sm }}
                 >
-                  <Text style={{ fontSize: 16, color: colors.error }}>✕</Text>
+                  <Text style={{ fontSize: fontSizes.md, color: colors.error }}>✕</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -401,14 +401,14 @@ export default function RoutineDetailScreen() {
 
       <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
         <Pressable style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
-          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
-            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
+          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
               {t('routine.detail.previousSessionMessage')}
             </Text>
             {lastSession && (
-              <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
-                <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
+              <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+                <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
                 {lastSession.exercises?.map((se) => {
                   const unit = resolveUnit(
                     allExercises?.find((e) => e.id === se.exerciseId)?.unit ?? null,
@@ -416,14 +416,14 @@ export default function RoutineDetailScreen() {
                   );
                   return (
                   <View key={se.id} style={{ marginBottom: spacing.xs }}>
-                    <Text style={{ fontSize: 14, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{getExerciseName(se.exerciseName ?? '', i18n.language) || se.exerciseName || t('routine.detail.exerciseNumber', { order: se.order })}</Text>
+                    <Text style={{ fontSize: fontSizes.md, color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{getExerciseName(se.exerciseName ?? '', i18n.language) || se.exerciseName || t('routine.detail.exerciseNumber', { order: se.order })}</Text>
                     {summarizeSets(se.sets ?? []).map((line) => (
                       line.type === 'group' ? (
-                        <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: 12, color: colors.accent.primary, fontFamily: fonts.bodyMedium, marginLeft: spacing.sm }}>
+                        <Text key={`${se.id}-g-${line.setNumber}`} style={{ fontSize: fontSizes.sm, color: colors.accent.primary, fontFamily: fonts.bodyMedium, marginLeft: spacing.sm }}>
                           {line.label} × {line.count}
                         </Text>
                       ) : (
-                        <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: 12, color: colors.text.secondary, fontFamily: fonts.body, marginLeft: spacing.sm }}>
+                        <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: fontSizes.sm, color: colors.text.secondary, fontFamily: fonts.body, marginLeft: spacing.sm }}>
                           {t('session.set')} {line.setNumber}: {line.reps ?? '—'} {t('session.reps')} × {line.weight != null ? formatWeight(line.weight, unit) : '—'}
                         </Text>
                       )

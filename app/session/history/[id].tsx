@@ -8,11 +8,12 @@ import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/us
 import { Button } from '../../../components/ui/Button';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { MODAL } from '../../../lib/constants/layout';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { formatDuration, formatVolume } from '../../../lib/utils/format';
 import { useSettings } from '../../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
-import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../../lib/theme/tokens';
 import { haptics } from '../../../lib/utils/haptics';
 import type { SessionExercise } from '../../../lib/types';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -122,19 +123,19 @@ export default function SessionSummaryScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       {/* Session Info */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
           {t('session.history.title')}
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <View style={{ alignItems: 'center', flex: 1 }}>
-            <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>{exerciseCount}</Text>
-            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.exercisesLabel')}</Text>
+            <Text style={{ fontSize: fontSizes.xxl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>{exerciseCount}</Text>
+            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.exercisesLabel')}</Text>
           </View>
           <View style={{ alignItems: 'center', flex: 1 }}>
-            <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: 'bold', color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.xxl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
               {formatDuration(duration)}
             </Text>
-            <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.durationLabel')}</Text>
+            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.secondary }}>{t('session.history.durationLabel')}</Text>
           </View>
         </View>
       </View>
@@ -142,7 +143,7 @@ export default function SessionSummaryScreen() {
       {/* Notes */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('session.history.notesLabel')}</Text>
+          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('session.history.notesLabel')}</Text>
           <Button
             title={isEditingNotes ? t('common.save') : t('common.edit')}
             variant="secondary"
@@ -161,15 +162,16 @@ export default function SessionSummaryScreen() {
           <TextInput
             style={{
               backgroundColor: colors.bg.elevated,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               borderRadius: borderRadius.sm,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.sm,
-              fontSize: 16,
+              fontSize: fontSizes.md,
               color: colors.text.primary,
+              flex: 1,
               minHeight: 80,
-              textAlignVertical: 'top',
+              textAlignVertical: 'top' as any,
             }}
             multiline
             numberOfLines={3}
@@ -203,11 +205,11 @@ export default function SessionSummaryScreen() {
               gap: spacing.sm,
             }}
           >
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
               {t('session.history.saveAsRoutine')}
             </Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginTop: spacing.xs }}>
+          <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, textAlign: 'center', marginTop: spacing.xs }}>
             {t('session.history.saveAsRoutineSubtitle')}
           </Text>
         </View>
@@ -215,7 +217,7 @@ export default function SessionSummaryScreen() {
 
       {/* Exercises and Sets */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, marginTop: spacing.sm }}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>
           {t('session.history.exercisesLabel')}
         </Text>
         {!sessionExercises || sessionExercises.length === 0 ? (
@@ -244,19 +246,19 @@ export default function SessionSummaryScreen() {
     {/* Save as Routine Modal — outside ScrollView to prevent clipping */}
     {showSaveAsRoutine && (
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg, zIndex: 1000 }}>
-        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-          <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
+        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
             {t('session.history.saveAsRoutine')}
           </Text>
           <TextInput
             style={{
               backgroundColor: colors.bg.elevated,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               borderRadius: borderRadius.sm,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.sm,
-              fontSize: 16,
+              fontSize: fontSizes.md,
               color: colors.text.primary,
               marginBottom: spacing.md,
             } as any}
@@ -271,14 +273,14 @@ export default function SessionSummaryScreen() {
               onPress={() => setShowSaveAsRoutine(false)}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
             >
-              <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
+              <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSaveAsRoutine}
               disabled={isSavingRoutine}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
             >
-              <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>
+              <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold }}>
                 {isSavingRoutine ? t('session.history.saving') : t('common.save')}
               </Text>
             </TouchableOpacity>
@@ -319,11 +321,11 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
     <View style={{ marginBottom: spacing.lg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
         <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)}>
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
             {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
           </Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 13, color: colors.text.muted }}>
+        <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted }}>
           {completedSets.length} sets • {formatVolume(totalVolume, unit)}
         </Text>
       </View>
@@ -340,18 +342,18 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
                 borderBottomColor: colors.border.primary,
               }}
             >
-              <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
-              <Text style={{ fontSize: 14, color: colors.text.primary }}>
+              <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
+              <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>
                 {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
               </Text>
-              <Text style={{ fontSize: 14, color: set.completed ? colors.success : colors.text.muted }}>
+              <Text style={{ fontSize: fontSizes.md, color: set.completed ? colors.success : colors.text.muted }}>
                 {set.completed ? '✓' : '○'}
               </Text>
             </View>
           ))}
         </View>
       ) : (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.muted }}>{t('session.history.noSetsLogged')}</Text>
+        <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.muted }}>{t('session.history.noSetsLogged')}</Text>
       )}
     </View>
   );

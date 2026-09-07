@@ -1,6 +1,7 @@
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
+import { MODAL } from '../../lib/constants/layout';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -111,19 +112,19 @@ const styles = {
     backgroundColor: colors.bg.card,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    width: 320,
-    borderWidth: 1,
+    width: MODAL.WIDTH,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
   },
   title: {
-    fontSize: 16,
+    fontSize: fontSizes.md,
     fontFamily: fonts.bodySemiBold,
     color: colors.text.primary,
     marginBottom: spacing.sm,
     textAlign: 'center' as const,
   },
   message: {
-    fontSize: 14,
+    fontSize: fontSizes.md,
     fontFamily: fonts.body,
     color: colors.text.secondary,
     marginBottom: spacing.lg,
@@ -159,8 +160,8 @@ const styles = {
   },
   cancelText: {
     color: colors.text.secondary,
-    fontWeight: '600' as const,
-    fontSize: 13,
+    fontWeight: fontWeights.semibold as const,
+    fontSize: fontSizes.sm,
   },
   confirmButton: {
     flex: 1,
@@ -177,8 +178,8 @@ const styles = {
   },
   confirmText: {
     color: colors.bg.primary,
-    fontWeight: '700' as const,
-    fontSize: 13,
+    fontWeight: fontWeights.bold as const,
+    fontSize: fontSizes.sm,
   },
   confirmTextDestructive: {
     color: colors.text.primary,

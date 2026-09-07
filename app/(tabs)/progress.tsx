@@ -12,7 +12,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { NavigationButton } from '../../components/progress/NavigationButton';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { buildMonthGrid, monthLabel, addMonths } from '../../lib/progress';
 import type { SessionByMonth } from '../../lib/progress';
 
@@ -84,7 +84,7 @@ const cardStyle = {
   backgroundColor: colors.bg.card,
   borderRadius: borderRadius.lg,
   padding: spacing.md,
-  borderWidth: 1,
+  borderWidth: borderWidths.thin,
   borderColor: colors.border.primary,
 };
 
@@ -121,13 +121,13 @@ function SessionRow({
       style={{
         backgroundColor: colors.bg.elevated,
         borderRadius: borderRadius.md,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
         padding: spacing.md,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
           <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
             <DayLabel sentry={formatDayShort(session.startedAt, locale)} t={t} locale={locale} />
           </Text>
@@ -138,7 +138,7 @@ function SessionRow({
             {formatVolume(session.totalVolume, unit)}
           </Text>
         </View>
-        <Text style={{ fontSize: 18, color: colors.text.muted }}>{'>'}</Text>
+        <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>{'>'}</Text>
       </View>
     </Pressable>
   );
@@ -173,7 +173,7 @@ function CalendarCard({
     aspectRatio: 1,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 3,
+    gap: spacing.xs,
   };
   const weekdayHeader = getWeekdayHeader(locale);
 
@@ -183,24 +183,24 @@ function CalendarCard({
         <Pressable
           onPress={() => onMonthChange(-1)}
           hitSlop={10}
-          style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary }}
+          style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: 20, color: colors.text.secondary }}>{'<'}</Text>
+          <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'<'}</Text>
         </Pressable>
         <View style={{ alignItems: 'center', flex: 1 }}>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
             {monthLabel(year, month)}
           </Text>
-          <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>
+           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>
             {t('progress.trainingCount', { count: sessionCount })}
           </Text>
         </View>
         <Pressable
           onPress={() => onMonthChange(1)}
           hitSlop={10}
-          style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary }}
+          style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: 20, color: colors.text.secondary }}>{'>'}</Text>
+          <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'>'}</Text>
         </Pressable>
       </View>
 
@@ -357,7 +357,7 @@ export default function ProgressScreen() {
                     marginTop: spacing.sm,
                     backgroundColor: colors.bg.elevated,
                     borderRadius: borderRadius.md,
-                    borderWidth: 1,
+                    borderWidth: borderWidths.thin,
                     borderColor: colors.border.primary,
                     paddingVertical: spacing.sm,
                     alignItems: 'center',
@@ -404,7 +404,7 @@ export default function ProgressScreen() {
                   marginTop: spacing.sm,
                   backgroundColor: colors.bg.elevated,
                   borderRadius: borderRadius.md,
-                  borderWidth: 1,
+                  borderWidth: borderWidths.thin,
                   borderColor: colors.border.primary,
                   paddingVertical: spacing.sm,
                   alignItems: 'center',

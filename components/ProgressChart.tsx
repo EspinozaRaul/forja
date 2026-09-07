@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
+import { CHART } from '../lib/constants/layout';
 import { SimpleLineChart } from './SimpleLineChart';
 import type { ProgressDataPoint } from '../lib/types';
 
@@ -17,17 +18,17 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
   const { t } = useTranslation();
 
   const containerStyle = embedded
-    ? { backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }
+    ? { backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }
     : { backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs };
 
   if (data.length === 0) {
     return (
       <View style={containerStyle}>
         {title && (
-          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
+          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{title}</Text>
         )}
-        <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
+        <View style={{ height: CHART.HEIGHT_EMPTY, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: colors.text.muted, fontSize: fontSizes.sm, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
         </View>
       </View>
     );
@@ -45,9 +46,9 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
   return (
     <View style={containerStyle}>
       {title && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 4 }}>{title}</Text>
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.xs }}>{title}</Text>
       )}
-      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
+      <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginBottom: spacing.sm }}>
         Cada punto = una semana del año
       </Text>
       <SimpleLineChart

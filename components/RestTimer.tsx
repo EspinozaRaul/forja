@@ -2,7 +2,9 @@ import { View, Text, TouchableOpacity, AppState, Platform, type AppStateStatus }
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { TIMER } from '../lib/constants/layout';
+import { TIMER_CONFIG } from '../lib/constants/config';
 import {
   saveRestTimer,
   loadRestTimer,
@@ -43,7 +45,7 @@ function formatCountdown(seconds: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-const PRESET_OPTIONS = [30, 60, 90, 120, 180];
+const PRESET_OPTIONS = TIMER_CONFIG.REST_PRESETS;
 
 // Android 8.0+ requires all notifications to belong to a channel; without an
 // explicit channel with sound, Android falls back to a silent "Miscellaneous"
@@ -57,7 +59,7 @@ async function ensureRestChannel(channelName: string): Promise<void> {
       name: channelName,
       importance: Notifications.AndroidImportance.HIGH,
       sound: 'default',
-      vibrationPattern: [0, 250, 250, 250],
+      vibrationPattern: TIMER_CONFIG.VIBRATION_PATTERN,
     });
   } catch {
     // Channel creation is best-effort; scheduling still proceeds on the fallback channel.
@@ -251,7 +253,7 @@ export function RestTimer({
             setRemaining(remainingSec);
           }
         }
-      }, 500); // Check more frequently for accuracy
+      }, TIMER_CONFIG.REST_TIMER_TICK); // Check more frequently for accuracy
     }
 
     return () => {
@@ -345,16 +347,16 @@ export function RestTimer({
   // Duration selector mode (not active, not counting down)
   if (!active && remaining === 0) {
     return (
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('restTimer.rest')}</Text>
+          <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('restTimer.rest')}</Text>
           {PRESET_OPTIONS.map((dur) => (
             <TouchableOpacity
               key={dur}
               onPress={() => handleSelectDuration(dur)}
-              style={{ backgroundColor: selectedDuration === dur ? colors.accent.primary : colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderWidth: selectedDuration === dur ? 0 : 1, borderColor: colors.border.primary }}
+              style={{ backgroundColor: selectedDuration === dur ? colors.accent.primary : colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderWidth: selectedDuration === dur ? 0 : borderWidths.thin, borderColor: colors.border.primary }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
+              <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
                 {dur >= 60 ? `${dur / 60}m` : `${dur}s`}
               </Text>
             </TouchableOpacity>
@@ -364,7 +366,7 @@ export function RestTimer({
           onPress={() => handleStart()}
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: '700', fontSize: 12 }}>{t('restTimer.startRest')}</Text>
+          <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}>{t('restTimer.startRest')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -372,31 +374,31 @@ export function RestTimer({
 
   // Active countdown — compact single-row bar
   return (
-    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.accent.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.accent.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <TouchableOpacity
-        onPress={() => handleAdjust(-15)}
-        style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}
+        onPress={() => handleAdjust(-TIMER_CONFIG.REST_ADJUST_STEP)}
+        style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 13 }}>-15</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}}>-{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', flex: 1 }}>
-        <Text style={{ fontSize: 9, fontWeight: '600', color: colors.accent.primary, marginBottom: 1 }}>{t('restTimer.rest')}</Text>
-        <Text style={{ fontSize: 22, fontFamily: fonts.display, fontWeight: '700', color: colors.accent.primary }}>
+        <Text style={{ fontSize: fontSizes.xxs, fontWeight: fontWeights.semibold, color: colors.accent.primary, marginBottom: spacing.xxs }}>{t('restTimer.rest')}</Text>
+        <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
           {formatCountdown(remaining)}
         </Text>
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <TouchableOpacity
-          onPress={() => handleAdjust(15)}
-          style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => handleAdjust(TIMER_CONFIG.REST_ADJUST_STEP)}
+          style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
         >
-          <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 13 }}>+15</Text>
+          <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}}>+{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSkip}
-          style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: 32, justifyContent: 'center', borderWidth: 1, borderColor: colors.border.light }}
+          style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: TIMER.BUTTON_SIZE, justifyContent: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 11 }}>{t('restTimer.skip')}</Text>
+          <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.xs}>{t('restTimer.skip')}</Text>
         </TouchableOpacity>
       </View>
     </View>

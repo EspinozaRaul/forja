@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
+import { NAV_BUTTON } from '../../lib/constants/layout';
 
 interface NavigationButtonProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -17,18 +18,18 @@ export function NavigationButton({ icon, label, description, onPress }: Navigati
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
-        paddingVertical: spacing.sm + 2,
+        paddingVertical: spacing.sm + spacing.xxs,
         paddingHorizontal: spacing.md,
         backgroundColor: colors.bg.card,
         borderRadius: borderRadius.lg,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
       }}
     >
       <View
         style={{
-          width: 40,
-          height: 40,
+          width: NAV_BUTTON.SIZE,
+          height: NAV_BUTTON.SIZE,
           borderRadius: borderRadius.md,
           backgroundColor: colors.accent.muted,
           alignItems: 'center',
@@ -41,7 +42,7 @@ export function NavigationButton({ icon, label, description, onPress }: Navigati
         <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           {label}
         </Text>
-        <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>
+        <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>
           {description}
         </Text>
       </View>

@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { MODAL, ICON } from '../lib/constants/layout';
 
 export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
 
@@ -78,20 +79,18 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     width: '100%',
-    maxWidth: 340,
-    borderWidth: 1,
+    maxWidth: MODAL.MAX_WIDTH,
+    borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: fontSizes.lg, fontWeight: fontWeights.bold,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   subtitle: {
-    fontSize: 12,
-    color: colors.text.muted,
+    fontSize: fontSizes.xs, color: colors.text.muted,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
@@ -102,28 +101,25 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + spacing.xs,
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.sm,
-    marginBottom: 2,
+    marginBottom: spacing.xxs,
   },
   optionIcon: {
-    width: 32,
+    width: ICON.SIZE_XL,
     textAlign: 'center',
   },
   optionText: {
     flex: 1,
   },
   optionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontWeight: fontWeights.semibold,
     color: colors.text.primary,
   },
   optionDescription: {
-    fontSize: 11,
-    color: colors.text.muted,
-    marginTop: 1,
+    fontSize: fontSizes.xs, color: colors.text.muted,
+    marginTop: spacing.xxs,
   },
   optionArrow: {
-    fontSize: 18,
-    color: colors.text.muted,
+    fontSize: fontSizes.lg, color: colors.text.muted,
   },
   cancelButton: {
     marginTop: spacing.sm,
@@ -133,8 +129,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border.divider,
   },
   cancelText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontWeight: fontWeights.semibold,
     color: colors.text.secondary,
   },
 });

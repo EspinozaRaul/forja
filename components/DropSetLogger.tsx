@@ -3,7 +3,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { SET_LOGGER } from '../lib/constants/layout';
 import type { Set } from '../lib/types';
 
 interface Drop {
@@ -167,7 +168,7 @@ export function DropSetLogger({
 
           {/* Add drop */}
           <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton}>
-            <Text style={{ fontSize: 13, color: colors.accent.secondary }}>+</Text>
+            <Text style={{ fontSize: fontSizes.sm, color: colors.accent.secondary }}>+</Text>
             <Text style={styles.addDropText}>{t('session.dropSet.addUnit', { unit: unitLabel })}</Text>
           </TouchableOpacity>
         </View>
@@ -292,7 +293,7 @@ function DropRow({
           onPress={() => onDeleteDrop(index)}
           style={styles.checkButton}
         >
-          <Text style={{ fontSize: 14, color: colors.error }}>×</Text>
+          <Text style={{ fontSize: fontSizes.sm, color: colors.error }}>×</Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.checkButton} />
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
   },
   toggleArea: {
     flex: 1,
@@ -317,68 +318,64 @@ const styles = StyleSheet.create({
   },
   // --- Columns matching SetLogger exactly ---
   serieCell: {
-    width: 32,
+    width: SET_LOGGER.SERIE_WIDTH,
     alignItems: 'center',
   },
   serieNumber: {
-    fontSize: 14,
-    fontFamily: fonts.display,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontFamily: fonts.display,
+    fontWeight: fontWeights.semibold,
     color: colors.text.secondary,
   },
   badge: {
     backgroundColor: colors.accent.muted,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
     borderRadius: borderRadius.sm,
     marginLeft: spacing.xs,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: fontSizes.xs2, fontWeight: fontWeights.extrabold,
     color: colors.accent.primary,
     letterSpacing: 0.3,
   },
   segmentCount: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: fontSizes.xs, fontWeight: fontWeights.semibold,
     color: colors.text.muted,
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
   inputCell: {
     flex: 1,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
-    marginHorizontal: 2,
-    paddingVertical: 6,
+    marginHorizontal: spacing.xxs,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
   },
   repsCell: {
     flex: 1,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
-    marginHorizontal: 2,
-    paddingVertical: 6,
+    marginHorizontal: spacing.xxs,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
   },
   input: {
-    fontSize: 14,
-    fontFamily: fonts.display,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontFamily: fonts.display,
+    fontWeight: fontWeights.semibold,
     color: colors.text.primary,
     textAlign: 'center',
     textAlignVertical: 'center',
     width: '100%',
   },
   intensityButton: {
-    width: 24,
+    width: SET_LOGGER.INTENSITY_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 2,
+    width: SET_LOGGER.CHECK_SIZE,
+    height: SET_LOGGER.CHECK_SIZE,
+    borderRadius: borderRadius.xs,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.xs,
@@ -388,18 +385,18 @@ const styles = StyleSheet.create({
   },
   checkIncomplete: {
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    borderWidth: borderWidths.medium,
     borderColor: colors.border.primary,
   },
   // --- Expanded drops ---
   dropsBlock: {
     marginTop: 0,
-    paddingLeft: 28 + spacing.xs,
+    paddingLeft: spacing.lg + spacing.xs,
   },
   dropRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
   },
   dropIndicator: {
     width: 12,
@@ -410,7 +407,7 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.border.light,
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   dropDotCompleted: {
     backgroundColor: colors.accent.primary,
@@ -419,16 +416,15 @@ const styles = StyleSheet.create({
     width: 1,
     flex: 1,
     backgroundColor: colors.border.primary,
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   dropLabelCell: {
-    width: 65,
+    width: SET_LOGGER.PREVIOUS_WIDTH,
     alignItems: 'flex-start',
     paddingLeft: spacing.xs,
   },
   dropLabelText: {
-    fontSize: 11,
-    color: colors.text.muted,
+    fontSize: fontSizes.xs, color: colors.text.muted,
     fontFamily: fonts.body,
   },
   // --- Add drop ---
@@ -436,23 +432,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
   },
   addDropText: {
-    fontSize: 13,
-    color: colors.accent.secondary,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, color: colors.accent.secondary,
+    fontWeight: fontWeights.semibold,
   },
   // --- Swipeable delete ---
   deleteAction: {
     backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
+    width: SET_LOGGER.DELETE_WIDTH,
   },
   deleteText: {
     color: colors.text.primary,
-    fontWeight: '600',
-    fontSize: 13,
+    fontWeight: fontWeights.semibold,
+    fontSize: fontSizes.sm
   },
 });

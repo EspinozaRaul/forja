@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
@@ -211,17 +211,17 @@ export default function HomeScreen() {
     >
       {/* Stats Dashboard */}
       <View style={styles.cardWithTopMargin}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.stats')}</Text>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.stats')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>{t('tabs.home.workouts')}</Text>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.accent.primary }}>
+          <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xs }}>{t('tabs.home.workouts')}</Text>
+            <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
               {globalStats?.totalWorkouts ?? 0}
             </Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 4 }}>{t('tabs.home.streak')}</Text>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.warning }}>
+          <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xs }}>{t('tabs.home.streak')}</Text>
+            <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.warning }}>
               {globalStats?.currentStreak ?? 0}d
             </Text>
           </View>
@@ -232,10 +232,10 @@ export default function HomeScreen() {
               const ex = allExercises?.find((e) => e.name === globalStats.mostFrequentExercise);
               if (ex) router.push(`/progress/exercise-detail/${ex.id}`);
             }}
-            style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: 1, borderColor: colors.border.primary }}
+            style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
           >
-            <Text style={{ fontSize: 11, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: 2 }}>{t('tabs.home.mostFrequent')}</Text>
-            <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xxs }}>{t('tabs.home.mostFrequent')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
               {getExerciseName(globalStats.mostFrequentExercise, i18n.language)} →
             </Text>
           </TouchableOpacity>
@@ -244,13 +244,13 @@ export default function HomeScreen() {
 
       {/* Quick Start — compact, below routines */}
       <View style={styles.card}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{t('tabs.home.quickStart')}</Text>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{t('tabs.home.quickStart')}</Text>
         <Button title={t('tabs.home.newSession')} onPress={handleStartEmptySession} compact />
       </View>
 
       {/* Recent Sessions */}
       <View style={styles.cardBottomMargin}>
-        <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.recentSessions')}</Text>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('tabs.home.recentSessions')}</Text>
         {recentSessions.length === 0 ? (
           <EmptyState
             title={t('tabs.home.noSessions')}
@@ -294,26 +294,26 @@ export default function HomeScreen() {
           onPress={() => setSelectedRoutineId(null)}
         >
           <Pressable
-            style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: 1, borderColor: colors.border.primary }}
+            style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
             onPress={(e) => e.stopPropagation()}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-              <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
                 {selectedRoutine?.name ?? t('tabs.home.startSession')}
               </Text>
               <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }}>
-                <Text style={{ fontSize: 18, color: colors.text.muted }}>✕</Text>
+                <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
               </TouchableOpacity>
             </View>
             {selectedRoutine?.description && (
-              <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.sm }}>{selectedRoutine.description}</Text>
+              <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.sm }}>{selectedRoutine.description}</Text>
             )}
             {exercisesLoading ? (
               <LoadingSpinner message={t('tabs.home.loadingExercises')} />
             ) : (
               <>
                 {routineExercisesWithDetails.length === 0 ? (
-                  <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
                     {t('tabs.home.noExercisesInRoutine')}
                   </Text>
                 ) : (
@@ -324,11 +324,11 @@ export default function HomeScreen() {
                         ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · ${t('tabs.home.lastWeight')}: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
                         : formatSetsRepsLabel(re.targetSets, re.targetReps);
                       return (
-                        <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: 3, borderWidth: 1, borderColor: colors.border.primary }}>
-                          <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+                        <View key={re.id} style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, marginBottom: spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+                          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
                             {re.exercise ? getExerciseName(re.exercise.name, i18n.language) : t('tabs.home.unknownExercise')}
                           </Text>
-                          <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.secondary, marginTop: 1 }}>
+                           <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xxs }}>
                             {label}
                           </Text>
                         </View>
@@ -377,14 +377,14 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.bg.card,
     padding: spacing.md + spacing.xs,
-    marginBottom: 12,
+    marginBottom: spacing.sm + spacing.xs,
     marginHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
   },
   cardWithTopMargin: {
     backgroundColor: colors.bg.card,
     padding: spacing.md + spacing.xs,
-    marginBottom: 12,
+    marginBottom: spacing.sm + spacing.xs,
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
     borderRadius: borderRadius.lg,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   cardBottomMargin: {
     backgroundColor: colors.bg.card,
     padding: spacing.md + spacing.xs,
-    marginBottom: 24,
+    marginBottom: spacing.lg,
     marginHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
   },

@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, AppState, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { TIMER_CONFIG } from '../lib/constants/config';
 import {
   saveSessionTimer,
   loadSessionTimer,
@@ -122,7 +123,7 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
     if (running) {
       intervalRef.current = setInterval(() => {
         recalculateElapsed();
-      }, 1000);
+      }, TIMER_CONFIG.MAIN_TIMER_TICK);
     }
 
     return () => {
@@ -183,22 +184,22 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm }}>
-      <Text style={{ fontSize: 28, fontFamily: fonts.display, fontWeight: '600', color: colors.accent.primary, fontVariant: ['tabular-nums'] }}>
+      <Text style={{ fontSize: fontSizes.xxl, fontFamily: fonts.display, fontWeight: fontWeights.semibold, color: colors.accent.primary, fontVariant: ['tabular-nums'] }}>
         {formatTime(elapsed)}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs, alignItems: 'center' }}>
         {!running ? (
           <TouchableOpacity onPress={handleStart} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.accent.primary, fontWeight: '600', fontSize: 14 }}>{t('timer.start')}</Text>
+            <Text style={{ color: colors.accent.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.start')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleStop} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.text.secondary, fontWeight: '600', fontSize: 14 }}>{t('timer.pause')}</Text>
+            <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.pause')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={handleReset} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-          <Text style={{ color: colors.text.muted, fontWeight: '600', fontSize: 14 }}>{t('timer.reset')}</Text>
+          <Text style={{ color: colors.text.muted, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.reset')}</Text>
         </TouchableOpacity>
       </View>
     </View>

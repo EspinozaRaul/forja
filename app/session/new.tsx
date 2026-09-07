@@ -6,7 +6,7 @@ import { useCreateSet } from '../../lib/hooks/useSets';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 import { DEFAULT_TARGET_SETS } from '../../lib/constants/routine-defaults';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -26,7 +26,7 @@ export default function NewSessionScreen() {
   if (routineId && isNaN(routineIdNum!)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('common.invalidId')}</Text>
+        <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('common.invalidId')}</Text>
       </View>
     );
   }
@@ -84,22 +84,22 @@ export default function NewSessionScreen() {
   return (
     <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md, paddingBottom: insets.bottom + spacing.md }} className="flex-1 bg-dark-bg p-4">
-      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('session.new.title')}</Text>
+      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('session.new.title')}</Text>
       
       {routine ? (
         <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.md, marginBottom: spacing.md }} className="bg-dark-card rounded-lg p-4 mb-4">
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">{routine.name}</Text>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">{routine.name}</Text>
           {routine.description && (
-            <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">{routine.description}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">{routine.description}</Text>
           )}
-          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">
+          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }} className="text-sm text-dark-text-secondary mt-2">
             {t('session.new.exerciseCount', { count: routineExercises?.length ?? 0 })}
           </Text>
         </View>
       ) : (
         <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.md, marginBottom: spacing.md }} className="bg-dark-card rounded-lg p-4 mb-4">
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">{t('session.new.emptySession')}</Text>
-          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} className="text-base font-medium text-dark-text-primary">{t('session.new.emptySession')}</Text>
+          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }} className="text-sm text-dark-text-secondary mt-1">
             {t('session.new.emptySessionMessage')}
           </Text>
         </View>

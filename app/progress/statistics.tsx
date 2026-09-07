@@ -8,7 +8,7 @@ import { useMostUsedExercises, useSessionCountByWeek } from '../../lib/hooks/use
 import { ProgressChart } from '../../components/ProgressChart';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import { getExerciseName } from '../../lib/utils/exercise-names';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
@@ -35,7 +35,7 @@ function StatCard({
       backgroundColor: colors.bg.card,
       borderRadius: borderRadius.md,
       padding: spacing.md,
-      borderWidth: 1,
+      borderWidth: borderWidths.thin,
       borderColor: colors.border.primary,
       flex: 1,
       minWidth: 140,
@@ -50,7 +50,7 @@ function StatCard({
         {value}
       </Text>
       {delta && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.xs }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
           <Ionicons 
             name={delta.isPositive ? 'trending-up' : 'trending-down'} 
             size={12} 
@@ -187,7 +187,7 @@ export default function StatisticsScreen() {
               paddingVertical: spacing.sm,
               borderRadius: borderRadius.full,
               backgroundColor: period === p ? colors.accent.primary : colors.bg.elevated,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: period === p ? colors.accent.primary : colors.border.primary,
             }}
           >
@@ -240,7 +240,7 @@ export default function StatisticsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs }}>
@@ -268,7 +268,7 @@ export default function StatisticsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ 
@@ -310,15 +310,15 @@ export default function StatisticsScreen() {
                   <View style={{
                     height: 4,
                     backgroundColor: colors.bg.elevated,
-                    borderRadius: 2,
-                    marginTop: 4,
+                    borderRadius: borderRadius.xs,
+                    marginTop: spacing.xs,
                     overflow: 'hidden',
                   }}>
                     <View style={{
                       height: '100%',
                       width: `${barWidth}%`,
                       backgroundColor: colors.accent.primary,
-                      borderRadius: 2,
+                      borderRadius: borderRadius.xs,
                     }} />
                   </View>
                 </View>
@@ -339,7 +339,7 @@ export default function StatisticsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.xxl,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ 
@@ -377,14 +377,14 @@ export default function StatisticsScreen() {
                   <View style={{
                     height: 4,
                     backgroundColor: colors.bg.elevated,
-                    borderRadius: 2,
+                    borderRadius: borderRadius.xs,
                     overflow: 'hidden',
                   }}>
                     <View style={{
                       height: '100%',
                       width: `${barWidth}%`,
                       backgroundColor: colors.accent.muted,
-                      borderRadius: 2,
+                      borderRadius: borderRadius.xs,
                     }} />
                   </View>
                 </View>

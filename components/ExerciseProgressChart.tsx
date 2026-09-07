@@ -1,6 +1,6 @@
 import { View, Text, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { SimpleLineChart } from './SimpleLineChart';
 import { EmptyState } from './ui/EmptyState';
 import type { ExerciseProgressionDataPoint } from '../lib/db/queries';
@@ -23,7 +23,7 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
   
   if (data.length === 0) {
     return (
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.md }}>
         <EmptyState
           icon="trending-up"
           title={t('progress.exercises.noData')}
@@ -48,15 +48,15 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
   }));
 
   return (
-    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border.primary, padding: spacing.md }}>
+    <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.md }}>
       {/* Weight Chart */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent.primary, marginRight: 8 }} />
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs }}>
+        <View style={{ width: 12, height: 12, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, marginRight: spacing.sm }} />
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           {t('progress.exercises.avgWeightPerSession')}
         </Text>
       </View>
-      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
+      <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginBottom: spacing.sm }}>
         {t('progress.exercises.eachPointOneSession')}
       </Text>
       <SimpleLineChart
@@ -67,13 +67,13 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       />
 
       {/* Reps Chart */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 4 }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.chart.reps, marginRight: 8 }} />
-        <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: spacing.xs }}>
+        <View style={{ width: 12, height: 12, borderRadius: borderRadius.md, backgroundColor: colors.chart.reps, marginRight: spacing.sm }} />
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           {t('progress.exercises.avgRepsPerSession')}
         </Text>
       </View>
-      <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginBottom: 8 }}>
+      <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginBottom: spacing.sm }}>
         {t('progress.exercises.eachPointOneSession')}
       </Text>
       <SimpleLineChart

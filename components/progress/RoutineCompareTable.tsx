@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import type { RoutineComparisonData, ExerciseComparisonRow, RoutineSessionSet } from '../../lib/progress';
 
 interface RoutineCompareTableProps {
@@ -50,8 +50,8 @@ function StatusBadge({ status, t }: { status: ExerciseComparisonRow['status']; t
       style={{
         backgroundColor: `${color}26`,
         borderRadius: borderRadius.full,
-        paddingHorizontal: spacing.xs + 2,
-        paddingVertical: 1,
+        paddingHorizontal: spacing.xs + spacing.xxs,
+        paddingVertical: spacing.xxs,
       }}
     >
       <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color }}>
@@ -89,8 +89,8 @@ function MethodBadge({ method }: { method: string | null }) {
         backgroundColor: colors.accent.muted,
         borderRadius: borderRadius.sm,
         paddingHorizontal: spacing.xs,
-        paddingVertical: 1,
-        marginTop: 2,
+        paddingVertical: spacing.xxs,
+        marginTop: spacing.xxs,
       }}
     >
       <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.accent.primary }}>
@@ -119,7 +119,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
         style={{
           backgroundColor: colors.bg.card,
           borderRadius: borderRadius.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
           padding: spacing.lg,
           alignItems: 'center',
@@ -137,7 +137,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
       style={{
         backgroundColor: colors.bg.card,
         borderRadius: borderRadius.lg,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
         overflow: 'hidden',
       }}
@@ -198,7 +198,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                       fontSize: fontSizes.xs,
                       fontFamily: fonts.body,
                       color: colors.text.muted,
-                      marginTop: 2,
+                      marginTop: spacing.xxs,
                     }}
                   >
                     {formatShortDate(dateStr, t)}
@@ -228,7 +228,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                   borderRightColor: colors.border.divider,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
                   <Text
                     style={{
                       fontSize: fontSizes.xs,
@@ -275,7 +275,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                               fontSize: fontSizes.xs,
                               fontFamily: fonts.bodyMedium,
                               color: colors.text.muted,
-                              marginBottom: 2,
+                               marginBottom: spacing.xxs,
                             }}
                           >
                             {formatShortDate(session.date, t)}

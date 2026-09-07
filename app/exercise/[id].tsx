@@ -11,7 +11,7 @@ import { useSettings } from '../../lib/utils/settings';
 import { ProgressChart } from '../../components/ProgressChart';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, spacing, borderRadius } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes , fontWeights} from '../../lib/theme/tokens';
 import { formatDuration, formatRelativeDate, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_IMAGES } from '../../lib/assets/exercise-images';
@@ -59,7 +59,7 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
         activeOpacity={1}
         onPress={onClose}
       >
-        <Text style={{ color: colors.text.primary, fontSize: 14, marginBottom: 12 }}>{t('exerciseDetail.tapToClose')}</Text>
+        <Text style={{ color: colors.text.primary, fontSize: fontSizes.sm, marginBottom: spacing.sm + spacing.xs }}>{t('exerciseDetail.tapToClose')}</Text>
         {loading ? (
           <ActivityIndicator size="large" color={colors.text.link} />
         ) : localUri ? (
@@ -121,7 +121,7 @@ export default function ExerciseDetailScreen() {
               onPress={() => setShowGif(true)}
               style={{ marginTop: spacing.sm, backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.tag.text }}>{t('exerciseDetail.viewAnimation')}</Text>
+              <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.tag.text }}>{t('exerciseDetail.viewAnimation')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -134,26 +134,26 @@ export default function ExerciseDetailScreen() {
 
       {/* Exercise Header */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text.primary }}>
+        <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.text.primary }}>
           {getExerciseName(exercise.name, i18n.language)}
         </Text>
 
         {/* Tags */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm }}>
           {exercise.muscleGroup && (
-            <View style={{ backgroundColor: colors.tag.muscle, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
-              <Text style={{ fontSize: 12, color: colors.tag.text }}>{exercise.muscleGroup}</Text>
+            <View style={{ backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.sm + spacing.xxs, paddingVertical: spacing.xs, borderRadius: borderRadius.full }}>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.tag.text }}>{exercise.muscleGroup}</Text>
             </View>
           )}
           {exercise.equipment && (
-            <View style={{ backgroundColor: colors.tag.equipment, paddingHorizontal: 10, paddingVertical: 4, borderRadius: borderRadius.full }}>
-              <Text style={{ fontSize: 12, color: colors.tag.equipmentText }}>{exercise.equipment}</Text>
+            <View style={{ backgroundColor: colors.tag.equipment, paddingHorizontal: spacing.sm + spacing.xxs, paddingVertical: spacing.xs, borderRadius: borderRadius.full }}>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.tag.equipmentText }}>{exercise.equipment}</Text>
             </View>
           )}
         </View>
 
         {exercise.instructionsEs && (
-          <Text style={{ fontSize: 14, color: colors.text.secondary, marginTop: spacing.md, lineHeight: 20 }}>
+          <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary, marginTop: spacing.md, lineHeight: 20 }}>
             {exercise.instructionsEs}
           </Text>
         )}
@@ -168,10 +168,10 @@ export default function ExerciseDetailScreen() {
           padding: spacing.md,
           alignItems: 'center',
         }}>
-          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+          <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, marginBottom: spacing.xs }}>
             {t('exerciseDetail.maxWeight')}
           </Text>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+          <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
             {stats?.maxWeight ? formatWeight(stats.maxWeight, unit) : '-'}
           </Text>
         </View>
@@ -183,10 +183,10 @@ export default function ExerciseDetailScreen() {
           padding: spacing.md,
           alignItems: 'center',
         }}>
-          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+          <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, marginBottom: spacing.xs }}>
             {t('exerciseDetail.totalVolume')}
           </Text>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+          <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
             {stats?.totalVolume ? formatVolume(stats.totalVolume, unit) : '0'}
           </Text>
         </View>
@@ -198,10 +198,10 @@ export default function ExerciseDetailScreen() {
           padding: spacing.md,
           alignItems: 'center',
         }}>
-          <Text style={{ fontSize: 12, color: colors.text.muted, marginBottom: spacing.xs }}>
+          <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, marginBottom: spacing.xs }}>
             {t('exerciseDetail.sessions')}
           </Text>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.accent.primary }}>
+          <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
             {stats?.totalSessions ?? 0}
           </Text>
         </View>
@@ -210,19 +210,19 @@ export default function ExerciseDetailScreen() {
       {/* Personal Records */}
       {prs && (prs.maxWeight || prs.bestSet || prs.estimated1RM) && (
         <View style={{ backgroundColor: colors.bg.card, marginHorizontal: spacing.md, borderRadius: borderRadius.md, padding: spacing.lg }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
+          <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.text.primary, marginBottom: spacing.md }}>
             {t('exerciseDetail.personalRecords')}
           </Text>
 
           <View style={{ gap: spacing.md }}>
             {prs.maxWeight && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.maxWeight')}</Text>
+                <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('exerciseDetail.maxWeight')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                  <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.warning }}>
                     {formatWeight(prs.maxWeight.value, unit)}
                   </Text>
-                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>
                     {formatRelativeDate(prs.maxWeight.date)}
                   </Text>
                 </View>
@@ -231,12 +231,12 @@ export default function ExerciseDetailScreen() {
 
             {prs.bestSet && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.bestSet')}</Text>
+                <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('exerciseDetail.bestSet')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                  <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.warning }}>
                     {formatWeight(prs.bestSet.weight, unit)} × {prs.bestSet.reps}
                   </Text>
-                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>
                     {formatRelativeDate(prs.bestSet.date)}
                   </Text>
                 </View>
@@ -245,12 +245,12 @@ export default function ExerciseDetailScreen() {
 
             {prs.maxVolumeSession && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.bestSession')}</Text>
+                <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('exerciseDetail.bestSession')}</Text>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                  <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.warning }}>
                     {formatVolume(prs.maxVolumeSession.volume, unit)}
                   </Text>
-                  <Text style={{ fontSize: 11, color: colors.text.muted }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>
                     {formatRelativeDate(prs.maxVolumeSession.date)}
                   </Text>
                 </View>
@@ -259,8 +259,8 @@ export default function ExerciseDetailScreen() {
 
             {prs.estimated1RM && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 14, color: colors.text.secondary }}>{t('exerciseDetail.est1RM')}</Text>
-                <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.warning }}>
+                <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('exerciseDetail.est1RM')}</Text>
+                <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.warning }}>
                   {formatWeight(prs.estimated1RM, unit)}
                 </Text>
               </View>
@@ -280,7 +280,7 @@ export default function ExerciseDetailScreen() {
 
       {/* Session History */}
       <View style={{ backgroundColor: colors.bg.card, marginTop: spacing.md, padding: spacing.lg }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text.primary, marginBottom: spacing.md }}>
+        <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.text.primary, marginBottom: spacing.md }}>
           {t('exerciseDetail.sessionHistory')}
         </Text>
 
@@ -303,11 +303,11 @@ export default function ExerciseDetailScreen() {
             >
               {/* Session Header */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.primary }}>
+                <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text.primary }}>
                   {formatRelativeDate(session.startedAt)}
                 </Text>
                 {session.duration && (
-                  <Text style={{ fontSize: 12, color: colors.text.muted }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>
                     {formatDuration(session.duration)}
                   </Text>
                 )}
@@ -316,14 +316,14 @@ export default function ExerciseDetailScreen() {
               {/* Session Stats */}
               <View style={{ flexDirection: 'row', gap: spacing.lg }}>
                 <View>
-                  <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('progress.volume')}</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.volume')}</Text>
+                  <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>
                     {formatVolume(session.volume, unit)}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('progress.sets')}</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.sets')}</Text>
+                  <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>
                     {session.completedSets}/{session.setCount}
                   </Text>
                 </View>

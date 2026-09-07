@@ -3,7 +3,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { SET_LOGGER } from '../lib/constants/layout';
 import type { Set } from '../lib/types';
 
 interface PartialSetLoggerProps {
@@ -194,71 +195,67 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
   },
   serieCell: {
-    width: 32,
+    width: SET_LOGGER.SERIE_WIDTH,
     alignItems: 'center',
   },
   serieNumber: {
-    fontSize: 14,
-    fontFamily: fonts.display,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontFamily: fonts.display,
+    fontWeight: fontWeights.semibold,
     color: colors.text.secondary,
   },
   badge: {
     backgroundColor: colors.accent.muted,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.xxs,
     borderRadius: borderRadius.sm,
     marginLeft: spacing.xs,
   },
   badgeText: {
-    fontSize: 9,
-    fontWeight: '800',
+    fontSize: fontSizes.xxs, fontWeight: fontWeights.extrabold,
     color: colors.accent.primary,
     letterSpacing: 0.3,
   },
   anteriorCell: {
-    width: 65,
+    width: SET_LOGGER.PREVIOUS_WIDTH,
     alignItems: 'center',
   },
   anteriorText: {
-    fontSize: 11,
-    color: colors.text.muted,
+    fontSize: fontSizes.xs, color: colors.text.muted,
     fontFamily: fonts.body,
   },
   inputCell: {
     flex: 1,
     backgroundColor: colors.bg.elevated,
     borderRadius: borderRadius.sm,
-    marginHorizontal: 2,
-    paddingVertical: 6,
+    marginHorizontal: spacing.xxs,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
   },
   input: {
-    fontSize: 14,
-    fontFamily: fonts.display,
-    fontWeight: '600',
+    fontSize: fontSizes.sm, fontFamily: fonts.display,
+    fontWeight: fontWeights.semibold,
     color: colors.text.primary,
     textAlign: 'center',
     textAlignVertical: 'center',
     width: '100%',
   },
   intensityButton: {
-    width: 24,
+    width: SET_LOGGER.INTENSITY_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 2,
+    width: SET_LOGGER.CHECK_SIZE,
+    height: SET_LOGGER.CHECK_SIZE,
+    borderRadius: borderRadius.xs,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.xs,
@@ -268,20 +265,20 @@ const styles = StyleSheet.create({
   },
   checkIncomplete: {
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    borderWidth: borderWidths.medium,
     borderColor: colors.border.primary,
   },
   deleteAction: {
     backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
+    width: SET_LOGGER.DELETE_WIDTH,
     borderRadius: borderRadius.sm,
     marginLeft: spacing.sm,
   },
   deleteText: {
     color: colors.text.primary,
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm
   },
 });

@@ -12,7 +12,7 @@ import i18n from '../lib/i18n';
 import { useDatabase } from '../lib/hooks/useDatabase';
 import { repairRoutineTargetDefaults } from '../lib/db/queries';
 import { useAuth } from '../lib/hooks/useAuth';
-import { colors } from '../lib/theme/tokens';
+import { colors, spacing , fontWeights} from '../lib/theme/tokens';
 
 const queryClient = new QueryClient();
 
@@ -42,7 +42,7 @@ function RootLayoutNav() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg.primary }}>
         <ActivityIndicator size="large" color={colors.accent.primary} />
-        <Text style={{ color: colors.text.muted, marginTop: 16 }}>{t('common.loading')}</Text>
+        <Text style={{ color: colors.text.muted, marginTop: spacing.md }}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -52,7 +52,7 @@ function RootLayoutNav() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg.primary },
         headerTintColor: colors.text.primary,
-        headerTitleStyle: { color: colors.text.primary, fontWeight: '600' },
+        headerTitleStyle: { color: colors.text.primary, fontWeight: fontWeights.semibold },
         contentStyle: { backgroundColor: colors.bg.primary },
       }}
     >

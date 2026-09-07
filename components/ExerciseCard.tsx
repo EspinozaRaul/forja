@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import { Badge } from './ui/Badge';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes } from '../lib/theme/tokens';
 import type { ExerciseWithCategory } from '../lib/types';
 
 interface ExerciseCardProps {
@@ -11,7 +11,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
   return (
     <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+        <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
           {exercise.name}
         </Text>
         {exercise.category && (
@@ -19,7 +19,7 @@ export function ExerciseCard({ exercise }: ExerciseCardProps) {
         )}
       </View>
       {exercise.description && (
-        <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }}>{exercise.description}</Text>
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.sm }}>{exercise.description}</Text>
       )}
     </View>
   );

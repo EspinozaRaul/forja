@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { View, Text, Pressable, TextInput, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
+import { MODAL, EMBER_DOT } from '../../lib/constants/layout';
 
 interface RoutineOption {
   id: number;
@@ -81,9 +82,9 @@ export function RoutinePickerModal({
           {/* Handle bar */}
           <View
             style={{
-              width: 36,
-              height: 4,
-              borderRadius: 2,
+              width: MODAL.HANDLE_WIDTH,
+              height: MODAL.HANDLE_HEIGHT,
+              borderRadius: borderRadius.xs,
               backgroundColor: colors.border.light,
               alignSelf: 'center',
               marginTop: spacing.sm,
@@ -122,7 +123,7 @@ export function RoutinePickerModal({
               alignItems: 'center',
               backgroundColor: colors.bg.elevated,
               borderRadius: borderRadius.md,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               marginHorizontal: spacing.lg,
               marginBottom: spacing.md,
@@ -137,7 +138,7 @@ export function RoutinePickerModal({
               placeholderTextColor={colors.text.muted}
               style={{
                 flex: 1,
-                paddingVertical: spacing.sm + 2,
+                paddingVertical: spacing.sm + spacing.xxs,
                 paddingHorizontal: spacing.sm,
                 fontSize: fontSizes.sm,
                 fontFamily: fonts.body,
@@ -171,7 +172,7 @@ export function RoutinePickerModal({
                       alignItems: 'center',
                       gap: spacing.sm,
                       paddingHorizontal: spacing.lg,
-                      paddingVertical: spacing.sm + 4,
+                      paddingVertical: spacing.sm + spacing.xs,
                       borderBottomWidth: 1,
                       borderBottomColor: colors.border.divider,
                     }}
@@ -181,8 +182,8 @@ export function RoutinePickerModal({
                       style={{
                         width: 20,
                         height: 20,
-                        borderRadius: 10,
-                        borderWidth: 2,
+                        borderRadius: borderRadius.xl,
+                        borderWidth: borderWidths.thick,
                         borderColor: isSelected ? colors.accent.primary : colors.border.light,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -191,9 +192,9 @@ export function RoutinePickerModal({
                       {isSelected && (
                         <View
                           style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
+                            width: EMBER_DOT.SIZE,
+                            height: EMBER_DOT.SIZE,
+                            borderRadius: borderRadius.md,
                             backgroundColor: colors.accent.primary,
                           }}
                         />
@@ -235,7 +236,7 @@ export function RoutinePickerModal({
               style={{
                 backgroundColor: selectedId != null ? colors.accent.primary : colors.bg.elevated,
                 borderRadius: borderRadius.md,
-                paddingVertical: spacing.sm + 4,
+                paddingVertical: spacing.sm + spacing.xs,
                 alignItems: 'center',
               }}
             >

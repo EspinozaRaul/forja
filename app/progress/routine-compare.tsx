@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { getAllRoutines } from '../../lib/db/queries';
 import { useRoutineCompare } from '../../lib/hooks/useProgress';
 import { PeriodChips } from '../../components/progress/PeriodChips';
@@ -159,7 +159,7 @@ export default function RoutineCompareScreen() {
             gap: spacing.sm,
             backgroundColor: colors.bg.card,
             borderRadius: borderRadius.lg,
-            borderWidth: 1,
+            borderWidth: borderWidths.thin,
             borderColor: colors.border.primary,
             padding: spacing.md,
           }}
@@ -209,7 +209,7 @@ export default function RoutineCompareScreen() {
               style={{
                 backgroundColor: colors.bg.card,
                 borderRadius: borderRadius.lg,
-                borderWidth: 1,
+                borderWidth: borderWidths.thin,
                 borderColor: colors.border.primary,
                 padding: spacing.lg,
               }}
@@ -233,7 +233,7 @@ export default function RoutineCompareScreen() {
             style={{
               backgroundColor: colors.bg.card,
               borderRadius: borderRadius.lg,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               padding: spacing.lg,
               alignItems: 'center',

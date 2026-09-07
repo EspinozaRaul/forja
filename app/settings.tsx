@@ -2,7 +2,7 @@ import { Text, View, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
-import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { useSettings, type WeightUnit, type AppLanguage } from '../lib/utils/settings';
 import { useAuth } from '../lib/hooks/useAuth';
 import { Button } from '../components/ui/Button';
@@ -15,8 +15,7 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <Text
       style={{
-        fontSize: 13,
-        fontFamily: fonts.bodySemiBold,
+        fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold,
         color: colors.text.secondary,
         textTransform: 'uppercase',
         marginBottom: spacing.sm,
@@ -99,12 +98,12 @@ export default function SettingsScreen() {
     <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }} contentContainerStyle={{ paddingBottom: spacing.xl }}>
       <SectionHeader title={t('settings.title')} />
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <Row first>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.language')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.language')}</Text>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary, overflow: 'hidden' }}>
             {(['es', 'en'] as const).map((lang) => {
               const active = settings.language === lang;
               return (
@@ -113,7 +112,7 @@ export default function SettingsScreen() {
                   onPress={() => handleLanguageChange(lang)}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
-                  <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
                     {t(`settings.languageOptions.${lang}`)}
                   </Text>
                 </TouchableOpacity>
@@ -123,10 +122,10 @@ export default function SettingsScreen() {
         </Row>
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.weightUnit')}</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.weightUnitDefault')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.weightUnit')}</Text>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>{t('settings.weightUnitDefault')}</Text>
           </View>
-          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border.primary, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary, overflow: 'hidden' }}>
             {(['kg', 'lbs'] as const).map((unit) => {
               const active = settings.weightUnit === unit;
               return (
@@ -135,7 +134,7 @@ export default function SettingsScreen() {
                   onPress={() => handleUnitChange(unit)}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
-                  <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
                     {unit}
                   </Text>
                 </TouchableOpacity>
@@ -145,8 +144,8 @@ export default function SettingsScreen() {
         </Row>
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.vibration')}</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.vibrationDescription')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.vibration')}</Text>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>{t('settings.vibrationDescription')}</Text>
           </View>
           <Switch
             value={settings.hapticsEnabled}
@@ -157,8 +156,8 @@ export default function SettingsScreen() {
         </Row>
         <Row>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.sound')}</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.soundDescription')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('settings.sound')}</Text>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>{t('settings.soundDescription')}</Text>
           </View>
           <Switch
             value={settings.soundEnabled}
@@ -170,12 +169,12 @@ export default function SettingsScreen() {
       </View>
 
       <SectionHeader title={t('settings.account')} />
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <Row first>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Email</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Email</Text>
           </View>
-          <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, flexShrink: 1 }} numberOfLines={1}>
+          <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, flexShrink: 1 }} numberOfLines={1}>
             {user?.email ?? '—'}
           </Text>
         </Row>
@@ -186,13 +185,13 @@ export default function SettingsScreen() {
             handleSignOut,
             { confirmLabel: t('settings.signOut'), destructive: true }
           )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.signOut')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.signOut')}</Text>
           </TouchableOpacity>
         </Row>
       </View>
 
       <SectionHeader title={t('settings.dangerZone')} />
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: 1, borderColor: colors.error }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.error }}>
         <Row first>
           <TouchableOpacity onPress={() => showConfirm(
             t('settings.deleteAccount'),
@@ -200,8 +199,8 @@ export default function SettingsScreen() {
             handleDeleteAccount,
             { confirmLabel: t('settings.deleteAccount'), destructive: true }
           )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
-            <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.deleteAccount')}</Text>
-            <Text style={{ fontSize: 12, fontFamily: fonts.body, color: colors.text.muted, marginTop: 2 }}>{t('settings.deleteAccountDescription')}</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.deleteAccount')}</Text>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>{t('settings.deleteAccountDescription')}</Text>
           </TouchableOpacity>
         </Row>
       </View>

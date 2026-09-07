@@ -10,7 +10,7 @@ import { ExerciseProgressChart } from '../../../components/ExerciseProgressChart
 import { ProgressChart } from '../../../components/ProgressChart';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../../lib/theme/tokens';
 import { formatRelativeDate, formatDuration, formatVolume } from '../../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
@@ -97,7 +97,7 @@ function DateRangeSelector({
         flexDirection: 'row',
         backgroundColor: colors.bg.card,
         borderRadius: borderRadius.md,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
         padding: spacing.xs,
         gap: spacing.xs,
@@ -221,7 +221,7 @@ function PRRow({
               fontSize: fontSizes.xs,
               fontFamily: fonts.body,
               color: colors.text.muted,
-              marginTop: 2,
+              marginTop: spacing.xxs,
             }}
           >
             {formatRelativeDate(date)}
@@ -382,7 +382,7 @@ export default function ExerciseDetailScreen() {
               gap: spacing.sm,
               backgroundColor: colors.bg.card,
               borderRadius: borderRadius.md,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               padding: spacing.md,
             }}
@@ -413,7 +413,7 @@ export default function ExerciseDetailScreen() {
           style={{
             backgroundColor: colors.bg.card,
             borderRadius: borderRadius.lg,
-            borderWidth: 1,
+            borderWidth: borderWidths.thin,
             borderColor: colors.border.primary,
             padding: spacing.md,
           }}
@@ -439,7 +439,7 @@ export default function ExerciseDetailScreen() {
           style={{
             backgroundColor: colors.bg.card,
             borderRadius: borderRadius.lg,
-            borderWidth: 1,
+            borderWidth: borderWidths.thin,
             borderColor: colors.border.primary,
             padding: spacing.md,
           }}
@@ -466,7 +466,7 @@ export default function ExerciseDetailScreen() {
             style={{
               backgroundColor: colors.bg.card,
               borderRadius: borderRadius.lg,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
               padding: spacing.md,
             }}
@@ -522,7 +522,7 @@ export default function ExerciseDetailScreen() {
           style={{
             backgroundColor: colors.bg.card,
             borderRadius: borderRadius.lg,
-            borderWidth: 1,
+            borderWidth: borderWidths.thin,
             borderColor: colors.border.primary,
             padding: spacing.md,
           }}
@@ -552,7 +552,7 @@ export default function ExerciseDetailScreen() {
                 style={{
                   backgroundColor: colors.bg.elevated,
                   borderRadius: borderRadius.md,
-                  borderWidth: 1,
+                  borderWidth: borderWidths.thin,
                   borderColor: colors.border.primary,
                   padding: spacing.md,
                   marginBottom: spacing.sm,

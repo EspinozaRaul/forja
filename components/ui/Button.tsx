@@ -1,6 +1,6 @@
 import { TouchableOpacity, Text, ActivityIndicator, View, type ViewStyle } from 'react-native';
 import { type ReactNode } from 'react';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, borderWidths } from '../../lib/theme/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'accent';
 
@@ -22,7 +22,7 @@ const variantStyles: Record<ButtonVariant, { container: any; text: any }> = {
     text: { color: colors.text.primary },
   },
   secondary: {
-    container: { backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary },
+    container: { backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary },
     text: { color: colors.text.primary },
   },
   danger: {

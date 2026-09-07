@@ -7,7 +7,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
+import { MODAL, SET_LOGGER } from '../../lib/constants/layout';
+import { TIMER_CONFIG } from '../../lib/constants/config';
 import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine, useUpdateSessionExerciseNotes } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
@@ -548,9 +550,9 @@ export default function SessionScreen() {
       <View style={{ backgroundColor: colors.bg.card, paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
-            <Text style={{ fontSize: 20, color: colors.accent.primary }}>←</Text>
+            <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
-           <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
+           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
         </View>
         <Timer sessionId={id} onTimeUpdate={setElapsedSeconds} autoStart />
       </View>
@@ -572,19 +574,19 @@ export default function SessionScreen() {
         bottomOffset={spacing.md + spacing.sm}
       >
         <View style={{ padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('session.exercises')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('session.exercises')}</Text>
             <TouchableOpacity
               onPress={() => setShowPicker(true)}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}
             >
-              <Text style={{ fontSize: 14, color: colors.accent.primary }}>{t('session.add')}</Text>
+              <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('session.add')}</Text>
             </TouchableOpacity>
           </View>
 
           {dragIndex !== null && (
-            <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.accent.primary }}>
-              <Text style={{ fontSize: 12, color: colors.accent.primary, textAlign: 'center' }}>
+            <View style={{ backgroundColor: colors.bg.active, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.accent.primary }}>
+              <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary, textAlign: 'center' }}>
                 {t('session.swapInstruction')}
               </Text>
             </View>
@@ -669,7 +671,7 @@ export default function SessionScreen() {
       <KeyboardStickyView style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm + spacing.xs : 0 }}>
           {showRestTimer && restExerciseName ? (
-            <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
+            <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
               {t('session.restLabel', { name: restExerciseName })}
             </Text>
           ) : null}
@@ -689,15 +691,15 @@ export default function SessionScreen() {
         <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs, flexDirection: 'row', gap: spacing.sm }}>
           <TouchableOpacity
             onPress={cancelSessionAndLeave}
-            style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: 1, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+            style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>{t('session.cancel')}</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg}>{t('session.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleEndSession}
             style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 16 }}>{t('session.endButton')}</Text>
+            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg}>{t('session.endButton')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardStickyView>
@@ -713,11 +715,11 @@ export default function SessionScreen() {
 
       <Modal visible={supersetPartnerMode !== null} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: 4 }}>
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.xs }}>
               {t('session.superset.title')}
             </Text>
-            <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+            <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
               {t('session.superset.subtitle')}
             </Text>
             {supersetPartnerMode &&
@@ -729,12 +731,12 @@ export default function SessionScreen() {
                     onPress={() => handlePairSuperset(se)}
                     style={{ paddingVertical: spacing.sm + spacing.xs, paddingHorizontal: spacing.sm, borderRadius: borderRadius.sm }}
                   >
-                    <Text style={{ fontSize: 14, color: colors.text.primary }}>{getExerciseNameForSession(se)}</Text>
+                    <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>{getExerciseNameForSession(se)}</Text>
                   </TouchableOpacity>
                 ))}
 {supersetPartnerMode &&
                 sortedExercises.filter((se) => se.id !== supersetPartnerMode.id && se.supersetPairId == null).length === 0 && (
-                  <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.sm }}>
+                  <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.sm }}>
                     {t('session.superset.noAvailable')}
                   </Text>
                 )}
@@ -750,7 +752,7 @@ export default function SessionScreen() {
                 }}
                 style={{ marginTop: spacing.xs, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.bg.primary }}>
+                <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.bg.primary }}>
                   {t('session.superset.searchCatalog')}
                 </Text>
               </TouchableOpacity>
@@ -758,7 +760,7 @@ export default function SessionScreen() {
                 onPress={() => setSupersetPartnerMode(null)}
                 style={{ marginTop: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.divider }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>{t('session.cancel')}</Text>
+                <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -785,16 +787,16 @@ export default function SessionScreen() {
               if (!applyingRoutineUpdate) setShowRoutineDiffModal(false);
             }}
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-              <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {t('session.diff.title')}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
                 {t('session.diff.message')}
               </Text>
               <View style={{ marginBottom: spacing.md }}>
                 {(pendingDiff ? summarizeDiff(pendingDiff) : []).map((line) => (
-                  <Text key={line} style={{ fontSize: 13, fontFamily: fonts.body, color: colors.text.primary, marginBottom: spacing.xs }}>
+                  <Text key={line} style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.primary, marginBottom: spacing.xs }}>
                     • {line}
                   </Text>
                 ))}
@@ -827,11 +829,11 @@ export default function SessionScreen() {
             style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
             onPress={() => setConfirmAction(null)}
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: 340, borderWidth: 1, borderColor: colors.border.primary }}>
-              <Text style={{ fontSize: 17, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {confirmAction === 'cancel' ? t('session.confirm.cancelSession') : t('session.confirm.endSession')}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted, textAlign: 'center', marginBottom: spacing.md }}>
                 {confirmAction === 'cancel'
                   ? t('session.confirm.cancelSessionMessage')
                   : t('session.confirm.endSessionMessage')}
@@ -1245,7 +1247,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     });
   };
 
-  const REST_PRESETS = [30, 60, 90, 120, 180];
+  const REST_PRESETS = TIMER_CONFIG.REST_PRESETS;
 
   const deleteSwipeableRef = useRef<Swipeable>(null);
 
@@ -1259,9 +1261,9 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     return (
       <TouchableOpacity
         onPress={handleSwipeDelete}
-        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
+        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -1280,7 +1282,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
         borderRadius: borderRadius.sm,
         padding: spacing.sm + spacing.xs,
         marginBottom: spacing.sm + spacing.xs,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: isDragging ? colors.accent.primary : colors.border.primary,
       }}
     >
@@ -1288,36 +1290,36 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
         <TouchableOpacity
           onPress={onDragTap}
           activeOpacity={0.7}
-          style={{ gap: 3, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
+          style={{ gap: spacing.xs, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
         >
-          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
-          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
-          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: 1 }} />
+          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
+          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
+          <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 15, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={2} ellipsizeMode="tail">
+        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={2} ellipsizeMode="tail">
           {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 }}>
           {onPairSuperset && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onPairSuperset(); }}
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + 2, paddingVertical: 2 }}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
             >
-              <Text style={{ fontSize: 10, fontWeight: '600', color: colors.text.secondary }}>{t('session.superSet')}</Text>
+              <Text style={{ fontSize: fontSizes.xs2, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.superSet')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
             onPress={() => setShowRestPicker(!showRestPicker)}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + 2, paddingVertical: 2 }}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
           >
-            <Text style={{ fontSize: 10, fontWeight: '600', color: colors.text.secondary }}>
+            <Text style={{ fontSize: fontSizes.xs2, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>
               {currentRestTime >= 60 ? `${Math.floor(currentRestTime / 60)}m${currentRestTime % 60 > 0 ? ` ${currentRestTime % 60}s` : ''}` : `${currentRestTime}s`}
             </Text>
           </TouchableOpacity>
           {onReplace && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onReplace(); }}
-              style={{ padding: 2 }}
+              style={{ padding: spacing.xxs }}
             >
               <Ionicons name="repeat" size={14} color={colors.accent.primary} />
             </TouchableOpacity>
@@ -1345,14 +1347,13 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                   backgroundColor: currentRestTime === dur ? colors.accent.primary : colors.bg.elevated,
                   borderRadius: borderRadius.sm,
                   paddingHorizontal: spacing.sm + spacing.xs,
-                  paddingVertical: 5,
+                  paddingVertical: spacing.sm,
                   borderWidth: currentRestTime === dur ? 0 : 1,
                   borderColor: colors.border.primary,
                 }}
               >
                 <Text style={{
-                  fontSize: 11,
-                  fontWeight: '600',
+                  fontSize: fontSizes.xs, fontWeight: fontWeights.semibold,
                   color: currentRestTime === dur ? colors.bg.primary : colors.text.secondary,
                 }}>
                   {dur >= 60 ? `${dur / 60}m` : `${dur}s`}
@@ -1371,12 +1372,12 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 backgroundColor: colors.bg.elevated,
                 borderRadius: borderRadius.sm,
                 paddingHorizontal: spacing.sm + spacing.xs,
-                paddingVertical: 5,
-                borderWidth: 1,
+                paddingVertical: spacing.sm,
+                borderWidth: borderWidths.thin,
                 borderColor: colors.accent.primary,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text.secondary }}>{t('session.custom')}</Text>
+              <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.custom')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1385,9 +1386,9 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       {/* Custom rest time modal */}
       <Modal visible={showCustomRest} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: 1, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: 20 }}>
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.md + spacing.xs }}>
               <TextInput
                 value={customMinutes}
                 onChangeText={setCustomMinutes}
@@ -1395,10 +1396,10 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={3}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
+                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
               />
-              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.minutes')}</Text>
-              <Text style={{ fontSize: 20, color: colors.text.muted }}>:</Text>
+              <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
+              <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>:</Text>
               <TextInput
                 value={customSeconds}
                 onChangeText={setCustomSeconds}
@@ -1406,16 +1407,16 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={2}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: 24, fontFamily: fonts.display, fontWeight: '700', width: 80, textAlign: 'center' }}
+                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
               />
-              <Text style={{ fontSize: 20, color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.seconds')}</Text>
+              <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
                 onPress={() => setShowCustomRest(false)}
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.text.secondary, fontWeight: '600' }}>{t('session.dropSet.cancel')}</Text>
+                <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -1429,7 +1430,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
                 }}
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontWeight: '700' }}>{t('session.dropSet.save')}</Text>
+                <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold }}>{t('session.dropSet.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1440,7 +1441,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
           onPress={toggleCollapsed}
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
+          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
             {t('session.collapsedSummary', { count: visibleCount, label: visibleCount === 1 ? t('session.set') : t('session.sets') })}
           </Text>
         </TouchableOpacity>
@@ -1769,12 +1770,12 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }}>
-      <Text numberOfLines={1} style={{ width: 64, fontSize: 12, fontWeight: '600', color: colors.text.muted }}>
+      <Text numberOfLines={1} style={{ width: 64, fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: colors.text.muted }}>
         {label}
       </Text>
       <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
         <TextInput
-          style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
+          style={{ fontSize: fontSizes.md, fontFamily: fonts.display, fontWeight: fontWeights.semibold, color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="decimal-pad"
           placeholder={weightPlaceholder()}
           placeholderTextColor={colors.text.muted}
@@ -1784,7 +1785,7 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
       </View>
       <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
         <TextInput
-          style={{ fontSize: 14, fontFamily: fonts.display, fontWeight: '600', color: colors.text.primary, textAlign: 'center', width: '100%' }}
+          style={{ fontSize: fontSizes.md, fontFamily: fonts.display, fontWeight: fontWeights.semibold, color: colors.text.primary, textAlign: 'center', width: '100%' }}
           keyboardType="numeric"
           placeholder={repsPlaceholder()}
           placeholderTextColor={colors.text.muted}
@@ -1797,19 +1798,19 @@ function SupersetSetRow({ set, label, unit, previousWeight = null, previousReps 
           onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
           style={{ backgroundColor: 'transparent', borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minWidth: 36, alignItems: 'center' }}
         >
-          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text.muted }}>{unit}</Text>
+          <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: colors.text.muted }}>{unit}</Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity
         onPress={() => onUpdate({ completed: !set.completed })}
         style={[
-          { width: 28, height: 28, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center' },
+          { width: SET_LOGGER.CHECK_SIZE, height: SET_LOGGER.CHECK_SIZE, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center' },
           set.completed
             ? { backgroundColor: colors.accent.primary }
-            : { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.border.primary },
+            : { backgroundColor: 'transparent', borderWidth: borderWidths.medium, borderColor: colors.border.primary },
         ]}
       >
-        <Text style={{ fontSize: 14, fontWeight: '700', color: set.completed ? colors.bg.primary : colors.text.secondary }}>
+        <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.bold, color: set.completed ? colors.bg.primary : colors.text.secondary }}>
           {set.completed ? '✓' : ''}
         </Text>
       </TouchableOpacity>
@@ -1981,9 +1982,9 @@ function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, 
     return (
       <TouchableOpacity
         onPress={handleSwipeDeletePair}
-        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
+        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -1997,15 +1998,15 @@ function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, 
         overshootRight={false}
         friction={2}
       >
-      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm + spacing.xs, borderWidth: 1, borderColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
             {nameA} ⟷ {nameB}
           </Text>
           <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
         </View>
         {!collapsed && (
-        <Text style={{ fontSize: 11, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xs, marginBottom: spacing.sm }}>
           {t('session.superset.instruction')}
         </Text>
         )}
@@ -2015,7 +2016,7 @@ function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, 
           onPress={toggleCollapsed}
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
+          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
             {t('session.collapsedSummary', { count: seriesRows.length, label: seriesRows.length === 1 ? t('session.set') : t('session.sets') })}
           </Text>
         </TouchableOpacity>
@@ -2048,13 +2049,13 @@ function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, 
             disabled={createSet.isPending}
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.xs }}
           >
-            <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
               {t('session.superset.addSeries')}
             </Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 12, color: colors.text.muted }}>·</Text>
+          <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>·</Text>
           <TouchableOpacity onPress={handleUnlink} style={{ paddingVertical: spacing.xs }}>
-            <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('session.superset.unlink')}</Text>
+            <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('session.superset.unlink')}</Text>
           </TouchableOpacity>
           </>
           )}
@@ -2108,9 +2109,9 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
     return (
       <TouchableOpacity
         onPress={handleSwipeDelete}
-        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: 80, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
+        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: '700', fontSize: 14 }}>{t('session.swipe.delete')}</Text>
+        <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -2124,14 +2125,14 @@ function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, exercise
     >
       <View style={{ marginBottom: spacing.xs }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 13, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
+          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.muted }}>
             {t('session.superset.setNumber', { number: row.setNumber })}
           </Text>
           <TouchableOpacity
             onPress={() => { swipeableRef.current?.close(); onDeleteSeries(row); }}
             style={{ marginLeft: 'auto', paddingVertical: spacing.xs, paddingLeft: spacing.sm, paddingRight: spacing.xs }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.muted }}>×</Text>
+            <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text.muted }}>×</Text>
           </TouchableOpacity>
         </View>
         {row.a ? (

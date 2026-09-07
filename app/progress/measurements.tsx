@@ -7,7 +7,8 @@ import { useBodyMeasurements, useCreateMeasurement, useDeleteMeasurement } from 
 import { useProgressPhotos, useCreatePhoto, useDeletePhoto, usePickPhoto, useTakePhoto } from '../../lib/hooks/useProgressPhotos';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
+import { THUMBNAIL } from '../../lib/constants/layout';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ function MeasurementInput({
       backgroundColor: colors.bg.elevated,
       borderRadius: borderRadius.md,
       padding: spacing.md,
-      borderWidth: 1,
+      borderWidth: borderWidths.thin,
       borderColor: colors.border.primary,
     }}>
       <Ionicons name={field.icon} size={20} color={colors.accent.primary} />
@@ -94,7 +95,7 @@ function MeasurementDelta({ current, previous }: { current: number | null; previ
   const isPositive = delta > 0;
   
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
       <Ionicons 
         name={isPositive ? 'trending-up' : 'trending-down'} 
         size={10} 
@@ -273,7 +274,7 @@ export default function MeasurementsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ 
@@ -321,7 +322,7 @@ export default function MeasurementsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.lg,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ 
@@ -376,7 +377,7 @@ export default function MeasurementsScreen() {
         padding: spacing.md,
         marginHorizontal: spacing.lg,
         marginBottom: spacing.lg,
-        borderWidth: 1,
+        borderWidth: borderWidths.thin,
         borderColor: colors.border.primary,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
@@ -400,7 +401,7 @@ export default function MeasurementsScreen() {
                 paddingVertical: spacing.sm,
                 borderRadius: borderRadius.full,
                 backgroundColor: selectedBodyPart === key ? colors.accent.primary : colors.bg.elevated,
-                borderWidth: 1,
+                borderWidth: borderWidths.thin,
                 borderColor: selectedBodyPart === key ? colors.accent.primary : colors.border.primary,
               }}
             >
@@ -429,7 +430,7 @@ export default function MeasurementsScreen() {
               backgroundColor: colors.bg.elevated,
               borderRadius: borderRadius.md,
               padding: spacing.md,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
             }}
           >
@@ -451,7 +452,7 @@ export default function MeasurementsScreen() {
               backgroundColor: colors.bg.elevated,
               borderRadius: borderRadius.md,
               padding: spacing.md,
-              borderWidth: 1,
+              borderWidth: borderWidths.thin,
               borderColor: colors.border.primary,
             }}
           >
@@ -471,8 +472,8 @@ export default function MeasurementsScreen() {
                   key={photo.id}
                   onLongPress={() => handleDeletePhoto(photo.id)}
                   style={{
-                    width: 100,
-                    height: 130,
+                    width: THUMBNAIL.PHOTO_WIDTH,
+                    height: THUMBNAIL.PHOTO_HEIGHT,
                     borderRadius: borderRadius.md,
                     overflow: 'hidden',
                     backgroundColor: colors.bg.elevated,
@@ -517,7 +518,7 @@ export default function MeasurementsScreen() {
           padding: spacing.md,
           marginHorizontal: spacing.lg,
           marginBottom: spacing.xxl,
-          borderWidth: 1,
+          borderWidth: borderWidths.thin,
           borderColor: colors.border.primary,
         }}>
           <Text style={{ 

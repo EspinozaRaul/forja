@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts } from '../../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../../lib/theme/tokens';
 import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine, useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -24,7 +24,7 @@ export default function FolderDetailScreen() {
   if (isNaN(folderId)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('common.invalidId')}</Text>
+        <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('common.invalidId')}</Text>
       </View>
     );
   }
@@ -130,7 +130,7 @@ export default function FolderDetailScreen() {
   if (!folder) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: 16 }}>{t('routine.folder.notFound')}</Text>
+        <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('routine.folder.notFound')}</Text>
       </View>
     );
   }
@@ -142,22 +142,22 @@ export default function FolderDetailScreen() {
       <View style={{ backgroundColor: colors.bg.card, paddingTop: insets.top + spacing.sm + spacing.xs, paddingBottom: spacing.sm + spacing.xs, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
-            <Text style={{ fontSize: 20, color: colors.accent.primary }}>←</Text>
+            <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
             </View>
             {folder.description && (
-              <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{folder.description}</Text>
+              <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{folder.description}</Text>
             )}
           </View>
           <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }}>
-              <Text style={{ fontSize: 14, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
+              <Text style={{ fontSize: fontSizes.sm, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: spacing.sm }}>
-              <Text style={{ fontSize: 14, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
+              <Text style={{ fontSize: fontSizes.sm, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -180,16 +180,16 @@ export default function FolderDetailScreen() {
               >
                 <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
+                    <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
                     {routine.description && (
-                      <Text style={{ fontSize: 14, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
+                      <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
                     )}
                   </View>
                   <TouchableOpacity
                     onPress={() => handleUnlinkRoutine(routine.id, routine.name)}
                     style={{ padding: spacing.sm }}
                   >
-                    <Text style={{ fontSize: 18, color: colors.text.muted }}>✕</Text>
+                    <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -204,13 +204,13 @@ export default function FolderDetailScreen() {
           onPress={() => router.push(`/routine/create?folderId=${folderId}`)}
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>+ {t('routine.folder.newRoutine')}</Text>
+          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.md }}>+ {t('routine.folder.newRoutine')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
-          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: 1, borderColor: colors.border.light }}
+          style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: 14 }}>{t('routine.folder.noFolder')}</Text>
+          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('routine.folder.noFolder')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -218,7 +218,7 @@ export default function FolderDetailScreen() {
       <Modal visible={showEditModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
-            <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 20 }}>{t('routine.folder.editTitle')}</Text>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('routine.folder.editTitle')}</Text>
 
             <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.name')}</Text>
             <TextInput
@@ -239,7 +239,7 @@ export default function FolderDetailScreen() {
             />
 
             <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.color')}</Text>
-            <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
+            <View style={{ flexDirection: 'row', marginBottom: spacing.md + spacing.xs, flexWrap: 'wrap', gap: spacing.sm }}>
               {colors.folders.map((color) => (
                 <TouchableOpacity
                   key={color}

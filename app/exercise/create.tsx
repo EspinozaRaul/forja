@@ -8,7 +8,7 @@ import { useSettings } from '../../lib/utils/settings';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { colors, spacing, fonts } from '../../lib/theme/tokens';
+import { colors, spacing, fonts, fontSizes } from '../../lib/theme/tokens';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
@@ -62,7 +62,7 @@ export default function CreateExerciseScreen() {
   return (
     <>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }} className="flex-1 bg-dark-bg p-4">
-      <Text style={{ fontSize: 18, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('exercisePicker.createScreen.title')}</Text>
+      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('exercisePicker.createScreen.title')}</Text>
 
       <Input
         label={t('exercisePicker.createScreen.nameLabel')}
@@ -81,9 +81,9 @@ export default function CreateExerciseScreen() {
         numberOfLines={3}
       />
 
-      <Text style={{ fontSize: 14, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-sm font-medium text-dark-text-secondary mb-2">{t('exercisePicker.createScreen.categoryLabel')}</Text>
+      <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }} className="text-sm font-medium text-dark-text-secondary mb-2">{t('exercisePicker.createScreen.categoryLabel')}</Text>
       {errors.category && (
-        <Text style={{ color: colors.error, fontSize: 14, marginBottom: spacing.sm }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
+        <Text style={{ color: colors.error, fontSize: fontSizes.sm, marginBottom: spacing.sm }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
       )}
       <View className="flex-row flex-wrap mb-4">
         {categories?.map((category) => (
