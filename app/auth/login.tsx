@@ -47,7 +47,11 @@ export default function LoginScreen() {
     setGoogleLoading(false);
 
     if (error) {
-      showAlert(t('common.error'), error.message);
+      // Translate error message if it's a translation key
+      const errorMessage = error.message.startsWith('auth.')
+        ? t(error.message)
+        : error.message;
+      showAlert(t('common.error'), errorMessage);
     } else {
       router.replace('/(tabs)');
     }

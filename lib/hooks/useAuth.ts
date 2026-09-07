@@ -63,7 +63,7 @@ export function useAuth() {
       if (data?.url) {
         // Open the OAuth URL in the browser
         if (!WebBrowser) {
-          return { error: new Error('Google Sign-In requires a development build, not Expo Go') };
+          return { error: new Error('auth.errors.googleRequiresDevBuild') };
         }
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
@@ -74,11 +74,11 @@ export function useAuth() {
           // The session will be set via onAuthStateChange
           return { error: null };
         } else {
-          return { error: new Error('Login cancelled') };
+          return { error: new Error('auth.errors.loginCancelled') };
         }
       }
 
-      return { error: new Error('No OAuth URL returned') };
+      return { error: new Error('auth.errors.noOAuthUrl') };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error(String(err)) };
     }

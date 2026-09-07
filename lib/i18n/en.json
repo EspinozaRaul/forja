@@ -40,6 +40,11 @@
       "success": {
         "created": "Account created. Check your email to confirm."
       }
+    },
+    "errors": {
+      "googleRequiresDevBuild": "Google Sign-In requires a development build, not Expo Go",
+      "loginCancelled": "Login cancelled",
+      "noOAuthUrl": "No OAuth URL returned"
     }
   },
   "common": {

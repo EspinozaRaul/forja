@@ -40,6 +40,11 @@
       "success": {
         "created": "Cuenta creada. Verificá tu email para confirmar."
       }
+    },
+    "errors": {
+      "googleRequiresDevBuild": "Google Sign-In requiere un development build, no Expo Go",
+      "loginCancelled": "Inicio de sesión cancelado",
+      "noOAuthUrl": "No se devolvió URL de OAuth"
     }
   },
   "common": {
