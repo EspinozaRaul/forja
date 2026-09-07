@@ -13,6 +13,7 @@ export default function ProgressLayout() {
       <Stack.Screen name="exercises" />
       <Stack.Screen name="exercise-detail/[id]" />
       <Stack.Screen name="routine-compare" />
+      <Stack.Screen name="measurements" />
     </Stack>
   );
 }

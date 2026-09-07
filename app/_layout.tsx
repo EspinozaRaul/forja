@@ -100,26 +100,7 @@ function RootLayoutNav() {
         name="session/history"
         options={{ title: t('session.history.title') }}
       />
-      <Stack.Screen
-        name="progress/statistics"
-        options={{ title: t('progress.statistics.title'), headerShown: false }}
-      />
-      <Stack.Screen
-        name="progress/exercises"
-        options={{ title: t('progress.exercises.title'), headerShown: false }}
-      />
-      <Stack.Screen
-        name="progress/exercise-detail/[id]"
-        options={{ title: t('progress.exerciseDetail.title'), headerShown: false }}
-      />
-      <Stack.Screen
-        name="progress/routine-compare"
-        options={{ title: t('progress.routineCompare.title'), headerShown: false }}
-      />
-      <Stack.Screen
-        name="progress/measurements"
-        options={{ title: t('progress.measurements.title'), headerShown: false }}
-      />
+
     </Stack>
   );
 }
