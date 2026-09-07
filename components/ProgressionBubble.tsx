@@ -35,18 +35,18 @@ function formatDateLong(date: Date): string {
   return `${day} de ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function formatWeightValue(weight: number | null): string {
-  if (weight == null) return 'Sin datos';
+function formatWeightValue(weight: number | null, noDataLabel: string): string {
+  if (weight == null) return noDataLabel;
   return `${Math.round(weight)}`;
 }
 
-function formatRepsValue(reps: number | null): string {
-  if (reps == null) return 'Sin datos';
+function formatRepsValue(reps: number | null, noDataLabel: string): string {
+  if (reps == null) return noDataLabel;
   return `${Math.round(reps)}`;
 }
 
-function formatRirValue(rir: number | null): string {
-  if (rir == null) return 'Sin datos';
+function formatRirValue(rir: number | null, noDataLabel: string): string {
+  if (rir == null) return noDataLabel;
   return `${Math.round(rir)}`;
 }
 
@@ -291,6 +291,9 @@ interface TooltipProps {
 }
 
 function Tooltip({ point, unit, onClose }: TooltipProps) {
+  const { t } = useTranslation();
+  const noDataLabel = t('progress.exercises.noData');
+  
   return (
     <Pressable
       onPress={onClose}
@@ -317,9 +320,9 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
       >
         {formatDateLong(point.date)}
       </Text>
-      <TooltipRow label={t('progress.maxWeight')} value={`${formatWeightValue(point.avgWeight)} ${unit}`} />
-      <TooltipRow label={t('session.reps')} value={formatRepsValue(point.avgReps)} />
-      <TooltipRow label="RIR" value={formatRirValue(point.avgRir)} />
+      <TooltipRow label={t('progress.maxWeight')} value={`${formatWeightValue(point.avgWeight, noDataLabel)} ${unit}`} />
+      <TooltipRow label={t('session.reps')} value={formatRepsValue(point.avgReps, noDataLabel)} />
+      <TooltipRow label="RIR" value={formatRirValue(point.avgRir, noDataLabel)} />
       <TooltipRow label={t('progress.sets')} value={`${point.setCount}`} />
     </Pressable>
   );

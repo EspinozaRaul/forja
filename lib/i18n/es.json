@@ -45,6 +45,7 @@
   "common": {
     "loading": "Cargando...",
     "error": "Error",
+    "unknownError": "Error desconocido",
     "cancel": "Cancelar",
     "save": "Guardar",
     "delete": "Eliminar",
@@ -375,7 +376,14 @@
       "sessions": "sesiones",
       "topExercises": "Ejercicios más usados",
       "muscleGroups": "Grupos musculares",
-      "days": "días"
+      "days": "días",
+      "other": "Otros",
+      "chest": "Pecho",
+      "legs": "Piernas",
+      "biceps": "Bíceps",
+      "back": "Espalda",
+      "shoulders": "Hombros",
+      "triceps": "Tríceps"
     },
     "measurements": {
       "title": "Medidas",

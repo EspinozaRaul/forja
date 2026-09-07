@@ -45,6 +45,7 @@
   "common": {
     "loading": "Loading...",
     "error": "Error",
+    "unknownError": "Unknown error",
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
@@ -396,7 +397,14 @@
       "sessions": "sessions",
       "topExercises": "Top exercises",
       "muscleGroups": "Muscle groups",
-      "days": "days"
+      "days": "days",
+      "other": "Other",
+      "chest": "Chest",
+      "legs": "Legs",
+      "biceps": "Biceps",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "triceps": "Triceps"
     },
     "measurements": {
       "title": "Measurements",

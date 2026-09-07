@@ -213,7 +213,7 @@ export default function RoutineCompareScreen() {
                   textAlign: 'center',
                 }}
               >
-                Error al cargar datos: {(error as Error)?.message ?? 'Error desconocido'}
+                Error al cargar datos: {(error as Error)?.message ?? t('common.unknownError')}
               </Text>
             </View>
           ) : comparisonData ? (

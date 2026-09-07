@@ -113,15 +113,15 @@ export default function StatisticsScreen() {
     exercises.forEach((ex) => {
       // Simple grouping based on common exercise name patterns
       const name = ex.name.toLowerCase();
-      let group = 'Otros';
+      let group = t('progress.statistics.other');
       
-      if (name.includes('press') || name.includes('chest') || name.includes('pecho')) group = 'Pecho';
-      else if (name.includes('squat') || name.includes('sentadilla') || name.includes('leg')) group = 'Piernas';
-      else if (name.includes('curl') || name.includes('bicep')) group = 'Bíceps';
-      else if (name.includes('row') || name.includes('back') || name.includes('espalda')) group = 'Espalda';
-      else if (name.includes('shoulder') || name.includes('press militar')) group = 'Hombros';
-      else if (name.includes('tricep') || name.includes('extension')) group = 'Tríceps';
-      else if (name.includes('lunge') || name.includes('zancada')) group = 'Piernas';
+      if (name.includes('press') || name.includes('chest') || name.includes('pecho')) group = t('progress.statistics.chest');
+      else if (name.includes('squat') || name.includes('sentadilla') || name.includes('leg')) group = t('progress.statistics.legs');
+      else if (name.includes('curl') || name.includes('bicep')) group = t('progress.statistics.biceps');
+      else if (name.includes('row') || name.includes('back') || name.includes('espalda')) group = t('progress.statistics.back');
+      else if (name.includes('shoulder') || name.includes('press militar')) group = t('progress.statistics.shoulders');
+      else if (name.includes('tricep') || name.includes('extension')) group = t('progress.statistics.triceps');
+      else if (name.includes('lunge') || name.includes('zancada')) group = t('progress.statistics.legs');
       
       groups[group] = (groups[group] || 0) + ex.sessionCount;
     });
