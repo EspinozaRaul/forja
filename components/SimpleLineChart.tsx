@@ -1,4 +1,5 @@
 import { View, Text, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 
 interface DataPoint {
@@ -26,6 +27,7 @@ export function SimpleLineChart({
   color = colors.accent.primary,
   height = 180 
 }: SimpleLineChartProps) {
+  const { t } = useTranslation();
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;
   const chartHeight = height;
@@ -40,7 +42,7 @@ export function SimpleLineChart({
           <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: 8 }}>{title}</Text>
         )}
         <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>Sin datos</Text>
+          <Text style={{ color: colors.text.muted, fontSize: 14, fontFamily: fonts.body }}>{t('progress.noDataYet')}</Text>
         </View>
       </View>
     );

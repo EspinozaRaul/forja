@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useRef, useEffect } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts } from '../lib/theme/tokens';
 import type { Set } from '../lib/types';
 
@@ -28,6 +29,7 @@ export function PartialSetLogger({
   previousPartialReps = null,
   previousMethod = null,
 }: PartialSetLoggerProps) {
+  const { t } = useTranslation();
   const swipeableRef = useRef<Swipeable>(null);
 
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
@@ -66,7 +68,7 @@ export function PartialSetLogger({
     if (!onDelete) return null;
     return (
       <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
-        <Text style={styles.deleteText}>Eliminar</Text>
+        <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };

@@ -142,9 +142,9 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
     console.error('Database initialization failed:', error);
     return (
       <View className="flex-1 items-center justify-center bg-dark-bg p-6">
-        <Text className="text-lg font-semibold text-error mb-2">Database Error</Text>
+        <Text className="text-lg font-semibold text-error mb-2">{t('common.databaseError')}</Text>
         <Text className="text-sm text-dark-text-secondary text-center">
-          Failed to initialize database. Please restart the app.
+          {t('common.databaseInitFailed')}
         </Text>
       </View>
     );
@@ -152,7 +152,7 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
   if (!isReady) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0A0A0A' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg.primary }}>
         <Image 
           source={require('../assets/splash-icon.png')} 
           style={{ width: 120, height: 120, resizeMode: 'contain' }}

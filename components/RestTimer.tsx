@@ -311,7 +311,7 @@ export function RestTimer({
     } else {
       setRemaining(newRemaining);
       // Reschedule notification
-      scheduleNotification(newEndTs, 'tu siguiente serie');
+      scheduleNotification(newEndTs, t('restTimer.nextSet'));
     }
 
     // Persist

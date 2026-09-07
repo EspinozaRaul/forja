@@ -322,7 +322,7 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
       </Text>
       <TooltipRow label={t('progress.maxWeight')} value={`${formatWeightValue(point.avgWeight, noDataLabel)} ${unit}`} />
       <TooltipRow label={t('session.reps')} value={formatRepsValue(point.avgReps, noDataLabel)} />
-      <TooltipRow label="RIR" value={formatRirValue(point.avgRir, noDataLabel)} />
+      <TooltipRow label={t('progress.exercises.rir')} value={formatRirValue(point.avgRir, noDataLabel)} />
       <TooltipRow label={t('progress.sets')} value={`${point.setCount}`} />
     </Pressable>
   );
