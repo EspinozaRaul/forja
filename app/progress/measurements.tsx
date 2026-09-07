@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useBodyMeasurements, useCreateMeasurement, useDeleteMeasurement } from '../../lib/hooks/useBodyMeasurements';
 import { useProgressPhotos, useCreatePhoto, useDeletePhoto, usePickPhoto, useTakePhoto } from '../../lib/hooks/useProgressPhotos';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { THUMBNAIL } from '../../lib/constants/layout';
 

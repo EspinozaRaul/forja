@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useExercise, useExerciseStats, useExerciseSessions, useExercisePRs } from '../../../lib/hooks/useExercises';
-import { useExerciseProgress, useTotalVolumeByWeek } from '../../../lib/hooks/useProgress';
+import { useTotalVolumeByWeek } from '../../../lib/hooks/useProgress';
 import { getExerciseProgressionData } from '../../../lib/db/queries';
 import { ExerciseProgressChart } from '../../../components/ExerciseProgressChart';
 import { ProgressChart } from '../../../components/ProgressChart';

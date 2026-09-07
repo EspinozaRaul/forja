@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 export default function SessionSummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const sessionId = parseInt(id, 10);
   const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
   const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);

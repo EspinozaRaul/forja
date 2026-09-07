@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
 import { THUMBNAIL } from '../lib/constants/layout';
-import { useCreateExercise, useExerciseStats, useExercisePRs } from '../lib/hooks/useExercises';
+import { useCreateExercise, useExerciseStats } from '../lib/hooks/useExercises';
 import { useCategories } from '../lib/hooks/useCategories';
 import { useSettings } from '../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../lib/utils/weight-unit';
@@ -39,8 +39,6 @@ interface ExercisePickerProps {
   state?: ExercisePickerState;
   onStateChange?: (state: ExercisePickerState) => void;
 }
-
-const EMPTY_STATE: ExercisePickerState = { search: '', selectedMuscle: 'all', selectedIds: [] };
 
 // Muscle group filters — uses dataset "target" field (more accurate than muscle_group)
 const MUSCLE_FILTERS = [
@@ -510,7 +508,6 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
   const settings = useSettings();
   const { t, i18n } = useTranslation();
   const { data: stats } = useExerciseStats(exercise.id);
-  const { data: prs } = useExercisePRs(exercise.id);
   const unit = resolveUnit(exercise.unit, settings.data.weightUnit);
   const exerciseImage = exercise.originalId ? EXERCISE_IMAGES[exercise.originalId] : null;
 

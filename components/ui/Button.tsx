@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, ActivityIndicator, View, type ViewStyle, type TextStyle } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, type ViewStyle, type TextStyle } from 'react-native';
 import { type ReactNode } from 'react';
 import { colors, spacing, borderRadius, fonts, borderWidths } from '../../lib/theme/tokens';
 

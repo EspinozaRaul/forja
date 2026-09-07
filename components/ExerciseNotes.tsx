@@ -18,11 +18,6 @@ const NOTE_TYPE_META: Record<string, { icon: 'trending-up' | 'options'; color: s
   ajuste: { icon: 'options', color: colors.warning },
 };
 
-function getNoteTypeInfo(type: string | null | undefined) {
-  if (!type || !NOTE_TYPE_META[type]) return null;
-  return { key: type, ...NOTE_TYPE_META[type] };
-}
-
 export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesProps) {
   const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState(notes ?? '');
@@ -35,8 +30,6 @@ export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesP
   }, [notes, noteType]);
 
   const hasNotes = notes !== null && notes.trim().length > 0;
-  const typeInfo = getNoteTypeInfo(noteType);
-
   const handleBlur = () => {
     onNotesChange(text.trim() || null, selectedType);
     setExpanded(false);

@@ -1,5 +1,5 @@
 import { Tabs, router } from 'expo-router';
-import { View, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, fontSizes , fontWeights} from '../../lib/theme/tokens';

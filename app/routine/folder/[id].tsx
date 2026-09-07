@@ -8,7 +8,6 @@ import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUp
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
-import { Button } from '../../../components/ui/Button';
 import { haptics } from '../../../lib/utils/haptics';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../../lib/hooks/useConfirmDialog';

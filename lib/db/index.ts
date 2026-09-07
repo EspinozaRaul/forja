@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
-import { categories, exercises, routineFolders } from './schema';
+import { categories, exercises } from './schema';
 import { sql } from 'drizzle-orm';
 import exercisesData from './exercises-data.json';
 import { getExerciseNameEs } from '../i18n/exercise-translations';

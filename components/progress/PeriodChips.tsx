@@ -1,4 +1,4 @@
-import { ScrollView, Pressable, Text, View } from 'react-native';
+import { ScrollView, Pressable, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 

@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, gte, lte, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, lte, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
   categories,
   exercises,

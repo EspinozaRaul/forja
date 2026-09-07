@@ -67,18 +67,6 @@ export default function HomeScreen() {
 
   const isLoading = sessionsLoading || routinesLoading || statsLoading;
 
-  // Stats — compute once per render, not per filter iteration
-  const totalSessions = sessions?.length ?? 0;
-  const thisWeekSessions = useMemo(() => {
-    if (!sessions) return 0;
-    const now = new Date();
-    return sessions.filter((s) => {
-      const sessionDate = new Date(s.startedAt);
-      const diffDays = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays <= 7;
-    }).length;
-  }, [sessions]);
-
   // Recent sessions (last 5)
   const recentSessions = sessions?.slice(0, 5) ?? [];
 
@@ -110,10 +98,6 @@ export default function HomeScreen() {
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
   };
-
-  const handleRoutinePress = useCallback((routineId: number) => {
-    setSelectedRoutineId(routineId);
-  }, []);
 
   const handleStartRoutineSession = async () => {
     if (!selectedRoutineId) return;

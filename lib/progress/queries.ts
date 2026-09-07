@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, inArray, gte, lte } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, inArray } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';

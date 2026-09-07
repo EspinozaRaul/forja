@@ -5,7 +5,6 @@ import i18n from '../lib/i18n';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { useSettings, type WeightUnit, type AppLanguage } from '../lib/utils/settings';
 import { useAuth } from '../lib/hooks/useAuth';
-import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { haptics } from '../lib/utils/haptics';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';

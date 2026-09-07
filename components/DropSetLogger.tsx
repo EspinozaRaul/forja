@@ -67,8 +67,6 @@ export function DropSetLogger({
   const badgeText = method === 'dropset' ? 'Drop Set' : method === 'rest_pause' ? 'Rest Pause' : method === 'cluster' ? 'Cluster' : method === 'partial' ? 'Partial' : 'Drop Set';
   const segmentCount = drops.length;
   const unitLabel = t(`methods.${method}.unitLabel`);
-  const unitLabelPlural = t(`methods.${method}.unitLabelPlural`);
-
   const handleDelete = () => {
     swipeableRef.current?.close();
     onDelete?.();

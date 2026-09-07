@@ -15,7 +15,7 @@ import { useSession, useSessionExercises, useSessionExercisesWithSets, useComple
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
 import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
-import { useSets, useCreateSet, useCreateDropSets, useUpdateSet, useDeleteSet, useDeleteDropSetGroup, useReplaceDropSetGroup } from '../../lib/hooks/useSets';
+import { useSets, useCreateSet, useUpdateSet, useDeleteSet, useDeleteDropSetGroup, useReplaceDropSetGroup } from '../../lib/hooks/useSets';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
 import { SetLogger } from '../../components/SetLogger';
@@ -929,7 +929,6 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
     return true;
   }).length;
   const createSet = useCreateSet();
-  const createDropSets = useCreateDropSets();
   const updateSet = useUpdateSet();
   const deleteSet = useDeleteSet();
   const deleteDropSetGroup = useDeleteDropSetGroup();

@@ -3,14 +3,12 @@ import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useExercises } from '../../lib/hooks/useExercises';
 import { useQuery } from '@tanstack/react-query';
 import { getAllExercises } from '../../lib/db/queries';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { THUMBNAIL } from '../../lib/constants/layout';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
-import { formatRelativeDate } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { useSettings } from '../../lib/utils/settings';
 import { getExerciseName } from '../../lib/utils/exercise-names';
@@ -58,10 +56,6 @@ export default function ExercisesScreen() {
       return name.includes(query);
     });
   }, [exercisesWithStats, search, i18n.language]);
-
-  const formatDate = (date: Date) => {
-    return formatRelativeDate(date);
-  };
 
   const renderExercise = ({ item }: { item: ExerciseWithStats }) => {
     const exerciseUnit = resolveUnit(item.unit, unit);

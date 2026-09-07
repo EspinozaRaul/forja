@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import { exercises, categories } from './schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 // Category mapping: dataset category -> our category name
 const CATEGORY_MAP: Record<string, string> = {

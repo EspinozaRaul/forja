@@ -11,8 +11,6 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import { getExerciseName } from '../../lib/utils/exercise-names';
-import type { WeightUnit } from '../../lib/utils/weight-unit';
-
 // ─── Types ──────────────────────────────────────────────
 
 type Period = '4w' | '12w' | 'all';
@@ -147,9 +145,6 @@ export default function StatisticsScreen() {
       />
     );
   }
-
-  // Calculate total sessions for the period
-  const totalSessionsPeriod = filteredSessionCount.reduce((sum, p) => sum + p.value, 0);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>

@@ -70,15 +70,6 @@ function formatDayShort(date: Date | string, locale: string): string {
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
-function formatTotalTime(seconds: number): string {
-  if (seconds >= 3600) {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.round((seconds % 3600) / 60);
-    return `${hours}h ${mins}m`;
-  }
-  return formatDuration(seconds);
-}
-
 // ─── Small presentational components ───────────────────
 const cardStyle = {
   backgroundColor: colors.bg.card,

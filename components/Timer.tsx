@@ -1,14 +1,13 @@
 import { View, Text, TouchableOpacity, AppState, type AppStateStatus } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { colors, spacing, fonts, fontSizes , fontWeights} from '../lib/theme/tokens';
 import { TIMER_CONFIG } from '../lib/constants/config';
 import {
   saveSessionTimer,
   loadSessionTimer,
   clearSessionTimer,
   calculateSessionElapsed,
-  type SessionTimerState,
 } from '../lib/utils/timer-persistence';
 
 interface TimerProps {

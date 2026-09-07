@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { colors, spacing, fontSizes , fontWeights} from '../lib/theme/tokens';
 import { SET_LOGGER } from '../lib/constants/layout';
 
 interface SetLoggerHeaderProps {

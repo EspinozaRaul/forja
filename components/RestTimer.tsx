@@ -10,7 +10,6 @@ import {
   loadRestTimer,
   clearRestTimer,
   calculateRestRemaining,
-  type RestTimerState,
 } from '../lib/utils/timer-persistence';
 import { getCachedSettings } from '../lib/utils/settings';
 
@@ -97,7 +96,6 @@ export function RestTimer({
   const endTimestampRef = useRef<number>(0);
   const onCompleteRef = useRef(onComplete);
   const onRestoredRef = useRef(onRestored);
-  const hasAutoStarted = useRef(false);
   const notificationIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef(sessionId);
   const lastRestartKeyRef = useRef<number | null>(null);
