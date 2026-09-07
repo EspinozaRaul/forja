@@ -632,12 +632,12 @@ export async function getLastSessionForRoutine(routineId: number) {
 // ─── Last Sets for Exercise (global, any routine) ─────
 
 export async function getLastSetsForExercise(exerciseId: number) {
-  // Find the most recent sessionExercise for this exercise across ALL sessions
+  // Find the most recent completed sessionExercise for this exercise across ALL sessions
   const lastSE = await db
     .select({ id: sessionExercises.id })
     .from(sessionExercises)
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), isNotNull(sessions.completedAt)))
     .orderBy(desc(sessions.completedAt))
     .limit(1);
 
@@ -662,7 +662,7 @@ export async function getLastSetsPerExercise(
 ): Promise<Record<number, typeof sets.$inferSelect[] | null>> {
   if (exerciseIds.length === 0) return {};
 
-  // Find the most recent sessionExercise per exercise across ALL sessions
+  // Find the most recent completed sessionExercise per exercise across ALL sessions
   const latestSE = await db
     .select({
       exerciseId: sessionExercises.exerciseId,
@@ -670,7 +670,7 @@ export async function getLastSetsPerExercise(
     })
     .from(sessionExercises)
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-    .where(inArray(sessionExercises.exerciseId, exerciseIds))
+    .where(and(inArray(sessionExercises.exerciseId, exerciseIds), isNotNull(sessions.completedAt)))
     .orderBy(desc(sessions.completedAt));
 
   // Keep only the first (most recent) per exerciseId
@@ -783,7 +783,8 @@ export async function getSetsByExerciseId(exerciseId: number) {
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId));
+    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .orderBy(desc(sessionExercises.sessionId), asc(sets.setNumber), asc(sets.dropOrder));
 }
 
 // ─── Exercise Stats ────────────────────────────────────
@@ -805,7 +806,7 @@ export async function getExerciseStats(exerciseId: number): Promise<ExerciseStat
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId));
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), eq(sets.completed, true)));
 
   return {
     maxWeight: result[0]?.maxWeight ?? null,
@@ -1062,14 +1063,14 @@ export async function getExerciseSessions(exerciseId: number): Promise<ExerciseS
       sessionId: sessions.id,
       startedAt: sessions.startedAt,
       duration: sessions.duration,
-      volume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+      volume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
       setCount: sql<number>`count(${sets.id})`,
       completedSets: sql<number>`sum(case when ${sets.completed} = 1 then 1 else 0 end)`,
     })
     .from(sessions)
     .innerJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), isNotNull(sessions.completedAt)))
     .groupBy(sessions.id)
     .orderBy(desc(sessions.startedAt));
 
@@ -1141,7 +1142,7 @@ export interface ExercisePRs {
 }
 
 export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
-  // Max Weight — heaviest single set
+  // Max Weight — heaviest single set (completed only, non-null weight)
   const maxWeightResult = await db
     .select({
       value: sets.weight,
@@ -1149,11 +1150,11 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), eq(sets.completed, true), isNotNull(sets.weight)))
     .orderBy(desc(sets.weight))
     .limit(1);
 
-  // Best Set — highest volume (weight × reps) in a single set
+  // Best Set — highest volume (weight × reps) in a single set (completed only)
   const bestSetResult = await db
     .select({
       weight: sets.weight,
@@ -1163,11 +1164,11 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), eq(sets.completed, true), isNotNull(sets.weight), isNotNull(sets.reps)))
     .orderBy(desc(sql`${sets.weight} * ${sets.reps}`))
     .limit(1);
 
-  // Max Volume Session — session with highest total volume
+  // Max Volume Session — session with highest total volume (completed sets only)
   const maxVolumeSessionResult = await db
     .select({
       volume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
@@ -1177,7 +1178,7 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
     .from(sessions)
     .innerJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sessionExercises.exerciseId, exerciseId))
+    .where(and(eq(sessionExercises.exerciseId, exerciseId), eq(sets.completed, true)))
     .groupBy(sessions.id)
     .orderBy(desc(sql`sum(${sets.reps} * ${sets.weight})`))
     .limit(1);
@@ -1224,10 +1225,11 @@ export interface GlobalStats {
 }
 
 export async function getGlobalStats(): Promise<GlobalStats> {
-  // Total workouts
+  // Total workouts (completed sessions only)
   const totalWorkouts = await db
     .select({ count: sql<number>`count(*)` })
-    .from(sessions);
+    .from(sessions)
+    .where(isNotNull(sessions.completedAt));
 
   // Total volume: sum of reps × weight over COMPLETED sets only. This mirrors
   // how volume is tallied per exercise (compare.ts collectExerciseStats excludes
@@ -1244,16 +1246,18 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     .from(sets)
     .where(eq(sets.completed, true));
 
-  // Total time (sum of all session durations)
+  // Total time (sum of completed session durations only)
   const totalTime = await db
     .select({ total: sql<number>`coalesce(sum(${sessions.duration}), 0)` })
-    .from(sessions);
+    .from(sessions)
+    .where(isNotNull(sessions.completedAt));
 
-  // Current streak — consecutive days with at least one session
+  // Current streak — consecutive days with at least one completed session
   // Increased from 30 to 100 to support longer streaks (~3 months)
   const recentSessions = await db
     .select({ startedAt: sessions.startedAt })
     .from(sessions)
+    .where(isNotNull(sessions.completedAt))
     .orderBy(desc(sessions.startedAt))
     .limit(100);
 
@@ -1323,14 +1327,14 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
   // Use SQLite strftime to match the same week format as the charts
   
   if (exerciseId) {
-    // Filter to only sessions containing this exercise
+    // Filter to only completed sessions containing this exercise
     return db
       .select({
         sessionId: sessions.id,
         startedAt: sessions.startedAt,
         duration: sessions.duration,
         exerciseCount: sql<number>`count(distinct ${sessionExercises.exerciseId})`,
-        totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+        totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
       })
       .from(sessions)
       .innerJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
@@ -1338,7 +1342,8 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
       .where(
         and(
           eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week),
-          eq(sessionExercises.exerciseId, exerciseId)
+          eq(sessionExercises.exerciseId, exerciseId),
+          isNotNull(sessions.completedAt)
         )
       )
       .groupBy(sessions.id)
@@ -1351,12 +1356,15 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
       startedAt: sessions.startedAt,
       duration: sessions.duration,
       exerciseCount: sql<number>`count(distinct ${sessionExercises.exerciseId})`,
-      totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+      totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
     .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week))
+    .where(and(
+      eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week),
+      isNotNull(sessions.completedAt)
+    ))
     .groupBy(sessions.id)
     .orderBy(desc(sessions.startedAt));
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { db } from '../db';
 import { sets, sessionExercises, sessions } from '../db/schema';
-import { eq, sql, and, gte, lte } from 'drizzle-orm';
+import { eq, sql, and, gte, lte, isNotNull } from 'drizzle-orm';
 import { getWeeklySessions } from '../db/queries';
 import { getSessionsByMonth, getSessionMonthIndex, getSessionWithSets, getSessionCompare, getMostUsedExercises, getRoutineSessionsByPeriods, buildRoutineComparison } from '../progress';
 import type { SessionByMonth, SessionMonthIndexEntry, SessionDetail, SessionCompareResult, MostUsedExercise, RoutineComparisonData } from '../progress';
@@ -32,12 +32,12 @@ export function useExerciseProgress(exerciseId: number, startDate?: Date, endDat
         .select({
           exerciseId: sessionExercises.exerciseId,
           week: sql<string>`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`,
-          totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+          totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
         })
         .from(sets)
         .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
         .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-        .where(whereCondition)
+        .where(and(whereCondition, isNotNull(sessions.completedAt)))
         .groupBy(sessionExercises.exerciseId, sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`);
 
       return result.map((row) => ({
@@ -68,7 +68,7 @@ export function useSessionCountByWeek(exerciseId?: number) {
         })
         .from(sessions)
         .leftJoin(sessionExercises, eq(sessions.id, sessionExercises.sessionId))
-        .where(whereCondition)
+        .where(and(whereCondition, isNotNull(sessions.completedAt)))
         .groupBy(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`);
 
       return result.map((row) => ({
@@ -88,12 +88,12 @@ export function useTotalVolumeByWeek(exerciseId: number) {
       const result = await db
         .select({
           week: sql<string>`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`,
-          totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+          totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
         })
         .from(sets)
         .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
         .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-        .where(eq(sessionExercises.exerciseId, exerciseId))
+        .where(and(eq(sessionExercises.exerciseId, exerciseId), isNotNull(sessions.completedAt)))
         .groupBy(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`);
 
       return result.map((row) => ({

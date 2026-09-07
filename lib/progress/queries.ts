@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, inArray } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, inArray, isNotNull } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';
@@ -42,12 +42,15 @@ export async function getSessionsByMonth(yearMonth: string): Promise<SessionByMo
       duration: sessions.duration,
       notes: sessions.notes,
       exerciseCount: sql<number>`count(distinct ${sessionExercises.id})`,
-      totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+      totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
     .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`, yearMonth))
+    .where(and(
+      eq(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`, yearMonth),
+      isNotNull(sessions.completedAt)
+    ))
     .groupBy(sessions.id)
     .orderBy(asc(sessions.startedAt));
 }
@@ -60,11 +63,12 @@ export async function getSessionMonthIndex(): Promise<SessionMonthIndexEntry[]> 
     .select({
       yearMonth: sql<string>`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`,
       sessionCount: sql<number>`count(distinct ${sessions.id})`,
-      totalVolume: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)`,
+      totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
     .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
+    .where(isNotNull(sessions.completedAt))
     .groupBy(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`)
     .orderBy(desc(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`));
 }
@@ -114,6 +118,7 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
     .from(sessionExercises)
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+    .where(isNotNull(sessions.completedAt))
     .groupBy(sessionExercises.exerciseId)
     .orderBy(desc(sql`count(distinct ${sessions.id})`))
     .limit(limit);
@@ -190,6 +195,7 @@ export async function getRoutineSessionsByPeriods(
 
   const whereClause = and(
     eq(sessions.routineId, routineId),
+    isNotNull(sessions.completedAt),
     ...[sql`(${sql.join(periodConditions, sql` OR `)})`]
   );
 
@@ -210,7 +216,7 @@ export async function getRoutineSessionsByPeriods(
     .innerJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
     .innerJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(whereClause)
+    .where(and(whereClause, eq(sets.completed, true)))
     .orderBy(
       asc(sessions.startedAt),
       asc(sessionExercises.order),
