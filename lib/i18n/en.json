@@ -428,9 +428,14 @@
       "deletePhoto": "Delete photo",
       "deletePhotoConfirm": "Are you sure you want to delete this photo?"
     },
+    "units": {
+      "kg": "kg"
+    },
     "routineCompare": {
       "title": "Compare Routine",
       "selectRoutine": "Select routine",
+      "select": "Select",
+      "exercise": "Exercise",
       "selectPeriods": "Select months to compare (max 6)",
       "loading": "Loading comparison...",
       "error": "Error loading data",

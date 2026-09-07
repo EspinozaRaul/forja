@@ -1,6 +1,7 @@
 import { View, Text, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
+import { MONTHS_ES } from '../lib/constants/months';
 import { SimpleLineChart } from './SimpleLineChart';
 import { EmptyState } from './ui/EmptyState';
 import type { ExerciseProgressionDataPoint } from '../lib/db/queries';
@@ -9,8 +10,6 @@ interface ExerciseProgressChartProps {
   data: ExerciseProgressionDataPoint[];
   unit?: string;
 }
-
-const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 function formatDate(date: Date): string {
   const d = date instanceof Date ? date : new Date(date);

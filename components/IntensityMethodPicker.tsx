@@ -34,6 +34,8 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
         style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}
+        accessibilityLabel="Cerrar selector de método"
+        accessibilityRole="button"
       >
         <View style={styles.container}>
           <Text style={styles.title}>{t('methods.title')}</Text>
@@ -47,6 +49,8 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
                 onClose();
               }}
               style={styles.option}
+              accessibilityLabel={`Seleccionar método: ${t(`methods.${method.id}.label`)}`}
+              accessibilityRole="button"
             >
               <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />
               <View style={styles.optionText}>
@@ -57,7 +61,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
+          <TouchableOpacity onPress={onClose} style={styles.cancelButton} accessibilityLabel="Cancelar" accessibilityRole="button">
             <Text style={styles.cancelText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>

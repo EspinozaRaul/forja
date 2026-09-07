@@ -68,7 +68,7 @@ export function PartialSetLogger({
   const renderRightActions = () => {
     if (!onDelete) return null;
     return (
-      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction} accessibilityLabel="Eliminar serie" accessibilityRole="button" accessibilityHint="Elimina esta serie parcial del ejercicio">
         <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
@@ -121,6 +121,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={weight}
               onChangeText={handleWeightChange}
+              accessibilityLabel="Peso de la serie parcial"
+              accessibilityHint="Ingresa el peso en kilogramos"
             />
           </View>
 
@@ -133,6 +135,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={reps}
               onChangeText={handleRepsChange}
+              accessibilityLabel="Contracciones de la serie"
+              accessibilityHint="Ingresa el número de contracciones"
             />
           </View>
 
@@ -145,6 +149,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={partialReps}
               onChangeText={handlePartialRepsChange}
+              accessibilityLabel="Repeticiones parciales"
+              accessibilityHint="Ingresa el número de repeticiones parciales"
             />
           </View>
 
@@ -153,6 +159,9 @@ export function PartialSetLogger({
             <TouchableOpacity
               onPress={onChangeMethod}
               style={styles.intensityButton}
+              accessibilityLabel="Cambiar método de intensidad"
+              accessibilityRole="button"
+              accessibilityHint="Abre el selector de método de intensidad"
             >
               <Ionicons name="flash" size={12} color={colors.accent.primary} />
             </TouchableOpacity>
@@ -177,6 +186,8 @@ export function PartialSetLogger({
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
+            accessibilityLabel={set.completed ? "Marcar serie como incompleta" : "Marcar serie como completada"}
+            accessibilityRole="button"
           >
             {set.completed && (
               <Ionicons name="checkmark" size={14} color={colors.bg.primary} />

@@ -71,7 +71,13 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const renderRightActions = () => {
     if (!onDelete) return null;
     return (
-      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction}>
+      <TouchableOpacity
+        onPress={handleDelete}
+        style={styles.deleteAction}
+        accessibilityLabel="Eliminar serie"
+        accessibilityRole="button"
+        accessibilityHint="Elimina esta serie del ejercicio"
+      >
         <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
@@ -134,6 +140,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               placeholderTextColor={colors.text.muted}
               value={weight}
               onChangeText={handleWeightChange}
+              accessibilityLabel="Peso de la serie"
+              accessibilityHint="Ingresa el peso en kilogramos"
             />
           </View>
 
@@ -146,6 +154,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               placeholderTextColor={colors.text.muted}
               value={reps}
               onChangeText={handleRepsChange}
+              accessibilityLabel="Repeticiones de la serie"
+              accessibilityHint="Ingresa el número de repeticiones"
             />
           </View>
 
@@ -154,6 +164,9 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
             <TouchableOpacity
               onPress={onOpenIntensityPicker}
               style={styles.intensityButton}
+              accessibilityLabel="Cambiar método de intensidad"
+              accessibilityRole="button"
+              accessibilityHint="Abre el selector de método de intensidad"
             >
               <Ionicons name="flash" size={12} color={colors.text.muted} />
             </TouchableOpacity>
@@ -176,6 +189,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
+            accessibilityLabel={set.completed ? "Marcar serie como incompleta" : "Marcar serie como completada"}
+            accessibilityRole="button"
           >
             {set.completed && (
               <Ionicons name="checkmark" size={14} color={colors.bg.primary} />

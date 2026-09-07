@@ -1,4 +1,4 @@
-import { TextInput, View, Text, type TextInputProps } from 'react-native';
+import { TextInput, View, Text, type TextInputProps, type TextStyle } from 'react-native';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 
 interface InputProps extends TextInputProps {
@@ -25,7 +25,7 @@ export function Input({ label, error, className = '', ...props }: InputProps) {
         <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.sm }}>{label}</Text>
       )}
       <TextInput
-        style={inputStyle as any}
+        style={inputStyle as TextStyle}
         placeholderTextColor={colors.text.muted}
         {...props}
       />

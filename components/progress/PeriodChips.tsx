@@ -66,6 +66,9 @@ export function PeriodChips({
               borderWidth: borderWidths.thin,
               borderColor: isSelected ? colors.accent.primary : colors.border.primary,
             }}
+            accessibilityLabel={`Período: ${formatPeriodLabel(periodKey, t)}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
           >
             <Text
               style={{

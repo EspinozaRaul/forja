@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -14,16 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { CHART } from '../lib/constants/layout';
 import { ANIMATION_CONFIG, CHART_CONFIG } from '../lib/constants/config';
+import { MONTHS_ES } from '../lib/constants/months';
 import { EmptyState } from './ui/EmptyState';
 import { mapWeightToY, mapRepsToSize, mapRirToOpacity } from '../lib/utils/progression-mapping';
 import type { ExerciseProgressionDataPoint } from '../lib/db/queries';
 
 // ─── Date Formatting ───────────────────────────────────
-
-const MONTHS_ES = [
-  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
-];
 
 function formatDateDD(date: Date): string {
   const d = date instanceof Date ? date : new Date(date);
@@ -77,7 +73,6 @@ export function ProgressionBubble({ data, exerciseName, unit = 'kg' }: Progressi
   }, []);
 
   const needsScroll = data.length >= CHART_CONFIG.SCROLL_THRESHOLD;
-  const contentWidth = Math.max(data.length * BUBBLE_COLUMN_WIDTH, needsScroll ? 0 : '100%' as any);
 
   const maxWeight = useMemo(() => {
     const weights = data.map((d) => d.avgWeight).filter((w): w is number => w != null);
@@ -215,11 +210,8 @@ function BubbleColumn({
   const scale = useSharedValue(0);
 
   // Entry animation
-  useMemo(() => {
+  useEffect(() => {
     scale.value = 0;
-  }, [point.sessionId]);
-
-  useMemo(() => {
     scale.value = withDelay(
       index * ANIMATION_CONFIG.LIST_ITEM_DELAY,
       withTiming(1, { duration: ANIMATION_CONFIG.LIST_ITEM_DURATION, easing: Easing.out(Easing.cubic) })

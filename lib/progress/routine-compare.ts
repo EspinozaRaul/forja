@@ -1,5 +1,7 @@
 // ─── Routine Comparison Types ──────────────────────────
 
+import { MONTHS_ES } from '../constants/months';
+
 export interface RoutineSessionSet {
   weight: number | null;
   reps: number | null;
@@ -50,11 +52,7 @@ export interface ExerciseComparisonRow {
 export function periodLabel(periodKey: string, monthLabels?: string[]): string {
   const [year, month] = periodKey.split('-');
   const idx = parseInt(month, 10) - 1;
-  const defaultLabels = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
-  ];
-  const labels = monthLabels ?? defaultLabels;
+  const labels = monthLabels ?? MONTHS_ES;
   return `${labels[idx] ?? month} ${year}`;
 }
 
@@ -141,14 +139,14 @@ export function buildRoutineComparison(
   }
 
   // Determine first and last period keys
-  const firstPeriod = periodKeys[0];
-  const lastPeriod = periodKeys[periodKeys.length - 1];
+  const firstPeriod = periodKeys[0] ?? null;
+  const lastPeriod = periodKeys[periodKeys.length - 1] ?? null;
 
   // Build per-exercise comparison rows
   const exercises: ExerciseComparisonRow[] = Array.from(exerciseMap.entries()).map(
     ([exerciseId, info]) => {
-      const orderInFirst = info.orderInPeriod.get(firstPeriod) ?? null;
-      const orderInLast = info.orderInPeriod.get(lastPeriod) ?? null;
+      const orderInFirst = firstPeriod != null ? info.orderInPeriod.get(firstPeriod) ?? null : null;
+      const orderInLast = lastPeriod != null ? info.orderInPeriod.get(lastPeriod) ?? null : null;
 
       let status: ExerciseComparisonRow['status'] = 'unchanged';
       if (orderInFirst != null && orderInLast == null) {

@@ -3,6 +3,14 @@ import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} f
 
 const RIR_OPTIONS = [0, 1, 2, 3, 4];
 
+const RIR_LABELS: Record<number, string> = {
+  0: 'RIR 0, sin reserva',
+  1: 'RIR 1, una repetición de reserva',
+  2: 'RIR 2, dos repeticiones de reserva',
+  3: 'RIR 3, tres repeticiones de reserva',
+  4: 'RIR 4, cuatro repeticiones de reserva',
+};
+
 interface RirPickerProps {
   value: number | null | undefined;
   onChange: (rir: number | null) => void;
@@ -27,6 +35,9 @@ export function RirPicker({ value, onChange, endPadding = 0 }: RirPickerProps) {
               onPress={() => onChange(selected ? null : rir)}
               style={[styles.chip, selected && styles.chipSelected]}
               activeOpacity={0.7}
+              accessibilityLabel={RIR_LABELS[rir]}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
             >
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                 {rir}

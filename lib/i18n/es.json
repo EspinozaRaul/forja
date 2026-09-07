@@ -523,9 +523,14 @@
       "backPhoto": "Foto posterior",
       "selectMonth": "Seleccionar mes"
     },
+    "units": {
+      "kg": "kg"
+    },
     "routineCompare": {
       "title": "Comparar rutina",
       "selectRoutine": "Seleccionar rutina",
+      "select": "Seleccionar",
+      "exercise": "Ejercicio",
       "selectPeriods": "Selecciona los meses a comparar (máx 6)",
       "loading": "Cargando comparación...",
       "error": "Error al cargar datos",

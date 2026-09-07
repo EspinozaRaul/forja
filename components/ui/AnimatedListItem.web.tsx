@@ -2,7 +2,6 @@
 // This file is only used on web (Metro resolves .web.ts over .ts)
 
 import { View } from 'react-native';
-import { ANIMATION_CONFIG } from '../../lib/constants/config';
 
 interface AnimatedListItemProps {
   children: React.ReactNode;

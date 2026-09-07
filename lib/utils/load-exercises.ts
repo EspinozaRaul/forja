@@ -8,14 +8,14 @@ export async function loadAndImportExercises() {
     // The JSON file should be in the assets folder
     const dataset = require('../../assets/exercises/data/exercises.json');
     
-    console.log(`📚 Loaded ${dataset.length} exercises from dataset`);
+    if (__DEV__) console.log(`📚 Loaded ${dataset.length} exercises from dataset`);
     
     // Import into database
     const result = await importExercisesFromDataset(dataset);
     
     return result;
   } catch (error) {
-    console.error('❌ Error loading exercises dataset:', error);
+    if (__DEV__) console.error('❌ Error loading exercises dataset:', error);
     throw error;
   }
 }

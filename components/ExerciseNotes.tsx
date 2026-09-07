@@ -55,6 +55,9 @@ export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesP
         onPress={() => setExpanded(true)}
         style={styles.trigger}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityLabel="Expandir notas del ejercicio"
+        accessibilityRole="button"
+        accessibilityHint="Abre el editor de notas del ejercicio"
       >
         {typeMeta ? (
           <View style={[styles.typeIcon, { backgroundColor: typeMeta.color + '20' }]}>
@@ -91,6 +94,8 @@ export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesP
         placeholderTextColor={colors.text.muted}
         autoFocus
         multiline
+        accessibilityLabel="Notas del ejercicio"
+        accessibilityHint="Escribe notas sobre el ejercicio"
       />
       <View style={styles.typeRow}>
         {(['rendimiento', 'ajuste'] as const).map((typeKey) => {
@@ -104,6 +109,9 @@ export function ExerciseNotes({ notes, noteType, onNotesChange }: ExerciseNotesP
                 styles.typeChip,
                 selectedType === typeKey && { backgroundColor: meta.color + '25', borderColor: meta.color },
               ]}
+              accessibilityLabel={selectedType === typeKey ? `Tipo de nota: ${label}, seleccionado` : `Tipo de nota: ${label}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedType === typeKey }}
             >
               <Ionicons
                 name={meta.icon}

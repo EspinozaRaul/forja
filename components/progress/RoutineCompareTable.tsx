@@ -11,9 +11,9 @@ interface RoutineCompareTableProps {
 
 // ─── Helpers ──────────────────────────────────────────
 
-function formatSet(set: RoutineSessionSet): string {
+function formatSet(set: RoutineSessionSet, t: (key: string) => string): string {
   const parts: string[] = [];
-  if (set.weight != null) parts.push(`${set.weight}kg`);
+  if (set.weight != null) parts.push(`${set.weight}${t('progress.units.kg')}`);
   if (set.reps != null) parts.push(`${set.reps}`);
   if (parts.length === 0) return '-';
   const base = parts.join('x');
@@ -165,7 +165,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                   color: colors.text.muted,
                 }}
               >
-                Ejercicio
+                {t('progress.routineCompare.exercise')}
               </Text>
             </View>
 
@@ -289,7 +289,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                                 color: colors.text.secondary,
                               }}
                             >
-                              {formatSet(set)}
+                              {formatSet(set, t)}
                             </Text>
                           ))}
                         </View>

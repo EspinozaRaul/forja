@@ -135,12 +135,12 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isReady) return;
     repairRoutineTargetDefaults().catch((err) => {
-      console.error('Failed to repair routine target defaults:', err);
+      if (__DEV__) console.error('Failed to repair routine target defaults:', err);
     });
   }, [isReady]);
 
   if (error) {
-    console.error('Database initialization failed:', error);
+    if (__DEV__) console.error('Database initialization failed:', error);
     return (
       <View className="flex-1 items-center justify-center bg-dark-bg p-6">
         <Text className="text-lg font-semibold text-error mb-2">{t('common.databaseError')}</Text>

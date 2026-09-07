@@ -168,7 +168,7 @@ export default function HomeScreen() {
           }
           await deleteSession.mutateAsync(activeSession.id);
         } catch (e) {
-          console.error('Failed to discard session:', e);
+          if (__DEV__) console.error('Failed to discard session:', e);
           await haptics.error();
           showAlert(t('common.error'), t('session.new.createFailed'));
         }

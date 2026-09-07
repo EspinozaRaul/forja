@@ -109,9 +109,9 @@ export function RoutinePickerModal({
                 color: colors.text.primary,
               }}
             >
-              Seleccionar rutina
+              {t('progress.routineCompare.selectRoutine')}
             </Text>
-            <Pressable onPress={handleClose} hitSlop={8}>
+            <Pressable onPress={handleClose} hitSlop={8} accessibilityLabel="Cerrar" accessibilityRole="button">
               <Ionicons name="close" size={22} color={colors.text.muted} />
             </Pressable>
           </View>
@@ -144,6 +144,9 @@ export function RoutinePickerModal({
                 fontFamily: fonts.body,
                 color: colors.text.primary,
               }}
+              accessibilityLabel="Buscar rutina"
+              accessibilityRole="search"
+              accessibilityHint="Escribe para buscar rutinas por nombre"
             />
           </View>
 
@@ -176,6 +179,9 @@ export function RoutinePickerModal({
                       borderBottomWidth: 1,
                       borderBottomColor: colors.border.divider,
                     }}
+                    accessibilityLabel={`Seleccionar rutina: ${routine.name}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
                   >
                     {/* Radio indicator */}
                     <View
@@ -239,6 +245,9 @@ export function RoutinePickerModal({
                 paddingVertical: spacing.sm + spacing.xs,
                 alignItems: 'center',
               }}
+              accessibilityLabel="Seleccionar rutina"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: selectedId == null }}
             >
               <Text
                 style={{
@@ -247,7 +256,7 @@ export function RoutinePickerModal({
                   color: selectedId != null ? colors.bg.primary : colors.text.muted,
                 }}
               >
-                Seleccionar
+                {t('progress.routineCompare.select')}
               </Text>
             </Pressable>
           </View>

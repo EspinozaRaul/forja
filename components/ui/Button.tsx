@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, ActivityIndicator, View, type ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, View, type ViewStyle, type TextStyle } from 'react-native';
 import { type ReactNode } from 'react';
 import { colors, spacing, borderRadius, fonts, borderWidths } from '../../lib/theme/tokens';
 
@@ -16,7 +16,7 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
-const variantStyles: Record<ButtonVariant, { container: any; text: any }> = {
+const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
   primary: {
     container: { backgroundColor: colors.accent.primary },
     text: { color: colors.text.primary },
