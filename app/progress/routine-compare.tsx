@@ -83,12 +83,21 @@ export default function RoutineCompareScreen() {
   });
 
   const routineOptions = useMemo(() => routines, [routines]);
+  
+  // Month labels for translation
+  const monthLabels = useMemo(() => [
+    t('progress.months.jan'), t('progress.months.feb'), t('progress.months.mar'),
+    t('progress.months.apr'), t('progress.months.may'), t('progress.months.jun'),
+    t('progress.months.jul'), t('progress.months.aug'), t('progress.months.sep'),
+    t('progress.months.oct'), t('progress.months.nov'), t('progress.months.dec'),
+  ], [t]);
 
   // Comparison data
   const { data: comparisonData, isLoading, isError, error } = useRoutineCompare(
     selectedRoutineId,
     selectedRoutineName,
-    selectedPeriods
+    selectedPeriods,
+    monthLabels
   );
 
   const periodDates = useMemo(

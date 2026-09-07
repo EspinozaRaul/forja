@@ -162,14 +162,15 @@ export function useSessionCompare(aId: number, bId: number) {
 export function useRoutineCompare(
   routineId: number | null,
   routineName: string,
-  periods: string[]
+  periods: string[],
+  monthLabels?: string[]
 ) {
   return useQuery<RoutineComparisonData>({
     queryKey: [...PROGRESS_KEY, 'routineCompare', routineId, periods],
     queryFn: async () => {
       if (!routineId) throw new Error('routineId required');
       const rows = await getRoutineSessionsByPeriods(routineId, periods);
-      return buildRoutineComparison(routineId, routineName, rows, periods);
+      return buildRoutineComparison(routineId, routineName, rows, periods, monthLabels);
     },
     enabled: !!routineId && periods.length > 0,
   });

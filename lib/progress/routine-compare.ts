@@ -46,16 +46,16 @@ export interface ExerciseComparisonRow {
 
 // ─── Period helpers ────────────────────────────────────
 
-const MONTH_LABELS_ES = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
-];
-
 /** Build a human-readable label for a periodKey like "2026-01". */
-export function periodLabel(periodKey: string): string {
+export function periodLabel(periodKey: string, monthLabels?: string[]): string {
   const [year, month] = periodKey.split('-');
   const idx = parseInt(month, 10) - 1;
-  return `${MONTH_LABELS_ES[idx] ?? month} ${year}`;
+  const defaultLabels = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+  ];
+  const labels = monthLabels ?? defaultLabels;
+  return `${labels[idx] ?? month} ${year}`;
 }
 
 // ─── buildRoutineComparison ────────────────────────────
@@ -83,7 +83,8 @@ export function buildRoutineComparison(
   routineId: number,
   routineName: string,
   rows: RawSessionRow[],
-  periodKeys: string[]
+  periodKeys: string[],
+  monthLabels?: string[]
 ): RoutineComparisonData {
   // Group rows by periodKey
   const sessionsByPeriod = new Map<string, Map<number, RoutineSessionExercise>>();
@@ -119,7 +120,7 @@ export function buildRoutineComparison(
   // Build period data in order
   const periods: RoutinePeriodData[] = periodKeys.map((pk) => ({
     periodKey: pk,
-    label: periodLabel(pk),
+    label: periodLabel(pk, monthLabels),
     sessions: Array.from(sessionsByPeriod.get(pk)?.values() ?? []),
   }));
 
