@@ -53,9 +53,31 @@ export const colors = {
     text: '#7A9AB5',      // tag text color
     equipmentText: '#6E9C8A',
   },
+  // Chart colors
+  chart: {
+    weight: '#4A6FA5',    // steel blue — weight line
+    reps: '#82c896',      // green — reps line
+  },
+  // Overlay variants
+  overlay: {
+    default: 'rgba(0, 0, 0, 0.7)',
+    deep: 'rgba(0, 0, 0, 0.9)',
+  },
+  // Folders
+  folders: [
+    '#4A6FA5', '#6E9C8A', '#C77B45', '#C2A05C',
+    '#9B7ABF', '#7A9AB5', '#C96F6F', '#8B8B8B',
+  ],
+  // Status muted (for badges/backgrounds)
+  statusMuted: {
+    success: 'rgba(110, 156, 138, 0.15)',
+    warning: 'rgba(194, 160, 92, 0.15)',
+    error: 'rgba(201, 111, 111, 0.15)',
+  },
 };
 
 export const spacing = {
+  xxs: 1,
   xs: 4,
   sm: 8,
   md: 16,
@@ -67,6 +89,7 @@ export const spacing = {
 // Radius — deliberately small, industrial. Authority comes from straight
 // edges, not soft curves. Only full stays round (checks, swatches, pills).
 export const borderRadius = {
+  xs: 2,
   sm: 4,
   md: 6,
   lg: 8,
@@ -84,6 +107,8 @@ export const fonts = {
 };
 
 export const fontSizes = {
+  xxs: 9,
+  xs2: 10,
   xs: 11,
   sm: 13,
   md: 15,
@@ -91,6 +116,20 @@ export const fontSizes = {
   xl: 24,
   xxl: 32,
   display: 40,
+};
+
+export const fontWeights = {
+  regular: '400' as const,
+  medium: '500' as const,
+  semibold: '600' as const,
+  bold: '700' as const,
+  extrabold: '800' as const,
+};
+
+export const borderWidths = {
+  thin: 1,
+  medium: 1.5,
+  thick: 2,
 };
 
 export const shadows = {
