@@ -101,6 +101,10 @@ function RootLayoutNav() {
         name="session/history"
         options={{ title: t('session.history.title') }}
       />
+      <Stack.Screen
+        name="progress"
+        options={{ headerShown: false }}
+      />
 
     </Stack>
   );

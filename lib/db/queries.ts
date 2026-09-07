@@ -192,7 +192,8 @@ export async function getRoutineExercises(routineId: number) {
   return db
     .select()
     .from(routineExercises)
-    .where(eq(routineExercises.routineId, routineId));
+    .where(eq(routineExercises.routineId, routineId))
+    .orderBy(asc(routineExercises.order));
 }
 
 export async function addExerciseToRoutine(data: {
@@ -324,7 +325,8 @@ export async function getSessionExercises(sessionId: number) {
   return db
     .select()
     .from(sessionExercises)
-    .where(eq(sessionExercises.sessionId, sessionId));
+    .where(eq(sessionExercises.sessionId, sessionId))
+    .orderBy(asc(sessionExercises.order));
 }
 
 export interface SessionExerciseWithSets extends SessionExercise {
@@ -335,7 +337,8 @@ export async function getSessionExercisesWithSets(sessionId: number): Promise<Se
   const rows = await db
     .select()
     .from(sessionExercises)
-    .where(eq(sessionExercises.sessionId, sessionId));
+    .where(eq(sessionExercises.sessionId, sessionId))
+    .orderBy(asc(sessionExercises.order));
 
   if (rows.length === 0) return [];
 
@@ -598,7 +601,8 @@ export async function getLastSessionForRoutine(routineId: number) {
     })
     .from(sessionExercises)
     .leftJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-    .where(eq(sessionExercises.sessionId, lastSession[0].id));
+    .where(eq(sessionExercises.sessionId, lastSession[0].id))
+    .orderBy(asc(sessionExercises.order));
 
   const seIds = sessionExercisesData.map((se) => se.id);
   let allSets: typeof sets.$inferSelect[] = [];

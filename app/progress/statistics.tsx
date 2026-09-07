@@ -242,7 +242,7 @@ export default function StatisticsScreen() {
             {t('progress.statistics.mostFrequent')}
           </Text>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-            {stats.mostFrequentExercise}
+            {getExerciseName(stats.mostFrequentExercise, i18n.language)}
           </Text>
         </View>
       )}

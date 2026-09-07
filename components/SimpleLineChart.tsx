@@ -64,11 +64,14 @@ export function SimpleLineChart({
     label: d.date,
   }));
 
-  // Y-axis labels — round to whole numbers for discrete counts
-  const yLabels = [0, 0.25, 0.5, 0.75, 1].map(pct => ({
+  // Y-axis labels — deduplicate when range is small
+  const rawYLabels = [0, 0.25, 0.5, 0.75, 1].map(pct => ({
     value: Math.round(minValue + range * pct),
     y: padding.top + innerHeight - pct * innerHeight,
   }));
+  const yLabels = rawYLabels.filter((label, i) => 
+    i === 0 || label.value !== rawYLabels[i - 1].value
+  );
 
   // X-axis labels (show max 5)
   const xStep = Math.max(1, Math.floor(data.length / CHART_CONFIG.MAX_X_LABELS));
