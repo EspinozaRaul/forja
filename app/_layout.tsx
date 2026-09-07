@@ -13,6 +13,7 @@ import { useDatabase } from '../lib/hooks/useDatabase';
 import { repairRoutineTargetDefaults } from '../lib/db/queries';
 import { useAuth } from '../lib/hooks/useAuth';
 import { colors, spacing , fontWeights} from '../lib/theme/tokens';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const queryClient = new QueryClient();
 
@@ -167,18 +168,20 @@ function FontInitializer({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <QueryClientProvider client={queryClient}>
-          <I18nextProvider i18n={i18n}>
-            <FontInitializer>
-              <DatabaseInitializer>
-                <RootLayoutNav />
-              </DatabaseInitializer>
-            </FontInitializer>
-          </I18nextProvider>
-        </QueryClientProvider>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <KeyboardProvider>
+          <QueryClientProvider client={queryClient}>
+            <I18nextProvider i18n={i18n}>
+              <FontInitializer>
+                <DatabaseInitializer>
+                  <RootLayoutNav />
+                </DatabaseInitializer>
+              </FontInitializer>
+            </I18nextProvider>
+          </QueryClientProvider>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
