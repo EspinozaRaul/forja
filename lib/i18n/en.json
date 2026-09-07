@@ -42,6 +42,150 @@
       }
     }
   },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "success": "Success",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}} days ago",
+    "weeksAgo": "{{count}} weeks ago",
+    "invalidId": "Invalid ID",
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "message": "An unexpected error occurred",
+      "retry": "Try Again"
+    }
+  },
+  "exercise": {
+    "create": {
+      "title": "New Exercise"
+    },
+    "detail": {
+      "title": "Exercise"
+    }
+  },
+  "routine": {
+    "detail": {
+      "title": "Routine",
+      "loading": "Loading routine...",
+      "notFound": "Routine not found",
+      "nameLabel": "Routine name",
+      "namePlaceholder": "Routine name",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Description (optional)",
+      "exercises": "Exercises",
+      "addExercise": "Add Exercise",
+      "tapToSwap": "Tap another exercise to swap — or tap the same to cancel",
+      "noExercises": "No exercises",
+      "noExercisesMessage": "Add exercises to this routine.",
+      "unknownExercise": "Unknown exercise",
+      "startSession": "Start Session",
+      "previousSessionMessage": "You have a previous session for this routine. Want to continue with your last numbers?",
+      "lastSession": "Last session",
+      "exerciseNumber": "Exercise {{order}}",
+      "startFresh": "Start Fresh",
+      "continueLast": "Continue Last",
+      "nameRequired": "Name is required",
+      "updateFailed": "Failed to update routine",
+      "addExerciseFailed": "Failed to add exercise",
+      "addExercisesFailed": "Failed to add exercises",
+      "reorderFailed": "Failed to reorder",
+      "replaceFailed": "Failed to replace exercise",
+      "removeExerciseTitle": "Remove Exercise",
+      "removeExerciseMessage": "Are you sure you want to remove this exercise from the routine?",
+      "remove": "Remove",
+      "removeExerciseFailed": "Failed to remove exercise",
+      "deleteRoutineTitle": "Delete Routine",
+      "deleteRoutineMessage": "Are you sure you want to delete this routine? This action cannot be undone.",
+      "deleteRoutineFailed": "Failed to delete routine",
+      "startSessionFailed": "Failed to start session"
+    },
+    "create": {
+      "title": "New Routine",
+      "nameLabel": "Routine name",
+      "namePlaceholder": "E.g. Chest day",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "E.g. Chest, shoulders, triceps",
+      "exercises": "Exercises",
+      "addExercise": "Add Exercise",
+      "tapToSwap": "Tap another exercise to swap positions — or tap the same to cancel",
+      "noExercises": "No exercises added yet",
+      "submit": "Create routine",
+      "loading": "Loading exercises...",
+      "nameRequired": "Routine name is required",
+      "nameMinLength": "Name must be at least 2 characters",
+      "createFailed": "Failed to create routine. Please try again.",
+      "lastWeight": "last"
+    },
+    "folder": {
+      "title": "Folder",
+      "loading": "Loading folder...",
+      "notFound": "Folder not found",
+      "editTitle": "Edit Folder",
+      "name": "Name",
+      "namePlaceholder": "Folder name",
+      "descriptionOptional": "Description (optional)",
+      "descriptionPlaceholder": "Description",
+      "color": "Color",
+      "emptyTitle": "No routines",
+      "emptyMessage": "Create routines and link them to this folder.",
+      "newRoutine": "Routine",
+      "noFolder": "No folder",
+      "deleteFolderTitle": "Delete Folder",
+      "deleteFolderMessage": "Delete \"{{name}}\"? Routines will not be deleted, just unlinked from this folder.",
+      "deleteRoutineTitle": "Delete Routine",
+      "deleteRoutineMessage": "Delete \"{{name}}\"? This action cannot be undone.",
+      "unlinkTitle": "Remove from folder",
+      "unlinkMessage": "Remove \"{{name}}\" from this folder? The routine will not be deleted.",
+      "remove": "Remove",
+      "saveFailed": "Could not save folder"
+    }
+  },
+  "session": {
+    "title": "Session",
+    "create": {
+      "title": "New Session"
+    },
+    "history": {
+      "title": "Session History",
+      "summary": "Session Summary"
+    },
+    "loadingMessage": "Loading session...",
+    "notFound": "Session not found",
+    "exercises": "Exercises",
+    "add": "+ Add",
+    "addSet": "Add set",
+    "swapInstruction": "Tap another exercise to swap — or tap the same to cancel",
+    "noExercises": "No exercises",
+    "noExercisesMessage": "Add exercises to this session.",
+    "cancel": "Cancel",
+    "endButton": "End session",
+    "restLabel": "Rest: {{name}}",
+    "unknownExercise": "Unknown exercise",
+    "fallbackExercise": "Exercise",
+    "custom": "Custom",
+    "superSet": "Super Set",
+    "set": "set",
+    "sets": "sets",
+    "collapsedSummary": "{{count}} {{label}} · tap to expand",
+    "reps": "reps",
+    "swipe": {
+      "delete": "Delete"
+    }
+  },
   "settings": {
     "title": "Settings",
     "language": "Language",

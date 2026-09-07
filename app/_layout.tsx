@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { I18nextProvider } from 'react-i18next';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
 import { useDatabase } from '../lib/hooks/useDatabase';
 import { repairRoutineTargetDefaults } from '../lib/db/queries';
@@ -20,6 +20,7 @@ function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (loading) return;
@@ -41,7 +42,7 @@ function RootLayoutNav() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg.primary }}>
         <ActivityIndicator size="large" color={colors.accent.primary} />
-        <Text style={{ color: colors.text.muted, marginTop: 16 }}>Loading...</Text>
+        <Text style={{ color: colors.text.muted, marginTop: 16 }}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -59,61 +60,65 @@ function RootLayoutNav() {
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen
         name="exercise/create"
-        options={{ title: 'New Exercise', presentation: 'modal' }}
+        options={{ title: t('exercise.create.title'), presentation: 'modal' }}
       />
       <Stack.Screen
         name="exercise/[id]"
-        options={{ title: 'Exercise' }}
+        options={{ title: t('exercise.detail.title') }}
       />
       <Stack.Screen
         name="routine/create"
-        options={{ title: 'New Routine', presentation: 'modal' }}
+        options={{ title: t('routine.create.title'), presentation: 'modal' }}
       />
       <Stack.Screen
         name="routine/[id]"
-        options={{ title: 'Routine' }}
+        options={{ title: t('routine.detail.title') }}
       />
       <Stack.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: t('settings.title'),
         }}
       />
       <Stack.Screen
         name="routine/folder/[id]"
-        options={{ title: 'Folder', headerShown: false }}
+        options={{ title: t('routine.folder.title'), headerShown: false }}
       />
       <Stack.Screen
         name="session/new"
-        options={{ title: 'New Session', presentation: 'modal' }}
+        options={{ title: t('session.create.title'), presentation: 'modal' }}
       />
       <Stack.Screen
         name="session/[id]"
-        options={{ title: 'Session', headerShown: false }}
+        options={{ title: t('session.title'), headerShown: false }}
       />
       <Stack.Screen
         name="session/history/[id]"
-        options={{ title: 'Session Summary' }}
+        options={{ title: t('session.history.summary') }}
       />
       <Stack.Screen
         name="session/history"
-        options={{ title: 'Session History' }}
+        options={{ title: t('session.history.title') }}
       />
       <Stack.Screen
         name="progress/statistics"
-        options={{ title: 'Statistics', headerShown: false }}
+        options={{ title: t('progress.statistics.title'), headerShown: false }}
       />
       <Stack.Screen
         name="progress/exercises"
-        options={{ title: 'Exercises', headerShown: false }}
+        options={{ title: t('progress.exercises.title'), headerShown: false }}
       />
       <Stack.Screen
         name="progress/exercise-detail/[id]"
-        options={{ title: 'Exercise Detail', headerShown: false }}
+        options={{ title: t('progress.exerciseDetail.title'), headerShown: false }}
       />
       <Stack.Screen
         name="progress/routine-compare"
-        options={{ title: 'Comparar Rutina', headerShown: false }}
+        options={{ title: t('progress.routineCompare.title'), headerShown: false }}
+      />
+      <Stack.Screen
+        name="progress/measurements"
+        options={{ title: t('progress.measurements.title'), headerShown: false }}
       />
     </Stack>
   );

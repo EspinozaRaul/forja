@@ -42,12 +42,135 @@
       }
     }
   },
-  "settings": {
-    "title": "Configuración",
-    "language": "Idioma",
-    "languageOptions": {
-      "es": "Español",
-      "en": "English"
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "back": "Volver",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "exercise": {
+    "create": {
+      "title": "Nuevo Ejercicio"
+    },
+    "detail": {
+      "title": "Ejercicio"
+    }
+  },
+  "routine": {
+    "detail": {
+      "title": "Rutina",
+      "loading": "Cargando rutina...",
+      "notFound": "Rutina no encontrada",
+      "nameLabel": "Nombre de la rutina",
+      "namePlaceholder": "Nombre de la rutina",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción (opcional)",
+      "exercises": "Ejercicios",
+      "addExercise": "Agregar ejercicio",
+      "tapToSwap": "Tocá otro ejercicio para intercambiar — o tocá el mismo para cancelar",
+      "noExercises": "Sin ejercicios",
+      "noExercisesMessage": "Agregá ejercicios a esta rutina.",
+      "unknownExercise": "Ejercicio desconocido",
+      "startSession": "Iniciar sesión",
+      "previousSessionMessage": "Tenés una sesión anterior para esta rutina. ¿Querés continuar con tus últimos números?",
+      "lastSession": "Última sesión",
+      "exerciseNumber": "Ejercicio {{order}}",
+      "startFresh": "Empezar de cero",
+      "continueLast": "Continuar última",
+      "nameRequired": "El nombre es obligatorio",
+      "updateFailed": "Error al actualizar la rutina",
+      "addExerciseFailed": "Error al agregar el ejercicio",
+      "addExercisesFailed": "Error al agregar los ejercicios",
+      "reorderFailed": "Error al reordenar",
+      "replaceFailed": "Error al reemplazar el ejercicio",
+      "removeExerciseTitle": "Quitar ejercicio",
+      "removeExerciseMessage": "¿Estás seguro de querer quitar este ejercicio de la rutina?",
+      "remove": "Quitar",
+      "removeExerciseFailed": "Error al quitar el ejercicio",
+      "deleteRoutineTitle": "Eliminar rutina",
+      "deleteRoutineMessage": "¿Estás seguro de querer eliminar esta rutina? Esta acción no se puede deshacer.",
+      "deleteRoutineFailed": "Error al eliminar la rutina",
+      "startSessionFailed": "Error al iniciar la sesión"
+    },
+    "create": {
+      "title": "Nueva Rutina",
+      "nameLabel": "Nombre de la rutina",
+      "namePlaceholder": "Ej: Día de pecho",
+      "descriptionLabel": "Descripción (opcional)",
+      "descriptionPlaceholder": "Ej: Pecho, hombros, tríceps",
+      "exercises": "Ejercicios",
+      "addExercise": "Agregar ejercicio",
+      "tapToSwap": "Tocá otro ejercicio para intercambiar posiciones — o tocá el mismo para cancelar",
+      "noExercises": "No hay ejercicios agregados aún",
+      "submit": "Crear rutina",
+      "loading": "Cargando ejercicios...",
+      "nameRequired": "El nombre de la rutina es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos 2 caracteres",
+      "createFailed": "Error al crear la rutina. Intentá de nuevo.",
+      "lastWeight": "último"
+    },
+    "folder": {
+      "title": "Carpeta",
+      "loading": "Cargando carpeta...",
+      "notFound": "Carpeta no encontrada",
+      "editTitle": "Editar Carpeta",
+      "name": "Nombre",
+      "namePlaceholder": "Nombre de la carpeta",
+      "descriptionOptional": "Descripción (opcional)",
+      "descriptionPlaceholder": "Descripción",
+      "color": "Color",
+      "emptyTitle": "Sin rutinas",
+      "emptyMessage": "Creá rutinas y vinculalas a esta carpeta.",
+      "newRoutine": "Rutina",
+      "noFolder": "Sin carpeta",
+      "deleteFolderTitle": "Eliminar carpeta",
+      "deleteFolderMessage": "¿Eliminar \"{{name}}\"? Las rutinas no se eliminarán, solo se desvincularán de esta carpeta.",
+      "deleteRoutineTitle": "Eliminar rutina",
+      "deleteRoutineMessage": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+      "unlinkTitle": "Quitar de carpeta",
+      "unlinkMessage": "¿Quitar \"{{name}}\" de esta carpeta? La rutina no se elimina.",
+      "remove": "Quitar",
+      "saveFailed": "No se pudo guardar la carpeta"
+    }
+  },
+  "session": {
+    "title": "Sesión",
+    "create": {
+      "title": "Nueva Sesión"
+    },
+    "history": {
+      "title": "Historial de Sesiones",
+      "summary": "Resumen de Sesión"
+    },
+    "loadingMessage": "Cargando sesión...",
+    "notFound": "Sesión no encontrada",
+    "exercises": "Ejercicios",
+    "add": "+ Agregar",
+    "addSet": "Agregar serie",
+    "swapInstruction": "Tocá otro ejercicio para intercambiar — o tocá el mismo para cancelar",
+    "noExercises": "Sin ejercicios",
+    "noExercisesMessage": "Agregá ejercicios a esta sesión.",
+    "cancel": "Cancelar",
+    "endButton": "Finalizar sesión",
+    "restLabel": "Descanso: {{name}}",
+    "unknownExercise": "Ejercicio desconocido",
+    "fallbackExercise": "Ejercicio",
+    "custom": "Personalizado",
+    "superSet": "Super Set",
+    "set": "serie",
+    "sets": "series",
+    "collapsedSummary": "{{count}} {{label}} · tocar para expandir",
+    "reps": "Reps",
+    "swipe": {
+      "delete": "Eliminar"
     },
     "weightUnit": "Unidad de peso",
     "weightUnitDefault": "Por defecto para ejercicios nuevos.",
