@@ -191,15 +191,15 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
       <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs, alignItems: 'center' }}>
         {!running ? (
           <TouchableOpacity onPress={handleStart} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.accent.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.start')}</Text>
+            <Text style={{ color: colors.accent.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.start')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleStop} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-            <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.pause')}</Text>
+            <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.pause')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={handleReset} hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}>
-          <Text style={{ color: colors.text.muted, fontWeight: fontWeights.semibold, fontSize: fontSizes.md}>{t('timer.reset')}</Text>
+          <Text style={{ color: colors.text.muted, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.reset')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -330,7 +330,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: spacing.lg }}
             ListEmptyComponent={
               <View style={{ paddingVertical: spacing.xxl, alignItems: 'center' }}>
-                <Text style={{ color: colors.text.muted, fontSize: fontSizes.sm}>{t('exercisePicker.noResults')}</Text>
+                <Text style={{ color: colors.text.muted, fontSize: fontSizes.sm }}>{t('exercisePicker.noResults')}</Text>
               </View>
             }
             renderItem={({ item }) => {

@@ -366,7 +366,7 @@ export function RestTimer({
           onPress={() => handleStart()}
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}>{t('restTimer.startRest')}</Text>
+          <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -398,7 +398,7 @@ export function RestTimer({
           onPress={handleSkip}
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: TIMER.BUTTON_SIZE, justifyContent: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.xs}>{t('restTimer.skip')}</Text>
+          <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.xs }}>{t('restTimer.skip')}</Text>
         </TouchableOpacity>
       </View>
     </View>
