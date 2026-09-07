@@ -693,13 +693,13 @@ export default function SessionScreen() {
             onPress={cancelSessionAndLeave}
             style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg}>{t('session.cancel')}</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleEndSession}
             style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
           >
-            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg}>{t('session.endButton')}</Text>
+            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardStickyView>
