@@ -196,7 +196,7 @@ export default function StatisticsScreen() {
               fontFamily: fonts.bodyMedium,
               color: period === p ? colors.text.primary : colors.text.secondary,
             }}>
-              {p === '4w' ? '4 sem' : p === '12w' ? '12 sem' : 'Todo'}
+              {p === '4w' ? t('progress.range4weeks') : p === '12w' ? t('progress.range12weeks') : t('progress.rangeAll')}
             </Text>
           </Pressable>
         ))}
@@ -227,7 +227,7 @@ export default function StatisticsScreen() {
         />
         <StatCard
           label={t('progress.statistics.currentStreak')}
-          value={`${stats.currentStreak} días`}
+          value={`${stats.currentStreak} ${t('progress.statistics.days')}`}
           icon="flame"
         />
       </View>

@@ -15,7 +15,7 @@ type MeasurementField = 'weight' | 'bodyFat' | 'chest' | 'waist' | 'hips' | 'arm
 
 interface MeasurementFieldConfig {
   key: MeasurementField;
-  label: string;
+  labelKey: string;
   unit: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
@@ -23,20 +23,16 @@ interface MeasurementFieldConfig {
 // ─── Constants ──────────────────────────────────────────
 
 const MEASUREMENT_FIELDS: MeasurementFieldConfig[] = [
-  { key: 'weight', label: 'Peso', unit: 'kg', icon: 'scale' },
-  { key: 'bodyFat', label: '% Grasa', unit: '%', icon: 'water' },
-  { key: 'chest', label: 'Pecho', unit: 'cm', icon: 'body' },
-  { key: 'waist', label: 'Cintura', unit: 'cm', icon: 'resize' },
-  { key: 'hips', label: 'Caderas', unit: 'cm', icon: 'ellipse' },
-  { key: 'arms', label: 'Brazos', unit: 'cm', icon: 'barbell' },
-  { key: 'thighs', label: 'Muslos', unit: 'cm', icon: 'footsteps' },
+  { key: 'weight', labelKey: 'progress.measurements.weight', unit: 'kg', icon: 'scale' },
+  { key: 'bodyFat', labelKey: 'progress.measurements.bodyFat', unit: '%', icon: 'water' },
+  { key: 'chest', labelKey: 'progress.measurements.chest', unit: 'cm', icon: 'body' },
+  { key: 'waist', labelKey: 'progress.measurements.waist', unit: 'cm', icon: 'resize' },
+  { key: 'hips', labelKey: 'progress.measurements.hips', unit: 'cm', icon: 'ellipse' },
+  { key: 'arms', labelKey: 'progress.measurements.arms', unit: 'cm', icon: 'barbell' },
+  { key: 'thighs', labelKey: 'progress.measurements.thighs', unit: 'cm', icon: 'footsteps' },
 ];
 
-const BODY_PART_OPTIONS = [
-  { key: 'front', label: 'Frontal' },
-  { key: 'side', label: 'Lateral' },
-  { key: 'back', label: 'Posterior' },
-];
+const BODY_PART_KEYS = ['front', 'side', 'back'] as const;
 
 // ─── Measurement Input Component ────────────────────────
 
@@ -44,10 +40,12 @@ function MeasurementInput({
   field,
   value,
   onChange,
+  label,
 }: {
   field: MeasurementFieldConfig;
   value: string;
   onChange: (text: string) => void;
+  label: string;
 }) {
   return (
     <View style={{
@@ -62,7 +60,7 @@ function MeasurementInput({
     }}>
       <Ionicons name={field.icon} size={20} color={colors.accent.primary} />
       <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.primary, width: 70 }}>
-        {field.label}
+        {label}
       </Text>
       <TextInput
         value={value}
@@ -149,7 +147,7 @@ export default function MeasurementsScreen() {
   const handleSave = async () => {
     const hasValues = Object.values(formValues).some((v) => v !== '');
     if (!hasValues) {
-      Alert.alert('Error', 'Ingresá al menos una medida');
+      Alert.alert(t('common.error'), t('progress.measurements.errorEmpty'));
       return;
     }
     
@@ -214,6 +212,19 @@ export default function MeasurementsScreen() {
     return <LoadingSpinner message={t('common.loading')} />;
   }
   
+  // Translate measurement field labels
+  const fieldLabels = MEASUREMENT_FIELDS.map((f) => ({
+    ...f,
+    label: t(f.labelKey),
+  }));
+  
+  // Translate body part labels
+  const bodyPartLabels: Record<string, string> = {
+    front: t('progress.measurements.front'),
+    side: t('progress.measurements.side'),
+    back: t('progress.measurements.back'),
+  };
+  
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Header */}
@@ -231,7 +242,7 @@ export default function MeasurementsScreen() {
           </Pressable>
           <Ionicons name="body" size={24} color={colors.accent.primary} />
           <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-            {t('progress.measurements.title', 'Medidas')}
+            {t('progress.measurements.title')}
           </Text>
         </View>
         
@@ -249,7 +260,7 @@ export default function MeasurementsScreen() {
         >
           <Ionicons name={showForm ? 'close' : 'add'} size={16} color={colors.text.primary} />
           <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
-            {showForm ? 'Cancelar' : 'Nueva'}
+            {showForm ? t('common.cancel') : t('progress.measurements.new')}
           </Text>
         </Pressable>
       </View>
@@ -271,15 +282,16 @@ export default function MeasurementsScreen() {
             color: colors.text.primary, 
             marginBottom: spacing.md 
           }}>
-            Nueva medida
+            {t('progress.measurements.newMeasurement')}
           </Text>
           
-          {MEASUREMENT_FIELDS.map((field) => (
+          {fieldLabels.map((field) => (
             <MeasurementInput
               key={field.key}
               field={field}
               value={formValues[field.key]}
               onChange={(text) => setFormValues((prev) => ({ ...prev, [field.key]: text }))}
+              label={field.label}
             />
           ))}
           
@@ -295,7 +307,7 @@ export default function MeasurementsScreen() {
             }}
           >
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-              {createMeasurement.isPending ? 'Guardando...' : 'Guardar'}
+              {createMeasurement.isPending ? t('common.loading') : t('common.save')}
             </Text>
           </Pressable>
         </View>
@@ -318,11 +330,11 @@ export default function MeasurementsScreen() {
             color: colors.text.primary, 
             marginBottom: spacing.md 
           }}>
-            Última medida
+            {t('progress.measurements.latestMeasurement')}
           </Text>
           
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {MEASUREMENT_FIELDS.map((field) => {
+            {fieldLabels.map((field) => {
               const value = latestMeasurement[field.key];
               const prevValue = previousMeasurement?.[field.key] ?? null;
               
@@ -373,31 +385,31 @@ export default function MeasurementsScreen() {
             fontFamily: fonts.bodySemiBold, 
             color: colors.text.primary 
           }}>
-            Fotos de progreso
+            {t('progress.measurements.progressPhotos')}
           </Text>
         </View>
         
         {/* Body Part Selector */}
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md }}>
-          {BODY_PART_OPTIONS.map((option) => (
+          {BODY_PART_KEYS.map((key) => (
             <Pressable
-              key={option.key}
-              onPress={() => setSelectedBodyPart(option.key)}
+              key={key}
+              onPress={() => setSelectedBodyPart(key)}
               style={{
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm,
                 borderRadius: borderRadius.full,
-                backgroundColor: selectedBodyPart === option.key ? colors.accent.primary : colors.bg.elevated,
+                backgroundColor: selectedBodyPart === key ? colors.accent.primary : colors.bg.elevated,
                 borderWidth: 1,
-                borderColor: selectedBodyPart === option.key ? colors.accent.primary : colors.border.primary,
+                borderColor: selectedBodyPart === key ? colors.accent.primary : colors.border.primary,
               }}
             >
               <Text style={{
                 fontSize: fontSizes.sm,
                 fontFamily: fonts.bodyMedium,
-                color: selectedBodyPart === option.key ? colors.text.primary : colors.text.secondary,
+                color: selectedBodyPart === key ? colors.text.primary : colors.text.secondary,
               }}>
-                {option.label}
+                {bodyPartLabels[key]}
               </Text>
             </Pressable>
           ))}
@@ -423,7 +435,7 @@ export default function MeasurementsScreen() {
           >
             <Ionicons name="images" size={20} color={colors.accent.primary} />
             <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
-              Galería
+              {t('progress.measurements.gallery')}
             </Text>
           </Pressable>
           
@@ -445,7 +457,7 @@ export default function MeasurementsScreen() {
           >
             <Ionicons name="camera" size={20} color={colors.accent.primary} />
             <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
-              Cámara
+              {t('progress.measurements.camera')}
             </Text>
           </Pressable>
         </View>
@@ -480,7 +492,7 @@ export default function MeasurementsScreen() {
                     padding: spacing.xs,
                   }}>
                     <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.primary }}>
-                      {photo.bodyPart === 'front' ? 'Frontal' : photo.bodyPart === 'side' ? 'Lateral' : 'Posterior'}
+                      {bodyPartLabels[photo.bodyPart] || photo.bodyPart}
                     </Text>
                   </View>
                 </Pressable>
@@ -491,7 +503,7 @@ export default function MeasurementsScreen() {
           <View style={{ alignItems: 'center', padding: spacing.xl }}>
             <Ionicons name="image-outline" size={32} color={colors.text.muted} />
             <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.sm }}>
-              Sin fotos aún
+              {t('progress.measurements.noPhotos')}
             </Text>
           </View>
         )}
@@ -514,7 +526,7 @@ export default function MeasurementsScreen() {
             color: colors.text.primary, 
             marginBottom: spacing.md 
           }}>
-            Historial
+            {t('progress.measurements.history')}
           </Text>
           
           {measurements.map((measurement) => (
@@ -535,7 +547,7 @@ export default function MeasurementsScreen() {
               </View>
               
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-                {MEASUREMENT_FIELDS.map((field) => {
+                {fieldLabels.map((field) => {
                   const value = measurement[field.key];
                   if (value === null) return null;
                   

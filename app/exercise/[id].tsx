@@ -316,13 +316,13 @@ export default function ExerciseDetailScreen() {
               {/* Session Stats */}
               <View style={{ flexDirection: 'row', gap: spacing.lg }}>
                 <View>
-                  <Text style={{ fontSize: 12, color: colors.text.muted }}>Volume</Text>
+                  <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('progress.volume')}</Text>
                   <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
                     {formatVolume(session.volume, unit)}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ fontSize: 12, color: colors.text.muted }}>Sets</Text>
+                  <Text style={{ fontSize: 12, color: colors.text.muted }}>{t('progress.sets')}</Text>
                   <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text.secondary }}>
                     {session.completedSets}/{session.setCount}
                   </Text>

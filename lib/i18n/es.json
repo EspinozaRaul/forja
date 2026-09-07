@@ -374,11 +374,13 @@
       "sessionFrequency": "Frecuencia de sesiones",
       "sessions": "sesiones",
       "topExercises": "Ejercicios más usados",
-      "muscleGroups": "Grupos musculares"
+      "muscleGroups": "Grupos musculares",
+      "days": "días"
     },
     "measurements": {
       "title": "Medidas",
       "newMeasurement": "Nueva medida",
+      "new": "Nueva",
       "weight": "Peso",
       "bodyFat": "% Grasa",
       "chest": "Pecho",
@@ -386,16 +388,30 @@
       "hips": "Caderas",
       "arms": "Brazos",
       "thighs": "Muslos",
+      "front": "Frontal",
+      "side": "Lateral",
+      "back": "Posterior",
       "latestMeasurement": "Última medida",
       "progressPhotos": "Fotos de progreso",
       "gallery": "Galería",
       "camera": "Cámara",
       "noPhotos": "Sin fotos aún",
       "history": "Historial",
+      "errorEmpty": "Ingresá al menos una medida",
       "deleteMeasurement": "Eliminar medida",
       "deleteMeasurementConfirm": "¿Estás seguro de que querés eliminar esta medida?",
       "deletePhoto": "Eliminar foto",
       "deletePhotoConfirm": "¿Estás seguro de que querés eliminar esta foto?"
+    },
+    "routineCompare": {
+      "title": "Comparar rutina",
+      "selectRoutine": "Seleccionar rutina",
+      "selectPeriods": "Selecciona los meses a comparar (máx 6)",
+      "loading": "Cargando comparación...",
+      "error": "Error al cargar datos",
+      "selectAtLeast2": "Selecciona al menos 2 meses para comparar",
+      "selectRoutineTitle": "Selecciona una rutina",
+      "selectRoutineMessage": "Elegí una rutina y los meses que quieras comparar para ver los cambios."
     },
     "exercises": {
       "title": "Ejercicios",

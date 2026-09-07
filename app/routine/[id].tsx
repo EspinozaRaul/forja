@@ -33,7 +33,7 @@ export default function RoutineDetailScreen() {
   if (isNaN(routineId)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('common.error')} message="Invalid routine ID" />
+        <EmptyState title={t('common.error')} message={t('common.invalidId')} />
       </View>
     );
   }
@@ -355,7 +355,7 @@ export default function RoutineDetailScreen() {
                     {(() => {
                       const entry = re.exercise ? lastWorkout.data?.[re.exercise.id] : undefined;
                       return entry
-                        ? `${entry.sets} sets${entry.reps != null ? ` × ${entry.reps} reps` : ''}${entry.weight != null ? ` · último: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
+                        ? `${entry.sets} ${t('session.sets')}${entry.reps != null ? ` × ${entry.reps} ${t('session.reps')}` : ''}${entry.weight != null ? ` · ${t('routine.detail.lastSession')}: ${formatWeight(entry.weight, resolveUnit(entry.unit, settingsUnit))}` : ''}`
                         : formatSetsRepsLabel(re.targetSets, re.targetReps);
                     })()}
                   </Text>
@@ -424,7 +424,7 @@ export default function RoutineDetailScreen() {
                         </Text>
                       ) : (
                         <Text key={`${se.id}-s-${line.setNumber}`} style={{ fontSize: 12, color: colors.text.secondary, fontFamily: fonts.body, marginLeft: spacing.sm }}>
-                          Set {line.setNumber}: {line.reps ?? '—'} reps × {line.weight != null ? formatWeight(line.weight, unit) : '—'}
+                          {t('session.set')} {line.setNumber}: {line.reps ?? '—'} {t('session.reps')} × {line.weight != null ? formatWeight(line.weight, unit) : '—'}
                         </Text>
                       )
                     ))}

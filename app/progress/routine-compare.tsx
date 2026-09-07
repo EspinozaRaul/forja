@@ -133,7 +133,7 @@ export default function RoutineCompareScreen() {
           }}
           numberOfLines={1}
         >
-          {selectedRoutineName || 'Comparar rutina'}
+          {selectedRoutineName || t('progress.routineCompare.title')}
         </Text>
       </View>
 
@@ -164,7 +164,7 @@ export default function RoutineCompareScreen() {
               color: selectedRoutineId ? colors.text.primary : colors.text.muted,
             }}
           >
-            {selectedRoutineName || 'Seleccionar rutina'}
+            {selectedRoutineName || t('progress.routineCompare.selectRoutine')}
           </Text>
           <Ionicons name="chevron-forward" size={18} color={colors.text.muted} />
         </Pressable>
@@ -194,7 +194,7 @@ export default function RoutineCompareScreen() {
         {/* Comparison table */}
         {selectedRoutineId && selectedPeriods.length >= 2 ? (
           isLoading ? (
-            <LoadingSpinner message="Cargando comparacion..." />
+            <LoadingSpinner message={t('progress.routineCompare.loading')} />
           ) : isError ? (
             <View
               style={{
@@ -236,14 +236,14 @@ export default function RoutineCompareScreen() {
                 color: colors.text.muted,
                 textAlign: 'center',
               }}
-            >
-              Selecciona al menos 2 meses para comparar
-            </Text>
+              >
+                {t('progress.routineCompare.selectPeriods')}
+              </Text>
           </View>
         ) : (
           <EmptyState
-            title="Selecciona una rutina"
-            message="Elegi una rutina y los meses que quieras comparar para ver los cambios."
+            title={t('progress.routineCompare.selectRoutineTitle')}
+            message={t('progress.routineCompare.selectRoutineMessage')}
           />
         )}
       </ScrollView>

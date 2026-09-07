@@ -48,7 +48,7 @@ export default function SessionSummaryScreen() {
   if (isNaN(sessionId)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('common.error')} message="Invalid session ID" />
+        <EmptyState title={t('common.error')} message={t('common.invalidId')} />
       </View>
     );
   }

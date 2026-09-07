@@ -23,17 +23,6 @@ type DateRange = '4w' | '12w' | 'all';
 
 // ─── Helpers ──────────────────────────────────────────────
 
-function getDateRangeLabel(range: DateRange): string {
-  switch (range) {
-    case '4w':
-      return '4 semanas';
-    case '12w':
-      return '12 semanas';
-    case 'all':
-      return 'Todo';
-  }
-}
-
 function filterSessionsByDateRange<T extends { startedAt: Date }>(
   sessions: T[],
   range: DateRange
@@ -88,7 +77,19 @@ function DateRangeSelector({
   selected: DateRange;
   onChange: (range: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const ranges: DateRange[] = ['4w', '12w', 'all'];
+  
+  const getDateRangeLabel = (range: DateRange): string => {
+    switch (range) {
+      case '4w':
+        return t('progress.range4weeks');
+      case '12w':
+        return t('progress.range12weeks');
+      case 'all':
+        return t('progress.rangeAll');
+    }
+  };
 
   return (
     <View
