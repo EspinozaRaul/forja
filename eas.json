@@ -11,17 +11,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
-        "EXPO_PUBLIC_SUPABASE_URL": "@supabase-url",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
-        "EXPO_PUBLIC_SUPABASE_URL": "@supabase-url",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     }
   },
