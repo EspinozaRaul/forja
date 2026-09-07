@@ -1,4 +1,5 @@
 import { ScrollView, Pressable, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 
 interface PeriodChipsProps {
@@ -13,12 +14,14 @@ interface PeriodChipsProps {
 }
 
 /** Format a "YYYY-MM" period key into a short Spanish label like "Ene 2026". */
-function formatPeriodLabel(periodKey: string): string {
+function formatPeriodLabel(periodKey: string, t: (key: string) => string): string {
   const [year, month] = periodKey.split('-');
   const idx = parseInt(month, 10) - 1;
   const LABELS = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+    t('progress.months.jan'), t('progress.months.feb'), t('progress.months.mar'),
+    t('progress.months.apr'), t('progress.months.may'), t('progress.months.jun'),
+    t('progress.months.jul'), t('progress.months.aug'), t('progress.months.sep'),
+    t('progress.months.oct'), t('progress.months.nov'), t('progress.months.dec'),
   ];
   return `${LABELS[idx] ?? month} ${year}`;
 }
@@ -33,6 +36,8 @@ export function PeriodChips({
   onChange,
   maxSelect = 6,
 }: PeriodChipsProps) {
+  const { t } = useTranslation();
+  
   const toggle = (key: string) => {
     if (selected.includes(key)) {
       onChange(selected.filter((k) => k !== key));
@@ -69,7 +74,7 @@ export function PeriodChips({
                 color: isSelected ? colors.bg.primary : colors.text.secondary,
               }}
             >
-              {formatPeriodLabel(periodKey)}
+              {formatPeriodLabel(periodKey, t)}
             </Text>
           </Pressable>
         );

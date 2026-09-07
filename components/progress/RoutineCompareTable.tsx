@@ -1,4 +1,5 @@
 import { View, Text, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import type { RoutineComparisonData, ExerciseComparisonRow, RoutineSessionSet } from '../../lib/progress';
 
@@ -20,24 +21,26 @@ function formatSet(set: RoutineSessionSet): string {
   return base;
 }
 
-function formatShortDate(dateStr: string): string {
+function formatShortDate(dateStr: string, t: (key: string) => string): string {
   // dateStr is "YYYY-MM" or full ISO; extract day+month
   const d = new Date(dateStr);
   const day = d.getDate();
   const MONTHS = [
-    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+    t('progress.months.janShort'), t('progress.months.febShort'), t('progress.months.marShort'),
+    t('progress.months.aprShort'), t('progress.months.mayShort'), t('progress.months.junShort'),
+    t('progress.months.julShort'), t('progress.months.augShort'), t('progress.months.sepShort'),
+    t('progress.months.octShort'), t('progress.months.novShort'), t('progress.months.decShort'),
   ];
   return `${day} ${MONTHS[d.getMonth()]}`;
 }
 
-function StatusBadge({ status }: { status: ExerciseComparisonRow['status'] }) {
+function StatusBadge({ status, t }: { status: ExerciseComparisonRow['status']; t: (key: string) => string }) {
   if (status === 'unchanged') return null;
 
   const config = {
-    new: { label: 'Nuevo', color: colors.success },
-    removed: { label: 'Eliminado', color: colors.error },
-    'order-changed': { label: 'Reordenado', color: colors.warning },
+    new: { label: t('progress.routineCompare.new'), color: colors.success },
+    removed: { label: t('progress.routineCompare.removed'), color: colors.error },
+    'order-changed': { label: t('progress.routineCompare.reordered'), color: colors.warning },
   } as const;
 
   const { label, color } = config[status];
@@ -108,6 +111,8 @@ const STICKY_WIDTH = 120;
  * Sticky exercise name column on the left.
  */
 export function RoutineCompareTable({ data, periodDates }: RoutineCompareTableProps) {
+  const { t } = useTranslation();
+  
   if (data.exercises.length === 0) {
     return (
       <View
@@ -121,7 +126,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
         }}
       >
         <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted }}>
-          No hay datos para los periodos seleccionados
+          {t('progress.routineCompare.noData')}
         </Text>
       </View>
     );
@@ -196,7 +201,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                       marginTop: 2,
                     }}
                   >
-                    {formatShortDate(dateStr)}
+                    {formatShortDate(dateStr, t)}
                   </Text>
                 ))}
               </View>
@@ -237,7 +242,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                   </Text>
                   <OrderDelta delta={exercise.orderDelta} />
                 </View>
-                <StatusBadge status={exercise.status} />
+                <StatusBadge status={exercise.status} t={t} />
               </View>
 
               {/* Period cells */}
@@ -273,7 +278,7 @@ export function RoutineCompareTable({ data, periodDates }: RoutineCompareTablePr
                               marginBottom: 2,
                             }}
                           >
-                            {formatShortDate(session.date)}
+                            {formatShortDate(session.date, t)}
                           </Text>
                           {session.sets.map((set, setIdx) => (
                             <Text
