@@ -12,8 +12,6 @@ import { colors, spacing, borderRadius, fonts } from '../../lib/theme/tokens';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
-const FOLDER_COLORS = ['#4A6FA5', '#7A9AB5', '#6E9C8A', '#C2A05C', '#9AA4AE', '#3A587F', '#C96F6F', '#22344A'];
-
 export default function RoutinesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -225,7 +223,7 @@ export default function RoutinesScreen() {
 
             <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: 8 }}>{t('tabs.routines.color')}</Text>
             <View style={{ flexDirection: 'row', marginBottom: 20, flexWrap: 'wrap', gap: spacing.sm }}>
-              {FOLDER_COLORS.map((color) => (
+              {colors.folders.map((color) => (
                 <TouchableOpacity
                   key={color}
                   onPress={() => setNewFolderColor(color)}

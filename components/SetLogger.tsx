@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropBadge: {
-    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    backgroundColor: colors.statusMuted.warning,
     paddingHorizontal: 3,
     paddingVertical: 1,
     borderRadius: 3,

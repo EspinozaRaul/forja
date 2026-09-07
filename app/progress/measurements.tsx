@@ -488,7 +488,7 @@ export default function MeasurementsScreen() {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    backgroundColor: colors.overlay.default,
                     padding: spacing.xs,
                   }}>
                     <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.primary }}>

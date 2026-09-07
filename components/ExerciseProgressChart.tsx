@@ -68,7 +68,7 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
 
       {/* Reps Chart */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, marginBottom: 4 }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#82c896', marginRight: 8 }} />
+        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.chart.reps, marginRight: 8 }} />
         <Text style={{ fontSize: 14, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
           {t('progress.exercises.avgRepsPerSession')}
         </Text>
@@ -79,7 +79,7 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
       <SimpleLineChart
         data={repData}
         unit="reps"
-        color="#82c896"
+        color={colors.chart.reps}
         height={160}
       />
     </View>
