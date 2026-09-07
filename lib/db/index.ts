@@ -231,7 +231,7 @@ export async function initializeDatabase() {
       sampleGif[0]?.gifUrl?.startsWith('assets/exercises/gifs/'); // old broken gif URLs
 
     if (needsMigration) {
-      console.log('🔄 Migrating exercises (body_part + gif URLs)...');
+      if (__DEV__) console.log('🔄 Migrating exercises (body_part + gif URLs)...');
       // Try to add body_part column if it doesn't exist
       try {
         expoDb.execSync('ALTER TABLE exercises ADD COLUMN body_part TEXT');
@@ -241,7 +241,7 @@ export async function initializeDatabase() {
       await db.delete(exercises);
       // Fall through to re-seed below
     } else {
-      console.log(`✅ Database already has ${exerciseCount[0].count} exercises`);
+      if (__DEV__) console.log(`✅ Database already has ${exerciseCount[0].count} exercises`);
       return;
     }
   }
@@ -255,7 +255,7 @@ export async function initializeDatabase() {
     for (const cat of existingCategories) {
       categoryMap[cat.name] = cat.id;
     }
-    console.log(`📁 Using ${existingCategories.length} existing categories`);
+    if (__DEV__) console.log(`📁 Using ${existingCategories.length} existing categories`);
   } else {
     for (const cat of APP_CATEGORIES) {
       const result = await db.insert(categories).values({
@@ -266,7 +266,7 @@ export async function initializeDatabase() {
       }).returning();
       categoryMap[cat.name] = result[0].id;
     }
-    console.log(`📁 Created ${APP_CATEGORIES.length} categories`);
+    if (__DEV__) console.log(`📁 Created ${APP_CATEGORIES.length} categories`);
   }
 
   // Import all exercises from lean dataset
@@ -304,14 +304,16 @@ export async function initializeDatabase() {
 
       imported++;
       if (imported % 200 === 0) {
-        console.log(`📥 Imported ${imported} exercises...`);
+        if (__DEV__) console.log(`📥 Imported ${imported} exercises...`);
       }
     } catch (error) {
       errors++;
     }
   }
 
-  console.log(`\n✨ Import complete!`);
-  console.log(`   ✅ Imported: ${imported} exercises`);
-  console.log(`   ❌ Errors: ${errors}`);
+  if (__DEV__) {
+    console.log(`\n✨ Import complete!`);
+    console.log(`   ✅ Imported: ${imported} exercises`);
+    console.log(`   ❌ Errors: ${errors}`);
+  }
 }

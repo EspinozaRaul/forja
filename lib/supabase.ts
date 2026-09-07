@@ -11,13 +11,27 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// AsyncStorage adapter for Supabase auth — works in both Expo Go and dev builds
-// When migrating to a dev build, swap to expo-secure-store for encrypted tokens
-const storage = {
-  getItem: async (key: string) => AsyncStorage.getItem(key),
-  setItem: async (key: string, value: string) => AsyncStorage.setItem(key, value),
-  removeItem: async (key: string) => AsyncStorage.removeItem(key),
-};
+// SecureStore for encrypted token storage (production)
+// Falls back to AsyncStorage in Expo Go where SecureStore isn't available
+let SecureStore: typeof import('expo-secure-store') | null = null;
+try {
+  SecureStore = require('expo-secure-store');
+} catch {
+  // Running in Expo Go — SecureStore not available, using AsyncStorage
+}
+
+const storage = SecureStore
+  ? {
+      getItem: async (key: string) => SecureStore.getItemAsync(key),
+      setItem: async (key: string, value: string) => SecureStore.setItemAsync(key, value),
+      removeItem: async (key: string) => SecureStore.deleteItemAsync(key),
+    }
+  : {
+      // Fallback for Expo Go — not encrypted but functional
+      getItem: async (key: string) => AsyncStorage.getItem(key),
+      setItem: async (key: string, value: string) => AsyncStorage.setItem(key, value),
+      removeItem: async (key: string) => AsyncStorage.removeItem(key),
+    };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
