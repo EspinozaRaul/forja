@@ -13,7 +13,7 @@ try {
 }
 
 // This is the Supabase callback URL - it will redirect back to the app
-const REDIRECT_URL = 'https://tvhirldahraymahvthfq.supabase.co/auth/v1/callback';
+const REDIRECT_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/auth/v1/callback`;
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
