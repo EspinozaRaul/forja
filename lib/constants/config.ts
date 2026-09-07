@@ -42,7 +42,7 @@ export const CHART_CONFIG = {
   // Chart padding
   PADDING: {
     top: 20,
-    right: 10,
+    right: 20,
     bottom: 30,
     left: 40,
   },

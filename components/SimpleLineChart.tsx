@@ -56,8 +56,9 @@ export function SimpleLineChart({
   const range = maxValue - minValue || 1;
 
   // Generate points
+  const dotRadius = 4;
   const points = data.map((d, i) => ({
-    x: padding.left + (i / (data.length - 1 || 1)) * innerWidth,
+    x: padding.left + dotRadius + (i / (data.length - 1 || 1)) * (innerWidth - dotRadius * 2),
     y: padding.top + innerHeight - ((d.value - minValue) / range) * innerHeight,
     value: d.value,
     label: d.date,
@@ -86,7 +87,7 @@ export function SimpleLineChart({
       )}
       
       {/* Chart */}
-      <View style={{ width: chartWidth, height: chartHeight }}>
+      <View style={{ width: chartWidth, height: chartHeight, overflow: 'hidden' }}>
         {/* Grid lines */}
         {yLabels.map((label, i) => (
           <View
@@ -166,7 +167,7 @@ export function SimpleLineChart({
             key={i}
             style={{
               position: 'absolute',
-              left: label.x - 15,
+              left: Math.max(0, Math.min(label.x - 15, chartWidth - 34)),
               bottom: 5,
               fontSize: fontSizes.xs2, fontFamily: fonts.body,
               color: colors.text.muted,
