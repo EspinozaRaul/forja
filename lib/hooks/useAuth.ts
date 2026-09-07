@@ -7,7 +7,7 @@ import { User, Session } from '@supabase/supabase-js';
 let WebBrowser: typeof import('expo-web-browser') | null = null;
 try {
   WebBrowser = require('expo-web-browser');
-  WebBrowser.maybeCompleteAuthSession();
+  WebBrowser?.maybeCompleteAuthSession();
 } catch {
   // Running in Expo Go — WebBrowser not available
 }

@@ -126,6 +126,7 @@ function RootLayoutNav() {
 
 function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   const { isReady, error } = useDatabase();
+  const { t } = useTranslation();
 
   // Transient one-time data fix: clean up routine_exercises rows corrupted by
   // the partial-session upsync bug (target_sets = 1, null/0 targets broke the

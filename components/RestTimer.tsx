@@ -59,7 +59,7 @@ async function ensureRestChannel(channelName: string): Promise<void> {
       name: channelName,
       importance: Notifications.AndroidImportance.HIGH,
       sound: 'default',
-      vibrationPattern: TIMER_CONFIG.VIBRATION_PATTERN,
+      vibrationPattern: [...TIMER_CONFIG.VIBRATION_PATTERN],
     });
   } catch {
     // Channel creation is best-effort; scheduling still proceeds on the fallback channel.

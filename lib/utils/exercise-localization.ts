@@ -43,5 +43,5 @@ export function getLocalizedDescription(
   if (language === 'es' && exercise.descriptionEs) {
     return exercise.descriptionEs;
   }
-  return exercise.description;
+  return exercise.description ?? null;
 }

@@ -493,7 +493,7 @@ export default function MeasurementsScreen() {
                     padding: spacing.xs,
                   }}>
                     <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.primary }}>
-                      {bodyPartLabels[photo.bodyPart] || photo.bodyPart}
+                      {(photo.bodyPart && bodyPartLabels[photo.bodyPart]) || photo.bodyPart}
                     </Text>
                   </View>
                 </Pressable>
