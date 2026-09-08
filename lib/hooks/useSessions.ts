@@ -91,6 +91,8 @@ export function useCompleteSession() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
       queryClient.invalidateQueries({ queryKey: ['activeSession'] });
+      queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
     },
   });
 }
@@ -103,6 +105,8 @@ export function useDeleteSession() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
       queryClient.invalidateQueries({ queryKey: ['activeSession'] });
+      queryClient.invalidateQueries({ queryKey: ['globalStats'] });
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
     },
   });
 }
@@ -221,6 +225,9 @@ export function useDeleteSessionExercise() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...SESSION_KEY, variables.sessionId, 'exercises', 'withSets'],
       });
     },
   });

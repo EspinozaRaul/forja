@@ -46,7 +46,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const handleRepsChange = (text: string) => {
     setReps(text);
     const value = parseInt(text, 10);
-    if (isNaN(value) || value < 0) {
+    if (isNaN(value) || value <= 0) {
       onUpdate({ reps: undefined });
     } else {
       onUpdate({ reps: value });
@@ -56,7 +56,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   const handleWeightChange = (text: string) => {
     setWeight(text);
     const value = parseFloat(text);
-    if (isNaN(value) || value < 0) {
+    if (isNaN(value) || value <= 0) {
       onUpdate({ weight: undefined });
     } else {
       onUpdate({ weight: value });

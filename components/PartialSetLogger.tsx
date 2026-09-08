@@ -45,19 +45,19 @@ export function PartialSetLogger({
   const handleWeightChange = (text: string) => {
     setWeight(text);
     const value = parseFloat(text);
-    onUpdate({ weight: isNaN(value) || value < 0 ? undefined : value });
+    onUpdate({ weight: isNaN(value) || value <= 0 ? undefined : value });
   };
 
   const handleRepsChange = (text: string) => {
     setReps(text);
     const value = parseInt(text, 10);
-    onUpdate({ reps: isNaN(value) || value < 0 ? undefined : value });
+    onUpdate({ reps: isNaN(value) || value <= 0 ? undefined : value });
   };
 
   const handlePartialRepsChange = (text: string) => {
     setPartialReps(text);
     const value = parseInt(text, 10);
-    onUpdate({ partialReps: isNaN(value) || value < 0 ? undefined : value });
+    onUpdate({ partialReps: isNaN(value) || value <= 0 ? undefined : value });
   };
 
   const handleDelete = () => {

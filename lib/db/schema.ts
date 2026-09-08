@@ -34,6 +34,7 @@ export const exercises = sqliteTable('exercises', {
 
 export const routineFolders = sqliteTable('routine_folders', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — nullable for local SQLite migration
   name: text('name').notNull(),
   description: text('description'),
   color: text('color').default('#00F5A0'),
@@ -43,6 +44,7 @@ export const routineFolders = sqliteTable('routine_folders', {
 
 export const routines = sqliteTable('routines', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — nullable for local SQLite migration
   name: text('name').notNull(),
   description: text('description'),
   categoryId: integer('category_id').references(() => categories.id),
@@ -65,6 +67,7 @@ export const routineExercises = sqliteTable('routine_exercises', {
 
 export const sessions = sqliteTable('sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — nullable for local SQLite migration
   routineId: integer('routine_id').references(() => routines.id, { onDelete: 'set null' }),
   startedAt: integer('started_at', { mode: 'timestamp' }).notNull(),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
@@ -112,6 +115,7 @@ export const sets = sqliteTable('sets', {
 
 export const bodyMeasurements = sqliteTable('body_measurements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — nullable for local SQLite migration
   date: integer('date', { mode: 'timestamp' }).notNull(),
   weight: real('weight'),           // kg
   bodyFat: real('body_fat'),        // percentage
@@ -126,6 +130,7 @@ export const bodyMeasurements = sqliteTable('body_measurements', {
 
 export const progressPhotos = sqliteTable('progress_photos', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — nullable for local SQLite migration
   date: integer('date', { mode: 'timestamp' }).notNull(),
   uri: text('uri').notNull(),       // local file URI
   bodyPart: text('body_part'),      // optional: 'front', 'back', 'side', etc.

@@ -65,6 +65,7 @@ CREATE INDEX IF NOT EXISTS name_category_idx ON exercises(name, category_id);
 
 CREATE TABLE IF NOT EXISTS routine_folders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
   name TEXT NOT NULL,
   description TEXT,
   color TEXT DEFAULT '#00F5A0',
@@ -74,6 +75,7 @@ CREATE TABLE IF NOT EXISTS routine_folders (
 
 CREATE TABLE IF NOT EXISTS routines (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
   name TEXT NOT NULL,
   description TEXT,
   category_id INTEGER REFERENCES categories(id),
@@ -84,7 +86,7 @@ CREATE TABLE IF NOT EXISTS routines (
 CREATE TABLE IF NOT EXISTS routine_exercises (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   routine_id INTEGER NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
-  exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+  exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
   "order" INTEGER NOT NULL,
   target_sets INTEGER DEFAULT 3,
   target_reps INTEGER DEFAULT 10
@@ -92,21 +94,30 @@ CREATE TABLE IF NOT EXISTS routine_exercises (
 
 CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  routine_id INTEGER REFERENCES routines(id),
+  user_id TEXT,
+  routine_id INTEGER REFERENCES routines(id) ON DELETE SET NULL,
   started_at INTEGER NOT NULL,
   completed_at INTEGER,
   duration INTEGER,
   notes TEXT
 );
 
+CREATE INDEX IF NOT EXISTS sessions_completed_at_idx ON sessions(completed_at);
+CREATE INDEX IF NOT EXISTS sessions_routine_id_idx ON sessions(routine_id);
+
 CREATE TABLE IF NOT EXISTS session_exercises (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-  exercise_id INTEGER NOT NULL REFERENCES exercises(id),
+  exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
   "order" INTEGER NOT NULL,
+  rest_time INTEGER DEFAULT 60,
   notes TEXT,
+  note_type TEXT,
   superset_pair_id INTEGER
 );
+
+CREATE INDEX IF NOT EXISTS se_session_idx ON session_exercises(session_id);
+CREATE INDEX IF NOT EXISTS se_exercise_idx ON session_exercises(exercise_id);
 
 CREATE TABLE IF NOT EXISTS sets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,6 +131,32 @@ CREATE TABLE IF NOT EXISTS sets (
   is_drop_group INTEGER DEFAULT 0,
   rir INTEGER,
   partial_reps INTEGER,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS sets_session_exercise_idx ON sets(session_exercise_id);
+
+CREATE TABLE IF NOT EXISTS body_measurements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
+  date INTEGER NOT NULL,
+  weight REAL,
+  body_fat REAL,
+  chest REAL,
+  waist REAL,
+  hips REAL,
+  arms REAL,
+  thighs REAL,
+  notes TEXT,
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS progress_photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
+  date INTEGER NOT NULL,
+  uri TEXT NOT NULL,
+  body_part TEXT,
   created_at INTEGER NOT NULL
 );
 `;
@@ -215,6 +252,33 @@ export async function initializeDatabase() {
   }
   try {
     expoDb.execSync("ALTER TABLE exercises ADD COLUMN description_es TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+
+  // Migration: add user_id columns for Supabase RLS (nullable for local SQLite)
+  try {
+    expoDb.execSync("ALTER TABLE sessions ADD COLUMN user_id TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE routines ADD COLUMN user_id TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE routine_folders ADD COLUMN user_id TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE body_measurements ADD COLUMN user_id TEXT");
+  } catch {
+    // Column already exists, ignore
+  }
+  try {
+    expoDb.execSync("ALTER TABLE progress_photos ADD COLUMN user_id TEXT");
   } catch {
     // Column already exists, ignore
   }

@@ -47,7 +47,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { data: settings, isLoading, update } = useSettings();
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
   if (isLoading) {
@@ -83,7 +83,6 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAccount = async () => {
-    const { deleteAccount } = useAuth();
     const { error } = await deleteAccount();
     if (error) {
       await haptics.error();

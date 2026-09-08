@@ -221,13 +221,13 @@ function DropRow({
   const handleRepsChange = (text: string) => {
     setReps(text);
     const value = parseInt(text, 10);
-    onUpdateDrop(index, { reps: isNaN(value) || value < 0 ? undefined : value });
+    onUpdateDrop(index, { reps: isNaN(value) || value <= 0 ? undefined : value });
   };
 
   const handleWeightChange = (text: string) => {
     setWeight(text);
     const value = parseFloat(text);
-    onUpdateDrop(index, { weight: isNaN(value) || value < 0 ? undefined : value });
+    onUpdateDrop(index, { weight: isNaN(value) || value <= 0 ? undefined : value });
   };
 
   const weightPlaceholder = () => {
