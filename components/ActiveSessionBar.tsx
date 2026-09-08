@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, fontSizes, fonts } from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes, fonts } from '../lib/theme/tokens';
 
 interface ActiveSessionBarProps {
   session: {
@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent.primary,
     paddingVertical: spacing.sm + spacing.xs,
+    borderRadius: borderRadius.sm,
     gap: spacing.xs,
   },
   resumeText: {

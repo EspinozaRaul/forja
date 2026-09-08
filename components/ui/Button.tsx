@@ -1,6 +1,6 @@
 import { TouchableOpacity, Text, ActivityIndicator, type ViewStyle, type TextStyle } from 'react-native';
 import { type ReactNode } from 'react';
-import { colors, spacing, borderRadius, fonts, borderWidths } from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'accent';
 
@@ -11,7 +11,6 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   children?: ReactNode;
-  className?: string;
   compact?: boolean;
   style?: ViewStyle;
 }
@@ -42,7 +41,6 @@ export function Button({
   disabled = false,
   loading = false,
   children,
-  className = '',
   compact = false,
   style,
 }: ButtonProps) {
@@ -58,21 +56,34 @@ export function Button({
       accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
-        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: compact ? borderRadius.sm : borderRadius.md, paddingHorizontal: compact ? spacing.md : spacing.lg, paddingVertical: compact ? spacing.sm : spacing.md },
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: compact ? borderRadius.sm : borderRadius.md,
+          paddingHorizontal: compact ? spacing.md : spacing.lg,
+          paddingVertical: compact ? spacing.sm : spacing.md,
+        },
         styles.container,
         isDisabled && { opacity: 0.4 },
         style,
       ]}
-      className={`flex-row items-center justify-center rounded-xl px-6 py-4 ${
-        isDisabled ? 'opacity-40' : ''
-      } ${className}`}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={variant === 'secondary' ? colors.text.primary : colors.text.primary} />
+        <ActivityIndicator size="small" color={colors.text.primary} />
       ) : children ? (
         children
       ) : (
-        <Text style={[{ fontSize: compact ? 14 : 16, fontFamily: fonts.bodySemiBold, flexShrink: 0 }, styles.text]} className={`text-base font-bold`}>{title}</Text>
+        <Text
+          style={{
+            fontSize: compact ? fontSizes.sm : fontSizes.md,
+            fontFamily: fonts.bodySemiBold,
+            flexShrink: 0,
+            ...styles.text,
+          }}
+        >
+          {title}
+        </Text>
       )}
     </TouchableOpacity>
   );

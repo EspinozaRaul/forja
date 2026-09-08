@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths} from '../../lib/theme/tokens';
 import { EMBER_DOT } from '../../lib/constants/layout';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/hooks/useAuth';
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSizes.xxl,
-    fontWeight: fontWeights.bold,
+    fontFamily: fonts.bodySemiBold,
     color: colors.text.primary,
     marginBottom: spacing.sm,
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: colors.text.primary,
     fontSize: fontSizes.md,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold,
   },
   divider: {
     flexDirection: 'row',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.bg.primary,
     fontSize: fontSizes.md,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold,
   },
   linkButton: {
     alignItems: 'center',
@@ -282,6 +282,6 @@ const styles = StyleSheet.create({
   },
   linkBold: {
     color: colors.accent.primary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold,
   },
 });

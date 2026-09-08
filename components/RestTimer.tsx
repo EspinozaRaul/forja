@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, AppState, Platform, type AppStateStatus }
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths} from '../lib/theme/tokens';
 import { TIMER } from '../lib/constants/layout';
 import { TIMER_CONFIG } from '../lib/constants/config';
 import {
@@ -347,14 +347,14 @@ export function RestTimer({
     return (
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-          <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('restTimer.rest')}</Text>
+          <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('restTimer.rest')}</Text>
           {PRESET_OPTIONS.map((dur) => (
             <TouchableOpacity
               key={dur}
               onPress={() => handleSelectDuration(dur)}
               style={{ backgroundColor: selectedDuration === dur ? colors.accent.primary : colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderWidth: selectedDuration === dur ? 0 : borderWidths.thin, borderColor: colors.border.primary }}
             >
-              <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.semibold, color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
+              <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
                 {dur >= 60 ? `${dur / 60}m` : `${dur}s`}
               </Text>
             </TouchableOpacity>
@@ -364,7 +364,7 @@ export function RestTimer({
           onPress={() => handleStart()}
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
+          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -377,11 +377,11 @@ export function RestTimer({
         onPress={() => handleAdjust(-TIMER_CONFIG.REST_ADJUST_STEP)}
         style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
       >
-        <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}}>-{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
+        <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm}}>-{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', flex: 1 }}>
-        <Text style={{ fontSize: fontSizes.xxs, fontWeight: fontWeights.semibold, color: colors.accent.primary, marginBottom: spacing.xxs }}>{t('restTimer.rest')}</Text>
-        <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
+        <Text style={{ fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, color: colors.accent.primary, marginBottom: spacing.xxs }}>{t('restTimer.rest')}</Text>
+        <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
           {formatCountdown(remaining)}
         </Text>
       </View>
@@ -390,13 +390,13 @@ export function RestTimer({
           onPress={() => handleAdjust(TIMER_CONFIG.REST_ADJUST_STEP)}
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
         >
-          <Text style={{ color: colors.text.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm}}>+{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
+          <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm}}>+{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSkip}
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: TIMER.BUTTON_SIZE, justifyContent: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
-          <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.xs }}>{t('restTimer.skip')}</Text>
+          <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.xs }}>{t('restTimer.skip')}</Text>
         </TouchableOpacity>
       </View>
     </View>

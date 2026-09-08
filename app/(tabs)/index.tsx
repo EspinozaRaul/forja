@@ -369,6 +369,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm + spacing.xs,
     marginHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
+    borderWidth: borderWidths.thin,
+    borderColor: colors.border.primary,
   },
   cardWithTopMargin: {
     backgroundColor: colors.bg.card,
@@ -377,6 +379,8 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
     borderRadius: borderRadius.lg,
+    borderWidth: borderWidths.thin,
+    borderColor: colors.border.primary,
   },
   cardBottomMargin: {
     backgroundColor: colors.bg.card,
@@ -384,5 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     marginHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
+    borderWidth: borderWidths.thin,
+    borderColor: colors.border.primary,
   },
 });

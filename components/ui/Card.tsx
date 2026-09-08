@@ -1,15 +1,26 @@
-import { View, TouchableOpacity, type ViewProps } from 'react-native';
+import { View, TouchableOpacity, type ViewProps, type ViewStyle } from 'react-native';
 import { type ReactNode } from 'react';
+import { colors, spacing, borderRadius, borderWidths } from '../../lib/theme/tokens';
 
 interface CardProps extends ViewProps {
   onPress?: () => void;
   children: ReactNode;
+  style?: ViewStyle;
 }
 
-export function Card({ onPress, children, className = '', ...props }: CardProps) {
+export function Card({ onPress, children, style, ...props }: CardProps) {
   const content = (
     <View
-      className={`bg-dark-card rounded-2xl p-5 ${className}`}
+      style={[
+        {
+          backgroundColor: colors.bg.card,
+          borderRadius: borderRadius.lg,
+          borderWidth: borderWidths.thin,
+          borderColor: colors.border.primary,
+          padding: spacing.md,
+        },
+        style,
+      ]}
       {...props}
     >
       {children}

@@ -48,12 +48,25 @@ export default function ExercisesScreen() {
 
   const filteredExercises = useMemo(() => {
     if (!exercisesWithStats) return [];
-    if (!search.trim()) return exercisesWithStats;
-
-    const query = search.toLowerCase().trim();
-    return exercisesWithStats.filter((ex) => {
-      const name = getExerciseName(ex.name, i18n.language).toLowerCase();
-      return name.includes(query);
+    let filtered = exercisesWithStats;
+    if (search.trim()) {
+      const query = search.toLowerCase().trim();
+      filtered = exercisesWithStats.filter((ex) => {
+        const name = getExerciseName(ex.name, i18n.language).toLowerCase();
+        return name.includes(query);
+      });
+    }
+    // Sort: used exercises first (by session count desc), then unused alphabetically
+    return [...filtered].sort((a, b) => {
+      if (a.sessionCount > 0 && b.sessionCount > 0) {
+        return b.sessionCount - a.sessionCount; // Both used: sort by frequency
+      }
+      if (a.sessionCount > 0) return -1; // Used first
+      if (b.sessionCount > 0) return 1;
+      // Both unused: sort alphabetically
+      const nameA = getExerciseName(a.name, i18n.language).toLowerCase();
+      const nameB = getExerciseName(b.name, i18n.language).toLowerCase();
+      return nameA.localeCompare(nameB);
     });
   }, [exercisesWithStats, search, i18n.language]);
 

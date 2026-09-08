@@ -49,7 +49,7 @@ export function ProgressChart({ data, title, unit = '', embedded = false }: Prog
         <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.xs }}>{title}</Text>
       )}
       <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginBottom: spacing.sm }}>
-        Cada punto = una semana del año
+        {t('progress.chartWeekHint')}
       </Text>
       <SimpleLineChart
         data={chartData}

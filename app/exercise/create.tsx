@@ -92,7 +92,7 @@ export default function CreateExerciseScreen() {
             title={category.name}
             variant={selectedCategoryId === category.id ? 'primary' : 'secondary'}
             onPress={() => setSelectedCategoryId(category.id)}
-            className="mr-2 mb-2"
+            style={{ marginRight: spacing.sm, marginBottom: spacing.sm }}
           />
         ))}
       </View>

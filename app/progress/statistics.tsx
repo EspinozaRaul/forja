@@ -31,7 +31,7 @@ function StatCard({
   return (
     <View style={{
       backgroundColor: colors.bg.card,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.lg,
       padding: spacing.md,
       borderWidth: borderWidths.thin,
       borderColor: colors.border.primary,

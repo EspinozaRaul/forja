@@ -492,6 +492,7 @@
       "sun": "D"
     },
     "noDataYet": "Sin datos todavía",
+    "chartWeekHint": "Cada punto = una semana del año",
     "statistics": {
       "title": "Estadísticas",
       "noData": "Sin estadísticas",
