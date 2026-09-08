@@ -68,7 +68,7 @@ export function PartialSetLogger({
   const renderRightActions = () => {
     if (!onDelete) return null;
     return (
-      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction} accessibilityLabel="Eliminar serie" accessibilityRole="button" accessibilityHint="Elimina esta serie parcial del ejercicio">
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction} accessibilityLabel={t('accessibility.partialSetLogger.deleteSet')} accessibilityRole="button" accessibilityHint={t('accessibility.partialSetLogger.deleteHint')}>
         <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
@@ -121,8 +121,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={weight}
               onChangeText={handleWeightChange}
-              accessibilityLabel="Peso de la serie parcial"
-              accessibilityHint="Ingresa el peso en kilogramos"
+              accessibilityLabel={t('accessibility.partialSetLogger.weight')}
+              accessibilityHint={t('accessibility.partialSetLogger.weightHint')}
             />
           </View>
 
@@ -135,8 +135,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={reps}
               onChangeText={handleRepsChange}
-              accessibilityLabel="Contracciones de la serie"
-              accessibilityHint="Ingresa el número de contracciones"
+              accessibilityLabel={t('accessibility.partialSetLogger.contractions')}
+              accessibilityHint={t('accessibility.partialSetLogger.contractionsHint')}
             />
           </View>
 
@@ -149,8 +149,8 @@ export function PartialSetLogger({
               placeholderTextColor={colors.text.muted}
               value={partialReps}
               onChangeText={handlePartialRepsChange}
-              accessibilityLabel="Repeticiones parciales"
-              accessibilityHint="Ingresa el número de repeticiones parciales"
+              accessibilityLabel={t('accessibility.partialSetLogger.partialReps')}
+              accessibilityHint={t('accessibility.partialSetLogger.partialRepsHint')}
             />
           </View>
 
@@ -159,9 +159,9 @@ export function PartialSetLogger({
             <TouchableOpacity
               onPress={onChangeMethod}
               style={styles.intensityButton}
-              accessibilityLabel="Cambiar método de intensidad"
+              accessibilityLabel={t('accessibility.partialSetLogger.intensityMethod')}
               accessibilityRole="button"
-              accessibilityHint="Abre el selector de método de intensidad"
+              accessibilityHint={t('accessibility.partialSetLogger.intensityHint')}
             >
               <Ionicons name="flash" size={12} color={colors.accent.primary} />
             </TouchableOpacity>
@@ -186,7 +186,7 @@ export function PartialSetLogger({
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
-            accessibilityLabel={set.completed ? "Marcar serie como incompleta" : "Marcar serie como completada"}
+            accessibilityLabel={set.completed ? t('accessibility.setActions.markIncomplete') : t('accessibility.setActions.markComplete')}
             accessibilityRole="button"
           >
             {set.completed && (

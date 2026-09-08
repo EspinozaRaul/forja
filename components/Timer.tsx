@@ -192,9 +192,9 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
           <TouchableOpacity
             onPress={handleStart}
             hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}
-            accessibilityLabel="Iniciar timer"
+            accessibilityLabel={t('accessibility.timer.start')}
             accessibilityRole="button"
-            accessibilityHint="Inicia la medición del tiempo"
+            accessibilityHint={t('accessibility.timer.startHint')}
           >
             <Text style={{ color: colors.accent.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.start')}</Text>
           </TouchableOpacity>
@@ -202,9 +202,9 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
           <TouchableOpacity
             onPress={handleStop}
             hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}
-            accessibilityLabel="Detener timer"
+            accessibilityLabel={t('accessibility.timer.stop')}
             accessibilityRole="button"
-            accessibilityHint="Pausa la medición del tiempo"
+            accessibilityHint={t('accessibility.timer.stopHint')}
           >
             <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.pause')}</Text>
           </TouchableOpacity>
@@ -212,9 +212,9 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
         <TouchableOpacity
           onPress={handleReset}
           hitSlop={{ top: spacing.sm, bottom: spacing.sm, left: spacing.sm, right: spacing.sm }}
-          accessibilityLabel="Reiniciar timer"
+          accessibilityLabel={t('accessibility.timer.reset')}
           accessibilityRole="button"
-          accessibilityHint="Reinicia el timer a cero"
+          accessibilityHint={t('accessibility.timer.resetHint')}
         >
           <Text style={{ color: colors.text.muted, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.reset')}</Text>
         </TouchableOpacity>

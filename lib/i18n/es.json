@@ -362,7 +362,33 @@
     "yesterday": "Ayer",
     "sets": "Series",
     "time": "Tiempo",
-    "exercises": "Ejercicios",
+    "exercises": {
+      "title": "Ejercicios",
+      "search": "Buscar ejercicio...",
+      "noExercises": "Aún no hay ejercicios",
+      "startTraining": "Empezá a entrenar para ver tus ejercicios aquí.",
+      "sessions": "sesiones",
+      "sets": "series",
+      "maxWeight": "Peso máx",
+      "rir": "RIR",
+      "lastUsed": "Último uso",
+      "progression": "Progresión",
+      "personalRecords": "Records personales",
+      "maxWeightRecord": "Peso máximo",
+      "bestSet": "Mejor set",
+      "bestSession": "Mejor sesión",
+      "estimated1RM": "1RM estimado",
+      "sessionHistory": "Historial de sesiones",
+      "volume": "Volumen",
+      "noData": "Sin datos de este ejercicio",
+      "noDataProgress": "Sin datos de progreso",
+      "completeSessions": "Completá sesiones para ver tu evolución",
+      "avgWeightPerSession": "Peso promedio por sesión",
+      "avgRepsPerSession": "Repeticiones promedio por sesión",
+      "eachPointOneSession": "Cada punto = una sesión de entrenamiento",
+      "noProgression": "Progresión no disponible",
+      "needAtLeast2Sessions": "Necesitás al menos 2 sesiones con datos para ver la progresión"
+    },
     "volume": "Volumen",
     "max": "máx",
     "compare": "Comparar",
@@ -543,33 +569,6 @@
       "new": "Nuevo",
       "removed": "Eliminado",
       "reordered": "Reordenado"
-    },
-    "exercises": {
-      "title": "Ejercicios",
-      "search": "Buscar ejercicio...",
-      "noExercises": "Aún no hay ejercicios",
-      "startTraining": "Empezá a entrenar para ver tus ejercicios aquí.",
-      "sessions": "sesiones",
-      "sets": "series",
-      "maxWeight": "Peso máx",
-      "rir": "RIR",
-      "lastUsed": "Último uso",
-      "progression": "Progresión",
-      "personalRecords": "Records personales",
-      "maxWeightRecord": "Peso máximo",
-      "bestSet": "Mejor set",
-      "bestSession": "Mejor sesión",
-      "estimated1RM": "1RM estimado",
-      "sessionHistory": "Historial de sesiones",
-      "volume": "Volumen",
-      "noData": "Sin datos de este ejercicio",
-      "noDataProgress": "Sin datos de progreso",
-      "completeSessions": "Completá sesiones para ver tu evolución",
-      "avgWeightPerSession": "Peso promedio por sesión",
-      "avgRepsPerSession": "Repeticiones promedio por sesión",
-      "eachPointOneSession": "Cada punto = una sesión de entrenamiento",
-      "noProgression": "Progresión no disponible",
-      "needAtLeast2Sessions": "Necesitás al menos 2 sesiones con datos para ver la progresión"
     }
   },
   "methods": {
@@ -711,5 +710,102 @@
     "sets": "Series",
     "volumeChange": "Volumen {{direction}} {{percent}}%",
     "noSessions": "Sin sesiones aún"
+  },
+  "accessibility": {
+    "setLogger": {
+      "deleteSet": "Eliminar serie",
+      "deleteHint": "Elimina esta serie del ejercicio",
+      "weight": "Peso de la serie",
+      "weightHint": "Ingresa el peso en kilogramos",
+      "reps": "Repeticiones de la serie",
+      "repsHint": "Ingresa el número de repeticiones",
+      "intensityMethod": "Cambiar método de intensidad",
+      "intensityHint": "Abre el selector de método de intensidad"
+    },
+    "partialSetLogger": {
+      "deleteSet": "Eliminar serie",
+      "deleteHint": "Elimina esta serie parcial del ejercicio",
+      "weight": "Peso de la serie parcial",
+      "weightHint": "Ingresa el peso en kilogramos",
+      "contractions": "Contracciones de la serie",
+      "contractionsHint": "Ingresa el número de contracciones",
+      "partialReps": "Repeticiones parciales",
+      "partialRepsHint": "Ingresa el número de repeticiones parciales",
+      "intensityMethod": "Cambiar método de intensidad",
+      "intensityHint": "Abre el selector de método de intensidad"
+    },
+    "dropSetLogger": {
+      "deleteSet": "Eliminar set",
+      "deleteHint": "Elimina este set del ejercicio",
+      "collapse": "Contraer drops",
+      "expand": "Expandir drops",
+      "collapseHint": "Oculta los detalles de los drops",
+      "expandHint": "Muestra los detalles de los drops",
+      "intensityMethod": "Cambiar método de intensidad",
+      "intensityHint": "Abre el selector de método de intensidad",
+      "markIncomplete": "Marcar todos como incompletos",
+      "markComplete": "Marcar todos como completados"
+    },
+    "setActions": {
+      "markIncomplete": "Marcar serie como incompleta",
+      "markComplete": "Marcar serie como completada"
+    },
+    "dropActions": {
+      "addDrop": "Agregar drop",
+      "addDropHint": "Agrega un nuevo drop al set",
+      "weight": "Peso drop {{number}}",
+      "weightHint": "Ingresa el peso en kilogramos",
+      "reps": "Repeticiones drop {{number}}",
+      "repsHint": "Ingresa el número de repeticiones",
+      "deleteDrop": "Eliminar drop {{number}}",
+      "deleteDropHint": "Elimina este drop del set"
+    },
+    "timer": {
+      "start": "Iniciar timer",
+      "startHint": "Inicia la medición del tiempo",
+      "stop": "Detener timer",
+      "stopHint": "Pausa la medición del tiempo",
+      "reset": "Reiniciar timer",
+      "resetHint": "Reinicia el timer a cero"
+    },
+    "exerciseNotes": {
+      "expand": "Expandir notas del ejercicio",
+      "expandHint": "Abre el editor de notas del ejercicio",
+      "title": "Notas del ejercicio",
+      "titleHint": "Escribe notas sobre el ejercicio",
+      "typeSelected": "Tipo de nota: {{label}}, seleccionado",
+      "typeUnselected": "Tipo de nota: {{label}}"
+    },
+    "exercisePicker": {
+      "cancel": "Cancelar",
+      "save": "Guardar ejercicio",
+      "name": "Nombre del ejercicio",
+      "nameHint": "Ingresa el nombre del nuevo ejercicio",
+      "description": "Descripción del ejercicio",
+      "descriptionHint": "Ingresa una descripción del ejercicio",
+      "search": "Buscar ejercicios",
+      "searchHint": "Escribe para buscar ejercicios por nombre o músculo",
+      "createNew": "Crear nuevo ejercicio",
+      "createNewHint": "Abre el formulario para crear un nuevo ejercicio",
+      "select": "Seleccionar ejercicio",
+      "add": "Agregar ejercicio",
+      "addHint": "Agregar ejercicio a la rutina",
+      "confirm": "Confirmar selección",
+      "back": "Volver",
+      "deselect": "Desseleccionar {{name}}",
+      "selectExercise": "Seleccionar {{name}}"
+    },
+    "intensityPicker": {
+      "close": "Cerrar selector de método",
+      "select": "Seleccionar método: {{method}}",
+      "cancel": "Cancelar"
+    },
+    "routinePicker": {
+      "close": "Cerrar",
+      "search": "Buscar rutina",
+      "searchHint": "Escribe para buscar rutinas por nombre",
+      "select": "Seleccionar rutina: {{name}}",
+      "confirm": "Seleccionar rutina"
+    }
   }
 }

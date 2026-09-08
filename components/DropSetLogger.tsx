@@ -75,7 +75,7 @@ export function DropSetLogger({
   const renderRightActions = () => {
     if (!onDelete) return null;
     return (
-      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction} accessibilityLabel="Eliminar set" accessibilityRole="button" accessibilityHint="Elimina este set del ejercicio">
+      <TouchableOpacity onPress={handleDelete} style={styles.deleteAction} accessibilityLabel={t('accessibility.dropSetLogger.deleteSet')} accessibilityRole="button" accessibilityHint={t('accessibility.dropSetLogger.deleteHint')}>
         <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
@@ -84,7 +84,7 @@ export function DropSetLogger({
   // Header row: compact summary without inputs
   const renderHeader = () => (
     <View style={styles.container}>
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea} accessibilityLabel={expanded ? "Contraer drops" : "Expandir drops"} accessibilityRole="button" accessibilityHint={expanded ? "Oculta los detalles de los drops" : "Muestra los detalles de los drops"}>
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.toggleArea} accessibilityLabel={expanded ? t('accessibility.dropSetLogger.collapse') : t('accessibility.dropSetLogger.expand')} accessibilityRole="button" accessibilityHint={expanded ? t('accessibility.dropSetLogger.collapseHint') : t('accessibility.dropSetLogger.expandHint')}>
         <View style={styles.serieCell}>
           <Text style={styles.serieNumber}>{parentSet.setNumber}</Text>
         </View>
@@ -99,9 +99,9 @@ export function DropSetLogger({
         <TouchableOpacity
           onPress={onChangeMethod}
           style={styles.intensityButton}
-          accessibilityLabel="Cambiar método de intensidad"
+          accessibilityLabel={t('accessibility.dropSetLogger.intensityMethod')}
           accessibilityRole="button"
-          accessibilityHint="Abre el selector de método de intensidad"
+          accessibilityHint={t('accessibility.dropSetLogger.intensityHint')}
         >
           <Ionicons name="flash" size={12} color={colors.accent.primary} />
         </TouchableOpacity>
@@ -114,7 +114,7 @@ export function DropSetLogger({
           styles.checkButton,
           allCompleted ? styles.checkCompleted : styles.checkIncomplete,
         ]}
-        accessibilityLabel={allCompleted ? "Marcar todos como incompletos" : "Marcar todos como completados"}
+        accessibilityLabel={allCompleted ? t('accessibility.dropSetLogger.markIncomplete') : t('accessibility.dropSetLogger.markComplete')}
         accessibilityRole="button"
       >
         {allCompleted && (
@@ -170,7 +170,7 @@ export function DropSetLogger({
           ))}
 
           {/* Add drop */}
-          <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton} accessibilityLabel="Agregar drop" accessibilityRole="button" accessibilityHint="Agrega un nuevo drop al set">
+          <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton} accessibilityLabel={t('accessibility.dropActions.addDrop')} accessibilityRole="button" accessibilityHint={t('accessibility.dropActions.addDropHint')}>
             <Text style={{ fontSize: fontSizes.sm, color: colors.accent.secondary }}>+</Text>
             <Text style={styles.addDropText}>{t('session.dropSet.addUnit', { unit: unitLabel })}</Text>
           </TouchableOpacity>
@@ -208,6 +208,7 @@ function DropRow({
   previousDropFor?: (method: string, dropOrder: number) => { weight: number | null; reps: number | null } | undefined;
   maxWeight?: number | null;
 }) {
+  const { t } = useTranslation();
   const [reps, setReps] = useState(drop.reps?.toString() ?? '');
   const [weight, setWeight] = useState(drop.weight?.toString() ?? '');
 
@@ -272,8 +273,8 @@ function DropRow({
           placeholderTextColor={colors.text.muted}
           value={weight}
           onChangeText={handleWeightChange}
-          accessibilityLabel={`Peso drop ${index + 1}`}
-          accessibilityHint="Ingresa el peso en kilogramos"
+          accessibilityLabel={t('accessibility.dropActions.weight', { number: index + 1 })}
+          accessibilityHint={t('accessibility.dropActions.weightHint')}
         />
       </View>
 
@@ -286,8 +287,8 @@ function DropRow({
           placeholderTextColor={colors.text.muted}
           value={reps}
           onChangeText={handleRepsChange}
-          accessibilityLabel={`Repeticiones drop ${index + 1}`}
-          accessibilityHint="Ingresa el número de repeticiones"
+          accessibilityLabel={t('accessibility.dropActions.reps', { number: index + 1 })}
+          accessibilityHint={t('accessibility.dropActions.repsHint')}
         />
       </View>
 
@@ -299,9 +300,9 @@ function DropRow({
         <TouchableOpacity
           onPress={() => onDeleteDrop(index)}
           style={styles.checkButton}
-          accessibilityLabel={`Eliminar drop ${index + 1}`}
+          accessibilityLabel={t('accessibility.dropActions.deleteDrop', { number: index + 1 })}
           accessibilityRole="button"
-          accessibilityHint="Elimina este drop del set"
+          accessibilityHint={t('accessibility.dropActions.deleteDropHint')}
         >
           <Text style={{ fontSize: fontSizes.sm, color: colors.error }}>×</Text>
         </TouchableOpacity>

@@ -74,9 +74,9 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
       <TouchableOpacity
         onPress={handleDelete}
         style={styles.deleteAction}
-        accessibilityLabel="Eliminar serie"
+        accessibilityLabel={t('accessibility.setLogger.deleteSet')}
         accessibilityRole="button"
-        accessibilityHint="Elimina esta serie del ejercicio"
+        accessibilityHint={t('accessibility.setLogger.deleteHint')}
       >
         <Text style={styles.deleteText}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
@@ -140,8 +140,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               placeholderTextColor={colors.text.muted}
               value={weight}
               onChangeText={handleWeightChange}
-              accessibilityLabel="Peso de la serie"
-              accessibilityHint="Ingresa el peso en kilogramos"
+              accessibilityLabel={t('accessibility.setLogger.weight')}
+              accessibilityHint={t('accessibility.setLogger.weightHint')}
             />
           </View>
 
@@ -154,8 +154,8 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               placeholderTextColor={colors.text.muted}
               value={reps}
               onChangeText={handleRepsChange}
-              accessibilityLabel="Repeticiones de la serie"
-              accessibilityHint="Ingresa el número de repeticiones"
+              accessibilityLabel={t('accessibility.setLogger.reps')}
+              accessibilityHint={t('accessibility.setLogger.repsHint')}
             />
           </View>
 
@@ -164,9 +164,9 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
             <TouchableOpacity
               onPress={onOpenIntensityPicker}
               style={styles.intensityButton}
-              accessibilityLabel="Cambiar método de intensidad"
+              accessibilityLabel={t('accessibility.setLogger.intensityMethod')}
               accessibilityRole="button"
-              accessibilityHint="Abre el selector de método de intensidad"
+              accessibilityHint={t('accessibility.setLogger.intensityHint')}
             >
               <Ionicons name="flash" size={12} color={colors.text.muted} />
             </TouchableOpacity>
@@ -189,7 +189,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
-            accessibilityLabel={set.completed ? "Marcar serie como incompleta" : "Marcar serie como completada"}
+            accessibilityLabel={set.completed ? t('accessibility.setActions.markIncomplete') : t('accessibility.setActions.markComplete')}
             accessibilityRole="button"
           >
             {set.completed && (
