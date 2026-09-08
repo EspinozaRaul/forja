@@ -268,5 +268,5 @@ export async function initializeDatabase() {
     { id: nextId++, name: 'Cardio Blast', description: '20 min HIIT session', category_id: 4, created_at: now }
   );
 
-  console.log('[Web Mock DB] Seeded with', FULL_SEED_EXERCISES.length, 'exercises');
+  if (__DEV__) console.log('[Web Mock DB] Seeded with', FULL_SEED_EXERCISES.length, 'exercises');
 }

@@ -1225,47 +1225,49 @@ export interface GlobalStats {
 }
 
 export async function getGlobalStats(): Promise<GlobalStats> {
-  // Total workouts (completed sessions only)
-  const totalWorkouts = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(sessions)
-    .where(isNotNull(sessions.completedAt));
+  // Run independent aggregate queries in parallel
+  const [totalWorkoutsResult, totalVolumeResult, totalCompletedSetsResult, totalTimeResult, recentSessionsResult, mostFrequentResult] = await Promise.all([
+    // Total workouts (completed sessions only)
+    db.select({ count: sql<number>`count(*)` })
+      .from(sessions)
+      .where(isNotNull(sessions.completedAt)),
+    // Total volume: sum of reps × weight over COMPLETED sets only
+    db.select({ total: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)` })
+      .from(sets)
+      .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
+      .where(eq(sets.completed, true)),
+    // Total completed sets
+    db.select({ count: sql<number>`coalesce(count(*), 0)` })
+      .from(sets)
+      .where(eq(sets.completed, true)),
+    // Total time (sum of completed session durations only)
+    db.select({ total: sql<number>`coalesce(sum(${sessions.duration}), 0)` })
+      .from(sessions)
+      .where(isNotNull(sessions.completedAt)),
+    // Current streak — consecutive days with at least one completed session
+    db.select({ startedAt: sessions.startedAt })
+      .from(sessions)
+      .where(isNotNull(sessions.completedAt))
+      .orderBy(desc(sessions.startedAt))
+      .limit(100),
+    // Most frequent exercise
+    db.select({
+      name: exercises.name,
+      count: sql<number>`count(*)`,
+    })
+      .from(sessionExercises)
+      .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+      .groupBy(sessionExercises.exerciseId)
+      .orderBy(desc(sql`count(*)`))
+      .limit(1),
+  ]);
 
-  // Total volume: sum of reps × weight over COMPLETED sets only. This mirrors
-  // how volume is tallied per exercise (compare.ts collectExerciseStats excludes
-  // non-completed sets) — planned/skipped sets must not inflate the total.
-  const totalVolume = await db
-    .select({ total: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)` })
-    .from(sets)
-    .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(eq(sets.completed, true));
-
-  // Total completed sets
-  const totalCompletedSets = await db
-    .select({ count: sql<number>`coalesce(count(*), 0)` })
-    .from(sets)
-    .where(eq(sets.completed, true));
-
-  // Total time (sum of completed session durations only)
-  const totalTime = await db
-    .select({ total: sql<number>`coalesce(sum(${sessions.duration}), 0)` })
-    .from(sessions)
-    .where(isNotNull(sessions.completedAt));
-
-  // Current streak — consecutive days with at least one completed session
-  // Increased from 30 to 100 to support longer streaks (~3 months)
-  const recentSessions = await db
-    .select({ startedAt: sessions.startedAt })
-    .from(sessions)
-    .where(isNotNull(sessions.completedAt))
-    .orderBy(desc(sessions.startedAt))
-    .limit(100);
-
+  // Calculate streak from recent sessions
   let streak = 0;
-  if (recentSessions.length > 0) {
+  if (recentSessionsResult.length > 0) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const sessionDates = recentSessions.map((s) => {
+    const sessionDates = recentSessionsResult.map((s) => {
       const d = new Date(s.startedAt);
       d.setHours(0, 0, 0, 0);
       return d.getTime();
@@ -1290,25 +1292,13 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     }
   }
 
-  // Most frequent exercise
-  const mostFrequent = await db
-    .select({
-      name: exercises.name,
-      count: sql<number>`count(*)`,
-    })
-    .from(sessionExercises)
-    .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-    .groupBy(sessionExercises.exerciseId)
-    .orderBy(desc(sql`count(*)`))
-    .limit(1);
-
   return {
-    totalWorkouts: totalWorkouts[0]?.count ?? 0,
-    totalVolume: totalVolume[0]?.total ?? 0,
-    totalCompletedSets: totalCompletedSets[0]?.count ?? 0,
-    totalTime: totalTime[0]?.total ?? 0,
+    totalWorkouts: totalWorkoutsResult[0]?.count ?? 0,
+    totalVolume: totalVolumeResult[0]?.total ?? 0,
+    totalCompletedSets: totalCompletedSetsResult[0]?.count ?? 0,
+    totalTime: totalTimeResult[0]?.total ?? 0,
     currentStreak: streak,
-    mostFrequentExercise: mostFrequent[0]?.name ?? null,
+    mostFrequentExercise: mostFrequentResult[0]?.name ?? null,
   };
 }
 

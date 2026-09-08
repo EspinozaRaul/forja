@@ -29,6 +29,12 @@ BEGIN
 
   DELETE FROM routines WHERE user_id = uid;
 
+  DELETE FROM routine_folders WHERE user_id = uid;
+
+  DELETE FROM body_measurements WHERE user_id = uid;
+
+  DELETE FROM progress_photos WHERE user_id = uid;
+
   -- Delete auth user (must be last)
   DELETE FROM auth.users WHERE id = uid;
 END;

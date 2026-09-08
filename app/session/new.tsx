@@ -61,12 +61,17 @@ export default function NewSessionScreen() {
           });
           const sessionExerciseId = se[0].id;
           const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
+          // Batch create all sets for this exercise in parallel
+          const setPromises = [];
           for (let i = 1; i <= plannedSets; i++) {
-            await createSet.mutateAsync({
-              sessionExerciseId,
-              setNumber: i,
-            });
+            setPromises.push(
+              createSet.mutateAsync({
+                sessionExerciseId,
+                setNumber: i,
+              })
+            );
           }
+          await Promise.all(setPromises);
         }
       }
 
