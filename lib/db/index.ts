@@ -4,6 +4,7 @@ import { categories, exercises } from './schema';
 import { sql } from 'drizzle-orm';
 import exercisesData from './exercises-data.json';
 import { getExerciseNameEs } from '../i18n/exercise-translations';
+import { now } from '../utils/date';
 
 const DATABASE_NAME = 'fitness-tracker.db';
 

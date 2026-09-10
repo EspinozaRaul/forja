@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import { exercises, categories } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { now } from '../lib/utils/date';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -64,7 +65,7 @@ async function importExercises() {
         name: catName,
         color: config.color,
         icon: config.icon,
-        createdAt: new Date(),
+        createdAt: now(),
       }).returning();
       categoryMap[catName] = result[0].id;
       console.log(`✅ Created category: ${catName}`);
@@ -111,7 +112,7 @@ async function importExercises() {
         imageUrl: exercise.image,
         gifUrl: exercise.gif_url,
         originalId: exercise.id,
-        createdAt: new Date(),
+        createdAt: now(),
       });
 
       imported++;

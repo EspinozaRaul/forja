@@ -8,6 +8,7 @@ import {
   deleteDropSetGroup,
   replaceDropSetGroup,
 } from '../db/queries';
+import { mutationErrorHandler } from '../utils/mutation-error';
 import type { Set } from '../types';
 
 const SET_KEY = ['sets'];
@@ -42,6 +43,7 @@ export function useCreateSet() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al crear serie"),
   });
 }
 
@@ -62,6 +64,7 @@ export function useCreateDropSets() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al crear drop sets"),
   });
 }
 
@@ -84,6 +87,7 @@ export function useUpdateSet() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al actualizar serie"),
   });
 }
 
@@ -105,6 +109,7 @@ export function useDeleteSet() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al eliminar serie"),
   });
 }
 
@@ -126,6 +131,7 @@ export function useDeleteDropSetGroup() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al eliminar drop set"),
   });
 }
 
@@ -146,5 +152,6 @@ export function useReplaceDropSetGroup() {
       queryClient.invalidateQueries({ queryKey: ['exercises', 'maxWeight'] });
       queryClient.invalidateQueries({ queryKey: PROGRESS_KEY });
     },
+    onError: mutationErrorHandler("Error al reemplazar drop set"),
   });
 }

@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '../db';
 import { progressPhotos } from '../db/schema';
 import { desc, eq } from 'drizzle-orm';
+import { mutationErrorHandler } from '../utils/mutation-error';
+import { now } from '../utils/date';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -59,6 +61,7 @@ export function useCreatePhoto() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PHOTOS_KEY });
     },
+    onError: mutationErrorHandler('Error al guardar foto'),
   });
 }
 
@@ -72,6 +75,7 @@ export function useDeletePhoto() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PHOTOS_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar foto'),
   });
 }
 

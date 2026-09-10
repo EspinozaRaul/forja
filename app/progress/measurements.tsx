@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, TextInput, Alert, Image } from 'reac
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { now } from '../../lib/utils/date';
 import { useBodyMeasurements, useCreateMeasurement, useDeleteMeasurement } from '../../lib/hooks/useBodyMeasurements';
 import { useProgressPhotos, useCreatePhoto, useDeletePhoto, usePickPhoto, useTakePhoto } from '../../lib/hooks/useProgressPhotos';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -152,7 +153,7 @@ export default function MeasurementsScreen() {
     }
     
     await createMeasurement.mutateAsync({
-      date: new Date(),
+      date: now(),
       weight: formValues.weight ? parseFloat(formValues.weight) : undefined,
       bodyFat: formValues.bodyFat ? parseFloat(formValues.bodyFat) : undefined,
       chest: formValues.chest ? parseFloat(formValues.chest) : undefined,
@@ -179,7 +180,7 @@ export default function MeasurementsScreen() {
     
     if (result) {
       await createPhoto.mutateAsync({
-        date: new Date(),
+        date: now(),
         uri: result.uri,
         bodyPart: result.bodyPart,
       });

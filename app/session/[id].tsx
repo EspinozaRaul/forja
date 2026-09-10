@@ -3,6 +3,7 @@ import { KeyboardAwareScrollView, KeyboardStickyView, useKeyboardState } from 'r
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { now } from '../../lib/utils/date';
 import { useQueryClient } from '@tanstack/react-query';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -1202,7 +1203,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       isDropGroup: i === 0,
       rir: d.rir ?? null,
       partialReps: null,
-      createdAt: new Date(),
+      createdAt: now(),
     }));
 
     // OPTIMISTIC: instantly replace linear set with drop entries in cache

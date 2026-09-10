@@ -146,7 +146,7 @@ export function RoutinePickerModal({
               }}
               accessibilityLabel={t('accessibility.routinePicker.search')}
               accessibilityRole="search"
-              accessibilityHint="Escribe para buscar rutinas por nombre"
+              accessibilityHint={t('accessibility.routinePicker.searchHint')}
             />
           </View>
 

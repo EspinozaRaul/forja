@@ -13,6 +13,7 @@ import { db } from './index';
 import { countVisibleSets } from '../utils/routine-diff';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS } from '../constants/routine-defaults';
 import type { SessionExercise, Set } from '../types';
+import { now } from '../utils/date';
 
 // ─── Categories ────────────────────────────────────────
 
@@ -31,7 +32,7 @@ export async function createCategory(data: {
 }) {
   return db
     .insert(categories)
-    .values({ ...data, createdAt: new Date() })
+    .values({ ...data, createdAt: now() })
     .returning();
 }
 
@@ -69,7 +70,7 @@ export async function createFolder(data: {
 }) {
   return db
     .insert(routineFolders)
-    .values({ ...data, createdAt: new Date() })
+    .values({ ...data, createdAt: now() })
     .returning();
 }
 
@@ -114,7 +115,7 @@ export async function createExercise(data: {
 }) {
   return db
     .insert(exercises)
-    .values({ ...data, createdAt: new Date() })
+    .values({ ...data, createdAt: now() })
     .returning();
 }
 
@@ -167,7 +168,7 @@ export async function createRoutine(data: {
 }) {
   return db
     .insert(routines)
-    .values({ ...data, createdAt: new Date() })
+    .values({ ...data, createdAt: now() })
     .returning();
 }
 
@@ -292,7 +293,7 @@ export async function createSession(data: {
 }) {
   return db
     .insert(sessions)
-    .values({ ...data, startedAt: data.startedAt ?? new Date() })
+    .values({ ...data, startedAt: data.startedAt ?? now() })
     .returning();
 }
 
@@ -302,7 +303,7 @@ export async function completeSession(
 ) {
   return db
     .update(sessions)
-    .set({ ...data, completedAt: data.completedAt ?? new Date() })
+    .set({ ...data, completedAt: data.completedAt ?? now() })
     .where(eq(sessions.id, id))
     .returning();
 }
@@ -438,10 +439,10 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     const missingSets: typeof sets.$inferInsert[] = [];
     for (const setNumber of allNumbers) {
       if (!firstNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: new Date() });
+        missingSets.push({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: now() });
       }
       if (!secondNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: new Date() });
+        missingSets.push({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: now() });
       }
     }
 
@@ -485,7 +486,7 @@ export async function createSet(data: {
     .values({
       ...data,
       completed: false,
-      createdAt: new Date(),
+      createdAt: now(),
     })
     .returning();
 }
@@ -509,7 +510,7 @@ export async function createDropSets(data: {
     isDropGroup: i === 0,
     rir: drop.rir,
     partialReps: null,
-    createdAt: new Date(),
+    createdAt: now(),
   }));
 
   return db.insert(sets).values(values).returning();
@@ -569,7 +570,7 @@ export async function replaceDropSetGroup(data: {
       isDropGroup: i === 0,
       rir: drop.rir,
       partialReps: null,
-      createdAt: new Date(),
+      createdAt: now(),
     }));
 
     return tx.insert(sets).values(values).returning();
@@ -754,7 +755,7 @@ export async function duplicateSessionData(
             dropOrder: s.dropOrder,
             isDropGroup: s.isDropGroup,
             rir: s.rir,
-            createdAt: new Date(),
+            createdAt: now(),
           }))
         );
       }
@@ -1298,7 +1299,7 @@ export async function getGlobalStats(): Promise<GlobalStats> {
   // Calculate streak from recent sessions
   let streak = 0;
   if (recentSessionsResult.length > 0) {
-    const today = new Date();
+    const today = now();
     today.setHours(0, 0, 0, 0);
     const sessionDates = recentSessionsResult.map((s) => {
       const d = new Date(s.startedAt);

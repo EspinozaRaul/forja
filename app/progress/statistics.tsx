@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { now } from '../../lib/utils/date';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { useMostUsedExercises, useSessionCountByWeek } from '../../lib/hooks/useProgress';
 import { ProgressChart } from '../../components/ProgressChart';

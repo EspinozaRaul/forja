@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllCategories, getCategoryById, createCategory } from '../db/queries';
+import { mutationErrorHandler } from '../utils/mutation-error';
 import type { Category } from '../types';
 
 const CATEGORY_KEY = ['categories'];
@@ -28,5 +29,6 @@ export function useCreateCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CATEGORY_KEY });
     },
+    onError: mutationErrorHandler('Error al crear categoría'),
   });
 }

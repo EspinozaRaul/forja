@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import { exercises, categories } from './schema';
 import { eq } from 'drizzle-orm';
+import { now } from '../utils/date';
 
 // Category mapping: dataset category -> our category name
 const CATEGORY_MAP: Record<string, string> = {
@@ -71,7 +72,7 @@ export async function importExercisesFromDataset(dataset: DatasetExercise[]) {
         name: catName,
         color: config.color,
         icon: config.icon,
-        createdAt: new Date(),
+        createdAt: now(),
       }).returning();
       categoryMap[catName] = result[0].id;
       if (__DEV__) console.log(`✅ Created category: ${catName}`);
@@ -118,7 +119,7 @@ export async function importExercisesFromDataset(dataset: DatasetExercise[]) {
         imageUrl: exercise.image,
         gifUrl: exercise.gif_url,
         originalId: exercise.id,
-        createdAt: new Date(),
+        createdAt: now(),
       });
 
       imported++;

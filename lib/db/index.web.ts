@@ -224,6 +224,7 @@ export const db = { select, insert, update, delete: del };
 
 // ─── Seed data ─────────────────────────────────────────
 import { SEED_EXERCISES as FULL_SEED_EXERCISES } from './seed-exercises';
+import { now } from '../utils/date';
 
 const SEED_CATEGORIES = [
   { name: 'Strength', color: '#EF4444', icon: '💪' },

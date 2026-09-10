@@ -27,6 +27,7 @@ export function formatRelativeDate(date: Date | string, t?: (key: string, option
 }
 
 import type { WeightUnit } from './weight-unit';
+import { now } from '../utils/date';
 
 /**
  * Format volume with appropriate precision for the given unit. Aggregates mix

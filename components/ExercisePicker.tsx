@@ -206,7 +206,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 onChangeText={setNewName}
                 autoFocus
                 accessibilityLabel={t('accessibility.exercisePicker.name')}
-                accessibilityHint="Ingresa el nombre del nuevo ejercicio"
+                accessibilityHint={t('accessibility.exercisePicker.nameHint')}
               />
 
               <Text style={{ fontSize: fontSizes.sm, color: colors.text.secondary, marginBottom: spacing.sm }}>{t('exercisePicker.descriptionLabel')}</Text>
@@ -218,7 +218,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 onChangeText={setNewDescription}
                 multiline
                 accessibilityLabel={t('accessibility.exercisePicker.description')}
-                accessibilityHint="Ingresa una descripción del ejercicio"
+                accessibilityHint={t('accessibility.exercisePicker.descriptionHint')}
               />
 
               <Text style={{ fontSize: fontSizes.sm, color: colors.text.secondary, marginBottom: spacing.sm }}>{t('exercisePicker.categoryLabel')}</Text>
@@ -283,7 +283,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
               autoFocus
               accessibilityLabel={t('accessibility.exercisePicker.search')}
               accessibilityRole="search"
-              accessibilityHint="Escribe para buscar ejercicios por nombre o músculo"
+              accessibilityHint={t('accessibility.exercisePicker.searchHint')}
             />
           </View>
 
@@ -332,7 +332,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm + spacing.xs, backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
             accessibilityLabel={t('accessibility.exercisePicker.createNew')}
             accessibilityRole="button"
-            accessibilityHint="Abre el formulario para crear un nuevo ejercicio"
+            accessibilityHint={t('accessibility.exercisePicker.createNewHint')}
           >
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>{t('exercisePicker.createNew')}</Text>
           </TouchableOpacity>

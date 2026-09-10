@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '../db';
 import { bodyMeasurements } from '../db/schema';
 import { desc, eq } from 'drizzle-orm';
+import { mutationErrorHandler } from '../utils/mutation-error';
+import { now } from '../utils/date';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -77,6 +79,7 @@ export function useCreateMeasurement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MEASUREMENTS_KEY });
     },
+    onError: mutationErrorHandler('Error al guardar medición'),
   });
 }
 
@@ -90,5 +93,6 @@ export function useDeleteMeasurement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MEASUREMENTS_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar medición'),
   });
 }
