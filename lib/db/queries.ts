@@ -933,6 +933,39 @@ export async function getLastRepsByExerciseIds(exerciseIds: number[]): Promise<R
   return result;
 }
 
+/**
+ * Returns the most recent notes recorded for each of the given exercises, keyed
+ * by exercise id. Used when creating a new session so exercise notes (seat height,
+ * pain notes, etc.) persist across sessions and routines.
+ */
+export async function getLastNotesByExerciseIds(exerciseIds: number[]): Promise<Record<number, string | null>> {
+  if (exerciseIds.length === 0) return {};
+
+  const rows = await db
+    .select({
+      exerciseId: sessionExercises.exerciseId,
+      notes: sessionExercises.notes,
+      createdAt: sessions.startedAt,
+    })
+    .from(sessionExercises)
+    .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
+    .where(and(
+      inArray(sessionExercises.exerciseId, exerciseIds),
+      isNotNull(sessions.completedAt),
+      isNotNull(sessionExercises.notes),
+    ))
+    .orderBy(desc(sessions.startedAt));
+
+  // First row per exercise (ordered by startedAt desc) is the latest one
+  const result: Record<number, string | null> = {};
+  for (const row of rows) {
+    if (!(row.exerciseId in result)) {
+      result[row.exerciseId] = row.notes;
+    }
+  }
+  return result;
+}
+
 // ─── Last Workout Per Exercise ────────────────────────
 
 export interface LastWorkoutPerExercise {

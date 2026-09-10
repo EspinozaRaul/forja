@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
 import { MODAL, SET_LOGGER } from '../../lib/constants/layout';
 import { TIMER_CONFIG } from '../../lib/constants/config';
-import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine, useUpdateSessionExerciseNotes } from '../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useSessionExercisesWithSets, useCompleteSession, useAddExerciseToSession, useUpdateExerciseRestTime, useUpdateSessionExerciseOrder, useReplaceSessionExercise, useCreateSuperSetPair, useUnlinkSuperSet, useDeleteSessionExercise, useDeleteSession, useLastSessionForRoutine, useUpdateSessionExerciseNotes, useLastSetsPerExercise } from '../../lib/hooks/useSessions';
 
 const SESSION_KEY = ['sessions'];
 import { useExercise, useExercises, useUpdateExercise, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
@@ -86,6 +86,10 @@ export default function SessionScreen() {
     session?.routineId ?? 0,
     sessionExercises?.map((se) => se.exerciseId) ?? []
   );
+  // Global last sets per exercise (across ALL routines) — primary source for "Anterior"
+  const { data: lastSetsGlobal } = useLastSetsPerExercise(
+    sessionExercises?.map((se) => se.exerciseId) ?? []
+  );
 
   // Guard: invalid sessionId — hooks above are safe because queries with NaN return empty
   if (isNaN(sessionId)) {
@@ -97,7 +101,7 @@ export default function SessionScreen() {
   }
 
   // Previous values per exerciseId + setNumber from the last completed session
-  // of THIS routine. Prefer the drop group parent (isDropGroup === true, the
+  // across ALL routines. Prefer the drop group parent (isDropGroup === true, the
   // heaviest first drop) or a plain linear set; fall back to any set with the
   // same setNumber. The fallback works PER FIELD: if the matching set left a
   // field empty, fall back to the most recent recorded value for the exercise
@@ -109,9 +113,14 @@ export default function SessionScreen() {
     let rir: number | null = null;
     let method: string | null = null;
     let partialReps: number | null = null;
-    const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
-    if (prevSets && prevSets.length > 0) {
-      const withNumber = prevSets.filter((s) => s.setNumber === setNumber);
+
+    // Primary source: global last sets for this exercise (across ALL routines)
+    const globalSets = lastSetsGlobal?.[exerciseId];
+    if (globalSets && globalSets.length > 0) {
+      // Filter out partial sets — they don't count as full sets for "Anterior" display
+      const nonPartial = globalSets.filter((s) => s.method !== 'partial');
+      const setsToUse = nonPartial.length > 0 ? nonPartial : globalSets;
+      const withNumber = setsToUse.filter((s) => s.setNumber === setNumber);
       if (withNumber.length > 0) {
         const preferred = withNumber.find((s) => s.isDropGroup === true || s.dropOrder == null);
         const chosen = preferred ?? withNumber[0];
@@ -122,6 +131,27 @@ export default function SessionScreen() {
         partialReps = chosen.partialReps ?? null;
       }
     }
+
+    // Fallback: last session of this routine (for setNumber-specific data)
+    if (weight == null && reps == null) {
+      const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;
+      if (prevSets && prevSets.length > 0) {
+        const nonPartial = prevSets.filter((s) => s.method !== 'partial');
+        const setsToUse = nonPartial.length > 0 ? nonPartial : prevSets;
+        const withNumber = setsToUse.filter((s) => s.setNumber === setNumber);
+        if (withNumber.length > 0) {
+          const preferred = withNumber.find((s) => s.isDropGroup === true || s.dropOrder == null);
+          const chosen = preferred ?? withNumber[0];
+          weight = chosen.weight != null ? chosen.weight : null;
+          reps = chosen.reps != null ? chosen.reps : null;
+          rir = chosen.rir != null ? chosen.rir : null;
+          method = chosen.method ?? null;
+          partialReps = chosen.partialReps ?? null;
+        }
+      }
+    }
+
+    // Per-field fallback: most recent recorded value for the exercise overall
     if (weight == null) weight = lastWeights.data?.[exerciseId]?.weight ?? null;
     if (reps == null) reps = lastReps.data?.[exerciseId]?.reps ?? null;
     // RIR fallback: use lastRirByExercise from routine-level query

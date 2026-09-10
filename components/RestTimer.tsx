@@ -332,10 +332,15 @@ export function RestTimer({
     onDurationChange?.(dur);
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount — cancel interval AND scheduled notification
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      // Cancel any pending notification to prevent ghost alerts after unmount
+      if (notificationIdRef.current) {
+        Notifications.cancelScheduledNotificationAsync(notificationIdRef.current);
+        notificationIdRef.current = null;
+      }
     };
   }, []);
 

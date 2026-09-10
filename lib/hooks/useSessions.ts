@@ -17,6 +17,7 @@ import {
   getLastSessionForRoutine,
   getLastSetsForExercise,
   getLastSetsPerExercise,
+  getLastNotesByExerciseIds,
   duplicateSessionData,
   createSuperSetPair,
   unlinkSuperSetPair,
@@ -131,6 +132,14 @@ export function useLastSetsPerExercise(exerciseIds: number[]) {
   return useQuery({
     queryKey: ['sessions', 'lastSetsPerExercise', [...exerciseIds].sort()],
     queryFn: () => getLastSetsPerExercise(exerciseIds),
+    enabled: exerciseIds.length > 0,
+  });
+}
+
+export function useLastNotesByExerciseIds(exerciseIds: number[]) {
+  return useQuery({
+    queryKey: ['sessions', 'lastNotes', [...exerciseIds].sort()],
+    queryFn: () => getLastNotesByExerciseIds(exerciseIds),
     enabled: exerciseIds.length > 0,
   });
 }
