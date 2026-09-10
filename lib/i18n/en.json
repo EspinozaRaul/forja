@@ -554,7 +554,11 @@
       "noExercisesMessage": "Add exercises to this session.",
       "cancel": "Cancel",
       "endButton": "End Session",
-      "restLabel": "Rest: {{name}}",
+    "restLabel": "Rest: {{name}}",
+    "longSession": {
+      "title": "Long session",
+      "message": "Your session has been running for over 2 hours. Would you like to end it?"
+    },
       "unknownExercise": "Unknown exercise",
       "fallbackExercise": "Exercise",
       "custom": "Custom",

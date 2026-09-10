@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm + spacing.xs,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.sm,
-    marginBottom: spacing.xxs,
+    marginBottom: spacing.xs,
   },
   optionIcon: {
     width: ICON.SIZE_XL,

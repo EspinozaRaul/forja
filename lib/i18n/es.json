@@ -178,6 +178,10 @@
     "cancel": "Cancelar",
     "endButton": "Finalizar sesión",
     "restLabel": "Descanso: {{name}}",
+    "longSession": {
+      "title": "Sesión larga",
+      "message": "Tu sesión lleva más de 2 horas. ¿Querés finalizarla?"
+    },
     "unknownExercise": "Ejercicio desconocido",
     "fallbackExercise": "Ejercicio",
     "custom": "Personalizado",

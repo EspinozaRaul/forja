@@ -134,6 +134,26 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.forgotButton}
+          onPress={async () => {
+            if (!email) {
+              showAlert(t('common.error'), t('auth.login.error.emptyFields'));
+              return;
+            }
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+              redirectTo: 'forja://reset-password',
+            });
+            if (error) {
+              showAlert(t('common.error'), error.message);
+            } else {
+              showAlert(t('common.success'), t('auth.login.forgotPassword'));
+            }
+          }}
+        >
+          <Text style={styles.forgotText}>{t('auth.login.forgotPassword')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.linkButton}
           onPress={() => router.push('/auth/signup')}
         >
@@ -275,6 +295,14 @@ const styles = StyleSheet.create({
   linkButton: {
     alignItems: 'center',
     marginTop: spacing.md,
+  },
+  forgotButton: {
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  forgotText: {
+    color: colors.text.muted,
+    fontSize: fontSizes.sm,
   },
   linkText: {
     color: colors.text.secondary,

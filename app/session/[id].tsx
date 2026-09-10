@@ -1,5 +1,5 @@
 import { Text, View, TouchableOpacity, TextInput, Modal, Pressable, LayoutAnimation, BackHandler, Platform } from 'react-native';
-import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView, KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -47,6 +47,7 @@ export default function SessionScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
   const sessionId = parseInt(id, 10);
   const { t, i18n } = useTranslation();
 
@@ -223,6 +224,15 @@ export default function SessionScreen() {
 
     return () => handler.remove();
   }, [sessionId]);
+
+  // Alert if session runs longer than 2 hours
+  const longSessionAlertedRef = useRef(false);
+  useEffect(() => {
+    if (elapsedSeconds >= 7200 && !longSessionAlertedRef.current) {
+      longSessionAlertedRef.current = true;
+      showAlert(t('session.longSession.title'), t('session.longSession.message'));
+    }
+  }, [elapsedSeconds]);
 
   const handleNewRecord = (exerciseName: string, weight: number, unit: string) => {
     recordNonceRef.current += 1;
@@ -577,7 +587,7 @@ export default function SessionScreen() {
     <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
       {/* Timer + Header — fixed top */}
-      <View style={{ backgroundColor: colors.bg.card, paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+      <View style={{ backgroundColor: colors.bg.card, paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.md, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
             <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
@@ -698,8 +708,8 @@ export default function SessionScreen() {
       </KeyboardAwareScrollView>
 
       {/* Bottom — fixed: rest timer + end session */}
-      <KeyboardStickyView style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + spacing.sm }}>
-        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm + spacing.xs : 0 }}>
+      <KeyboardStickyView style={{ backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, paddingBottom: insets.bottom + (isKeyboardVisible ? 0 : spacing.sm) }}>
+        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.xs : 0 }}>
           {showRestTimer && restExerciseName ? (
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.xs, textAlign: 'center' }}>
               {t('session.restLabel', { name: restExerciseName })}
@@ -718,20 +728,22 @@ export default function SessionScreen() {
           />
         </View>
 
-        <View style={{ paddingHorizontal: spacing.md, paddingTop: showRestTimer ? spacing.sm : spacing.sm + spacing.xs, flexDirection: 'row', gap: spacing.sm }}>
-          <TouchableOpacity
-            onPress={cancelSessionAndLeave}
-            style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
-          >
-            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.cancel')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleEndSession}
-            style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
-          >
-            <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
-          </TouchableOpacity>
-        </View>
+        {!isKeyboardVisible && (
+          <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, flexDirection: 'row', gap: spacing.sm }}>
+            <TouchableOpacity
+              onPress={cancelSessionAndLeave}
+              style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.cancel')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleEndSession}
+              style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardStickyView>
 
       <ExercisePicker
