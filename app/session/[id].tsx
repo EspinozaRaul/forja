@@ -755,7 +755,7 @@ export default function SessionScreen() {
         onStateChange={setPickerState}
       />
 
-      <Modal visible={supersetPartnerMode !== null} transparent animationType="fade">
+      <Modal accessible={true} visible={supersetPartnerMode !== null} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.xs }}>
@@ -1425,7 +1425,7 @@ function SessionExerciseItem({ sessionExercise, sessionId, previousWeightFor, ma
       )}
 
       {/* Custom rest time modal */}
-      <Modal visible={showCustomRest} transparent animationType="fade">
+      <Modal accessible={true} visible={showCustomRest} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>

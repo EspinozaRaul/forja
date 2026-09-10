@@ -214,7 +214,7 @@ export default function FolderDetailScreen() {
       </View>
 
       {/* Edit Modal */}
-      <Modal visible={showEditModal} transparent animationType="slide">
+      <Modal accessible={true} visible={showEditModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('routine.folder.editTitle')}</Text>

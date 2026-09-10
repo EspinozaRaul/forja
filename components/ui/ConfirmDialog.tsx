@@ -37,7 +37,7 @@ export function ConfirmDialog({
   const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal accessible={true} visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>

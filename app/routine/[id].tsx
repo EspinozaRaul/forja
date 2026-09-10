@@ -399,7 +399,7 @@ export default function RoutineDetailScreen() {
         onStateChange={setPickerState}
       />
 
-      <Modal visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
+      <Modal accessible={true} visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
         <Pressable style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
           <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>

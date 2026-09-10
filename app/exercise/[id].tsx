@@ -53,7 +53,7 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
   }, [visible, url]);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal accessible={true} visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity
         style={{ flex: 1, backgroundColor: colors.overlay.deep, justifyContent: 'center', alignItems: 'center' }}
         activeOpacity={1}

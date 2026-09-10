@@ -46,15 +46,15 @@ interface DatasetExercise {
 }
 
 export async function importExercisesFromDataset(dataset: DatasetExercise[]) {
-  console.log('🚀 Starting exercise import...');
-  console.log(`📊 Found ${dataset.length} exercises in dataset`);
+  if (__DEV__) console.log('🚀 Starting exercise import...');
+  if (__DEV__) console.log(`📊 Found ${dataset.length} exercises in dataset`);
 
   const expoDb = openDatabaseSync('fitness-tracker.db');
   const db = drizzle(expoDb);
 
   // Get existing categories
   const existingCategories = await db.select().from(categories);
-  console.log(`📁 Found ${existingCategories.length} existing categories`);
+  if (__DEV__) console.log(`📁 Found ${existingCategories.length} existing categories`);
 
   // Create a map of category name -> id
   const categoryMap: Record<string, number> = {};
@@ -74,7 +74,7 @@ export async function importExercisesFromDataset(dataset: DatasetExercise[]) {
         createdAt: new Date(),
       }).returning();
       categoryMap[catName] = result[0].id;
-      console.log(`✅ Created category: ${catName}`);
+      if (__DEV__) console.log(`✅ Created category: ${catName}`);
     }
   }
 
@@ -123,18 +123,18 @@ export async function importExercisesFromDataset(dataset: DatasetExercise[]) {
 
       imported++;
       if (imported % 100 === 0) {
-        console.log(`📥 Imported ${imported} exercises...`);
+        if (__DEV__) console.log(`📥 Imported ${imported} exercises...`);
       }
     } catch (error) {
-      console.error(`❌ Error importing exercise ${exercise.id}:`, error);
+      if (__DEV__) console.error(`❌ Error importing exercise ${exercise.id}:`, error);
       skipped++;
     }
   }
 
-  console.log('\n✨ Import complete!');
-  console.log(`✅ Imported: ${imported} exercises`);
-  console.log(`⏭️ Skipped: ${skipped} exercises`);
-  console.log(`📊 Total in database: ${imported + skipped}`);
+  if (__DEV__) console.log('\n✨ Import complete!');
+  if (__DEV__) console.log(`✅ Imported: ${imported} exercises`);
+  if (__DEV__) console.log(`⏭️ Skipped: ${skipped} exercises`);
+  if (__DEV__) console.log(`📊 Total in database: ${imported + skipped}`);
 
   return { imported, skipped };
 }

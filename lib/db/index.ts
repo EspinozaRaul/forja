@@ -376,8 +376,8 @@ export async function initializeDatabase() {
   }
 
   if (__DEV__) {
-    console.log(`\n✨ Import complete!`);
-    console.log(`   ✅ Imported: ${imported} exercises`);
-    console.log(`   ❌ Errors: ${errors}`);
+    if (__DEV__) console.log(`\n✨ Import complete!`);
+    if (__DEV__) console.log(`   ✅ Imported: ${imported} exercises`);
+    if (__DEV__) console.log(`   ❌ Errors: ${errors}`);
   }
 }

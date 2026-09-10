@@ -170,7 +170,7 @@ export default function SettingsScreen() {
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, marginHorizontal: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <Row first>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>Email</Text>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('auth.login.email')}</Text>
           </View>
           <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, flexShrink: 1 }} numberOfLines={1}>
             {user?.email ?? '—'}

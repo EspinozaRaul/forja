@@ -19,6 +19,7 @@ import {
   updateFolder,
   deleteFolder,
 } from '../db/queries';
+import { mutationErrorHandler } from '../utils/mutation-error';
 import type { Routine, RoutineExercise, RoutineFolder } from '../types';
 
 const ROUTINE_KEY = ['routines'];
@@ -57,6 +58,7 @@ export function useCreateRoutine() {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
+    onError: mutationErrorHandler('Error al crear rutina'),
   });
 }
 
@@ -75,6 +77,7 @@ export function useUpdateRoutine() {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
+    onError: mutationErrorHandler('Error al actualizar rutina'),
   });
 }
 
@@ -87,6 +90,7 @@ export function useDeleteRoutine() {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar rutina'),
   });
 }
 
@@ -106,6 +110,7 @@ export function useAddExerciseToRoutine() {
         queryKey: [...ROUTINE_KEY, variables.routineId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al agregar ejercicio'),
   });
 }
 
@@ -117,6 +122,7 @@ export function useRemoveExerciseFromRoutine() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar ejercicio'),
   });
 }
 
@@ -129,6 +135,7 @@ export function useUpdateRoutineExerciseOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
+    onError: mutationErrorHandler('Error al reordenar ejercicios'),
   });
 }
 
@@ -146,6 +153,7 @@ export function useUpdateRoutineExerciseTargets() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
+    onError: mutationErrorHandler('Error al actualizar objetivos'),
   });
 }
 
@@ -158,6 +166,7 @@ export function useReplaceRoutineExercise() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
+    onError: mutationErrorHandler('Error al reemplazar ejercicio'),
   });
 }
 
@@ -203,6 +212,7 @@ export function useCreateFolder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
+    onError: mutationErrorHandler('Error al crear carpeta'),
   });
 }
 
@@ -220,6 +230,7 @@ export function useUpdateFolder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
     },
+    onError: mutationErrorHandler('Error al actualizar carpeta'),
   });
 }
 
@@ -232,5 +243,6 @@ export function useDeleteFolder() {
       queryClient.invalidateQueries({ queryKey: FOLDER_KEY });
       queryClient.invalidateQueries({ queryKey: ROUTINE_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar carpeta'),
   });
 }

@@ -183,7 +183,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
   if (showCreate) {
     return (
       <>
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <Modal accessible={true} visible={visible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
             <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -258,7 +258,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
 
   return (
     <>
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+    <Modal accessible={true} visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
         <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           {/* Header */}
@@ -512,7 +512,7 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
   const exerciseImage = exercise.originalId ? EXERCISE_IMAGES[exercise.originalId] : null;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+    <Modal accessible={true} visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
         {/* Header */}
         <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -22,6 +22,7 @@ import {
   createSuperSetPair,
   unlinkSuperSetPair,
 } from '../db/queries';
+import { mutationErrorHandler } from '../utils/mutation-error';
 import type { Session, SessionExercise } from '../types';
 import type { SessionExerciseWithSets } from '../db/queries';
 
@@ -75,6 +76,7 @@ export function useCreateSession() {
       queryClient.invalidateQueries({ queryKey: SESSION_KEY });
       queryClient.invalidateQueries({ queryKey: ['activeSession'] });
     },
+    onError: mutationErrorHandler('Error al crear sesión'),
   });
 }
 
@@ -95,6 +97,7 @@ export function useCompleteSession() {
       queryClient.invalidateQueries({ queryKey: ['globalStats'] });
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
     },
+    onError: mutationErrorHandler('Error al finalizar sesión'),
   });
 }
 
@@ -109,6 +112,7 @@ export function useDeleteSession() {
       queryClient.invalidateQueries({ queryKey: ['globalStats'] });
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
     },
+    onError: mutationErrorHandler('Error al eliminar sesión'),
   });
 }
 
@@ -163,6 +167,7 @@ export function useDuplicateSessionData() {
         queryKey: [...SESSION_KEY, variables.targetSessionId, 'exercises', 'withSets'],
       });
     },
+    onError: mutationErrorHandler('Error al duplicar sesión'),
   });
 }
 
@@ -181,6 +186,7 @@ export function useAddExerciseToSession() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al agregar ejercicio'),
   });
 }
 
@@ -195,6 +201,7 @@ export function useUpdateExerciseRestTime() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al actualizar descanso'),
   });
 }
 
@@ -209,6 +216,7 @@ export function useUpdateSessionExerciseOrder() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al reordenar ejercicios'),
   });
 }
 
@@ -223,6 +231,7 @@ export function useReplaceSessionExercise() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al reemplazar ejercicio'),
   });
 }
 
@@ -239,6 +248,7 @@ export function useDeleteSessionExercise() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises', 'withSets'],
       });
     },
+    onError: mutationErrorHandler('Error al eliminar ejercicio'),
   });
 }
 
@@ -252,6 +262,7 @@ export function useCreateSuperSetPair() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al crear super set'),
   });
 }
 
@@ -264,6 +275,7 @@ export function useUnlinkSuperSet() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al desvincular super set'),
   });
 }
 
@@ -277,5 +289,6 @@ export function useUpdateSessionExerciseNotes() {
         queryKey: [...SESSION_KEY, variables.sessionId, 'exercises'],
       });
     },
+    onError: mutationErrorHandler('Error al guardar notas'),
   });
 }

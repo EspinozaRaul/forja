@@ -29,7 +29,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
   const { t } = useTranslation();
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal accessible={true} visible={visible} transparent animationType="fade">
       <TouchableOpacity
         style={styles.overlay}
         activeOpacity={1}

@@ -16,6 +16,7 @@ import {
   getLastWorkoutPerExercise,
   getLastRirByRoutineExerciseIds,
 } from '../db/queries';
+import { mutationErrorHandler } from '../utils/mutation-error';
 import type { Exercise, Set } from '../types';
 import type { ExerciseStats, ExerciseSessionEntry, ExercisePRs, LastWorkoutPerExercise } from '../db/queries';
 
@@ -53,6 +54,7 @@ export function useCreateExercise() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EXERCISE_KEY });
     },
+    onError: mutationErrorHandler('Error al crear ejercicio'),
   });
 }
 
@@ -70,6 +72,7 @@ export function useUpdateExercise() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EXERCISE_KEY });
     },
+    onError: mutationErrorHandler('Error al actualizar ejercicio'),
   });
 }
 
@@ -81,6 +84,7 @@ export function useDeleteExercise() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EXERCISE_KEY });
     },
+    onError: mutationErrorHandler('Error al eliminar ejercicio'),
   });
 }
 
