@@ -196,7 +196,7 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
             accessibilityRole="button"
             accessibilityHint={t('accessibility.timer.startHint')}
           >
-            <Text style={{ color: colors.accent.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.start')}</Text>
+            <Text style={{ color: colors.accent.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.start')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -206,7 +206,7 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
             accessibilityRole="button"
             accessibilityHint={t('accessibility.timer.stopHint')}
           >
-            <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.pause')}</Text>
+            <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.pause')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -216,7 +216,7 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
           accessibilityRole="button"
           accessibilityHint={t('accessibility.timer.resetHint')}
         >
-          <Text style={{ color: colors.text.muted, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.reset')}</Text>
+          <Text style={{ color: colors.text.muted, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, fontSize: fontSizes.md }}>{t('timer.reset')}</Text>
         </TouchableOpacity>
       </View>
     </View>

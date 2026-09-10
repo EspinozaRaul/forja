@@ -69,8 +69,7 @@ export default function SignupScreen() {
 
       <View style={styles.form}>
         <TextInput
-          // @ts-ignore — tintColor works at runtime but isn't in RN types yet
-          style={[styles.input, { tintColor: colors.accent.primary }]}
+          style={[styles.input, { tintColor: colors.accent.primary } as any]}
           placeholder={t('auth.signup.email')}
           placeholderTextColor={colors.text.muted}
           value={email}
@@ -80,8 +79,7 @@ export default function SignupScreen() {
         />
         <View style={styles.passwordContainer}>
           <TextInput
-            // @ts-ignore — tintColor works at runtime but isn't in RN types yet
-            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary }]}
+            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.signup.password')}
             placeholderTextColor={colors.text.muted}
             value={password}
@@ -101,8 +99,7 @@ export default function SignupScreen() {
         </View>
         <View style={styles.passwordContainer}>
           <TextInput
-            // @ts-ignore — tintColor works at runtime but isn't in RN types yet
-            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary }]}
+            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.signup.confirmPassword')}
             placeholderTextColor={colors.text.muted}
             value={confirmPassword}

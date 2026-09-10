@@ -345,12 +345,12 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   badgeText: {
-    fontSize: fontSizes.xs2, fontWeight: fontWeights.extrabold,
+    fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.extrabold,
     color: colors.accent.primary,
     letterSpacing: 0.3,
   },
   segmentCount: {
-    fontSize: fontSizes.xs, fontWeight: fontWeights.semibold,
+    fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     color: colors.text.muted,
     marginLeft: spacing.xs,
   },
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   addDropText: {
     fontSize: fontSizes.sm, color: colors.accent.secondary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
   },
   // --- Swipeable delete ---
   deleteAction: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: colors.text.primary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     fontSize: fontSizes.sm
   },
 });

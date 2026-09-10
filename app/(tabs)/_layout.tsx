@@ -2,7 +2,7 @@ import { Tabs, router } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, fontSizes , fontWeights} from '../../lib/theme/tokens';
+import { colors, spacing, fontSizes, fontWeights, fonts } from '../../lib/theme/tokens';
 
 export default function TabLayout() {
   const { t } = useTranslation();
@@ -12,7 +12,7 @@ export default function TabLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg.primary },
         headerTintColor: colors.text.primary,
-        headerTitleStyle: { color: colors.text.primary, fontWeight: fontWeights.semibold },
+        headerTitleStyle: { color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold },
         tabBarStyle: {
           backgroundColor: colors.bg.primary,
           borderTopColor: colors.border.primary,
@@ -24,7 +24,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.accent.primary,
         tabBarInactiveTintColor: colors.text.muted,
         tabBarLabelStyle: {
-          fontSize: fontSizes.xs, fontWeight: fontWeights.semibold,
+          fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
         },
       }}
     >

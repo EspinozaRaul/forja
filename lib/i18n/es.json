@@ -178,6 +178,8 @@
     "cancel": "Cancelar",
     "endButton": "Finalizar sesión",
     "restLabel": "Descanso: {{name}}",
+    "partialSet": "Parcial",
+    "partialRepsPlaceholder": "R/P",
     "longSession": {
       "title": "Sesión larga",
       "message": "Tu sesión lleva más de 2 horas. ¿Querés finalizarla?"

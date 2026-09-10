@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { colors , fontWeights} from '../../lib/theme/tokens';
+import { colors, fontWeights, fonts } from '../../lib/theme/tokens';
 
 export default function AuthLayout() {
   return (
@@ -7,7 +7,7 @@ export default function AuthLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg.primary },
         headerTintColor: colors.text.primary,
-        headerTitleStyle: { color: colors.text.primary, fontWeight: fontWeights.semibold },
+        headerTitleStyle: { color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold },
         contentStyle: { backgroundColor: colors.bg.primary },
       }}
     >

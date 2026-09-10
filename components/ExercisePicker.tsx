@@ -187,11 +187,11 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
             <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <TouchableOpacity onPress={handleCancelCreate} style={{ width: 80 }} accessibilityLabel="Cancelar" accessibilityRole="button">
+              <TouchableOpacity onPress={handleCancelCreate} style={{ width: 80 }} accessibilityLabel={t('accessibility.exercisePicker.cancel')} accessibilityRole="button">
                 <Text style={{ color: colors.accent.primary, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('exercisePicker.newExercise')}</Text>
-              <TouchableOpacity onPress={handleCreateExercise} style={{ width: 80, alignItems: 'flex-end' }} accessibilityLabel="Guardar ejercicio" accessibilityRole="button">
+              <TouchableOpacity onPress={handleCreateExercise} style={{ width: 80, alignItems: 'flex-end' }} accessibilityLabel={t('accessibility.exercisePicker.save')} accessibilityRole="button">
                 <Text style={{ color: colors.accent.primary, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
@@ -205,7 +205,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 value={newName}
                 onChangeText={setNewName}
                 autoFocus
-                accessibilityLabel="Nombre del ejercicio"
+                accessibilityLabel={t('accessibility.exercisePicker.name')}
                 accessibilityHint="Ingresa el nombre del nuevo ejercicio"
               />
 
@@ -217,7 +217,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 value={newDescription}
                 onChangeText={setNewDescription}
                 multiline
-                accessibilityLabel="Descripción del ejercicio"
+                accessibilityLabel={t('accessibility.exercisePicker.description')}
                 accessibilityHint="Ingresa una descripción del ejercicio"
               />
 
@@ -263,7 +263,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
         <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
           {/* Header */}
           <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={onClose} style={{ width: 80 }} accessibilityLabel="Cancelar" accessibilityRole="button">
+            <TouchableOpacity onPress={onClose} style={{ width: 80 }} accessibilityLabel={t('accessibility.exercisePicker.cancel')} accessibilityRole="button">
               <Text style={{ color: colors.accent.primary, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
@@ -281,7 +281,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
               value={search}
               onChangeText={setSearch}
               autoFocus
-              accessibilityLabel="Buscar ejercicios"
+              accessibilityLabel={t('accessibility.exercisePicker.search')}
               accessibilityRole="search"
               accessibilityHint="Escribe para buscar ejercicios por nombre o músculo"
             />
@@ -330,7 +330,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
           <TouchableOpacity
             onPress={() => setShowCreate(true)}
             style={{ marginHorizontal: spacing.md, marginBottom: spacing.sm + spacing.xs, backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
-            accessibilityLabel="Crear nuevo ejercicio"
+            accessibilityLabel={t('accessibility.exercisePicker.createNew')}
             accessibilityRole="button"
             accessibilityHint="Abre el formulario para crear un nuevo ejercicio"
           >
@@ -407,7 +407,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       />
                     ) : (
                       <View style={{ width: THUMBNAIL.SIZE_LG, height: THUMBNAIL.SIZE_LG, borderRadius: borderRadius.sm, backgroundColor: colors.bg.elevated, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: fontSizes.md, color: colors.text.muted, fontFamily: fonts.bodySemiBold }}>Ej</Text>
+                        <Text style={{ fontSize: fontSizes.md, color: colors.text.muted, fontFamily: fonts.bodySemiBold }}>{t('exercisePicker.exercise')}</Text>
                       </View>
                     )}
                     <Text style={{ flex: 1, fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }} numberOfLines={1}>
@@ -455,7 +455,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                   paddingHorizontal: spacing.lg,
                   paddingVertical: spacing.sm + spacing.xs,
                 }}
-                accessibilityLabel="Confirmar selección"
+                accessibilityLabel={t('accessibility.exercisePicker.confirm')}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: selectedIds.size === 0 }}
               >
@@ -516,13 +516,13 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
         {/* Header */}
         <View style={{ backgroundColor: colors.bg.card, borderBottomWidth: 1, borderBottomColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <TouchableOpacity onPress={onClose} style={{ width: 80 }} accessibilityLabel="Volver" accessibilityRole="button">
+          <TouchableOpacity onPress={onClose} style={{ width: 80 }} accessibilityLabel={t('accessibility.exercisePicker.back')} accessibilityRole="button">
             <Text style={{ color: colors.accent.primary, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold }}>{t('common.back')}</Text>
           </TouchableOpacity>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
             {t('exercisePicker.exercise')}
           </Text>
-          <TouchableOpacity onPress={() => onAdd(exercise)} style={{ width: 80, alignItems: 'flex-end' }} accessibilityLabel="Agregar ejercicio" accessibilityRole="button">
+          <TouchableOpacity onPress={() => onAdd(exercise)} style={{ width: 80, alignItems: 'flex-end' }} accessibilityLabel={t('accessibility.exercisePicker.add')} accessibilityRole="button">
             <Text style={{ color: colors.accent.primary, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold }}>{t('exercisePicker.add')}</Text>
           </TouchableOpacity>
         </View>
@@ -589,7 +589,7 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
             <TouchableOpacity
               onPress={() => onAdd(exercise)}
               style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
-              accessibilityLabel="Agregar ejercicio a la rutina"
+              accessibilityLabel={t('accessibility.exercisePicker.addHint')}
               accessibilityRole="button"
             >
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>{t('exercisePicker.addExercise')}</Text>

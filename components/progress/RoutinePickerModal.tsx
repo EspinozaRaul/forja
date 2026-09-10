@@ -111,7 +111,7 @@ export function RoutinePickerModal({
             >
               {t('progress.routineCompare.selectRoutine')}
             </Text>
-            <Pressable onPress={handleClose} hitSlop={8} accessibilityLabel="Cerrar" accessibilityRole="button">
+            <Pressable onPress={handleClose} hitSlop={8} accessibilityLabel={t('accessibility.routinePicker.close')} accessibilityRole="button">
               <Ionicons name="close" size={22} color={colors.text.muted} />
             </Pressable>
           </View>
@@ -144,7 +144,7 @@ export function RoutinePickerModal({
                 fontFamily: fonts.body,
                 color: colors.text.primary,
               }}
-              accessibilityLabel="Buscar rutina"
+              accessibilityLabel={t('accessibility.routinePicker.search')}
               accessibilityRole="search"
               accessibilityHint="Escribe para buscar rutinas por nombre"
             />
@@ -245,7 +245,7 @@ export function RoutinePickerModal({
                 paddingVertical: spacing.sm + spacing.xs,
                 alignItems: 'center',
               }}
-              accessibilityLabel="Seleccionar rutina"
+              accessibilityLabel={t('accessibility.routinePicker.select')}
               accessibilityRole="button"
               accessibilityState={{ disabled: selectedId == null }}
             >

@@ -160,7 +160,7 @@ const styles = {
   },
   cancelText: {
     color: colors.text.secondary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     fontSize: fontSizes.sm,
   },
   confirmButton: {
@@ -178,7 +178,7 @@ const styles = {
   },
   confirmText: {
     color: colors.bg.primary,
-    fontWeight: fontWeights.bold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     fontSize: fontSizes.sm,
   },
   confirmTextDestructive: {

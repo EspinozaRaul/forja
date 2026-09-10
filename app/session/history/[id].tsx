@@ -261,7 +261,7 @@ export default function SessionSummaryScreen() {
               fontSize: fontSizes.md,
               color: colors.text.primary,
               marginBottom: spacing.md,
-            } as any}
+            }}
             value={routineName}
             onChangeText={setRoutineName}
             placeholder={t('session.history.routineNamePlaceholder')}
@@ -273,14 +273,14 @@ export default function SessionSummaryScreen() {
               onPress={() => setShowSaveAsRoutine(false)}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
             >
-              <Text style={{ color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('common.cancel')}</Text>
+              <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold }}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSaveAsRoutine}
               disabled={isSavingRoutine}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
             >
-              <Text style={{ color: colors.bg.primary, fontWeight: fontWeights.bold }}>
+              <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>
                 {isSavingRoutine ? t('session.history.saving') : t('common.save')}
               </Text>
             </TouchableOpacity>

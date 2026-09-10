@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { colors } from '../lib/theme/tokens';
+import { colors, fonts, fontSizes, fontWeights } from '../lib/theme/tokens';
 
 interface State {
   hasError: boolean;
@@ -54,9 +54,10 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   title: {
-    color: '#ff0000',
-    fontSize: 24,
-    fontWeight: 'bold',
+    color: colors.error,
+    fontSize: fontSizes.xxl,
+    fontFamily: fonts.bodySemiBold,
+    fontWeight: fontWeights.bold,
     marginBottom: 16,
   },
   scroll: {

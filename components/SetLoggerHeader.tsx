@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, fontSizes , fontWeights} from '../lib/theme/tokens';
+import { colors, spacing, fontSizes, fontWeights, fonts } from '../lib/theme/tokens';
 import { SET_LOGGER } from '../lib/constants/layout';
 
 interface SetLoggerHeaderProps {
@@ -28,7 +28,7 @@ export function SetLoggerHeader({ unit, onUnitChange, hasPartial = false }: SetL
       </TouchableOpacity>
       <Text style={styles.repsHeader}>{t('setLogger.reps')}</Text>
       {hasPartial && (
-        <Text style={styles.partialHeader}>R/P</Text>
+        <Text style={styles.partialHeader}>{t('session.sets')} R/P</Text>
       )}
       <View style={styles.intensitySpacer} />
       <View style={styles.checkHeader} />
@@ -47,14 +47,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   serieHeader: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     width: SET_LOGGER.SERIE_WIDTH,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   anteriorHeader: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     width: SET_LOGGER.PREVIOUS_WIDTH,
     textAlign: 'center',
@@ -68,19 +68,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unitHeaderText: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     letterSpacing: 0.5,
   },
   repsHeader: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     flex: 1,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   partialHeader: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.muted,
     flex: 1,
     textAlign: 'center',

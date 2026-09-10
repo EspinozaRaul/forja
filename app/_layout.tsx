@@ -12,7 +12,7 @@ import i18n from '../lib/i18n';
 import { useDatabase } from '../lib/hooks/useDatabase';
 import { repairRoutineTargetDefaults } from '../lib/db/queries';
 import { useAuth } from '../lib/hooks/useAuth';
-import { colors, spacing , fontWeights} from '../lib/theme/tokens';
+import { colors, spacing, fontWeights, fonts } from '../lib/theme/tokens';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const queryClient = new QueryClient();
@@ -53,7 +53,7 @@ function RootLayoutNav() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg.primary },
         headerTintColor: colors.text.primary,
-        headerTitleStyle: { color: colors.text.primary, fontWeight: fontWeights.semibold },
+        headerTitleStyle: { color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold },
         contentStyle: { backgroundColor: colors.bg.primary },
       }}
     >

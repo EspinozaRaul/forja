@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes, fontWeights, borderWidths, fonts } from '../lib/theme/tokens';
 import { ICON } from '../lib/constants/layout';
 
 type NoteType = 'rendimiento' | 'ajuste' | null;
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   typeIconText: {
-    fontSize: fontSizes.xs2, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
   },
   container: {
     backgroundColor: colors.bg.elevated,

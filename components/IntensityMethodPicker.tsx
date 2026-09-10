@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, fontSizes , fontWeights, borderWidths} from '../lib/theme/tokens';
+import { colors, spacing, borderRadius, fontSizes, fontWeights, borderWidths, fonts } from '../lib/theme/tokens';
 import { MODAL, ICON } from '../lib/constants/layout';
 
 export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
@@ -34,7 +34,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
         style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}
-        accessibilityLabel="Cerrar selector de método"
+        accessibilityLabel={t('accessibility.intensityPicker.close')}
         accessibilityRole="button"
       >
         <View style={styles.container}>
@@ -61,7 +61,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity onPress={onClose} style={styles.cancelButton} accessibilityLabel="Cancelar" accessibilityRole="button">
+          <TouchableOpacity onPress={onClose} style={styles.cancelButton} accessibilityLabel={t('accessibility.intensityPicker.cancel')} accessibilityRole="button">
             <Text style={styles.cancelText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.primary,
   },
   title: {
-    fontSize: fontSizes.lg, fontWeight: fontWeights.bold,
+    fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.xs,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionLabel: {
-    fontSize: fontSizes.sm, fontWeight: fontWeights.semibold,
+    fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     color: colors.text.primary,
   },
   optionDescription: {
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border.divider,
   },
   cancelText: {
-    fontSize: fontSizes.sm, fontWeight: fontWeights.semibold,
+    fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     color: colors.text.secondary,
   },
 });

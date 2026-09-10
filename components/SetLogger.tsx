@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: colors.text.primary,
-    fontWeight: fontWeights.bold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     fontSize: fontSizes.sm
   },
   dropBadge: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxs,
   },
   dropBadgeText: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.extrabold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.extrabold,
     color: colors.warning,
   },
 });

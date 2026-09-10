@@ -92,8 +92,7 @@ export default function LoginScreen() {
 
         {/* Email/Password Form */}
         <TextInput
-          // @ts-ignore — tintColor works at runtime but isn't in RN types yet
-          style={[styles.input, { tintColor: colors.accent.primary }]}
+          style={[styles.input, { tintColor: colors.accent.primary } as any]}
           placeholder={t('auth.login.email')}
           placeholderTextColor={colors.text.muted}
           value={email}
@@ -103,8 +102,7 @@ export default function LoginScreen() {
         />
         <View style={styles.passwordContainer}>
           <TextInput
-            // @ts-ignore — tintColor works at runtime but isn't in RN types yet
-            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary }]}
+            style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.login.password')}
             placeholderTextColor={colors.text.muted}
             value={password}

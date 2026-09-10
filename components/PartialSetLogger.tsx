@@ -99,7 +99,7 @@ export function PartialSetLogger({
             <Text style={styles.serieNumber}>{set.setNumber}</Text>
           </View>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Partial</Text>
+            <Text style={styles.badgeText}>{t('session.partialSet')}</Text>
           </View>
         </View>
 
@@ -145,7 +145,7 @@ export function PartialSetLogger({
             <TextInput
               style={styles.input}
               keyboardType="numeric"
-              placeholder="R/P"
+              placeholder={t('session.partialRepsPlaceholder')}
               placeholderTextColor={colors.text.muted}
               value={partialReps}
               onChangeText={handlePartialRepsChange}
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   badgeText: {
-    fontSize: fontSizes.xxs, fontWeight: fontWeights.extrabold,
+    fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.extrabold,
     color: colors.accent.primary,
     letterSpacing: 0.3,
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: colors.text.primary,
-    fontWeight: fontWeights.bold,
+    fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     fontSize: fontSizes.sm
   },
 });
