@@ -22,11 +22,17 @@ export function shouldCelebrateNewRecord(
 }
 
 /**
- * Returns the weight of the most recent qualifying earlier set for the same
- * session-exercise, to compare against for the "new record" celebration.
- * Qualifying: a set other than the one being updated, with a weight > 0, that
- * is a real "visible" row (parent of a grouped method or plain linear; drop
- * children excluded). Returns null when no such earlier set exists.
+ * Returns the weight to compare against for the "new record" celebration:
+ * the most recent qualifying earlier set of the same session-exercise.
+ *
+ * Selection rule, in order:
+ *  1. highest setNumber below the current set (the immediately preceding set)
+ *  2. a plain linear set over a drop-group parent when both share that setNumber
+ *  3. array order, so the result is deterministic
+ *
+ * Qualifying: a set other than the one being updated, with weight > 0, that is a
+ * real "visible" row (drop children excluded). Returns null when no such set
+ * exists.
  *
  * NOTE: in the DB, a plain linear set has dropOrder = 0 (schema default) and
  * isDropGroup = false; drop children have dropOrder >= 1. The mapper also
@@ -49,10 +55,15 @@ export function findPreviousSetWeight(
   );
   if (candidates.length === 0) return null;
 
-  // Return the heaviest qualifying earlier set (most recent high-water mark)
+  const isDropParent = (s: Set) => s.isDropGroup === true;
+
   let best = candidates[0];
   for (const s of candidates) {
-    if ((s.weight ?? 0) > (best.weight ?? 0)) {
+    const setNumber = s.setNumber ?? 0;
+    const bestSetNumber = best.setNumber ?? 0;
+    if (setNumber > bestSetNumber) {
+      best = s;
+    } else if (setNumber === bestSetNumber && isDropParent(best) && !isDropParent(s)) {
       best = s;
     }
   }
