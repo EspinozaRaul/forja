@@ -56,7 +56,15 @@ describe('i18n catalog parity', () => {
  */
 describe('i18n usage', () => {
   const ROOTS = ['app', 'components', 'lib'];
-  const STATIC_KEY = /(?<![A-Za-z0-9_.])t\('([A-Za-z][A-Za-z0-9_.]*)'\)/g;
+  // First argument of t(), single-quoted, followed by `)` or `,` so that both
+  // the plain form `t('key')` and the options form `t('key', { count })` are
+  // covered. The trailing `[,)]` deliberately ignores concatenations such as
+  // `t('a' + b)`, which are not static keys.
+  const STATIC_KEY = /(?<![A-Za-z0-9_.])t\(\s*'([A-Za-z][A-Za-z0-9_.]*)'\s*[,)]/g;
+  // Template-literal keys `t(`prefix.${x}`)`. Only the literal parts are
+  // captured; the base path and the reachability of its children are asserted
+  // by the "resolves every template-literal key base" test below.
+  const TEMPLATE_KEY = /(?<![A-Za-z0-9_.])t\(\s*`([^`]*)`/g;
 
   function collectSourceFiles(dir: string): string[] {
     const files: string[] = [];
@@ -71,16 +79,31 @@ describe('i18n usage', () => {
     return files;
   }
 
-  const usedKeys = (() => {
+  const sourceFiles = (() => {
     const root = path.join(__dirname, '..', '..', '..');
-    const keys = new Set<string>();
+    const files: string[] = [];
     for (const dir of ROOTS) {
       const abs = path.join(root, dir);
-      if (!fs.existsSync(abs)) continue;
-      for (const file of collectSourceFiles(abs)) {
-        for (const match of fs.readFileSync(file, 'utf8').matchAll(STATIC_KEY)) {
-          keys.add(match[1]);
-        }
+      if (fs.existsSync(abs)) files.push(...collectSourceFiles(abs));
+    }
+    return files;
+  })();
+
+  const usedKeys = (() => {
+    const keys = new Set<string>();
+    for (const file of sourceFiles) {
+      for (const match of fs.readFileSync(file, 'utf8').matchAll(STATIC_KEY)) {
+        keys.add(match[1]);
+      }
+    }
+    return keys;
+  })();
+
+  const templateKeys = (() => {
+    const keys: string[] = [];
+    for (const file of sourceFiles) {
+      for (const match of fs.readFileSync(file, 'utf8').matchAll(TEMPLATE_KEY)) {
+        keys.push(match[1]);
       }
     }
     return keys;
@@ -94,6 +117,8 @@ describe('i18n usage', () => {
     }
     return typeof cur !== 'string';
   };
+
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   it('uses only keys that exist in es.json', () => {
     const missing = [...usedKeys].filter((k) => !esFlat.has(k)).sort();
@@ -110,5 +135,30 @@ describe('i18n usage', () => {
       .filter((key) => isGroup(es as Json, key) || isGroup(en as Json, key))
       .sort();
     expect(groups).toEqual([]);
+  });
+
+  it('resolves every template-literal key base to an existing group', () => {
+    // `t(`methods.${id}.label`)` cannot be resolved statically, so instead of
+    // checking the key itself we check the two things a rename would break:
+    // the literal base must exist as a group, and the whole shape must still
+    // match at least one real key in both catalogs.
+    const dynamic = templateKeys.filter((key) => key.includes('${'));
+    const problems: string[] = [];
+    for (const template of dynamic) {
+      const base = template.slice(0, template.indexOf('${')).replace(/\.$/, '');
+      if (base && !(isGroup(es as Json, base) && isGroup(en as Json, base))) {
+        problems.push(`base "${base}" of \`${template}\` is not a group in both catalogs`);
+        continue;
+      }
+      const segments = template.split(/\$\{[^}]*\}/);
+      let pattern = '^' + escapeRegExp(segments[0]);
+      for (let i = 1; i < segments.length; i++) pattern += '.+' + escapeRegExp(segments[i]);
+      pattern += '$';
+      const shape = new RegExp(pattern);
+      if (![...esFlat.keys()].some((key) => shape.test(key))) {
+        problems.push(`\`${template}\` matches no key in es.json`);
+      }
+    }
+    expect(problems.sort()).toEqual([]);
   });
 });
