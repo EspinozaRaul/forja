@@ -60,10 +60,19 @@ export function useAuth() {
       if (!cancelled) setLoading(false);
     };
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session);
-    });
+    // Get initial session. Fail CLOSED and unblock: if storage/session throws, we
+    // must still drop `loading` (the root layout gates the whole app on it) and
+    // clear the scope mirror so no query runs unscoped — applySession(null) does
+    // both. Without this catch a throw left the user on the splash forever.
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        applySession(session);
+      })
+      .catch((err) => {
+        if (__DEV__) console.error('Failed to restore session:', err);
+        applySession(null);
+      });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
