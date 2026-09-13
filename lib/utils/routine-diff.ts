@@ -5,6 +5,17 @@
  * those never trigger the "update routine?" question.
  */
 
+import i18n from '../i18n';
+import type { TOptions } from 'i18next';
+
+/**
+ * Translator shape used by the summary helpers. Defaults to the app i18n
+ * instance; injectable so callers (and tests) can pin a language explicitly.
+ */
+export type TranslateFn = (key: string, options?: TOptions) => string;
+
+const defaultTranslate: TranslateFn = (key, options) => i18n.t(key, options);
+
 export interface DiffSetRow {
   setNumber: number;
   method: string | null;
@@ -124,13 +135,13 @@ export function detectRoutineDiff(params: DetectParams): RoutineDiff {
   };
 }
 
-export function summarizeDiff(diff: RoutineDiff): string[] {
+export function summarizeDiff(diff: RoutineDiff, t: TranslateFn = defaultTranslate): string[] {
   const lines: string[] = [];
-  for (const item of diff.removed) lines.push(`Removed: ${item.name}`);
-  for (const item of diff.added) lines.push(`Added: ${item.name}`);
+  for (const item of diff.removed) lines.push(t('session.diff.removed', { name: item.name }));
+  for (const item of diff.added) lines.push(t('session.diff.added', { name: item.name }));
   for (const item of diff.volumeChanged) {
-    lines.push(`Volume: ${item.fromSets}→${item.toSets} sets for ${item.name}`);
+    lines.push(t('session.diff.volume', { from: item.fromSets, to: item.toSets, name: item.name }));
   }
-  if (diff.reordered) lines.push('Exercise order changed');
+  if (diff.reordered) lines.push(t('session.diff.reordered'));
   return lines;
 }

@@ -1,3 +1,12 @@
+import type { WeightUnit } from './weight-unit';
+import { now } from './date';
+import i18n from '../i18n';
+import type { TOptions } from 'i18next';
+
+type TranslateFn = (key: string, options?: TOptions) => string;
+
+const defaultTranslate: TranslateFn = (key, options) => i18n.t(key, options);
+
 /**
  * Format seconds into MM:SS display
  */
@@ -8,26 +17,24 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * Format a date to a relative string using i18n
+ * Format a date to a relative string using i18n. Every branch goes through the
+ * translator, so there are no language-specific literals here: a missing key
+ * falls back to the app language rather than to a hardcoded string.
  */
-export function formatRelativeDate(date: Date | string, t?: (key: string, options?: Record<string, unknown>) => string): string {
+export function formatRelativeDate(
+  date: Date | string,
+  t: TranslateFn = defaultTranslate
+): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
+  const diffMs = now().getTime() - d.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return t ? t('common.today') : 'Hoy';
-  if (diffDays === 1) return t ? t('common.yesterday') : 'Ayer';
-  if (diffDays < 7) return t ? t('common.daysAgo', { count: diffDays }) : `Hace ${diffDays} días`;
-  if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return t ? t('common.weeksAgo', { count: weeks }) : `Hace ${weeks} semanas`;
-  }
+  if (diffDays === 0) return t('common.today');
+  if (diffDays === 1) return t('common.yesterday');
+  if (diffDays < 7) return t('common.daysAgo', { count: diffDays });
+  if (diffDays < 30) return t('common.weeksAgo', { count: Math.floor(diffDays / 7) });
   return d.toLocaleDateString();
 }
-
-import type { WeightUnit } from './weight-unit';
-import { now } from '../utils/date';
 
 /**
  * Format volume with appropriate precision for the given unit. Aggregates mix

@@ -1,4 +1,25 @@
 import type { Set } from '../types';
+import i18n from '../i18n';
+import type { TOptions } from 'i18next';
+
+/**
+ * Translator shape used by the summary helpers. Defaults to the app i18n
+ * instance; injectable so callers (and tests) can pin a language explicitly.
+ */
+export type TranslateFn = (key: string, options?: TOptions) => string;
+
+const defaultTranslate: TranslateFn = (key, options) => i18n.t(key, options);
+
+/**
+ * Maps a grouped intensity method to the i18n key holding its badge label
+ * ("Drop", "Segmento"). Unknown methods fall back to the segmented label,
+ * matching the previous hardcoded behaviour.
+ */
+function groupLabelKey(method: string | null): string {
+  if (method === 'dropset') return 'methods.dropset.unitLabel';
+  if (method === 'cluster') return 'methods.cluster.unitLabel';
+  return 'methods.rest_pause.unitLabel';
+}
 
 /**
  * Summarize a list of sets for compact display (e.g., the "last session" card
@@ -23,7 +44,7 @@ export interface SetSummaryLine {
 
 const GROUP_METHODS = ['dropset', 'rest_pause', 'cluster'];
 
-export function summarizeSets(sets: Set[]): SetSummaryLine[] {
+export function summarizeSets(sets: Set[], t: TranslateFn = defaultTranslate): SetSummaryLine[] {
   if (!sets || sets.length === 0) return [];
 
   // Group rows that belong to an intensity-method group: same setNumber + method.
@@ -50,7 +71,7 @@ export function summarizeSets(sets: Set[]): SetSummaryLine[] {
     const first = sorted[0];
     lines.push({
       type: 'group',
-      label: first.method === 'dropset' ? 'Drop' : 'Segment',
+      label: t(groupLabelKey(first.method)),
       count: sorted.length,
       setNumber: first.setNumber,
       reps: null,

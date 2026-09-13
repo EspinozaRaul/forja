@@ -1,4 +1,5 @@
 import { formatDuration, formatRelativeDate, formatVolume } from '../../../lib/utils/format';
+import { now } from '../../../lib/utils/date';
 
 describe('formatDuration', () => {
   it('formats 0 seconds as 0:00', () => {
@@ -26,33 +27,55 @@ describe('formatDuration', () => {
   });
 });
 
+/**
+ * Language-dependent assertions run in the app's default language: jest.setup.js
+ * pins expo-localization to `es`, which is also the i18n fallback language.
+ */
 describe('formatRelativeDate', () => {
-  it('returns "Today" for current date', () => {
-    const today = new Date();
-    expect(formatRelativeDate(today)).toBe('Today');
+  const daysAgo = (days: number) => {
+    const d = now();
+    d.setDate(d.getDate() - days);
+    return d;
+  };
+
+  it('renders the current date as "today"', () => {
+    expect(formatRelativeDate(now())).toBe('Hoy');
   });
 
-  it('returns "Yesterday" for previous day', () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    expect(formatRelativeDate(yesterday)).toBe('Yesterday');
+  it('renders the previous day as "yesterday"', () => {
+    expect(formatRelativeDate(daysAgo(1))).toBe('Ayer');
   });
 
-  it('returns "X days ago" for recent dates', () => {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    expect(formatRelativeDate(threeDaysAgo)).toBe('3 days ago');
+  it('renders recent dates with a day count', () => {
+    expect(formatRelativeDate(daysAgo(3))).toBe('Hace 3 días');
   });
 
-  it('returns "X weeks ago" for older dates', () => {
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    expect(formatRelativeDate(twoWeeksAgo)).toBe('2 weeks ago');
+  it('renders older dates with a week count', () => {
+    expect(formatRelativeDate(daysAgo(14))).toBe('Hace 2 semanas');
   });
 
   it('handles string dates', () => {
-    const today = new Date();
-    expect(formatRelativeDate(today.toISOString())).toBe('Today');
+    expect(formatRelativeDate(now().toISOString())).toBe('Hoy');
+  });
+
+  it('maps every branch to its i18n key with the right count', () => {
+    const calls: Array<{ key: string; options?: unknown }> = [];
+    const t = (key: string, options?: unknown) => {
+      calls.push({ key, options });
+      return key;
+    };
+
+    expect(formatRelativeDate(daysAgo(0), t)).toBe('common.today');
+    expect(formatRelativeDate(daysAgo(1), t)).toBe('common.yesterday');
+    expect(formatRelativeDate(daysAgo(3), t)).toBe('common.daysAgo');
+    expect(formatRelativeDate(daysAgo(14), t)).toBe('common.weeksAgo');
+
+    expect(calls).toEqual([
+      { key: 'common.today', options: undefined },
+      { key: 'common.yesterday', options: undefined },
+      { key: 'common.daysAgo', options: { count: 3 } },
+      { key: 'common.weeksAgo', options: { count: 2 } },
+    ]);
   });
 });
 
