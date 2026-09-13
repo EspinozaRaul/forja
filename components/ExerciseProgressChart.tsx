@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { MONTHS_ES } from '../lib/constants/months';
@@ -24,7 +25,7 @@ export function ExerciseProgressChart({ data, unit = 'kg' }: ExerciseProgressCha
     return (
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.md }}>
         <EmptyState
-          icon="trending-up"
+          icon={<Ionicons name="trending-up" size={48} color={colors.text.muted} />}
           title={t('progress.exercises.noData')}
           message={t('progress.exercises.startTraining')}
         />

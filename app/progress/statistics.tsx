@@ -139,8 +139,8 @@ export default function StatisticsScreen() {
 
   if (!stats) {
     return (
-      <EmptyState 
-        icon="bar-chart"
+      <EmptyState
+        icon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
         title={t('progress.statistics.noData')}
         message={t('progress.statistics.startTraining')}
       />
