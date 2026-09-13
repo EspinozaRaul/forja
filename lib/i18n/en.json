@@ -57,25 +57,14 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
-    "add": "Add",
     "back": "Back",
-    "close": "Close",
     "confirm": "Confirm",
-    "yes": "Yes",
-    "no": "No",
     "success": "Success",
-    "showPassword": "Show",
-    "hidePassword": "Hide",
     "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "{{count}} days ago",
     "weeksAgo": "{{count}} weeks ago",
-    "invalidId": "Invalid ID",
-    "errorBoundary": {
-      "title": "Something went wrong",
-      "message": "An unexpected error occurred",
-      "retry": "Try Again"
-    }
+    "invalidId": "Invalid ID"
   },
   "exercise": {
     "create": {
@@ -164,6 +153,7 @@
   },
   "session": {
     "title": "Session",
+    "exerciseCount": "{{count}} exercises",
     "create": {
       "title": "New Session"
     },
@@ -293,9 +283,6 @@
       "minutes": "min",
       "seconds": "sec",
       "save": "Save",
-      "saving": "Saving...",
-      "saveDropSet": "Save Drop Set",
-      "saveSet": "Save Set",
       "cancel": "Cancel",
       "addUnit": "Add {{unit}}"
     },
@@ -336,8 +323,7 @@
     "deleteAccount": "Delete account",
     "deleteAccountConfirm": "Permanently delete your account? All your data, workouts, and settings will be erased. This action cannot be undone.",
     "deleteAccountDescription": "Permanently delete your account and all associated data.",
-    "deleteAccountFailed": "Could not delete account.",
-    "version": "Version"
+    "deleteAccountFailed": "Could not delete account."
   },
   "tabs": {
     "home": {
@@ -346,7 +332,6 @@
       "workouts": "Workouts",
       "streak": "Streak",
       "mostFrequent": "Most Frequent",
-      "routines": "Routines",
       "quickStart": "Quick Start",
       "newSession": "New Session",
       "recentSessions": "Recent Sessions",
@@ -392,18 +377,13 @@
     }
   },
   "progress": {
-    "summary": "Summary",
     "today": "Today",
     "yesterday": "Yesterday",
     "sets": "Sets",
-    "time": "Time",
     "volume": "Volume",
     "max": "max",
-    "compare": "Compare",
-    "all": "All",
     "viewMore": "View more",
     "viewLess": "View less",
-    "close": "Close",
     "loading": "Loading…",
     "months": {
       "jan": "Jan",
@@ -441,14 +421,8 @@
       "compare": "Compare",
       "compareDescription": "Compare sessions"
     },
-    "loadingStats": "Loading stats…",
-    "loadingWeek": "Loading week…",
     "loadingSessions": "Loading sessions…",
-    "loadingExercises": "Loading exercises…",
-    "loadingEvolution": "Loading progression…",
-    "comparing": "Comparing sessions…",
     "noSessionsDay": "No workouts this day",
-    "noSessionsWeek": "No sessions this week",
     "noSessionsMonth": "No workouts this month",
     "noSessionsMonthMessage": "Work out to start seeing your progress here.",
     "daySessionsTitle": "Workouts for day {{day}}",
@@ -456,49 +430,11 @@
     "monthSessionsTitle": "Sessions of the month",
     "trainingCount": "{{count}} workouts",
     "exerciseCount": "{{count}} exercises",
-    "sessionsAndSets": "{{sessions}} sessions · {{sets}} sets",
-    "compareSessions": "Compare sessions",
-    "closeComparison": "Close comparison",
-    "compareInstruction": "Tap Compare on two sessions to compare them.",
-    "deltaVolume": "Δ Volume",
-    "deltaSets": "Δ Sets",
-    "new": "new",
-    "removed": "removed",
     "maxWeight": "Max weight",
-    "maxReps": "Max reps",
-    "weekTitle": "Week {{week}}",
-    "weekVolume": "Volume",
-    "weekExercises": "Exercises",
-    "mostUsedHint": "Most used — tap one to see its progression.",
-    "noExercises": "No exercises logged yet",
-    "dateRange": "Date range",
     "range4weeks": "4 weeks",
     "range12weeks": "12 weeks",
     "rangeAll": "All",
-    "weeklyVolume": "Weekly volume ({{unit}})",
-    "sessionsPerWeek": "Sessions per week",
-    "evolution": "Progression",
-    "noRecords": "No records for this exercise",
     "viewMoreCount": "View more ({{count}})",
-    "setsAndCompleted": "{{sets}} sets · {{completed}} completed",
-    "week": {
-      "sun": "Sun",
-      "mon": "Mon",
-      "tue": "Tue",
-      "wed": "Wed",
-      "thu": "Thu",
-      "fri": "Fri",
-      "sat": "Sat"
-    },
-    "weekdayHeader": {
-      "mon": "M",
-      "tue": "T",
-      "wed": "W",
-      "thu": "T",
-      "fri": "F",
-      "sat": "S",
-      "sun": "S"
-    },
     "noDataYet": "No data yet",
     "chartWeekHint": "Each point = one week of the year",
     "statistics": {
@@ -547,16 +483,7 @@
       "deleteMeasurement": "Delete measurement",
       "deleteMeasurementConfirm": "Are you sure you want to delete this measurement?",
       "deletePhoto": "Delete photo",
-      "deletePhotoConfirm": "Are you sure you want to delete this photo?",
-      "backPhoto": "Back photo",
-      "bodyWeight": "Body weight",
-      "frontPhoto": "Front photo",
-      "noMeasurements": "No measurements yet",
-      "saveError": "Could not save",
-      "saved": "Measurement saved!",
-      "selectMonth": "Select month",
-      "sidePhoto": "Side photo",
-      "startTracking": "Start tracking your progress"
+      "deletePhotoConfirm": "Are you sure you want to delete this photo?"
     },
     "units": {
       "kg": "kg"
@@ -568,8 +495,6 @@
       "exercise": "Exercise",
       "selectPeriods": "Select months to compare (max 6)",
       "loading": "Loading comparison...",
-      "error": "Error loading data",
-      "selectAtLeast2": "Select at least 2 months to compare",
       "selectRoutineTitle": "Select a routine",
       "selectRoutineMessage": "Choose a routine and the months you want to compare to see changes.",
       "searchPlaceholder": "Search...",
@@ -582,29 +507,12 @@
     "exercises": {
       "avgRepsPerSession": "Average reps per session",
       "avgWeightPerSession": "Average weight per session",
-      "bestSession": "Best session",
-      "bestSet": "Best set",
-      "completeSessions": "Complete sessions to see your progress",
       "eachPointOneSession": "Each point = one workout session",
-      "estimated1RM": "Est. 1RM",
-      "lastUsed": "Last used",
-      "maxWeight": "Max weight",
-      "maxWeightRecord": "Max weight record",
       "needAtLeast2Sessions": "You need at least 2 sessions with data to see progression",
       "noData": "No data for this exercise",
-      "noDataProgress": "No progress data",
-      "noExercises": "No exercises yet",
       "noProgression": "Progression unavailable",
-      "personalRecords": "Personal records",
-      "progression": "Progression",
       "rir": "RIR",
-      "search": "Search exercise...",
-      "sessionHistory": "Session history",
-      "sessions": "sessions",
-      "sets": "sets",
-      "startTraining": "Start training to see your exercises here.",
-      "title": "Exercises",
-      "volume": "Volume"
+      "startTraining": "Start training to see your exercises here."
     },
     "sessions": "Sessions"
   },
@@ -684,25 +592,20 @@
       "searchHint": "Type to search exercises by name or muscle",
       "createNew": "Create new exercise",
       "createNewHint": "Opens the form to create a new exercise",
-      "select": "Select exercise",
       "add": "Add exercise",
       "addHint": "Add exercise to routine",
       "confirm": "Confirm selection",
-      "back": "Back",
-      "deselect": "Deselect {{name}}",
-      "selectExercise": "Select {{name}}"
+      "back": "Back"
     },
     "intensityPicker": {
       "close": "Close method selector",
-      "select": "Select method: {{method}}",
       "cancel": "Cancel"
     },
     "routinePicker": {
       "close": "Close",
       "search": "Search routine",
       "searchHint": "Type to search routines by name",
-      "select": "Select routine: {{name}}",
-      "confirm": "Select routine"
+      "select": "Select routine: {{name}}"
     }
   },
   "methods": {
@@ -711,32 +614,27 @@
     "dropset": {
       "label": "Drop Set",
       "description": "Reduce weight and continue without rest",
-      "unitLabel": "Drop",
-      "unitLabelPlural": "drops"
+      "unitLabel": "Drop"
     },
     "rest_pause": {
       "label": "Rest-Pause",
       "description": "Short pause and continue with same weight",
-      "unitLabel": "Segment",
-      "unitLabelPlural": "segments"
+      "unitLabel": "Segment"
     },
     "cluster": {
       "label": "Cluster",
       "description": "Grouped reps with micro-breaks",
-      "unitLabel": "Segment",
-      "unitLabelPlural": "segments"
+      "unitLabel": "Segment"
     },
     "superset": {
       "label": "Super Set",
       "description": "Two exercises alternated without rest",
-      "unitLabel": "Segment",
-      "unitLabelPlural": "segments"
+      "unitLabel": "Segment"
     },
     "partial": {
       "label": "Partial",
       "description": "Partial reps with limited range",
-      "unitLabel": "Partial",
-      "unitLabelPlural": "partials"
+      "unitLabel": "Partial"
     }
   },
   "timer": {
@@ -830,8 +728,6 @@
   "exercises": {
     "title": "Exercises",
     "loading": "Loading exercises...",
-    "error": "Error",
-    "errorMessage": "Could not load exercises",
     "empty": "No exercises",
     "emptyMessage": "Start a session to see your exercises",
     "noResults": "No results",

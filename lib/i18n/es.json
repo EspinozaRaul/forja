@@ -57,25 +57,14 @@
     "save": "Guardar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "add": "Agregar",
     "back": "Volver",
-    "close": "Cerrar",
     "confirm": "Confirmar",
-    "yes": "Sí",
-    "no": "No",
     "success": "Éxito",
-    "showPassword": "Ver",
-    "hidePassword": "Ocultar",
     "today": "Hoy",
     "yesterday": "Ayer",
     "daysAgo": "Hace {{count}} días",
     "weeksAgo": "Hace {{count}} semanas",
-    "invalidId": "ID inválido",
-    "errorBoundary": {
-      "title": "Algo salió mal",
-      "message": "Ocurrió un error inesperado",
-      "retry": "Reintentar"
-    }
+    "invalidId": "ID inválido"
   },
   "exercise": {
     "create": {
@@ -164,6 +153,7 @@
   },
   "session": {
     "title": "Sesión",
+    "exerciseCount": "{{count}} ejercicios",
     "create": {
       "title": "Nueva Sesión"
     },
@@ -265,9 +255,6 @@
       "minutes": "min",
       "seconds": "seg",
       "save": "Guardar",
-      "saving": "Guardando...",
-      "saveDropSet": "Guardar Drop Set",
-      "saveSet": "Guardar Serie",
       "cancel": "Cancelar",
       "addUnit": "Agregar {{unit}}"
     },
@@ -322,7 +309,6 @@
       "workouts": "Entrenamientos",
       "streak": "Racha",
       "mostFrequent": "Más frecuente",
-      "routines": "Rutinas",
       "quickStart": "Inicio rápido",
       "newSession": "Nueva sesión",
       "recentSessions": "Sesiones recientes",
@@ -368,32 +354,13 @@
     }
   },
   "progress": {
-    "summary": "Resumen",
     "today": "Hoy",
     "yesterday": "Ayer",
     "sets": "Series",
-    "time": "Tiempo",
     "exercises": {
-      "title": "Ejercicios",
-      "search": "Buscar ejercicio...",
-      "noExercises": "Aún no hay ejercicios",
       "startTraining": "Empezá a entrenar para ver tus ejercicios aquí.",
-      "sessions": "sesiones",
-      "sets": "series",
-      "maxWeight": "Peso máx",
       "rir": "RIR",
-      "lastUsed": "Último uso",
-      "progression": "Progresión",
-      "personalRecords": "Records personales",
-      "maxWeightRecord": "Peso máximo",
-      "bestSet": "Mejor set",
-      "bestSession": "Mejor sesión",
-      "estimated1RM": "1RM estimado",
-      "sessionHistory": "Historial de sesiones",
-      "volume": "Volumen",
       "noData": "Sin datos de este ejercicio",
-      "noDataProgress": "Sin datos de progreso",
-      "completeSessions": "Completá sesiones para ver tu evolución",
       "avgWeightPerSession": "Peso promedio por sesión",
       "avgRepsPerSession": "Repeticiones promedio por sesión",
       "eachPointOneSession": "Cada punto = una sesión de entrenamiento",
@@ -402,11 +369,8 @@
     },
     "volume": "Volumen",
     "max": "máx",
-    "compare": "Comparar",
-    "all": "Todos",
     "viewMore": "Ver más",
     "viewLess": "Ver menos",
-    "close": "Cerrar",
     "loading": "Cargando…",
     "nav": {
       "statistics": "Estadísticas",
@@ -418,14 +382,8 @@
       "compare": "Comparar",
       "compareDescription": "Compara sesiones"
     },
-    "loadingStats": "Cargando estadísticas…",
-    "loadingWeek": "Cargando semana…",
     "loadingSessions": "Cargando sesiones…",
-    "loadingExercises": "Cargando ejercicios…",
-    "loadingEvolution": "Cargando evolución…",
-    "comparing": "Comparando sesiones…",
     "noSessionsDay": "Sin entrenamientos este día",
-    "noSessionsWeek": "Sin sesiones esta semana",
     "noSessionsMonth": "Sin entrenamientos este mes",
     "noSessionsMonthMessage": "Entrená para empezar a ver tu progreso aquí.",
     "daySessionsTitle": "Entrenamientos del día {{day}}",
@@ -433,40 +391,11 @@
     "monthSessionsTitle": "Sesiones del mes",
     "trainingCount": "{{count}} entrenamientos",
     "exerciseCount": "{{count}} ejercicios",
-    "sessionsAndSets": "{{sessions}} sesiones · {{sets}} series",
-    "compareSessions": "Comparar sesiones",
-    "closeComparison": "Cerrar comparación",
-    "compareInstruction": "Tocá Comparar en dos sesiones para compararlas.",
-    "deltaVolume": "Δ Volumen",
-    "deltaSets": "Δ Series",
-    "new": "nuevo",
-    "removed": "quitado",
     "maxWeight": "Peso máx",
-    "maxReps": "Reps máx",
-    "weekTitle": "Semana {{week}}",
-    "weekVolume": "Volumen",
-    "weekExercises": "Ejercicios",
-    "mostUsedHint": "Los más usados — tocá uno para ver su progresión.",
-    "noExercises": "Aún no hay ejercicios entrenados",
-    "dateRange": "Rango de fechas",
     "range4weeks": "4 semanas",
     "range12weeks": "12 semanas",
     "rangeAll": "Todo",
-    "weeklyVolume": "Volumen semanal ({{unit}})",
-    "sessionsPerWeek": "Sesiones por semana",
-    "evolution": "Evolución",
-    "noRecords": "Sin registros de este ejercicio",
     "viewMoreCount": "Ver más ({{count}})",
-    "setsAndCompleted": "{{sets}} series · {{completed}} completadas",
-    "week": {
-      "sun": "Dom",
-      "mon": "Lun",
-      "tue": "Mar",
-      "wed": "Mié",
-      "thu": "Jue",
-      "fri": "Vie",
-      "sat": "Sáb"
-    },
     "months": {
       "jan": "Ene",
       "feb": "Feb",
@@ -492,15 +421,6 @@
       "octShort": "Oct",
       "novShort": "Nov",
       "decShort": "Dic"
-    },
-    "weekdayHeader": {
-      "mon": "L",
-      "tue": "M",
-      "wed": "X",
-      "thu": "J",
-      "fri": "V",
-      "sat": "S",
-      "sun": "D"
     },
     "noDataYet": "Sin datos todavía",
     "chartWeekHint": "Cada punto = una semana del año",
@@ -541,11 +461,7 @@
       "side": "Lateral",
       "back": "Posterior",
       "latestMeasurement": "Última medida",
-      "noMeasurements": "Sin medidas aún",
-      "startTracking": "Empezá a registrar tu progreso",
       "errorEmpty": "Completá al menos un campo",
-      "saved": "¡Medida guardada!",
-      "saveError": "Error al guardar",
       "deleteMeasurement": "Eliminar medida",
       "deleteMeasurementConfirm": "¿Estás seguro? Esta acción no se puede deshacer.",
       "deletePhoto": "Eliminar foto",
@@ -554,12 +470,7 @@
       "gallery": "Galería",
       "camera": "Cámara",
       "noPhotos": "Sin fotos aún",
-      "history": "Historial",
-      "bodyWeight": "Peso corporal",
-      "frontPhoto": "Foto frontal",
-      "sidePhoto": "Foto lateral",
-      "backPhoto": "Foto posterior",
-      "selectMonth": "Seleccionar mes"
+      "history": "Historial"
     },
     "units": {
       "kg": "kg"
@@ -571,8 +482,6 @@
       "exercise": "Ejercicio",
       "selectPeriods": "Selecciona los meses a comparar (máx 6)",
       "loading": "Cargando comparación...",
-      "error": "Error al cargar datos",
-      "selectAtLeast2": "Selecciona al menos 2 meses para comparar",
       "selectRoutineTitle": "Selecciona una rutina",
       "selectRoutineMessage": "Elegí una rutina y los meses que quieras comparar para ver los cambios.",
       "searchPlaceholder": "Buscar...",
@@ -590,32 +499,27 @@
     "dropset": {
       "label": "Drop Set",
       "description": "Reducir peso y continuar sin descanso",
-      "unitLabel": "Drop",
-      "unitLabelPlural": "drops"
+      "unitLabel": "Drop"
     },
     "rest_pause": {
       "label": "Rest-Pause",
       "description": "Pausa corta y continuar con el mismo peso",
-      "unitLabel": "Segmento",
-      "unitLabelPlural": "segmentos"
+      "unitLabel": "Segmento"
     },
     "cluster": {
       "label": "Cluster",
       "description": "Repeticiones agrupadas con micro-descansos",
-      "unitLabel": "Segmento",
-      "unitLabelPlural": "segmentos"
+      "unitLabel": "Segmento"
     },
     "superset": {
       "label": "Super Set",
       "description": "Dos ejercicios alternados sin descanso",
-      "unitLabel": "Segmento",
-      "unitLabelPlural": "segmentos"
+      "unitLabel": "Segmento"
     },
     "partial": {
       "label": "Parcial",
       "description": "Repeticiones parciales con rango limitado",
-      "unitLabel": "Parcial",
-      "unitLabelPlural": "parciales"
+      "unitLabel": "Parcial"
     }
   },
   "exercisePicker": {
@@ -709,8 +613,6 @@
   "exercises": {
     "title": "Ejercicios",
     "loading": "Cargando ejercicios...",
-    "error": "Error",
-    "errorMessage": "No se pudieron cargar los ejercicios",
     "empty": "Sin ejercicios",
     "emptyMessage": "Empezá una sesión para ver tus ejercicios",
     "noResults": "Sin resultados",
@@ -800,25 +702,20 @@
       "searchHint": "Escribe para buscar ejercicios por nombre o músculo",
       "createNew": "Crear nuevo ejercicio",
       "createNewHint": "Abre el formulario para crear un nuevo ejercicio",
-      "select": "Seleccionar ejercicio",
       "add": "Agregar ejercicio",
       "addHint": "Agregar ejercicio a la rutina",
       "confirm": "Confirmar selección",
-      "back": "Volver",
-      "deselect": "Desseleccionar {{name}}",
-      "selectExercise": "Seleccionar {{name}}"
+      "back": "Volver"
     },
     "intensityPicker": {
       "close": "Cerrar selector de método",
-      "select": "Seleccionar método: {{method}}",
       "cancel": "Cancelar"
     },
     "routinePicker": {
       "close": "Cerrar",
       "search": "Buscar rutina",
       "searchHint": "Escribe para buscar rutinas por nombre",
-      "select": "Seleccionar rutina: {{name}}",
-      "confirm": "Seleccionar rutina"
+      "select": "Seleccionar rutina: {{name}}"
     }
   },
   "settings": {
@@ -839,7 +736,6 @@
     "signOutFailed": "No se pudo cerrar sesión.",
     "sound": "Sonido",
     "soundDescription": "Sonido del temporizador de descanso.",
-    "version": "Versión",
     "vibration": "Vibración",
     "vibrationDescription": "Vibración al tocar.",
     "weightUnit": "Unidad de peso",
