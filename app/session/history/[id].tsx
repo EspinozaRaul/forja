@@ -1,7 +1,7 @@
 import { Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSession, useSessionExercises, useCompleteSession } from '../../../lib/hooks/useSessions';
+import { useSession, useSessionExercises, useUpdateSessionNotes } from '../../../lib/hooks/useSessions';
 import { useExercise } from '../../../lib/hooks/useExercises';
 import { useSets } from '../../../lib/hooks/useSets';
 import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/useRoutines';
@@ -27,7 +27,7 @@ export default function SessionSummaryScreen() {
   const sessionId = parseInt(id, 10);
   const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
   const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
-  const completeSession = useCompleteSession();
+  const updateNotes = useUpdateSessionNotes();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
@@ -71,9 +71,11 @@ export default function SessionSummaryScreen() {
 
   const handleSaveNotes = async () => {
     try {
-      await completeSession.mutateAsync({
+      // Notes-only write: it must not re-stamp completedAt, or editing the notes of
+      // a finished session would move it to today in the history and statistics.
+      await updateNotes.mutateAsync({
         id: sessionId,
-        data: { notes: notes.trim() || undefined },
+        notes: notes.trim() || null,
       });
       setIsEditingNotes(false);
     } catch (error) {
@@ -155,7 +157,7 @@ export default function SessionSummaryScreen() {
                 setIsEditingNotes(true);
               }
             }}
-            loading={completeSession.isPending}
+            loading={updateNotes.isPending}
           />
         </View>
         {isEditingNotes ? (

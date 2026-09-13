@@ -413,9 +413,28 @@ export async function completeSession(
   id: number,
   data: { completedAt?: Date; duration?: number; notes?: string }
 ) {
+  // First completion wins. `coalesce` keeps the stored completed_at when the
+  // session already has one, so completing an already-completed session (e.g. a
+  // duplicate tap) cannot move the date that history ordering and the statistics
+  // group by; other fields still update. A brand-new completion keeps defaulting
+  // to now() when no date is passed. The unix-seconds conversion mirrors the
+  // encoding drizzle applies to the `timestamp` column.
+  const completedAtSeconds = Math.floor((data.completedAt ?? now()).getTime() / 1000);
   return db
     .update(sessions)
-    .set({ ...data, completedAt: data.completedAt ?? now() })
+    .set({ ...data, completedAt: sql`coalesce(${sessions.completedAt}, ${completedAtSeconds})` })
+    .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
+    .returning();
+}
+
+export async function updateSessionNotes(id: number, notes: string | null) {
+  // Notes-only write. It must NOT touch completed_at — that date drives the
+  // history ordering and the statistics grouping, so editing notes used to make a
+  // finished session jump to today. `sessions` has no updated_at column, so
+  // `notes` is the only field changed.
+  return db
+    .update(sessions)
+    .set({ notes })
     .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
     .returning();
 }
@@ -1548,7 +1567,9 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
       .orderBy(desc(sessions.startedAt))
       .limit(100),
-    // Most frequent exercise
+    // Most frequent exercise — completed sessions only, like every sibling
+    // aggregate above: an abandoned or still-active session must not inflate the
+    // card.
     db.select({
       name: exercises.name,
       count: sql<number>`count(*)`,
@@ -1556,7 +1577,7 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       .from(sessionExercises)
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
       .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-      .where(ownedByCurrentUser(sessions.userId))
+      .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
       .groupBy(sessionExercises.exerciseId)
       .orderBy(desc(sql`count(*)`))
       .limit(1),

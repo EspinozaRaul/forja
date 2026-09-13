@@ -5,6 +5,7 @@ import {
   getActiveSession,
   createSession,
   completeSession,
+  updateSessionNotes,
   deleteSession,
   getSessionExercises,
   getSessionExercisesWithSets,
@@ -106,6 +107,19 @@ export function useCompleteSession() {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
     },
     onError: mutationErrorHandler('Error al finalizar sesión'),
+  });
+}
+
+export function useUpdateSessionNotes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes: string | null }) =>
+      updateSessionNotes(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    },
+    onError: mutationErrorHandler('Error al guardar notas'),
   });
 }
 
