@@ -19,9 +19,11 @@ jest.mock('../../../lib/db/index', () => ({
 
 import { db } from '../../../lib/db/index';
 
-// Helper to create mock query chain
-const createMockQuery = (result: any) => {
-  const mockChain = {
+/**
+ * Builds a thenable stand-in for a Drizzle query chain.
+ */
+function createMockQuery<T extends object>(result: T[]) {
+  return {
     from: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
@@ -29,26 +31,32 @@ const createMockQuery = (result: any) => {
     groupBy: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
-    then: jest.fn().mockImplementation((resolve) => resolve(result)),
+    then: jest.fn().mockImplementation((resolve: (value: T[]) => unknown) => resolve(result)),
   };
-  return mockChain;
-};
+}
+
+/** Queues one `db.select()` result per query the implementation runs. */
+function mockSelects(...results: object[][]) {
+  const select = db.select as jest.Mock;
+  for (const result of results) {
+    select.mockReturnValueOnce(createMockQuery(result));
+  }
+}
 
 describe('Database Queries', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    // resetAllMocks, NOT clearAllMocks: `clearAllMocks` leaves the
+    // `mockReturnValueOnce` queue intact, so a test that queues more results
+    // than the implementation consumes leaks them into the next test and
+    // silently shifts every assertion after it.
+    jest.resetAllMocks();
   });
 
   describe('getExerciseStats', () => {
     it('should return stats for an exercise with data', async () => {
-      const mockStats = [
-        { maxWeight: 100, totalVolume: 5000, totalSets: 20 },
-      ];
-      const mockSessionCount = [{ count: 5 }];
-
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery(mockStats))
-        .mockReturnValueOnce(createMockQuery(mockSessionCount));
+      mockSelects([
+        { maxWeight: 100, totalVolume: 5000, totalSets: 20, totalSessions: 5 },
+      ]);
 
       const result = await getExerciseStats(1);
 
@@ -61,12 +69,9 @@ describe('Database Queries', () => {
     });
 
     it('should return null/zero values when no data exists', async () => {
-      const mockStats = [{ maxWeight: null, totalVolume: 0, totalSets: 0 }];
-      const mockSessionCount = [{ count: 0 }];
-
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery(mockStats))
-        .mockReturnValueOnce(createMockQuery(mockSessionCount));
+      mockSelects([
+        { maxWeight: null, totalVolume: 0, totalSets: 0, totalSessions: 0 },
+      ]);
 
       const result = await getExerciseStats(999);
 
@@ -81,18 +86,11 @@ describe('Database Queries', () => {
 
   describe('getExercisePRs', () => {
     it('should return personal records for an exercise', async () => {
-      const mockMaxWeight = [{ value: 120, date: new Date('2026-07-20') }];
-      const mockBestSet = [
-        { weight: 100, reps: 8, volume: 800, date: new Date('2026-07-19') },
-      ];
-      const mockMaxVolumeSession = [
-        { volume: 2400, date: new Date('2026-07-18'), sessionId: 5 },
-      ];
-
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery(mockMaxWeight))
-        .mockReturnValueOnce(createMockQuery(mockBestSet))
-        .mockReturnValueOnce(createMockQuery(mockMaxVolumeSession));
+      mockSelects(
+        [{ value: 120, date: new Date('2026-07-20') }],
+        [{ weight: 100, reps: 8, volume: 800, date: new Date('2026-07-19') }],
+        [{ volume: 2400, date: new Date('2026-07-18'), sessionId: 5 }]
+      );
 
       const result = await getExercisePRs(1);
 
@@ -116,10 +114,7 @@ describe('Database Queries', () => {
     });
 
     it('should return null PRs when no data exists', async () => {
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery([]))
-        .mockReturnValueOnce(createMockQuery([]))
-        .mockReturnValueOnce(createMockQuery([]));
+      mockSelects([], [], []);
 
       const result = await getExercisePRs(999);
 
@@ -132,43 +127,45 @@ describe('Database Queries', () => {
 
   describe('getGlobalStats', () => {
     it('should return global statistics', async () => {
-      const mockWorkouts = [{ count: 25 }];
-      const mockVolume = [{ total: 50000 }];
-      const mockTime = [{ total: 18000 }];
-      const mockRecentSessions = [
-        { startedAt: new Date() },
-        { startedAt: new Date(Date.now() - 86400000) },
-      ];
-      const mockFrequent = [{ name: 'Bench Press' }];
+      const today = new Date();
+      today.setHours(12, 0, 0, 0);
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
 
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery(mockWorkouts))
-        .mockReturnValueOnce(createMockQuery(mockVolume))
-        .mockReturnValueOnce(createMockQuery(mockTime))
-        .mockReturnValueOnce(createMockQuery(mockRecentSessions))
-        .mockReturnValueOnce(createMockQuery(mockFrequent));
+      // Order matters: it mirrors the Promise.all batch in getGlobalStats.
+      mockSelects(
+        [{ count: 25 }], // total workouts
+        [{ total: 50000 }], // total volume
+        [{ count: 120 }], // total completed sets
+        [{ total: 18000 }], // total time
+        [{ startedAt: today }, { startedAt: yesterday }], // recent sessions (streak)
+        [{ name: 'Bench Press', count: 9 }] // most frequent exercise
+      );
 
       const result = await getGlobalStats();
 
       expect(result.totalWorkouts).toBe(25);
       expect(result.totalVolume).toBe(50000);
+      expect(result.totalCompletedSets).toBe(120);
       expect(result.totalTime).toBe(18000);
-      expect(result.currentStreak).toBeGreaterThanOrEqual(1);
+      expect(result.currentStreak).toBe(2);
       expect(result.mostFrequentExercise).toBe('Bench Press');
     });
 
     it('should return zero stats when no sessions exist', async () => {
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery([{ count: 0 }]))
-        .mockReturnValueOnce(createMockQuery([{ total: 0 }]))
-        .mockReturnValueOnce(createMockQuery([{ total: 0 }]))
-        .mockReturnValueOnce(createMockQuery([]))
-        .mockReturnValueOnce(createMockQuery([]));
+      mockSelects(
+        [{ count: 0 }],
+        [{ total: 0 }],
+        [{ count: 0 }],
+        [{ total: 0 }],
+        [],
+        []
+      );
 
       const result = await getGlobalStats();
 
       expect(result.totalWorkouts).toBe(0);
       expect(result.totalVolume).toBe(0);
+      expect(result.totalCompletedSets).toBe(0);
       expect(result.totalTime).toBe(0);
       expect(result.currentStreak).toBe(0);
       expect(result.mostFrequentExercise).toBeNull();
@@ -177,32 +174,28 @@ describe('Database Queries', () => {
 
   describe('getLastSessionForRoutine', () => {
     it('should return last session with exercises and sets', async () => {
-      const mockSession = [
-        {
-          id: 10,
-          routineId: 1,
-          startedAt: new Date('2026-07-20'),
-          completedAt: new Date('2026-07-20'),
-          duration: 3600,
-        },
-      ];
-      const mockExercises = [
-        { id: 1, sessionId: 10, exerciseId: 1, order: 1 },
-        { id: 2, sessionId: 10, exerciseId: 2, order: 2 },
-      ];
-      const mockSets1 = [
+      const sets = [
         { id: 1, sessionExerciseId: 1, setNumber: 1, reps: 10, weight: 80 },
         { id: 2, sessionExerciseId: 1, setNumber: 2, reps: 8, weight: 85 },
-      ];
-      const mockSets2 = [
         { id: 3, sessionExerciseId: 2, setNumber: 1, reps: 12, weight: 40 },
       ];
 
-      (db.select as jest.Mock)
-        .mockReturnValueOnce(createMockQuery(mockSession))
-        .mockReturnValueOnce(createMockQuery(mockExercises))
-        .mockReturnValueOnce(createMockQuery(mockSets1))
-        .mockReturnValueOnce(createMockQuery(mockSets2));
+      mockSelects(
+        [
+          {
+            id: 10,
+            routineId: 1,
+            startedAt: new Date('2026-07-20'),
+            completedAt: new Date('2026-07-20'),
+            duration: 3600,
+          },
+        ],
+        [
+          { id: 1, sessionId: 10, exerciseId: 1, order: 1 },
+          { id: 2, sessionId: 10, exerciseId: 2, order: 2 },
+        ],
+        sets
+      );
 
       const result = await getLastSessionForRoutine(1);
 
@@ -214,7 +207,7 @@ describe('Database Queries', () => {
     });
 
     it('should return null when no session exists for routine', async () => {
-      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery([]));
+      mockSelects([]);
 
       const result = await getLastSessionForRoutine(999);
 
@@ -224,12 +217,10 @@ describe('Database Queries', () => {
 
   describe('getMaxWeightByExerciseIds', () => {
     it('should return max weight per exercise', async () => {
-      const mockRows = [
+      mockSelects([
         { exerciseId: 1, maxWeight: 100 },
         { exerciseId: 2, maxWeight: 60.5 },
-      ];
-
-      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery(mockRows));
+      ]);
 
       const result = await getMaxWeightByExerciseIds([1, 2]);
 
@@ -237,7 +228,7 @@ describe('Database Queries', () => {
     });
 
     it('should omit exercises without recorded weight', async () => {
-      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery([]));
+      mockSelects([]);
 
       const result = await getMaxWeightByExerciseIds([1, 2]);
 
@@ -253,7 +244,7 @@ describe('Database Queries', () => {
 
   describe('getExerciseSessions', () => {
     it('should return session history for an exercise', async () => {
-      const mockResults = [
+      mockSelects([
         {
           sessionId: 5,
           startedAt: new Date('2026-07-20'),
@@ -270,9 +261,7 @@ describe('Database Queries', () => {
           setCount: 4,
           completedSets: 4,
         },
-      ];
-
-      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery(mockResults));
+      ]);
 
       const result = await getExerciseSessions(1);
 
@@ -283,7 +272,7 @@ describe('Database Queries', () => {
     });
 
     it('should return empty array when no sessions exist', async () => {
-      (db.select as jest.Mock).mockReturnValueOnce(createMockQuery([]));
+      mockSelects([]);
 
       const result = await getExerciseSessions(999);
 
