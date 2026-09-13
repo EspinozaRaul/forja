@@ -2,6 +2,7 @@ import { eq, desc, asc, sql, and, inArray, isNotNull } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';
+import { ownedByCurrentUser, sessionExerciseOwnedByCurrentUser } from '../db/user-scope';
 import type { Session } from '../types';
 import type { SessionExerciseWithSets } from '../db/queries';
 
@@ -49,7 +50,8 @@ export async function getSessionsByMonth(yearMonth: string): Promise<SessionByMo
     .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
     .where(and(
       eq(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`, yearMonth),
-      isNotNull(sessions.completedAt)
+      isNotNull(sessions.completedAt),
+      ownedByCurrentUser(sessions.userId)
     ))
     .groupBy(sessions.id)
     .orderBy(asc(sessions.startedAt));
@@ -68,7 +70,7 @@ export async function getSessionMonthIndex(): Promise<SessionMonthIndexEntry[]> 
     .from(sessions)
     .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
     .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(isNotNull(sessions.completedAt))
+    .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
     .groupBy(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`)
     .orderBy(desc(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`));
 }
@@ -118,7 +120,7 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
     .from(sessionExercises)
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-    .where(isNotNull(sessions.completedAt))
+    .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
     .groupBy(sessionExercises.exerciseId)
     .orderBy(desc(sql`count(distinct ${sessions.id})`))
     .limit(limit);
@@ -134,7 +136,13 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
     })
     .from(sets)
     .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(and(inArray(sessionExercises.exerciseId, exerciseIds), eq(sets.completed, true)));
+        .where(
+          and(
+            inArray(sessionExercises.exerciseId, exerciseIds),
+            eq(sets.completed, true),
+            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+          )
+        );
 
   // Step 3: aggregate setCount and maxWeight in JS.
   const setsByExercise = new Map<number, { count: number; maxWeight: number | null }>();
@@ -196,6 +204,7 @@ export async function getRoutineSessionsByPeriods(
   const whereClause = and(
     eq(sessions.routineId, routineId),
     isNotNull(sessions.completedAt),
+    ownedByCurrentUser(sessions.userId),
     ...[sql`(${sql.join(periodConditions, sql` OR `)})`]
   );
 

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
+import { claimLegacyRows, deleteUserLocalData } from '../db/queries';
+import { getCurrentUserId, setCurrentUserId } from '../db/user-scope';
 import { User, Session } from '@supabase/supabase-js';
 
 // expo-web-browser is a native module — only available in dev builds, not Expo Go
@@ -15,28 +18,63 @@ try {
 // This is the Supabase callback URL - it will redirect back to the app
 const REDIRECT_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/auth/v1/callback`;
 
+// The account whose legacy rows this app session has already claimed. The
+// backfill is idempotent, but this avoids a needless scan on every remount.
+let backfilledUserId: string | null = null;
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
+    let cancelled = false;
+
+    const applySession = async (nextSession: Session | null) => {
+      const userId = nextSession?.user?.id ?? null;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (userId) {
+        // Mirror the id before any query can run, then adopt pre-auth rows so the
+        // user's own existing data stays visible. Holding `loading` until the
+        // backfill finishes is what guarantees that ordering — the root layout
+        // gates every screen on `loading`.
+        setCurrentUserId(userId);
+        if (backfilledUserId !== userId) {
+          try {
+            await claimLegacyRows();
+          } catch (err) {
+            if (__DEV__) console.error('Failed to claim legacy rows:', err);
+          }
+          backfilledUserId = userId;
+        }
+      } else {
+        // Sign-out keeps local rows (they stay owned by their account) but nothing
+        // user-scoped may render for the next account, so drop the whole cache.
+        setCurrentUserId(null);
+        queryClient.clear();
+      }
+
+      if (!cancelled) setLoading(false);
+    };
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      applySession(session);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      applySession(session);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });
@@ -91,8 +129,27 @@ export function useAuth() {
 
   const deleteAccount = async () => {
     try {
+      // Read the active id BEFORE signing out: signing out clears the scope mirror.
+      const userId = getCurrentUserId();
       const { error } = await supabase.rpc('delete_user_account');
       if (error) throw error;
+
+      // Wipe this account's local rows and photo files. Signing out must not
+      // delete rows, but deleting the account must.
+      if (userId) {
+        const photoUris = await deleteUserLocalData(userId);
+        if (photoUris.length > 0) {
+          const { File } = await import('expo-file-system');
+          for (const uri of photoUris) {
+            try {
+              new File(uri).delete();
+            } catch {
+              // File already gone (cache eviction) — nothing to clean up
+            }
+          }
+        }
+      }
+
       await supabase.auth.signOut();
       return { error: null };
     } catch (err) {

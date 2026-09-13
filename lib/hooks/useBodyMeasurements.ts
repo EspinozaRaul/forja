@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db } from '../db';
-import { bodyMeasurements } from '../db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { getBodyMeasurements, createBodyMeasurement, deleteBodyMeasurement } from '../db/queries';
 import { mutationErrorHandler } from '../utils/mutation-error';
-import { now } from '../utils/date';
+import { useCurrentUserId } from './useCurrentUser';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -40,13 +38,11 @@ const MEASUREMENTS_KEY = ['bodyMeasurements'];
 // ─── Hooks ──────────────────────────────────────────────
 
 export function useBodyMeasurements() {
+  const userId = useCurrentUserId();
   return useQuery<BodyMeasurement[]>({
-    queryKey: MEASUREMENTS_KEY,
+    queryKey: [...MEASUREMENTS_KEY, userId],
     queryFn: async () => {
-      const results = await db
-        .select()
-        .from(bodyMeasurements)
-        .orderBy(desc(bodyMeasurements.date));
+      const results = await getBodyMeasurements();
       
       return results.map((r) => ({
         ...r,
@@ -54,6 +50,7 @@ export function useBodyMeasurements() {
         createdAt: new Date(r.createdAt),
       }));
     },
+    enabled: !!userId,
   });
 }
 
@@ -62,8 +59,7 @@ export function useCreateMeasurement() {
   
   return useMutation({
     mutationFn: async (input: CreateMeasurementInput) => {
-      const now = new Date();
-      await db.insert(bodyMeasurements).values({
+      await createBodyMeasurement({
         date: input.date,
         weight: input.weight ?? null,
         bodyFat: input.bodyFat ?? null,
@@ -73,7 +69,6 @@ export function useCreateMeasurement() {
         arms: input.arms ?? null,
         thighs: input.thighs ?? null,
         notes: input.notes ?? null,
-        createdAt: now,
       });
     },
     onSuccess: () => {
@@ -88,7 +83,7 @@ export function useDeleteMeasurement() {
   
   return useMutation({
     mutationFn: async (id: number) => {
-      await db.delete(bodyMeasurements).where(eq(bodyMeasurements.id, id));
+      await deleteBodyMeasurement(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MEASUREMENTS_KEY });

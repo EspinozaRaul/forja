@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db } from '../db';
-import { progressPhotos } from '../db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { getProgressPhotos, createProgressPhoto, deleteProgressPhoto } from '../db/queries';
 import { mutationErrorHandler } from '../utils/mutation-error';
-import { now } from '../utils/date';
+import { useCurrentUserId } from './useCurrentUser';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -28,13 +26,11 @@ const PHOTOS_KEY = ['progressPhotos'];
 // ─── Hooks ──────────────────────────────────────────────
 
 export function useProgressPhotos() {
+  const userId = useCurrentUserId();
   return useQuery<ProgressPhoto[]>({
-    queryKey: PHOTOS_KEY,
+    queryKey: [...PHOTOS_KEY, userId],
     queryFn: async () => {
-      const results = await db
-        .select()
-        .from(progressPhotos)
-        .orderBy(desc(progressPhotos.date));
+      const results = await getProgressPhotos();
       
       return results.map((r) => ({
         ...r,
@@ -42,6 +38,7 @@ export function useProgressPhotos() {
         createdAt: new Date(r.createdAt),
       }));
     },
+    enabled: !!userId,
   });
 }
 
@@ -50,12 +47,10 @@ export function useCreatePhoto() {
   
   return useMutation({
     mutationFn: async (input: CreatePhotoInput) => {
-      const now = new Date();
-      await db.insert(progressPhotos).values({
+      await createProgressPhoto({
         date: input.date,
         uri: input.uri,
         bodyPart: input.bodyPart ?? null,
-        createdAt: now,
       });
     },
     onSuccess: () => {
@@ -70,7 +65,7 @@ export function useDeletePhoto() {
   
   return useMutation({
     mutationFn: async (id: number) => {
-      await db.delete(progressPhotos).where(eq(progressPhotos.id, id));
+      await deleteProgressPhoto(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PHOTOS_KEY });

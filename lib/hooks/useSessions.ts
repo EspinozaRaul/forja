@@ -23,47 +23,55 @@ import {
   unlinkSuperSetPair,
 } from '../db/queries';
 import { mutationErrorHandler } from '../utils/mutation-error';
+import { useCurrentUserId } from './useCurrentUser';
 import type { Session, SessionExercise } from '../types';
 import type { SessionExerciseWithSets } from '../db/queries';
 
 const SESSION_KEY = ['sessions'];
 
 export function useSessions() {
+  const userId = useCurrentUserId();
   return useQuery<Session[]>({
-    queryKey: SESSION_KEY,
+    queryKey: [...SESSION_KEY, userId],
     queryFn: getAllSessions,
+    enabled: !!userId,
   });
 }
 
 export function useSession(id: number) {
+  const userId = useCurrentUserId();
   return useQuery<Session[]>({
-    queryKey: [...SESSION_KEY, id],
+    queryKey: [...SESSION_KEY, id, userId],
     queryFn: () => getSessionById(id),
-    enabled: !!id,
+    enabled: !!id && !!userId,
   });
 }
 
 export function useActiveSession() {
+  const userId = useCurrentUserId();
   return useQuery({
-    queryKey: ['activeSession'],
+    queryKey: ['activeSession', userId],
     queryFn: getActiveSession,
+    enabled: !!userId,
     refetchInterval: 60000,
   });
 }
 
 export function useSessionExercises(sessionId: number) {
+  const userId = useCurrentUserId();
   return useQuery<SessionExercise[]>({
-    queryKey: [...SESSION_KEY, sessionId, 'exercises'],
+    queryKey: [...SESSION_KEY, sessionId, 'exercises', userId],
     queryFn: () => getSessionExercises(sessionId),
-    enabled: !!sessionId,
+    enabled: !!sessionId && !!userId,
   });
 }
 
 export function useSessionExercisesWithSets(sessionId: number) {
+  const userId = useCurrentUserId();
   return useQuery<SessionExerciseWithSets[]>({
-    queryKey: [...SESSION_KEY, sessionId, 'exercises', 'withSets'],
+    queryKey: [...SESSION_KEY, sessionId, 'exercises', 'withSets', userId],
     queryFn: () => getSessionExercisesWithSets(sessionId),
-    enabled: !!sessionId,
+    enabled: !!sessionId && !!userId,
   });
 }
 
@@ -117,34 +125,38 @@ export function useDeleteSession() {
 }
 
 export function useLastSessionForRoutine(routineId: number) {
+  const userId = useCurrentUserId();
   return useQuery({
-    queryKey: ['sessions', 'lastForRoutine', routineId],
+    queryKey: ['sessions', 'lastForRoutine', routineId, userId],
     queryFn: () => getLastSessionForRoutine(routineId),
-    enabled: !!routineId,
+    enabled: !!routineId && !!userId,
   });
 }
 
 export function useLastSetsForExercise(exerciseId: number) {
+  const userId = useCurrentUserId();
   return useQuery({
-    queryKey: ['sessions', 'lastSetsForExercise', exerciseId],
+    queryKey: ['sessions', 'lastSetsForExercise', exerciseId, userId],
     queryFn: () => getLastSetsForExercise(exerciseId),
-    enabled: !!exerciseId,
+    enabled: !!exerciseId && !!userId,
   });
 }
 
 export function useLastSetsPerExercise(exerciseIds: number[]) {
+  const userId = useCurrentUserId();
   return useQuery({
-    queryKey: ['sessions', 'lastSetsPerExercise', [...exerciseIds].sort()],
+    queryKey: ['sessions', 'lastSetsPerExercise', [...exerciseIds].sort(), userId],
     queryFn: () => getLastSetsPerExercise(exerciseIds),
-    enabled: exerciseIds.length > 0,
+    enabled: exerciseIds.length > 0 && !!userId,
   });
 }
 
 export function useLastNotesByExerciseIds(exerciseIds: number[]) {
+  const userId = useCurrentUserId();
   return useQuery({
-    queryKey: ['sessions', 'lastNotes', [...exerciseIds].sort()],
+    queryKey: ['sessions', 'lastNotes', [...exerciseIds].sort(), userId],
     queryFn: () => getLastNotesByExerciseIds(exerciseIds),
-    enabled: exerciseIds.length > 0,
+    enabled: exerciseIds.length > 0 && !!userId,
   });
 }
 

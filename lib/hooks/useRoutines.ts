@@ -20,31 +20,36 @@ import {
   deleteFolder,
 } from '../db/queries';
 import { mutationErrorHandler } from '../utils/mutation-error';
+import { useCurrentUserId } from './useCurrentUser';
 import type { Routine, RoutineExercise, RoutineFolder } from '../types';
 
 const ROUTINE_KEY = ['routines'];
 const FOLDER_KEY = ['folders'];
 
 export function useRoutines() {
+  const userId = useCurrentUserId();
   return useQuery<Routine[]>({
-    queryKey: ROUTINE_KEY,
+    queryKey: [...ROUTINE_KEY, userId],
     queryFn: getAllRoutines,
+    enabled: !!userId,
   });
 }
 
 export function useRoutine(id: number) {
+  const userId = useCurrentUserId();
   return useQuery<Routine[]>({
-    queryKey: [...ROUTINE_KEY, id],
+    queryKey: [...ROUTINE_KEY, id, userId],
     queryFn: () => getRoutineById(id),
-    enabled: !!id,
+    enabled: !!id && !!userId,
   });
 }
 
 export function useRoutineExercises(routineId: number) {
+  const userId = useCurrentUserId();
   return useQuery<RoutineExercise[]>({
-    queryKey: [...ROUTINE_KEY, routineId, 'exercises'],
+    queryKey: [...ROUTINE_KEY, routineId, 'exercises', userId],
     queryFn: () => getRoutineExercises(routineId),
-    enabled: !!routineId,
+    enabled: !!routineId && !!userId,
   });
 }
 
@@ -173,33 +178,38 @@ export function useReplaceRoutineExercise() {
 // ─── Folder Hooks ──────────────────────────────────────
 
 export function useFolders() {
+  const userId = useCurrentUserId();
   return useQuery<RoutineFolder[]>({
-    queryKey: FOLDER_KEY,
+    queryKey: [...FOLDER_KEY, userId],
     queryFn: getAllFolders,
+    enabled: !!userId,
   });
 }
 
 export function useFolder(id: number) {
+  const userId = useCurrentUserId();
   return useQuery<RoutineFolder[]>({
-    queryKey: [...FOLDER_KEY, id],
+    queryKey: [...FOLDER_KEY, id, userId],
     queryFn: () => getFolderById(id),
-    enabled: !!id,
+    enabled: !!id && !!userId,
   });
 }
 
 export function useRoutinesByFolder(folderId: number) {
+  const userId = useCurrentUserId();
   return useQuery<Routine[]>({
-    queryKey: [...FOLDER_KEY, folderId, 'routines'],
+    queryKey: [...FOLDER_KEY, folderId, 'routines', userId],
     queryFn: () => getRoutinesByFolder(folderId),
-    enabled: !!folderId,
+    enabled: !!folderId && !!userId,
   });
 }
 
 export function useFolderRoutineCount(folderId: number) {
+  const userId = useCurrentUserId();
   return useQuery<number>({
-    queryKey: [...FOLDER_KEY, folderId, 'count'],
+    queryKey: [...FOLDER_KEY, folderId, 'count', userId],
     queryFn: () => getFolderRoutineCount(folderId),
-    enabled: !!folderId,
+    enabled: !!folderId && !!userId,
   });
 }
 

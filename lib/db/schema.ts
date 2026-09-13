@@ -11,6 +11,7 @@ export const categories = sqliteTable('categories', {
 
 export const exercises = sqliteTable('exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id'), // Supabase auth.uid() — NULL for the shared seed library
   name: text('name').notNull(),
   nameEs: text('name_es'), // Spanish translation of exercise name
   categoryId: integer('category_id').references(() => categories.id),

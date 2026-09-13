@@ -9,16 +9,18 @@ import {
   replaceDropSetGroup,
 } from '../db/queries';
 import { mutationErrorHandler } from '../utils/mutation-error';
+import { useCurrentUserId } from './useCurrentUser';
 import type { Set } from '../types';
 
 const SET_KEY = ['sets'];
 const PROGRESS_KEY = ['progress'];
 
 export function useSets(sessionExerciseId: number) {
+  const userId = useCurrentUserId();
   return useQuery<Set[]>({
-    queryKey: [...SET_KEY, sessionExerciseId],
+    queryKey: [...SET_KEY, sessionExerciseId, userId],
     queryFn: () => getSetsForSessionExercise(sessionExerciseId),
-    enabled: !!sessionExerciseId,
+    enabled: !!sessionExerciseId && !!userId,
   });
 }
 
