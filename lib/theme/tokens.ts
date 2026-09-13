@@ -7,7 +7,6 @@ export const colors = {
   // Backgrounds — cold near-black with a blue undertone
   bg: {
     primary: '#101316',
-    secondary: '#15181C',
     card: '#1A1E23',
     elevated: '#22272D',
     active: '#1C2530',    // drag/reorder active state (steel tint)
@@ -31,8 +30,6 @@ export const colors = {
   // cold steel ecosystem (molten metal inside a dark forge).
   ember: {
     primary: '#C77B45',
-    deep: '#A05F33',
-    muted: 'rgba(199, 123, 69, 0.14)',
   },
   // Status — cold, desaturated; each has one job
   success: '#6E9C8A',     // blue-green sage — completed sets ONLY
@@ -53,7 +50,6 @@ export const colors = {
   },
   // Chart colors
   chart: {
-    weight: '#4A6FA5',    // steel blue — weight line
     reps: '#82c896',      // green — reps line
   },
   // Overlay variants
@@ -68,9 +64,7 @@ export const colors = {
   ],
   // Status muted (for badges/backgrounds)
   statusMuted: {
-    success: 'rgba(110, 156, 138, 0.15)',
     warning: 'rgba(194, 160, 92, 0.15)',
-    error: 'rgba(201, 111, 111, 0.15)',
   },
 };
 
@@ -113,11 +107,9 @@ export const fontSizes = {
   lg: 18,
   xl: 24,
   xxl: 32,
-  display: 40,
 };
 
 export const fontWeights = {
-  regular: '400' as const,
   medium: '500' as const,
   semibold: '600' as const,
   bold: '700' as const,
