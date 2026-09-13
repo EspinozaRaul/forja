@@ -178,7 +178,10 @@ export default function SessionScreen() {
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
+  // selectedMuscle holds a MUSCLE_FILTERS key, not a label: ExercisePicker
+  // compares it against `m.key` and against the literal 'all'. Translated text
+  // here silently disables the muscle filter.
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'all', selectedIds: [] as number[] });
   const [showRestTimer, setShowRestTimer] = useState(false);
   const [restDuration, setRestDuration] = useState(DEFAULT_REST_SECONDS);
   const [restExerciseName, setRestExerciseName] = useState('');

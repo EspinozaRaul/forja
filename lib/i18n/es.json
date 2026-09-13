@@ -239,7 +239,11 @@
       "title": "¿Actualizar la rutina?",
       "message": "La sesión tiene cambios estructurales respecto a tu rutina.",
       "updateRoutine": "Actualizar rutina",
-      "saveOnly": "Solo guardar sesión"
+      "saveOnly": "Solo guardar sesión",
+      "removed": "Eliminado: {{name}}",
+      "added": "Agregado: {{name}}",
+      "volume": "Volumen: {{from}}→{{to}} series en {{name}}",
+      "reordered": "Orden de ejercicios cambiado"
     },
     "error": {
       "reorder": "Error al reordenar",
@@ -287,7 +291,7 @@
       "routineCreatedMessage": "Rutina \"{{name}}\" creada",
       "ok": "OK",
       "saveRoutineFailed": "Error al guardar la rutina",
-      "title": "Resumen de Sesión",
+      "title": "Historial de Sesiones",
       "exercisesLabel": "Ejercicios",
       "durationLabel": "Duración",
       "notesLabel": "Notas",
@@ -301,7 +305,8 @@
       "noExercisesMessage": "Esta sesión no tiene ejercicios registrados.",
       "backToHome": "Volver al Inicio",
       "setNumber": "Serie {{number}}",
-      "noSetsLogged": "Sin series registradas"
+      "noSetsLogged": "Sin series registradas",
+      "summary": "Resumen de Sesión"
     },
     "newRecord": "¡Nuevo récord!",
     "exerciseNotesPlaceholder": "Nota (altura del asiento, molestia, etc.)",
@@ -576,7 +581,8 @@
       "new": "Nuevo",
       "removed": "Eliminado",
       "reordered": "Reordenado"
-    }
+    },
+    "sessions": "Sesiones"
   },
   "methods": {
     "title": "Método de intensidad",
@@ -814,5 +820,29 @@
       "select": "Seleccionar rutina: {{name}}",
       "confirm": "Seleccionar rutina"
     }
+  },
+  "settings": {
+    "title": "Ajustes",
+    "account": "Cuenta",
+    "dangerZone": "Zona de peligro",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteAccountConfirm": "¿Eliminar tu cuenta permanentemente? Se borran todos tus datos, entrenamientos y ajustes. Esta acción no se puede deshacer.",
+    "deleteAccountDescription": "Elimina tu cuenta permanentemente y todos los datos asociados.",
+    "deleteAccountFailed": "No se pudo eliminar la cuenta.",
+    "language": "Idioma",
+    "languageOptions": {
+      "es": "Español",
+      "en": "English"
+    },
+    "signOut": "Cerrar sesión",
+    "signOutConfirm": "¿Seguro que querés cerrar sesión?",
+    "signOutFailed": "No se pudo cerrar sesión.",
+    "sound": "Sonido",
+    "soundDescription": "Sonido del temporizador de descanso.",
+    "version": "Versión",
+    "vibration": "Vibración",
+    "vibrationDescription": "Vibración al tocar.",
+    "weightUnit": "Unidad de peso",
+    "weightUnitDefault": "Predeterminada para ejercicios nuevos."
   }
 }

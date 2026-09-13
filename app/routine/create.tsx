@@ -35,7 +35,10 @@ export default function CreateRoutineScreen() {
   const [description, setDescription] = useState('');
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'Todos', selectedIds: [] as number[] });
+  // selectedMuscle holds a MUSCLE_FILTERS key, not a label: ExercisePicker
+  // compares it against `m.key` and against the literal 'all'. Translated text
+  // here silently disables the muscle filter.
+  const [pickerState, setPickerState] = useState({ search: '', selectedMuscle: 'all', selectedIds: [] as number[] });
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);

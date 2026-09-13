@@ -124,7 +124,7 @@ export default function SessionSummaryScreen() {
       {/* Session Info */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>
-          {t('session.history.title')}
+          {t('session.history.summary')}
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <View style={{ alignItems: 'center', flex: 1 }}>

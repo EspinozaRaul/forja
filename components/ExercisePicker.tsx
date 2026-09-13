@@ -577,7 +577,7 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
               </Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.bg.card, borderRadius: borderRadius.md, padding: spacing.sm, alignItems: 'center' }}>
-              <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.exercises')}</Text>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('progress.sessions')}</Text>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
                 {stats?.totalSessions ?? 0}
               </Text>
