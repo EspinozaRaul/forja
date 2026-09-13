@@ -95,15 +95,6 @@ export default function SessionScreen() {
     sessionExercises?.map((se) => se.exerciseId) ?? []
   );
 
-  // Guard: invalid sessionId — hooks above are safe because queries with NaN return empty
-  if (isNaN(sessionId)) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('session.notFound')} />
-      </View>
-    );
-  }
-
   // Previous values per exerciseId + setNumber from the last completed session
   // across ALL routines. Prefer the drop group parent (isDropGroup === true, the
   // heaviest first drop) or a plain linear set; fall back to any set with the
@@ -293,6 +284,20 @@ export default function SessionScreen() {
     setReplaceId(null);
     setShowPicker(false);
   };
+
+  // Guard: invalid sessionId. It lives BELOW every hook on purpose: expo-router
+  // reuses this screen across /session/1 → /session/2, and returning before the
+  // later hooks would change the hook count between renders ("Rendered more hooks
+  // than during the previous render"). The hooks tolerate NaN — their queries are
+  // `enabled: !!id` — so the same hooks always run and only the rendered output
+  // differs. The invalid-id output is unchanged.
+  if (isNaN(sessionId)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+        <EmptyState title={t('session.notFound')} />
+      </View>
+    );
+  }
 
   if (isLoading) {
     return <LoadingSpinner message={t('session.loadingMessage')} />;
