@@ -50,3 +50,5 @@ build-*/
 
 # releases (local copies)
 releases/
+# Local Pi runtime state
+.atl/
