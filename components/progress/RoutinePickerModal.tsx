@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { MODAL, EMBER_DOT } from '../../lib/constants/layout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface RoutineOption {
   id: number;
@@ -29,6 +30,7 @@ export function RoutinePickerModal({
   onClose,
 }: RoutinePickerModalProps) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -76,7 +78,9 @@ export function RoutinePickerModal({
             borderTopLeftRadius: borderRadius.xl,
             borderTopRightRadius: borderRadius.xl,
             maxHeight: '70%',
-            paddingBottom: spacing.xl,
+            // The sheet is flush with the screen bottom, so it has to clear
+            // the Android 3-button nav bar / iOS home indicator itself.
+            paddingBottom: spacing.xl + insets.bottom,
           }}
         >
           {/* Handle bar */}
