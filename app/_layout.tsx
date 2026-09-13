@@ -6,6 +6,7 @@ import { Stack, router, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
@@ -172,20 +173,22 @@ function FontInitializer({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <KeyboardProvider>
-          <QueryClientProvider client={queryClient}>
-            <I18nextProvider i18n={i18n}>
-              <FontInitializer>
-                <DatabaseInitializer>
-                  <RootLayoutNav />
-                </DatabaseInitializer>
-              </FontInitializer>
-            </I18nextProvider>
-          </QueryClientProvider>
-        </KeyboardProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <KeyboardProvider>
+            <QueryClientProvider client={queryClient}>
+              <I18nextProvider i18n={i18n}>
+                <FontInitializer>
+                  <DatabaseInitializer>
+                    <RootLayoutNav />
+                  </DatabaseInitializer>
+                </FontInitializer>
+              </I18nextProvider>
+            </QueryClientProvider>
+          </KeyboardProvider>
+        </GestureHandlerRootView>
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }

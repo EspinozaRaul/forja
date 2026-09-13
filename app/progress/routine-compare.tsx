@@ -11,6 +11,8 @@ import { RoutinePickerModal } from '../../components/progress/RoutinePickerModal
 import { RoutineCompareTable } from '../../components/progress/RoutineCompareTable';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { useQuery } from '@tanstack/react-query';
 
 // ─── Helpers ──────────────────────────────────────────
@@ -112,39 +114,12 @@ export default function RoutineCompareScreen() {
   }, [routines]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Top bar */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          paddingHorizontal: spacing.md,
-          paddingTop: spacing.lg,
-          paddingBottom: spacing.sm,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border.divider,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={{ padding: spacing.xs }}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
-        </Pressable>
-        <Text
-          style={{
-            flex: 1,
-            fontSize: fontSizes.lg,
-            fontFamily: fonts.bodySemiBold,
-            color: colors.text.primary,
-          }}
-          numberOfLines={1}
-        >
-          {selectedRoutineName || t('progress.routineCompare.title')}
-        </Text>
-      </View>
+  <Screen>
+      <ScreenHeader
+        title={selectedRoutineName || t('progress.routineCompare.title')}
+        onBack={() => router.back()}
+        divider
+      />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -264,6 +239,6 @@ export default function RoutineCompareScreen() {
         onSelect={handleSelectRoutine}
         onClose={() => setPickerVisible(false)}
       />
-    </View>
+    </Screen>
   );
 }

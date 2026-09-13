@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllExercises } from '../../lib/db/queries';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { THUMBNAIL } from '../../lib/constants/layout';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
@@ -179,39 +181,13 @@ export default function ExercisesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          paddingHorizontal: spacing.md,
-          paddingTop: spacing.lg,
-          paddingBottom: spacing.sm,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border.divider,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={{ padding: spacing.xs }}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
-        </Pressable>
-        <Ionicons name="barbell" size={20} color={colors.accent.primary} />
-        <Text
-          style={{
-            flex: 1,
-            fontSize: fontSizes.lg,
-            fontFamily: fonts.bodySemiBold,
-            color: colors.text.primary,
-          }}
-        >
-          {t('exercises.title')}
-        </Text>
-      </View>
+  <Screen>
+      <ScreenHeader
+        title={t('exercises.title')}
+        icon="barbell"
+        onBack={() => router.back()}
+        divider
+      />
 
       {/* Search Bar */}
       <View
@@ -275,6 +251,6 @@ export default function ExercisesScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </Screen>
   );
 }

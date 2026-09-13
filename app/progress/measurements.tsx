@@ -7,6 +7,8 @@ import { now } from '../../lib/utils/date';
 import { useBodyMeasurements, useCreateMeasurement, useDeleteMeasurement } from '../../lib/hooks/useBodyMeasurements';
 import { useProgressPhotos, useCreatePhoto, useDeletePhoto, usePickPhoto, useTakePhoto } from '../../lib/hooks/useProgressPhotos';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { THUMBNAIL } from '../../lib/constants/layout';
 
@@ -227,44 +229,32 @@ export default function MeasurementsScreen() {
   };
   
   return (
+  <Screen>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Header */}
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xxl,
-        paddingBottom: spacing.md,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <Pressable onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+      <ScreenHeader
+        title={t('progress.measurements.title')}
+        icon="body"
+        onBack={() => router.back()}
+        right={
+          <Pressable
+            onPress={() => setShowForm(!showForm)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xs,
+              backgroundColor: showForm ? colors.error : colors.accent.primary,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.sm,
+              borderRadius: borderRadius.full,
+            }}
+          >
+            <Ionicons name={showForm ? 'close' : 'add'} size={16} color={colors.text.primary} />
+            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
+              {showForm ? t('common.cancel') : t('progress.measurements.new')}
+            </Text>
           </Pressable>
-          <Ionicons name="body" size={24} color={colors.accent.primary} />
-          <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-            {t('progress.measurements.title')}
-          </Text>
-        </View>
-        
-        <Pressable
-          onPress={() => setShowForm(!showForm)}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.xs,
-            backgroundColor: showForm ? colors.error : colors.accent.primary,
-            paddingHorizontal: spacing.md,
-            paddingVertical: spacing.sm,
-            borderRadius: borderRadius.full,
-          }}
-        >
-          <Ionicons name={showForm ? 'close' : 'add'} size={16} color={colors.text.primary} />
-          <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
-            {showForm ? t('common.cancel') : t('progress.measurements.new')}
-          </Text>
-        </Pressable>
-      </View>
+        }
+      />
       
       {/* Measurement Form */}
       {showForm && (
@@ -564,5 +554,6 @@ export default function MeasurementsScreen() {
         </View>
       )}
     </ScrollView>
+    </Screen>
   );
 }

@@ -9,6 +9,8 @@ import { useMostUsedExercises, useSessionCountByWeek } from '../../lib/hooks/use
 import { ProgressChart } from '../../components/ProgressChart';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import { getExerciseName } from '../../lib/utils/exercise-names';
@@ -148,24 +150,13 @@ export default function StatisticsScreen() {
   }
 
   return (
+  <Screen>
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Header */}
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xxl,
-        paddingBottom: spacing.md,
-      }}>
-        <Pressable onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-        </Pressable>
-        <Ionicons name="bar-chart" size={24} color={colors.accent.primary} />
-        <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-          {t('progress.statistics.title')}
-        </Text>
-      </View>
+      <ScreenHeader
+        title={t('progress.statistics.title')}
+        icon="bar-chart"
+        onBack={() => router.back()}
+      />
 
       {/* Period Selector */}
       <View style={{
@@ -393,5 +384,6 @@ export default function StatisticsScreen() {
         </View>
       )}
     </ScrollView>
+    </Screen>
   );
 }
