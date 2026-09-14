@@ -261,7 +261,7 @@
             "name",
             "category_id"
           ],
-          "isUnique": true
+          "isUnique": false
         }
       },
       "foreignKeys": {

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../constants/routine-defaults';
 
 export const categories = sqliteTable('categories', {
@@ -30,7 +30,12 @@ export const exercises = sqliteTable('exercises', {
   unit: text('unit').default('kg'), // kg or lbs per exercise
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (exercises) => ({
-  nameCategoryUnique: uniqueIndex('name_category_idx').on(exercises.name, exercises.categoryId),
+  // NOT unique on purpose. The seeded dataset contains 6 (category, name) pairs twice —
+  // "lever chest press", "barbell seated calf raise", "push-up (on stability ball)" and
+  // three more — with different ids, and the runtime DDL (lib/db/ddl.ts) has always
+  // created this as a plain index. A UNIQUE index here would reject the exercise import
+  // and take the Supabase migration down with it, so it must stay a plain index.
+  nameCategoryIdx: index('name_category_idx').on(exercises.name, exercises.categoryId),
 }));
 
 export const routineFolders = sqliteTable('routine_folders', {
