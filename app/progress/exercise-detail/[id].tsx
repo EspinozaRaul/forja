@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useExercise, useExerciseStats, useExerciseSessions, useExercisePRs } from '../../../lib/hooks/useExercises';
 import { useTotalVolumeByWeek } from '../../../lib/hooks/useProgress';
-import { getExerciseProgressionData } from '../../../lib/db/queries';
+import { useExerciseProgressionData } from '../../../lib/hooks/useProgressionBubble';
 import { ExerciseProgressChart } from '../../../components/ExerciseProgressChart';
 import { ProgressChart } from '../../../components/ProgressChart';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -18,7 +18,6 @@ import { resolveUnit, formatWeight } from '../../../lib/utils/weight-unit';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { useSettings } from '../../../lib/utils/settings';
 import type { ExerciseProgressionDataPoint } from '../../../lib/db/queries';
-import { useQuery } from '@tanstack/react-query';
 
 // ─── Date Range Type ──────────────────────────────────────
 type DateRange = '4w' | '12w' | 'all';
@@ -255,12 +254,8 @@ export default function ExerciseDetailScreen() {
   const { data: prs, isLoading: prsLoading, isError: prsError, refetch: refetchPrs } = useExercisePRs(exerciseId);
   const { data: volumeData, isLoading: volumeLoading, isError: volumeError, refetch: refetchVolume } = useTotalVolumeByWeek(exerciseId);
 
-  // Fetch progression data for bubble chart
-  const { data: progressionData, isLoading: progressionLoading, isError: progressionError, refetch: refetchProgression } = useQuery<ExerciseProgressionDataPoint[]>({
-    queryKey: ['progression', exerciseId],
-    queryFn: () => getExerciseProgressionData(exerciseId),
-    enabled: !!exerciseId,
-  });
+  // Fetch progression data for bubble chart (per-account via the canonical hook)
+  const { data: progressionData, isLoading: progressionLoading, isError: progressionError, refetch: refetchProgression } = useExerciseProgressionData(exerciseId);
 
   const exercise = exercises?.[0];
   const exerciseUnit = resolveUnit(exercise?.unit, unit);

@@ -3,8 +3,7 @@ import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { getAllExercises } from '../../lib/db/queries';
+import { useExercises } from '../../lib/hooks/useExercises';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
@@ -28,11 +27,8 @@ export default function ExercisesScreen() {
   const settings = useSettings();
   const unit = settings.data.weightUnit;
 
-  // Fetch all exercises from the database
-  const { data: allExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useQuery({
-    queryKey: ['exercises', 'all'],
-    queryFn: getAllExercises,
-  });
+  // Fetch all exercises from the database (per-account via the canonical hook)
+  const { data: allExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useExercises();
 
   const [search, setSearch] = useState('');
 

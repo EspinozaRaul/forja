@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
-import { getAllRoutines } from '../../lib/db/queries';
+import { useRoutines } from '../../lib/hooks/useRoutines';
 import { useRoutineCompare } from '../../lib/hooks/useProgress';
 import { PeriodChips } from '../../components/progress/PeriodChips';
 import { RoutinePickerModal } from '../../components/progress/RoutinePickerModal';
@@ -13,7 +13,6 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
-import { useQuery } from '@tanstack/react-query';
 
 // ─── Helpers ──────────────────────────────────────────
 
@@ -71,20 +70,13 @@ export default function RoutineCompareScreen() {
     }
   }, [availablePeriods]);
 
-  // Fetch routines list for picker
-  const { data: routines = [] } = useQuery({
-    queryKey: ['routines', 'list'],
-    queryFn: async () => {
-      const all = await getAllRoutines();
-      return all.map((r) => ({
-        id: r.id,
-        name: r.name,
-        sessionCount: 0,
-      }));
-    },
-  });
+  // Fetch routines list for picker (per-account via the canonical hook)
+  const { data: routines = [] } = useRoutines();
 
-  const routineOptions = useMemo(() => routines, [routines]);
+  const routineOptions = useMemo(
+    () => routines.map((r) => ({ id: r.id, name: r.name, sessionCount: 0 })),
+    [routines]
+  );
   
   // Month labels for translation
   const monthLabels = useMemo(() => [

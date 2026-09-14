@@ -56,7 +56,7 @@ export function useExerciseProgress(exerciseId: number, startDate?: Date, endDat
         totalVolume: row.totalVolume,
       }));
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseId && !!userId,
   });
 }
 
@@ -92,6 +92,7 @@ export function useSessionCountByWeek(exerciseId?: number) {
         value: row.count,
       }));
     },
+    enabled: !!userId,
   });
 }
 
@@ -124,7 +125,7 @@ export function useTotalVolumeByWeek(exerciseId: number) {
         value: row.totalVolume,
       }));
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseId && !!userId,
   });
 }
 

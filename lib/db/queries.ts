@@ -346,25 +346,52 @@ export async function updateRoutineExerciseTargets(
  * guaranteed to come from that partial upsync. Additionally null/0 targets
  * break the Home preview (which only falls back to defaults when the value is
  * null). Reset everything to the intended defaults (3 sets × 10 reps).
+ *
+ * Per account: routine_exercises carry no user_id, so ownership is inherited from
+ * the owning routine. It runs from the auth effect right after the legacy backfill,
+ * while `loading` still gates every screen, because only then is the scope mirror
+ * set — an unscoped run while two accounts share a device repaired both accounts'
+ * rows at once.
  */
 export async function repairRoutineTargetDefaults() {
+  if (!getCurrentUserId()) return;
   await db.transaction(async (tx) => {
     await tx
       .update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
-      .where(eq(routineExercises.targetSets, 1));
+      .where(
+        and(
+          eq(routineExercises.targetSets, 1),
+          routineOwnedByCurrentUser(routineExercises.routineId)
+        )
+      );
     await tx
       .update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
-      .where(isNull(routineExercises.targetSets));
+      .where(
+        and(
+          isNull(routineExercises.targetSets),
+          routineOwnedByCurrentUser(routineExercises.routineId)
+        )
+      );
     await tx
       .update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
-      .where(isNull(routineExercises.targetReps));
+      .where(
+        and(
+          isNull(routineExercises.targetReps),
+          routineOwnedByCurrentUser(routineExercises.routineId)
+        )
+      );
     await tx
       .update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
-      .where(lte(routineExercises.targetReps, 0));
+      .where(
+        and(
+          lte(routineExercises.targetReps, 0),
+          routineOwnedByCurrentUser(routineExercises.routineId)
+        )
+      );
   });
 }
 
@@ -1749,9 +1776,12 @@ export async function deleteProgressPhoto(id: number) {
  * existed have user_id = NULL; the first account to sign in on this device adopts
  * them so a user does not lose sight of its own data.
  *
- * Naturally idempotent: after the first run none of the five owned tables has a
- * NULL user_id left, so a second run updates zero rows. Seeded exercises are
- * deliberately NOT touched — they are the shared library and stay user_id NULL.
+ * Naturally idempotent: after the first run none of the six owned tables has a
+ * NULL user_id left, so a second run updates zero rows. The seeded exercises
+ * (original_id NOT NULL) are deliberately left in the shared library with
+ * user_id NULL; a pre-scoping custom exercise (original_id NULL) is claimed by the
+ * first account, otherwise it would leak to every account and its author could not
+ * even delete it.
  */
 export async function claimLegacyRows(): Promise<void> {
   const userId = getCurrentUserId();
@@ -1761,6 +1791,10 @@ export async function claimLegacyRows(): Promise<void> {
   await db.update(sessions).set({ userId }).where(isNull(sessions.userId));
   await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
   await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
+  await db
+    .update(exercises)
+    .set({ userId })
+    .where(and(isNull(exercises.userId), isNull(exercises.originalId)));
 }
 
 /**

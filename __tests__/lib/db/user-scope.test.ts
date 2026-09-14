@@ -27,6 +27,7 @@ jest.mock('../../../lib/db/index', () => {
 import * as queries from '../../../lib/db/queries';
 import * as progressQueries from '../../../lib/progress/queries';
 import { getCurrentUserId, setCurrentUserId } from '../../../lib/db/user-scope';
+import { DEFAULT_TARGET_SETS } from '../../../lib/constants/routine-defaults';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 let sqlite: any;
@@ -142,6 +143,65 @@ describe('user scoping', () => {
     const before = rawRows('SELECT user_id FROM sessions');
     await queries.claimLegacyRows();
     expect(rawRows('SELECT user_id FROM sessions')).toEqual(before);
+  });
+
+  it('claims pre-scoping custom exercises but leaves the seeded library shared', async () => {
+    // Rows written before user scoping existed. Only the seeded library row carries
+    // an original_id; a user-invented custom exercise has original_id NULL.
+    sqlite.exec(
+      "INSERT INTO exercises (user_id, name, original_id, created_at) VALUES (NULL, 'My invented move', NULL, 1767225600);" +
+        "INSERT INTO exercises (user_id, name, original_id, created_at) VALUES (NULL, 'Bench press', 'dataset-1', 1767225600);"
+    );
+
+    setCurrentUserId('user-a');
+    await queries.claimLegacyRows();
+
+    // The custom row is adopted by the first account; the seeded row stays shared.
+    expect(
+      rawCount("SELECT COUNT(*) AS c FROM exercises WHERE user_id = 'user-a' AND original_id IS NULL")
+    ).toBe(1);
+    expect(
+      rawCount('SELECT COUNT(*) AS c FROM exercises WHERE user_id IS NULL AND original_id IS NOT NULL')
+    ).toBe(1);
+
+    // B must not see A's custom exercise, but still sees the shared library.
+    setCurrentUserId('user-b');
+    const names = (await queries.getAllExercises()).map((e) => e.name);
+    expect(names).toContain('Bench press');
+    expect(names).not.toContain('My invented move');
+  });
+
+  it('repairs routine target defaults only inside the active account', async () => {
+    sqlite.exec("INSERT INTO exercises (id, name, created_at) VALUES (1, 'Bench press', 0);");
+
+    // A and B each own a routine whose template row has the buggy target_sets = 1.
+    setCurrentUserId('user-a');
+    const [routineA] = await queries.createRoutine({ name: 'A routine' });
+    await queries.addExerciseToRoutine({
+      routineId: routineA.id,
+      exerciseId: 1,
+      order: 0,
+      targetSets: 1,
+    });
+
+    setCurrentUserId('user-b');
+    const [routineB] = await queries.createRoutine({ name: 'B routine' });
+    await queries.addExerciseToRoutine({
+      routineId: routineB.id,
+      exerciseId: 1,
+      order: 0,
+      targetSets: 1,
+    });
+
+    // B is the active account: the repair may touch B's row only.
+    await queries.repairRoutineTargetDefaults();
+
+    const targetSetsFor = (userId: string): number =>
+      rawRows(
+        `SELECT re.target_sets AS target_sets FROM routine_exercises re JOIN routines r ON r.id = re.routine_id WHERE r.user_id = '${userId}'`
+      )[0].target_sets;
+    expect(targetSetsFor('user-b')).toBe(DEFAULT_TARGET_SETS);
+    expect(targetSetsFor('user-a')).toBe(1);
   });
 
   it('scopes session children through the owning session and refuses foreign writes', async () => {

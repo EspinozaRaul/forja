@@ -16,6 +16,7 @@ jest.mock('../../../lib/supabase', () => ({
 
 jest.mock('../../../lib/db/queries', () => ({
   claimLegacyRows: jest.fn(),
+  repairRoutineTargetDefaults: jest.fn(),
   deleteUserLocalData: jest.fn(),
 }));
 
@@ -65,7 +66,7 @@ describe('useAuth', () => {
   });
 
   it('sets the scope mirror before unblocking on a restored session', async () => {
-    const { claimLegacyRows } = require('../../../lib/db/queries');
+    const { claimLegacyRows, repairRoutineTargetDefaults } = require('../../../lib/db/queries');
     getSession.mockResolvedValue({ data: { session: { user: { id: 'user-a' } } } });
 
     const { result } = await renderHook(() => useAuth(), { wrapper });
@@ -75,5 +76,7 @@ describe('useAuth', () => {
     expect(result.current.user?.id).toBe('user-a');
     expect(setCurrentUserId).toHaveBeenCalledWith('user-a');
     expect(claimLegacyRows).toHaveBeenCalled();
+    // The per-account repair runs in the same gated block, after the backfill.
+    expect(repairRoutineTargetDefaults).toHaveBeenCalled();
   });
 });

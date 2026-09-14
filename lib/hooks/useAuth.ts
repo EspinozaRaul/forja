@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
-import { claimLegacyRows, deleteUserLocalData } from '../db/queries';
+import { claimLegacyRows, deleteUserLocalData, repairRoutineTargetDefaults } from '../db/queries';
 import { getCurrentUserId, setCurrentUserId } from '../db/user-scope';
 import { User, Session } from '@supabase/supabase-js';
 
@@ -40,13 +40,19 @@ export function useAuth() {
         // Mirror the id before any query can run, then adopt pre-auth rows so the
         // user's own existing data stays visible. Holding `loading` until the
         // backfill finishes is what guarantees that ordering — the root layout
-        // gates every screen on `loading`.
+        // gates every screen on `loading`. The per-account routine repair runs
+        // here too, for the same reason: only now is the scope mirror set.
         setCurrentUserId(userId);
         if (backfilledUserId !== userId) {
           try {
             await claimLegacyRows();
           } catch (err) {
             if (__DEV__) console.error('Failed to claim legacy rows:', err);
+          }
+          try {
+            await repairRoutineTargetDefaults();
+          } catch (err) {
+            if (__DEV__) console.error('Failed to repair routine target defaults:', err);
           }
           backfilledUserId = userId;
         }
