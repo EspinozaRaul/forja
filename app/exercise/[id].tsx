@@ -1,7 +1,9 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
+import { useEvent } from 'expo';
 import { Directory, File, Paths } from 'expo-file-system';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useExercise } from '../../lib/hooks/useExercises';
@@ -15,10 +17,11 @@ import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme
 import { formatDuration, formatRelativeDate, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { EXERCISE_IMAGES } from '../../lib/assets/exercise-images';
+import { EXERCISE_VIDEOS } from '../../lib/assets/exercise-videos';
 import { getExerciseName } from '../../lib/utils/exercise-names';
 import i18n from '../../lib/i18n';
 
-function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
+function RemoteGifPlayer({ url, visible, onClose }: { url: string; visible: boolean; onClose: () => void }) {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
@@ -74,6 +77,61 @@ function GifPlayer({ url, visible, onClose }: { url: string; visible: boolean; o
   );
 }
 
+// Plays the bundled MP4 for the exercise. The clips are silent and only a few
+// seconds long, so they loop while the modal is open.
+function BundledVideoPlayer({ source, visible, onClose }: { source: number; visible: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const player = useVideoPlayer(source, (p) => {
+    p.loop = true;
+    p.muted = true;
+  });
+  const { status } = useEvent(player, 'statusChange', { status: player.status });
+
+  useEffect(() => {
+    if (visible && status === 'readyToPlay') {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [visible, status, player]);
+
+  return (
+    <Modal accessible={true} visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity
+        style={{ flex: 1, backgroundColor: colors.overlay.deep, justifyContent: 'center', alignItems: 'center' }}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <Text style={{ color: colors.text.primary, fontSize: fontSizes.sm, marginBottom: spacing.sm + spacing.xs }}>{t('exerciseDetail.tapToClose')}</Text>
+        <View style={{ width: 300, height: 300, borderRadius: borderRadius.md, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
+          {status === 'readyToPlay' ? (
+            <VideoView
+              player={player}
+              style={{ width: 300, height: 300 }}
+              contentFit="contain"
+              nativeControls={false}
+            />
+          ) : (
+            <ActivityIndicator size="large" color={colors.text.link} />
+          )}
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
+// Prefers the bundled MP4 (plays offline, no network) and falls back to the
+// remote-GIF cache path for exercises that have no bundled video.
+function GifPlayer({ url, video, visible, onClose }: { url?: string | null; video?: number | null; visible: boolean; onClose: () => void }) {
+  if (video) {
+    return <BundledVideoPlayer source={video} visible={visible} onClose={onClose} />;
+  }
+  if (url) {
+    return <RemoteGifPlayer url={url} visible={visible} onClose={onClose} />;
+  }
+  return null;
+}
+
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -113,7 +171,9 @@ export default function ExerciseDetailScreen() {
   }
 
   const exerciseImage = exercise.originalId ? EXERCISE_IMAGES[exercise.originalId] : null;
+  const bundledVideo = exercise.originalId ? EXERCISE_VIDEOS[exercise.originalId] : null;
   const gifUrl = exercise.gifUrl;
+  const hasAnimation = Boolean(bundledVideo || gifUrl);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
@@ -124,7 +184,7 @@ export default function ExerciseDetailScreen() {
             source={exerciseImage}
             style={{ width: 200, height: 200, borderRadius: borderRadius.md, resizeMode: 'contain' }}
           />
-          {gifUrl && (
+          {hasAnimation && (
             <TouchableOpacity
               onPress={() => setShowGif(true)}
               style={{ marginTop: spacing.sm, backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
@@ -135,9 +195,9 @@ export default function ExerciseDetailScreen() {
         </View>
       )}
 
-      {/* GIF Modal */}
-      {gifUrl && (
-        <GifPlayer url={gifUrl} visible={showGif} onClose={() => setShowGif(false)} />
+      {/* Animation Modal */}
+      {hasAnimation && (
+        <GifPlayer url={gifUrl} video={bundledVideo} visible={showGif} onClose={() => setShowGif(false)} />
       )}
 
       {/* Exercise Header */}

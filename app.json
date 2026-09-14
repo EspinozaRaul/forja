@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "assetBundlePatterns": [
       "assets/exercises/images/**/*",
-      "assets/exercises/gifs/**/*"
+      "assets/exercises/videos/**/*"
     ],
     "ios": {
       "supportsTablet": true,
