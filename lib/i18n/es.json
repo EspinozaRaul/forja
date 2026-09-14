@@ -494,7 +494,9 @@
       "noData": "No hay datos para los periodos seleccionados",
       "new": "Nuevo",
       "removed": "Eliminado",
-      "reordered": "Reordenado"
+      "reordered": "Reordenado",
+      "sessionCountOne": "1 sesión",
+      "sessionCountMany": "{{count}} sesiones"
     },
     "sessions": "Sesiones"
   },

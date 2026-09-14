@@ -232,7 +232,9 @@ export function RoutinePickerModal({
                           color: colors.text.muted,
                         }}
                       >
-                        {routine.sessionCount} {routine.sessionCount === 1 ? 'sesion' : 'sesiones'}
+                        {routine.sessionCount === 1
+                          ? t('progress.routineCompare.sessionCountOne')
+                          : t('progress.routineCompare.sessionCountMany', { count: routine.sessionCount })}
                       </Text>
                     </View>
                   </Pressable>

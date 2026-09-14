@@ -160,7 +160,7 @@ export default function RoutineCompareScreen() {
                 marginBottom: spacing.sm,
               }}
             >
-              Selecciona los meses a comparar (max 6)
+              {t('progress.routineCompare.selectPeriods')}
             </Text>
             <PeriodChips
               periods={availablePeriods}

@@ -507,7 +507,9 @@
       "noData": "No data for selected periods",
       "new": "New",
       "removed": "Removed",
-      "reordered": "Reordered"
+      "reordered": "Reordered",
+      "sessionCountOne": "1 session",
+      "sessionCountMany": "{{count}} sessions"
     },
     "exercises": {
       "avgRepsPerSession": "Average reps per session",
