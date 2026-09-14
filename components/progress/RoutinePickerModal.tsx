@@ -65,6 +65,8 @@ export function RoutinePickerModal({
       {/* Backdrop */}
       <Pressable
         onPress={handleClose}
+        accessibilityLabel={t('accessibility.common.close')}
+        accessibilityRole="button"
         style={{
           flex: 1,
           backgroundColor: colors.overlay.default,
@@ -73,6 +75,7 @@ export function RoutinePickerModal({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
+          accessible={false}
           style={{
             backgroundColor: colors.bg.card,
             borderTopLeftRadius: borderRadius.xl,
@@ -183,7 +186,7 @@ export function RoutinePickerModal({
                       borderBottomWidth: 1,
                       borderBottomColor: colors.border.divider,
                     }}
-                    accessibilityLabel={`Seleccionar rutina: ${routine.name}`}
+                    accessibilityLabel={t('accessibility.routinePicker.select', { name: routine.name })}
                     accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
                   >

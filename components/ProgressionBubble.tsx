@@ -291,6 +291,8 @@ function Tooltip({ point, unit, onClose }: TooltipProps) {
   return (
     <Pressable
       onPress={onClose}
+      accessibilityLabel={t('accessibility.common.close')}
+      accessibilityRole="button"
       style={{
         position: 'absolute',
         top: 0,

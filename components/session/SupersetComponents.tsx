@@ -91,6 +91,8 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
       {onUnitChange && (
         <TouchableOpacity
           onPress={() => onUnitChange(unit === 'kg' ? 'lbs' : 'kg')}
+          accessibilityLabel={t('accessibility.common.changeUnit')}
+          accessibilityRole="button"
           style={{ backgroundColor: 'transparent', borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minWidth: 36, alignItems: 'center' }}
         >
           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.muted }}>{unit}</Text>
@@ -98,6 +100,10 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
       )}
       <TouchableOpacity
         onPress={() => onUpdate({ completed: !set.completed })}
+        hitSlop={{ top: 8, bottom: 8, right: 8, left: 0 }}
+        accessibilityLabel={set.completed ? t('accessibility.setActions.markIncomplete') : t('accessibility.setActions.markComplete')}
+        accessibilityRole="button"
+        accessibilityState={{ checked: set.completed }}
         style={[
           { width: SET_LOGGER.CHECK_SIZE, height: SET_LOGGER.CHECK_SIZE, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center' },
           set.completed
@@ -277,6 +283,7 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
     return (
       <TouchableOpacity
         onPress={handleSwipeDeletePair}
+        accessibilityRole="button"
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
         <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
@@ -309,6 +316,8 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
         {collapsed ? (
         <TouchableOpacity
           onPress={toggleCollapsed}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: !collapsed }}
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
           <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>
@@ -342,6 +351,8 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
           <TouchableOpacity
             onPress={handleAddSeries}
             disabled={createSet.isPending}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: createSet.isPending }}
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.xs }}
           >
             <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: createSet.isPending ? colors.text.muted : colors.accent.primary }}>
@@ -349,7 +360,7 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
             </Text>
           </TouchableOpacity>
           <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>·</Text>
-          <TouchableOpacity onPress={handleUnlink} style={{ paddingVertical: spacing.xs }}>
+          <TouchableOpacity onPress={handleUnlink} accessibilityRole="button" style={{ paddingVertical: spacing.xs }}>
             <Text style={{ fontSize: fontSizes.xs, color: colors.text.muted }}>{t('session.superset.unlink')}</Text>
           </TouchableOpacity>
           </>
@@ -404,6 +415,7 @@ export function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, e
     return (
       <TouchableOpacity
         onPress={handleSwipeDelete}
+        accessibilityRole="button"
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
         <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
@@ -425,6 +437,9 @@ export function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, e
           </Text>
           <TouchableOpacity
             onPress={() => { swipeableRef.current?.close(); onDeleteSeries(row); }}
+            hitSlop={8}
+            accessibilityLabel={t('accessibility.setLogger.deleteSet')}
+            accessibilityRole="button"
             style={{ marginLeft: 'auto', paddingVertical: spacing.xs, paddingLeft: spacing.sm, paddingRight: spacing.xs }}
           >
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.muted }}>×</Text>

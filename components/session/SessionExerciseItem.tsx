@@ -384,6 +384,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
     return (
       <TouchableOpacity
         onPress={handleSwipeDelete}
+        accessibilityRole="button"
         style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
         <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
@@ -413,6 +414,9 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
         <TouchableOpacity
           onPress={onDragTap}
           activeOpacity={0.7}
+          hitSlop={8}
+          accessibilityLabel={t('accessibility.common.reorder')}
+          accessibilityRole="button"
           style={{ gap: spacing.xs, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
         >
           <View style={{ width: 16, height: 2, backgroundColor: isDragging ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
@@ -426,6 +430,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
           {onPairSuperset && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onPairSuperset(); }}
+              accessibilityRole="button"
               style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
             >
               <Text style={{ fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.superSet')}</Text>
@@ -433,6 +438,9 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
           )}
           <TouchableOpacity
             onPress={() => setShowRestPicker(!showRestPicker)}
+            accessibilityLabel={t('accessibility.common.changeRest')}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showRestPicker }}
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
           >
             <Text style={{ fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>
@@ -442,6 +450,9 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
           {onReplace && (
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onReplace(); }}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              accessibilityLabel={t('accessibility.common.replaceExercise')}
+              accessibilityRole="button"
               style={{ padding: spacing.xxs }}
             >
               <Ionicons name="repeat" size={14} color={colors.accent.primary} />
@@ -466,6 +477,8 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
               <TouchableOpacity
                 key={dur}
                 onPress={() => handleSetRestTime(dur)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: currentRestTime === dur }}
                 style={{
                   backgroundColor: currentRestTime === dur ? colors.accent.primary : colors.bg.elevated,
                   borderRadius: borderRadius.sm,
@@ -491,6 +504,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                 setCustomSeconds(secs > 0 ? String(secs) : '');
                 setShowCustomRest(true);
               }}
+              accessibilityRole="button"
               style={{
                 backgroundColor: colors.bg.elevated,
                 borderRadius: borderRadius.sm,
@@ -537,6 +551,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
                 onPress={() => setShowCustomRest(false)}
+                accessibilityRole="button"
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold }}>{t('session.dropSet.cancel')}</Text>
@@ -551,6 +566,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                     setShowCustomRest(false);
                   }
                 }}
+                accessibilityRole="button"
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>{t('session.dropSet.save')}</Text>
@@ -562,6 +578,8 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
       {collapsed ? (
         <TouchableOpacity
           onPress={toggleCollapsed}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: !collapsed }}
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary }}
         >
           <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary }}>

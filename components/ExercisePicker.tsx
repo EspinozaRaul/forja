@@ -228,7 +228,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                     key={cat.id}
                     onPress={() => setSelectedCategoryId(cat.id)}
                     style={{ backgroundColor: selectedCategoryId === cat.id ? cat.color : colors.bg.elevated, borderWidth: selectedCategoryId === cat.id ? 0 : 1, borderColor: colors.border.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.full }}
-                    accessibilityLabel={`Categoría: ${cat.name}`}
+                    accessibilityLabel={t('accessibility.exercisePicker.category', { name: cat.name })}
                     accessibilityRole="button"
                     accessibilityState={{ selected: selectedCategoryId === cat.id }}
                   >
@@ -303,7 +303,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                     borderRadius: borderRadius.full,
                     marginRight: spacing.sm,
                   }}
-                  accessibilityLabel={`Filtrar por: ${t(`exercisePicker.muscle.${muscle.key}`)}`}
+                  accessibilityLabel={t('accessibility.exercisePicker.filterBy', { name: t(`exercisePicker.muscle.${muscle.key}`) })}
                   accessibilityRole="button"
                   accessibilityState={{ selected: selectedMuscle === muscle.key }}
                 >
@@ -377,7 +377,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
-                      accessibilityLabel={isSelected ? `Desseleccionar ${getExerciseNameFromExercise(item, i18n.language)}` : `Seleccionar ${getExerciseNameFromExercise(item, i18n.language)}`}
+                      accessibilityLabel={isSelected ? t('accessibility.exercisePicker.deselect', { name: getExerciseNameFromExercise(item, i18n.language) }) : t('accessibility.exercisePicker.select', { name: getExerciseNameFromExercise(item, i18n.language) })}
                       accessibilityRole="button"
                       accessibilityState={{ selected: isSelected }}
                     >
@@ -397,7 +397,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       }
                     }}
                     style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm + spacing.xxs }}
-                    accessibilityLabel={`Seleccionar ejercicio: ${getExerciseNameFromExercise(item, i18n.language)}`}
+                    accessibilityLabel={t('accessibility.exercisePicker.selectExercise', { name: getExerciseNameFromExercise(item, i18n.language) })}
                     accessibilityRole="button"
                   >
                     {exerciseImage ? (
@@ -420,7 +420,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                     <TouchableOpacity
                       onPress={() => onSelect(item)}
                       style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm + spacing.xs, paddingVertical: spacing.sm }}
-                      accessibilityLabel={`Agregar ejercicio: ${getExerciseNameFromExercise(item, i18n.language)}`}
+                      accessibilityLabel={t('accessibility.exercisePicker.addExercise', { name: getExerciseNameFromExercise(item, i18n.language) })}
                       accessibilityRole="button"
                     >
                       <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>+</Text>

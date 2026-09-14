@@ -357,6 +357,8 @@ export function RestTimer({
             <TouchableOpacity
               key={dur}
               onPress={() => handleSelectDuration(dur)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedDuration === dur }}
               style={{ backgroundColor: selectedDuration === dur ? colors.accent.primary : colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderWidth: selectedDuration === dur ? 0 : borderWidths.thin, borderColor: colors.border.primary }}
             >
               <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
@@ -367,6 +369,7 @@ export function RestTimer({
         </View>
         <TouchableOpacity
           onPress={() => handleStart()}
+          accessibilityRole="button"
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
           <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
@@ -380,6 +383,9 @@ export function RestTimer({
     <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.accent.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <TouchableOpacity
         onPress={() => handleAdjust(-TIMER_CONFIG.REST_ADJUST_STEP)}
+        hitSlop={6}
+        accessibilityLabel={t('accessibility.common.decreaseRest')}
+        accessibilityRole="button"
         style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
       >
         <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm}}>-{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
@@ -393,12 +399,16 @@ export function RestTimer({
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
         <TouchableOpacity
           onPress={() => handleAdjust(TIMER_CONFIG.REST_ADJUST_STEP)}
+          hitSlop={{ top: 6, bottom: 6, left: 0, right: 0 }}
+          accessibilityLabel={t('accessibility.common.increaseRest')}
+          accessibilityRole="button"
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, width: TIMER.BUTTON_SIZE, height: TIMER.BUTTON_SIZE, justifyContent: 'center', alignItems: 'center' }}
         >
           <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm}}>+{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSkip}
+          accessibilityRole="button"
           style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, height: TIMER.BUTTON_SIZE, justifyContent: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
           <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.xs }}>{t('restTimer.skip')}</Text>

@@ -14,6 +14,7 @@ export function NavigationButton({ icon, label, description, onPress }: Navigati
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       style={{
         flexDirection: 'row',
         alignItems: 'center',

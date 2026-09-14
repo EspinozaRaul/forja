@@ -182,12 +182,14 @@ export function PartialSetLogger({
               }
               onUpdate({ completed: !set.completed });
             }}
+            hitSlop={{ top: 8, bottom: 8, right: 8, left: 0 }}
             style={[
               styles.checkButton,
               set.completed ? styles.checkCompleted : styles.checkIncomplete,
             ]}
             accessibilityLabel={set.completed ? t('accessibility.setActions.markIncomplete') : t('accessibility.setActions.markComplete')}
             accessibilityRole="button"
+            accessibilityState={{ checked: set.completed }}
           >
             {set.completed && (
               <Ionicons name="checkmark" size={14} color={colors.bg.primary} />

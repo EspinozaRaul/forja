@@ -110,12 +110,14 @@ export function DropSetLogger({
       {/* Check button — toggle: complete all / uncomplete all */}
       <TouchableOpacity
         onPress={() => allCompleted ? onUncompleteAll?.() : onCompleteAll()}
+        hitSlop={{ top: 8, bottom: 8, right: 8, left: 0 }}
         style={[
           styles.checkButton,
           allCompleted ? styles.checkCompleted : styles.checkIncomplete,
         ]}
         accessibilityLabel={allCompleted ? t('accessibility.dropSetLogger.markIncomplete') : t('accessibility.dropSetLogger.markComplete')}
         accessibilityRole="button"
+        accessibilityState={{ checked: allCompleted }}
       >
         {allCompleted && (
           <Ionicons name="checkmark" size={14} color={colors.bg.primary} />

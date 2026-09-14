@@ -49,7 +49,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
                 onClose();
               }}
               style={styles.option}
-              accessibilityLabel={`Seleccionar método: ${t(`methods.${method.id}.label`)}`}
+              accessibilityLabel={t('accessibility.intensityPicker.select', { name: t(`methods.${method.id}.label`) })}
               accessibilityRole="button"
             >
               <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />

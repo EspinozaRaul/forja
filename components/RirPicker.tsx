@@ -1,15 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fontSizes, fontWeights, borderWidths, fonts } from '../lib/theme/tokens';
 
 const RIR_OPTIONS = [0, 1, 2, 3, 4];
-
-const RIR_LABELS: Record<number, string> = {
-  0: 'RIR 0, sin reserva',
-  1: 'RIR 1, una repetición de reserva',
-  2: 'RIR 2, dos repeticiones de reserva',
-  3: 'RIR 3, tres repeticiones de reserva',
-  4: 'RIR 4, cuatro repeticiones de reserva',
-};
 
 interface RirPickerProps {
   value: number | null | undefined;
@@ -23,6 +16,7 @@ interface RirPickerProps {
  * Lives below the set row so it never crowds the reps/weight inputs.
  */
 export function RirPicker({ value, onChange, endPadding = 0 }: RirPickerProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <Text style={styles.label}>RIR</Text>
@@ -35,7 +29,7 @@ export function RirPicker({ value, onChange, endPadding = 0 }: RirPickerProps) {
               onPress={() => onChange(selected ? null : rir)}
               style={[styles.chip, selected && styles.chipSelected]}
               activeOpacity={0.7}
-              accessibilityLabel={RIR_LABELS[rir]}
+              accessibilityLabel={t(`accessibility.rirPicker.option.${rir}`)}
               accessibilityRole="button"
               accessibilityState={{ selected }}
             >

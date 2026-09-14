@@ -20,6 +20,9 @@ export function SetLoggerHeader({ unit, onUnitChange, hasPartial = false }: SetL
         onPress={() => onUnitChange?.(unit === 'kg' ? 'lbs' : 'kg')}
         style={styles.unitHeader}
         disabled={!onUnitChange}
+        accessibilityLabel={t('accessibility.common.changeUnit')}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !onUnitChange }}
       >
         <Text style={styles.unitHeaderText}>{unit.toUpperCase()}</Text>
         {onUnitChange && (
