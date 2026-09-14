@@ -631,8 +631,29 @@
     "volumeChange": "Volumen {{direction}} {{percent}}%",
     "noSessions": "Sin sesiones aún"
   },
-  "accessibility": {
-    "setLogger": {
+      "accessibility": {
+        "common": {
+          "back": "Volver",
+          "close": "Cerrar",
+          "settings": "Abrir ajustes",
+          "showPassword": "Mostrar contraseña",
+          "hidePassword": "Ocultar contraseña",
+          "changeUnit": "Cambiar unidad",
+          "reorder": "Reordenar",
+          "replaceExercise": "Reemplazar ejercicio",
+          "removeExercise": "Quitar ejercicio",
+          "chooseColor": "Elegir color",
+          "clearSearch": "Borrar búsqueda",
+          "previousMonth": "Mes anterior",
+          "nextMonth": "Mes siguiente",
+          "calendarDay": "Día {{day}}",
+          "changeRest": "Cambiar descanso",
+          "decreaseRest": "Reducir descanso",
+          "increaseRest": "Aumentar descanso",
+          "expand": "Expandir",
+          "collapse": "Contraer"
+        },
+        "setLogger": {
       "deleteSet": "Eliminar serie",
       "deleteHint": "Elimina esta serie del ejercicio",
       "weight": "Peso de la serie",
@@ -710,17 +731,36 @@
       "add": "Agregar ejercicio",
       "addHint": "Agregar ejercicio a la rutina",
       "confirm": "Confirmar selección",
-      "back": "Volver"
+      "back": "Volver",
+      "category": "Categoría: {{name}}",
+      "select": "Seleccionar {{name}}",
+      "deselect": "Deseleccionar {{name}}",
+      "selectExercise": "Seleccionar ejercicio: {{name}}",
+      "addExercise": "Agregar ejercicio: {{name}}",
+      "filterBy": "Filtrar por: {{name}}"
     },
     "intensityPicker": {
       "close": "Cerrar selector de método",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "select": "Seleccionar método: {{name}}"
     },
     "routinePicker": {
       "close": "Cerrar",
       "search": "Buscar rutina",
       "searchHint": "Escribe para buscar rutinas por nombre",
       "select": "Seleccionar rutina: {{name}}"
+    },
+    "periodChips": {
+      "period": "Período: {{label}}"
+    },
+    "rirPicker": {
+      "option": {
+    "0": "RIR 0, sin reserva",
+    "1": "RIR 1, una repetición de reserva",
+    "2": "RIR 2, dos repeticiones de reserva",
+    "3": "RIR 3, tres repeticiones de reserva",
+    "4": "RIR 4, cuatro repeticiones de reserva"
+      }
     }
   },
   "settings": {

@@ -521,8 +521,29 @@
     },
     "sessions": "Sessions"
   },
-  "accessibility": {
-    "setLogger": {
+      "accessibility": {
+        "common": {
+          "back": "Back",
+          "close": "Close",
+          "settings": "Open settings",
+          "showPassword": "Show password",
+          "hidePassword": "Hide password",
+          "changeUnit": "Change unit",
+          "reorder": "Reorder",
+          "replaceExercise": "Replace exercise",
+          "removeExercise": "Remove exercise",
+          "chooseColor": "Choose color",
+          "clearSearch": "Clear search",
+          "previousMonth": "Previous month",
+          "nextMonth": "Next month",
+          "calendarDay": "Day {{day}}",
+          "changeRest": "Change rest time",
+          "decreaseRest": "Decrease rest time",
+          "increaseRest": "Increase rest time",
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "setLogger": {
       "deleteSet": "Delete set",
       "deleteHint": "Deletes this set from the exercise",
       "weight": "Set weight",
@@ -600,17 +621,36 @@
       "add": "Add exercise",
       "addHint": "Add exercise to routine",
       "confirm": "Confirm selection",
-      "back": "Back"
+      "back": "Back",
+      "category": "Category: {{name}}",
+      "select": "Select {{name}}",
+      "deselect": "Deselect {{name}}",
+      "selectExercise": "Select exercise: {{name}}",
+      "addExercise": "Add exercise: {{name}}",
+      "filterBy": "Filter by: {{name}}"
     },
     "intensityPicker": {
       "close": "Close method selector",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "select": "Select method: {{name}}"
     },
     "routinePicker": {
       "close": "Close",
       "search": "Search routine",
       "searchHint": "Type to search routines by name",
       "select": "Select routine: {{name}}"
+    },
+    "periodChips": {
+      "period": "Period: {{label}}"
+    },
+    "rirPicker": {
+      "option": {
+    "0": "RIR 0, no reps in reserve",
+    "1": "RIR 1, one rep in reserve",
+    "2": "RIR 2, two reps in reserve",
+    "3": "RIR 3, three reps in reserve",
+    "4": "RIR 4, four reps in reserve"
+      }
     }
   },
   "methods": {

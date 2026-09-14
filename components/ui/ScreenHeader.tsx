@@ -1,5 +1,6 @@
 import { View, Text, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { type ComponentProps, type ReactNode } from 'react';
 import { colors, spacing, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 
@@ -27,6 +28,7 @@ interface ScreenHeaderProps {
  * scrolls away from a hard edge.
  */
 export function ScreenHeader({ title, icon, onBack, right, divider, style }: ScreenHeaderProps) {
+  const { t } = useTranslation();
   return (
     <View
       style={[
@@ -53,11 +55,11 @@ export function ScreenHeader({ title, icon, onBack, right, divider, style }: Scr
         }}
       >
         {onBack && (
-          <Pressable onPress={onBack} hitSlop={8}>
+          <Pressable onPress={onBack} hitSlop={8} accessibilityLabel={t('accessibility.common.back')} accessibilityRole="button">
             <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </Pressable>
         )}
-        {icon && <Ionicons name={icon} size={24} color={colors.accent.primary} />}
+        {icon && <Ionicons name={icon} size={24} color={colors.accent.primary} accessibilityElementsHidden importantForAccessibility="no" />}
         <Text
           numberOfLines={1}
           style={{

@@ -29,7 +29,7 @@ export function Card({ onPress, children, style, ...props }: CardProps) {
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
         {content}
       </TouchableOpacity>
     );

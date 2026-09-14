@@ -49,12 +49,14 @@ export function ConfirmDialog({
               <TouchableOpacity
                 onPress={onCancel}
                 style={styles.cancelButtonVertical}
+                accessibilityRole="button"
               >
                 <Text style={styles.cancelText}>{resolvedCancelLabel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onThird}
                 style={[styles.confirmButtonVertical, thirdDestructive && styles.confirmDestructive]}
+                accessibilityRole="button"
               >
                 <Text style={[styles.confirmText, thirdDestructive && styles.confirmTextDestructive]}>
                   {thirdLabel}
@@ -63,6 +65,7 @@ export function ConfirmDialog({
               <TouchableOpacity
                 onPress={onConfirm}
                 style={[styles.confirmButtonVertical, destructive && styles.confirmDestructive]}
+                accessibilityRole="button"
               >
                 <Text style={[styles.confirmText, destructive && styles.confirmTextDestructive]}>
                   {resolvedConfirmLabel}
@@ -76,6 +79,7 @@ export function ConfirmDialog({
                 <TouchableOpacity
                   onPress={onCancel}
                   style={styles.cancelButton}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.cancelText}>{resolvedCancelLabel}</Text>
                 </TouchableOpacity>
@@ -87,6 +91,7 @@ export function ConfirmDialog({
                   destructive && styles.confirmDestructive,
                   !onCancel && styles.confirmSingle,
                 ]}
+                accessibilityRole="button"
               >
                 <Text style={[styles.confirmText, destructive && styles.confirmTextDestructive]}>
                   {resolvedConfirmLabel}
