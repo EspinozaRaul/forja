@@ -2,7 +2,7 @@
   "expo": {
     "name": "Forja",
     "slug": "fitness-tracker",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "scheme": "forja",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -60,7 +60,9 @@
         "expo-build-properties",
         {
           "android": {
-            "buildArchs": ["arm64-v8a", "armeabi-v7a"]
+            "buildArchs": ["arm64-v8a", "armeabi-v7a"],
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ]
