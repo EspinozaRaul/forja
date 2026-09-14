@@ -2,7 +2,7 @@
   "expo": {
     "name": "Forja",
     "slug": "fitness-tracker",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "scheme": "forja",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -47,12 +47,21 @@
       "expo-localization",
       "expo-web-browser",
       "expo-secure-store",
+      "expo-system-ui",
       [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#0A0A0A"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildArchs": ["arm64-v8a", "armeabi-v7a"]
+          }
         }
       ]
     ],
