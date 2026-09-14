@@ -13,9 +13,15 @@ interface EmptyStateProps {
   icon?: ReactNode | keyof typeof Ionicons.glyphMap;
   title: string;
   message?: string;
+  /**
+   * Optional call to action rendered under the message (e.g. the Retry button
+   * in `QueryState`). Kept here so a failed load and a genuinely empty list
+   * stay visually identical instead of growing a second empty-screen design.
+   */
+  action?: ReactNode;
 }
 
-export function EmptyState({ icon, title, message }: EmptyStateProps) {
+export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
   const iconNode =
     typeof icon === 'string'
       ? <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={48} color={colors.text.muted} />
@@ -33,6 +39,7 @@ export function EmptyState({ icon, title, message }: EmptyStateProps) {
       {message && (
         <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.muted, textAlign: 'center' }} className="text-sm text-dark-text-muted text-center">{message}</Text>
       )}
+      {action && <View style={{ marginTop: spacing.lg }}>{action}</View>}
     </View>
   );
 }

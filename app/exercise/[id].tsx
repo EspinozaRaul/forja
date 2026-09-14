@@ -9,8 +9,8 @@ import { useExerciseStats, useExerciseSessions, useExercisePRs } from '../../lib
 import { useTotalVolumeByWeek } from '../../lib/hooks/useProgress';
 import { useSettings } from '../../lib/utils/settings';
 import { ProgressChart } from '../../components/ProgressChart';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { formatDuration, formatRelativeDate, formatVolume } from '../../lib/utils/format';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
@@ -80,27 +80,35 @@ export default function ExerciseDetailScreen() {
   const { t } = useTranslation();
   const exerciseId = parseInt(id, 10);
 
-  const { data: exercises, isLoading: exerciseLoading } = useExercise(exerciseId);
-  const { data: stats, isLoading: statsLoading } = useExerciseStats(exerciseId);
-  const { data: prs, isLoading: prsLoading } = useExercisePRs(exerciseId);
-  const { data: sessions, isLoading: sessionsLoading } = useExerciseSessions(exerciseId);
-  const { data: volumeData, isLoading: volumeLoading } = useTotalVolumeByWeek(exerciseId);
+  const { data: exercises, isLoading: exerciseLoading, isError: exerciseError, refetch: refetchExercise } = useExercise(exerciseId);
+  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useExerciseStats(exerciseId);
+  const { data: prs, isLoading: prsLoading, isError: prsError, refetch: refetchPrs } = useExercisePRs(exerciseId);
+  const { data: sessions, isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions } = useExerciseSessions(exerciseId);
+  const { data: volumeData, isLoading: volumeLoading, isError: volumeError, refetch: refetchVolume } = useTotalVolumeByWeek(exerciseId);
   const settings = useSettings();
   const [showGif, setShowGif] = useState(false);
 
   const exercise = exercises?.[0];
   const unit = resolveUnit(exercise?.unit, settings.data.weightUnit);
   const isLoading = exerciseLoading || statsLoading || prsLoading || sessionsLoading || volumeLoading;
+  const hasError = exerciseError || statsError || prsError || sessionsError || volumeError;
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('exerciseDetail.loading')} />;
-  }
-
-  if (!exercise) {
+  if (isLoading || hasError || !exercise) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('exerciseDetail.notFound')} />
-      </View>
+      <QueryState
+        queries={[
+          { isLoading: exerciseLoading, isError: exerciseError, refetch: refetchExercise },
+          { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
+          { isLoading: prsLoading, isError: prsError, refetch: refetchPrs },
+          { isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions },
+          { isLoading: volumeLoading, isError: volumeError, refetch: refetchVolume },
+        ]}
+        loadingMessage={t('exerciseDetail.loading')}
+        empty
+        emptyTitle={t('exerciseDetail.notFound')}
+      >
+        {null}
+      </QueryState>
     );
   }
 

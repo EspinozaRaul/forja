@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
 > Last updated: 2026-09-13
-> Status: v1.0 (Layout foundation)
+> Status: v1.1 (Layout foundation + query states)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -76,6 +76,50 @@ and radii. Literal numbers for those are not allowed.
 `accessibilityLabel={t('accessibility.something')}` — never a hardcoded Spanish
 string. The label must exist in both catalogues like any other string.
 
+## 7. A query-backed screen shows loading, failure and empty — never one for another
+
+A screen whose data comes from react-query must tell those three states apart.
+The old pattern — `if (!data) return <EmptyState title="not found" />` — cannot: a
+dropped connection, an empty table and a wrong id all render the same "no
+encontrado", so the user concludes their data is gone. That is a lie, and it is
+the failure this rule exists to prevent.
+
+Route the states through `components/ui/QueryState.tsx`. It takes the query
+objects themselves so a screen cannot forget the failure case, and its failure
+branch always renders a retry action:
+
+```tsx
+import { QueryState } from '../../components/ui/QueryState';
+
+const sessionQuery = useSession(sessionId);
+const exercisesQuery = useSessionExercises(sessionId);
+const session = sessionQuery.data?.[0];
+
+return (
+  <QueryState
+    queries={[sessionQuery, exercisesQuery]}
+    loadingMessage={t('session.loadingMessage')}
+    empty={!session}
+    emptyTitle={t('session.notFound')}
+  >
+    {/* real content — only rendered once every query has data */}
+  </QueryState>
+);
+```
+
+- Pass **every** query the content depends on, not just the first. Six reads
+  behind one spinner are six chances to half-load a screen; `QueryState` fails the
+  whole view (with a retry) when any one of them errors.
+- The empty state keeps the copy it already had. `QueryState` decides *whether* to
+  show it, never what it says: `emptyTitle` / `emptyMessage` / `emptyIcon` build the
+  same `EmptyState` the screen used before.
+- The failure copy and the Retry button come from `common.queryError.title`,
+  `common.queryError.message` and `common.retry` in both catalogues. Do not invent
+  a second empty or error look.
+- When "empty" is a section inside otherwise-valid content (an empty list under a
+  working header), keep that inline empty — but still wrap the screen so the
+  failure state stays reachable.
+
 ## Checklist for a new screen
 
 - [ ] Root is `<Screen>` (or `<Screen edges={[]}>` under a native header)
@@ -83,6 +127,8 @@ string. The label must exist in both catalogues like any other string.
 - [ ] No `paddingTop` / `paddingBottom` in `style` fighting the safe area
 - [ ] Colours, spacing, fonts and radii come from `tokens.ts`
 - [ ] Every string goes through `t()` and exists in both catalogues
+- [ ] Query-backed data routes loading / failure / empty through `<QueryState>`
+      (failure always offers a retry) — never a bare `!data` fallback
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green
 
 ## Why this file exists

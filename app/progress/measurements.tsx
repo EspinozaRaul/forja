@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { now } from '../../lib/utils/date';
 import { useBodyMeasurements, useCreateMeasurement, useDeleteMeasurement } from '../../lib/hooks/useBodyMeasurements';
 import { useProgressPhotos, useCreatePhoto, useDeletePhoto, usePickPhoto, useTakePhoto } from '../../lib/hooks/useProgressPhotos';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
@@ -120,8 +120,8 @@ export default function MeasurementsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   
-  const { data: measurements, isLoading: measurementsLoading } = useBodyMeasurements();
-  const { data: photos, isLoading: photosLoading } = useProgressPhotos();
+  const { data: measurements, isLoading: measurementsLoading, isError: measurementsError, refetch: refetchMeasurements } = useBodyMeasurements();
+  const { data: photos, isLoading: photosLoading, isError: photosError, refetch: refetchPhotos } = useProgressPhotos();
   const createMeasurement = useCreateMeasurement();
   const deleteMeasurement = useDeleteMeasurement();
   const createPhoto = useCreatePhoto();
@@ -140,8 +140,6 @@ export default function MeasurementsScreen() {
     thighs: '',
   });
   const [selectedBodyPart, setSelectedBodyPart] = useState<string>('front');
-  
-  const isLoading = measurementsLoading || photosLoading;
   
   // Calculate deltas for the most recent measurement
   const latestMeasurement = measurements?.[0];
@@ -211,8 +209,18 @@ export default function MeasurementsScreen() {
     );
   };
   
-  if (isLoading) {
-    return <LoadingSpinner message={t('common.loading')} />;
+  if (measurementsLoading || photosLoading || measurementsError || photosError) {
+    return (
+      <QueryState
+        queries={[
+          { isLoading: measurementsLoading, isError: measurementsError, refetch: refetchMeasurements },
+          { isLoading: photosLoading, isError: photosError, refetch: refetchPhotos },
+        ]}
+        loadingMessage={t('common.loading')}
+      >
+        {null}
+      </QueryState>
+    );
   }
   
   // Translate measurement field labels

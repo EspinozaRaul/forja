@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFolders, useRoutines, useCreateFolder, useDeleteFolder, useUpdateRoutine } from '../../lib/hooks/useRoutines';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { Button } from '../../components/ui/Button';
 import { haptics } from '../../lib/utils/haptics';
@@ -15,8 +15,8 @@ import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 export default function RoutinesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { data: folders, isLoading: loadingFolders } = useFolders();
-  const { data: routines, isLoading: loadingRoutines } = useRoutines();
+  const { data: folders, isLoading: loadingFolders, isError: foldersError, refetch: refetchFolders } = useFolders();
+  const { data: routines, isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines } = useRoutines();
   const createFolder = useCreateFolder();
   const deleteFolder = useDeleteFolder();
   const updateRoutine = useUpdateRoutine();
@@ -28,8 +28,6 @@ export default function RoutinesScreen() {
   const [newFolderColor, setNewFolderColor] = useState(colors.accent.primary);
   const [movingRoutineId, setMovingRoutineId] = useState<number | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
-
-  const isLoading = loadingFolders || loadingRoutines;
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
@@ -91,8 +89,18 @@ export default function RoutinesScreen() {
   // Routines without a folder
   const unlinkedRoutines = routines?.filter((r) => !r.folderId) ?? [];
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('tabs.routines.loading')} />;
+  if (loadingFolders || loadingRoutines || foldersError || routinesError) {
+    return (
+      <QueryState
+        queries={[
+          { isLoading: loadingFolders, isError: foldersError, refetch: refetchFolders },
+          { isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines },
+        ]}
+        loadingMessage={t('tabs.routines.loading')}
+      >
+        {null}
+      </QueryState>
+    );
   }
 
   return (

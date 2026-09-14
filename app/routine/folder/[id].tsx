@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../../lib/theme/tokens';
 import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine, useDeleteRoutine } from '../../../lib/hooks/useRoutines';
-import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { QueryState } from '../../../components/ui/QueryState';
 import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
 import { haptics } from '../../../lib/utils/haptics';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -28,8 +28,8 @@ export default function FolderDetailScreen() {
     );
   }
 
-  const { data: folders, isLoading: loadingFolder } = useFolder(folderId);
-  const { data: routines, isLoading: loadingRoutines } = useRoutinesByFolder(folderId);
+  const { data: folders, isLoading: loadingFolder, isError: folderError, refetch: refetchFolder } = useFolder(folderId);
+  const { data: routines, isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines } = useRoutinesByFolder(folderId);
   const deleteRoutine = useDeleteRoutine();
   const deleteFolder = useDeleteFolder();
   const updateFolder = useUpdateFolder();
@@ -122,15 +122,19 @@ export default function FolderDetailScreen() {
     );
   };
 
-  if (loadingFolder || loadingRoutines) {
-    return <LoadingSpinner message={t('routine.folder.loading')} />;
-  }
-
-  if (!folder) {
+  if (loadingFolder || loadingRoutines || folderError || routinesError || !folder) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('routine.folder.notFound')}</Text>
-      </View>
+      <QueryState
+        queries={[
+          { isLoading: loadingFolder, isError: folderError, refetch: refetchFolder },
+          { isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines },
+        ]}
+        loadingMessage={t('routine.folder.loading')}
+        empty
+        emptyTitle={t('routine.folder.notFound')}
+      >
+        {null}
+      </QueryState>
     );
   }
 

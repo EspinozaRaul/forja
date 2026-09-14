@@ -63,9 +63,14 @@
     "today": "Hoy",
     "yesterday": "Ayer",
     "daysAgo": "Hace {{count}} días",
-    "weeksAgo": "Hace {{count}} semanas",
-    "invalidId": "ID inválido"
-  },
+        "weeksAgo": "Hace {{count}} semanas",
+        "invalidId": "ID inválido",
+        "retry": "Reintentar",
+        "queryError": {
+          "title": "No se pudieron cargar los datos",
+          "message": "Revisá tu conexión e intentá de nuevo."
+        }
+      },
   "exercise": {
     "create": {
       "title": "Nuevo Ejercicio"

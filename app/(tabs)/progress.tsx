@@ -7,8 +7,8 @@ import {
   useSessionMonthIndex,
 } from '../../lib/hooks/useProgress';
 import { useSettings } from '../../lib/utils/settings';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { NavigationButton } from '../../components/progress/NavigationButton';
 import { formatDuration, formatVolume } from '../../lib/utils/format';
 import type { WeightUnit } from '../../lib/utils/weight-unit';
@@ -87,7 +87,7 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function DayLabel({ sentry, t, locale }: { sentry: string; t: (key: string) => string; locale: string }) {
+function DayLabel({ sentry, t }: { sentry: string; t: (key: string) => string }) {
   if (sentry === '__TODAY__') return <>{t('progress.today')}</>;
   if (sentry === '__YESTERDAY__') return <>{t('progress.yesterday')}</>;
   return <>{sentry}</>;
@@ -120,7 +120,7 @@ function SessionRow({
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <View style={{ flex: 1, gap: spacing.xxs }}>
           <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
-            <DayLabel sentry={formatDayShort(session.startedAt, locale)} t={t} locale={locale} />
+            <DayLabel sentry={formatDayShort(session.startedAt, locale)} t={t} />
           </Text>
           <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted }}>
             {t('progress.exerciseCount', { count: session.exerciseCount })}
@@ -264,7 +264,8 @@ export default function ProgressScreen() {
   const yearMonth = `${visibleYear}-${String(visibleMonth).padStart(2, '0')}`;
 
   const { data: monthIndex } = useSessionMonthIndex();
-  const { data: monthSessions, isLoading: monthLoading } = useSessionsByMonth(yearMonth);
+  const monthSessionsQuery = useSessionsByMonth(yearMonth);
+  const { data: monthSessions } = monthSessionsQuery;
 
   const monthEntry = monthIndex?.find((m) => m.yearMonth === yearMonth);
   const grid = buildMonthGrid(visibleYear, visibleMonth);
@@ -321,14 +322,13 @@ export default function ProgressScreen() {
               <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('progress.viewAllMonth')}</Text>
             </Pressable>
           </View>
-          {monthLoading ? (
-            <LoadingSpinner message={t('progress.loading')} />
-          ) : selectedDaySessions.length === 0 ? (
-            <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
-              {t('progress.noSessionsDay')}
-            </Text>
-          ) : (
-            <>
+              <QueryState queries={[monthSessionsQuery]} loadingMessage={t('progress.loading')}>
+                {selectedDaySessions.length === 0 ? (
+                  <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, textAlign: 'center', paddingVertical: spacing.md }}>
+                    {t('progress.noSessionsDay')}
+                  </Text>
+                ) : (
+                  <>
               <View style={{ gap: spacing.sm }}>
                 {visibleDaySessions.map((session) => (
                   <SessionRow
@@ -361,21 +361,21 @@ export default function ProgressScreen() {
               ) : null}
             </>
           )}
+          </QueryState>
         </View>
       ) : null}
 
       {/* Sessions of the visible month */}
       <View style={cardStyle}>
         <SectionTitle>{t('progress.monthSessionsTitle')}</SectionTitle>
-        {monthLoading ? (
-          <LoadingSpinner message={t('progress.loadingSessions')} />
-        ) : !monthSessions || monthSessions.length === 0 ? (
-          <EmptyState
-            title={t('progress.noSessionsMonth')}
-            message={t('progress.noSessionsMonthMessage')}
-          />
-        ) : (
-          <>
+            <QueryState queries={[monthSessionsQuery]} loadingMessage={t('progress.loadingSessions')}>
+              {!monthSessions || monthSessions.length === 0 ? (
+                <EmptyState
+                  title={t('progress.noSessionsMonth')}
+                  message={t('progress.noSessionsMonthMessage')}
+                />
+              ) : (
+                <>
             <View style={{ gap: spacing.sm }}>
               {recentMonthSessions.map((session) => (
                 <SessionRow
@@ -408,6 +408,7 @@ export default function ProgressScreen() {
             ) : null}
           </>
         )}
+        </QueryState>
       </View>
 
       {/* Navigation buttons */}

@@ -12,6 +12,7 @@ import { SessionCard } from '../../components/SessionCard';
 import { ActiveSessionBar } from '../../components/ActiveSessionBar';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
@@ -29,9 +30,9 @@ import { useQueryClient } from '@tanstack/react-query';
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { data: sessions, isLoading: sessionsLoading } = useSessions();
-  const { data: routines, isLoading: routinesLoading } = useRoutines();
-  const { data: globalStats, isLoading: statsLoading } = useGlobalStats();
+  const { data: sessions, isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions } = useSessions();
+  const { data: routines, isLoading: routinesLoading, isError: routinesError, refetch: refetchRoutines } = useRoutines();
+  const { data: globalStats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useGlobalStats();
 
   const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -65,8 +66,6 @@ export default function HomeScreen() {
     return routines.find((r) => r.id === activeSession.routineId)?.name ?? null;
   }, [activeSession?.routineId, routines]);
 
-  const isLoading = sessionsLoading || routinesLoading || statsLoading;
-
   // Recent sessions (last 5)
   const recentSessions = sessions?.slice(0, 5) ?? [];
 
@@ -74,7 +73,7 @@ export default function HomeScreen() {
     try {
       await haptics.success();
       setShowPicker(true);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
@@ -93,7 +92,7 @@ export default function HomeScreen() {
         });
       }
       router.push(`/session/${newSession[0].id}`);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
@@ -136,7 +135,7 @@ export default function HomeScreen() {
 
       setSelectedRoutineId(null);
       router.push(`/session/${session[0].id}`);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('tabs.home.failedToCreateSession'));
     }
@@ -152,7 +151,7 @@ export default function HomeScreen() {
           try {
             const { clearSessionTimer } = await import('../../lib/utils/timer-persistence');
             await clearSessionTimer();
-          } catch (_) {
+          } catch {
             // timer persistence may not exist yet — safe to ignore
           }
           await deleteSession.mutateAsync(activeSession.id);
@@ -181,11 +180,15 @@ export default function HomeScreen() {
       .sort((a, b) => a.order - b.order);
   }, [routineExercises, allExercises]);
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('tabs.home.loadingDashboard')} />;
-  }
-
   return (
+    <QueryState
+      queries={[
+        { isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions },
+        { isLoading: routinesLoading, isError: routinesError, refetch: refetchRoutines },
+        { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
+      ]}
+      loadingMessage={t('tabs.home.loadingDashboard')}
+    >
     <>
     <ScrollView 
       style={{ flex: 1, backgroundColor: colors.bg.primary }}
@@ -359,9 +362,10 @@ export default function HomeScreen() {
       onMultiSelect={handleNewSessionWithExercises}
     />
     </>
+    </QueryState>
   );
 }
-
+    
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.bg.card,

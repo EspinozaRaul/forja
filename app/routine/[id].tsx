@@ -12,8 +12,8 @@ import { useCreateSet } from '../../lib/hooks/useSets';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { haptics } from '../../lib/utils/haptics';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
@@ -38,9 +38,9 @@ export default function RoutineDetailScreen() {
     );
   }
 
-  const { data: routines, isLoading: routineLoading } = useRoutine(routineId);
-  const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineId);
-  const { data: allExercises, isLoading: allExercisesLoading } = useExercises();
+  const { data: routines, isLoading: routineLoading, isError: routineError, refetch: refetchRoutine } = useRoutine(routineId);
+  const { data: routineExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useRoutineExercises(routineId);
+  const { data: allExercises, isLoading: allExercisesLoading, isError: allExercisesError, refetch: refetchAllExercises } = useExercises();
   const lastWorkout = useLastWorkoutPerExercise(routineExercises?.map((re) => re.exerciseId) ?? []);
   const updateRoutine = useUpdateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
@@ -56,7 +56,6 @@ export default function RoutineDetailScreen() {
   const settingsUnit = settings.data.weightUnit;
 
   const routine = routines?.[0];
-  const isLoading = routineLoading || exercisesLoading || allExercisesLoading;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -251,15 +250,20 @@ export default function RoutineDetailScreen() {
     }
   };
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('routine.detail.loading')} />;
-  }
-
-  if (!routine) {
+  if (routineLoading || exercisesLoading || allExercisesLoading || routineError || exercisesError || allExercisesError || !routine) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('routine.detail.notFound')} />
-      </View>
+      <QueryState
+        queries={[
+          { isLoading: routineLoading, isError: routineError, refetch: refetchRoutine },
+          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+          { isLoading: allExercisesLoading, isError: allExercisesError, refetch: refetchAllExercises },
+        ]}
+        loadingMessage={t('routine.detail.loading')}
+        empty
+        emptyTitle={t('routine.detail.notFound')}
+      >
+        {null}
+      </QueryState>
     );
   }
 

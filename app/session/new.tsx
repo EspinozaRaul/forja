@@ -5,7 +5,7 @@ import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, us
 import { useCreateSet } from '../../lib/hooks/useSets';
 import { useRoutine, useRoutineExercises } from '../../lib/hooks/useRoutines';
 import { Button } from '../../components/ui/Button';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../../lib/theme/tokens';
 import { haptics } from '../../lib/utils/haptics';
 import { DEFAULT_TARGET_SETS } from '../../lib/constants/routine-defaults';
@@ -31,8 +31,8 @@ export default function NewSessionScreen() {
     );
   }
 
-  const { data: routines, isLoading: routineLoading } = useRoutine(routineIdNum ?? 0);
-  const { data: routineExercises, isLoading: exercisesLoading } = useRoutineExercises(routineIdNum ?? 0);
+  const { data: routines, isLoading: routineLoading, isError: routineError, refetch: refetchRoutine } = useRoutine(routineIdNum ?? 0);
+  const { data: routineExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useRoutineExercises(routineIdNum ?? 0);
   const { data: lastSession } = useLastSessionForRoutine(routineIdNum ?? 0);
   // Global last notes per exercise (across ALL routines)
   const { data: lastNotesGlobal } = useLastNotesByExerciseIds(
@@ -43,7 +43,6 @@ export default function NewSessionScreen() {
   const { dialog, showAlert } = useConfirmDialog();
 
   const routine = routines?.[0];
-  const isLoading = routineIdNum ? (routineLoading || exercisesLoading) : false;
 
   const handleStartSession = async () => {
     try {
@@ -80,17 +79,20 @@ export default function NewSessionScreen() {
       }
 
       router.replace(`/session/${session[0].id}`);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('session.new.createFailed'));
     }
   };
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('session.new.loadingRoutine')} />;
-  }
-
   return (
+    <QueryState
+      queries={[
+        { isLoading: routineLoading, isError: routineError, refetch: refetchRoutine },
+        { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+      ]}
+      loadingMessage={t('session.new.loadingRoutine')}
+    >
     <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md, paddingBottom: insets.bottom + spacing.md }} className="flex-1 bg-dark-bg p-4">
       <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }} className="text-lg font-semibold text-dark-text-primary mb-4">{t('session.new.title')}</Text>
@@ -120,16 +122,17 @@ export default function NewSessionScreen() {
         loading={createSession.isPending}
       />
     </View>
-    <ConfirmDialog
-      visible={dialog.visible}
-      title={dialog.title}
-      message={dialog.message}
-      confirmLabel={dialog.confirmLabel}
-      cancelLabel={dialog.cancelLabel}
-      destructive={dialog.destructive}
-      onConfirm={dialog.onConfirm}
-      onCancel={dialog.onCancel}
-    />
-    </>
+        <ConfirmDialog
+          visible={dialog.visible}
+          title={dialog.title}
+          message={dialog.message}
+          confirmLabel={dialog.confirmLabel}
+          cancelLabel={dialog.cancelLabel}
+          destructive={dialog.destructive}
+          onConfirm={dialog.onConfirm}
+          onCancel={dialog.onCancel}
+        />
+        </>
+    </QueryState>
   );
 }

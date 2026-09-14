@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { getAllExercises } from '../../lib/db/queries';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { THUMBNAIL } from '../../lib/constants/layout';
@@ -29,7 +29,7 @@ export default function ExercisesScreen() {
   const unit = settings.data.weightUnit;
 
   // Fetch all exercises from the database
-  const { data: allExercises, isLoading: exercisesLoading } = useQuery({
+  const { data: allExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useQuery({
     queryKey: ['exercises', 'all'],
     queryFn: getAllExercises,
   });
@@ -176,8 +176,15 @@ export default function ExercisesScreen() {
     );
   };
 
-  if (exercisesLoading) {
-    return <LoadingSpinner message={t('exercises.loading')} />;
+  if (exercisesLoading || exercisesError) {
+    return (
+      <QueryState
+        queries={[{ isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises }]}
+        loadingMessage={t('exercises.loading')}
+      >
+        {null}
+      </QueryState>
+    );
   }
 
   return (

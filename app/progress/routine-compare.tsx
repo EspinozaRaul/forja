@@ -9,8 +9,8 @@ import { useRoutineCompare } from '../../lib/hooks/useProgress';
 import { PeriodChips } from '../../components/progress/PeriodChips';
 import { RoutinePickerModal } from '../../components/progress/RoutinePickerModal';
 import { RoutineCompareTable } from '../../components/progress/RoutineCompareTable';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { useQuery } from '@tanstack/react-query';
@@ -95,12 +95,13 @@ export default function RoutineCompareScreen() {
   ], [t]);
 
   // Comparison data
-  const { data: comparisonData, isLoading, isError, error } = useRoutineCompare(
+  const compareQuery = useRoutineCompare(
     selectedRoutineId,
     selectedRoutineName,
     selectedPeriods,
     monthLabels
   );
+  const comparisonData = compareQuery.data;
 
   const periodDates = useMemo(
     () => (comparisonData ? buildPeriodDates(comparisonData) : {}),
@@ -177,32 +178,14 @@ export default function RoutineCompareScreen() {
 
         {/* Comparison table */}
         {selectedRoutineId && selectedPeriods.length >= 2 ? (
-          isLoading ? (
-            <LoadingSpinner message={t('progress.routineCompare.loading')} />
-          ) : isError ? (
-            <View
-              style={{
-                backgroundColor: colors.bg.card,
-                borderRadius: borderRadius.lg,
-                borderWidth: borderWidths.thin,
-                borderColor: colors.border.primary,
-                padding: spacing.lg,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: fontSizes.sm,
-                  fontFamily: fonts.bodyMedium,
-                  color: colors.error,
-                  textAlign: 'center',
-                }}
-              >
-                Error al cargar datos: {(error as Error)?.message ?? t('common.unknownError')}
-              </Text>
-            </View>
-          ) : comparisonData ? (
-            <RoutineCompareTable data={comparisonData} periodDates={periodDates} />
-          ) : null
+          <QueryState
+            queries={[compareQuery]}
+            loadingMessage={t('progress.routineCompare.loading')}
+          >
+            {comparisonData ? (
+              <RoutineCompareTable data={comparisonData} periodDates={periodDates} />
+            ) : null}
+          </QueryState>
         ) : selectedRoutineId ? (
           <View
             style={{

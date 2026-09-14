@@ -16,7 +16,7 @@ import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { SessionExerciseItem } from '../../components/session/SessionExerciseItem';
 import { SupersetBlock } from '../../components/session/SupersetComponents';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -40,8 +40,8 @@ export default function SessionScreen() {
   const sessionId = parseInt(id, 10);
   const { t, i18n } = useTranslation();
 
-  const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
-  const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
+  const { data: sessions, isLoading: sessionLoading, isError: sessionError, refetch: refetchSession } = useSession(sessionId);
+  const { data: sessionExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useSessionExercises(sessionId);
   const completeSession = useCompleteSession();
   const deleteSession = useDeleteSession();
   const addExerciseToSession = useAddExerciseToSession();
@@ -49,7 +49,6 @@ export default function SessionScreen() {
   const { data: allExercises } = useExercises();
 
   const session = sessions?.[0];
-  const isLoading = sessionLoading || exercisesLoading;
 
   // Routine diff / upsync (End Session structural comparison)
   const { data: routineExercises, refetch: refetchRoutineExercises } = useRoutineExercises(session?.routineId ?? 0);
@@ -244,7 +243,7 @@ export default function SessionScreen() {
       try {
         await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1, sessionId });
         await updateOrder.mutateAsync({ id: source.id, order: index + 1, sessionId });
-      } catch (error) {
+      } catch {
         queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
         showAlert(t('common.error'), t('session.error.reorder'));
       }
@@ -263,7 +262,7 @@ export default function SessionScreen() {
     
     try {
       await replaceSessionExercise.mutateAsync({ id: replaceId, exerciseId: exercise.id, sessionId });
-    } catch (error) {
+    } catch {
       queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
       showAlert(t('common.error'), t('session.error.replace'));
     }
@@ -285,15 +284,22 @@ export default function SessionScreen() {
     );
   }
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('session.loadingMessage')} />;
-  }
-
-  if (!session) {
+  // Loading, failure (with retry) and empty all route through QueryState so a
+  // dropped connection can never read as "not found". `session` is narrowed for
+  // the rest of the screen by the `!session` term in this guard.
+  if (sessionLoading || exercisesLoading || sessionError || exercisesError || !session) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('session.notFound')} />
-      </View>
+      <QueryState
+        queries={[
+          { isLoading: sessionLoading, isError: sessionError, refetch: refetchSession },
+          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+        ]}
+        loadingMessage={t('session.loadingMessage')}
+        empty
+        emptyTitle={t('session.notFound')}
+      >
+        {null}
+      </QueryState>
     );
   }
 
@@ -310,7 +316,7 @@ export default function SessionScreen() {
       await haptics.heavy();
       await deleteSession.mutateAsync(sessionId);
       router.back();
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('session.error.discard'));
     }
@@ -324,7 +330,7 @@ export default function SessionScreen() {
         data: { duration: elapsedSeconds },
       });
       router.push(`/session/history/${sessionId}`);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('session.error.end'));
     }
@@ -391,7 +397,7 @@ export default function SessionScreen() {
     try {
       const { routineRows, sessionRows } = await refreshDiffData();
       diff = buildRoutineDiff(routineRows, sessionRows);
-    } catch (error) {
+    } catch {
       // Fall back to the plain confirmation if the comparison data fails to load.
       confirmEndSession();
       return;
@@ -473,7 +479,7 @@ export default function SessionScreen() {
       setShowRoutineDiffModal(false);
       setPendingDiff(null);
       await completeSessionAndNavigate();
-    } catch (error) {
+    } catch {
       await haptics.error();
       setApplyingRoutineUpdate(false);
       showAlert(t('common.error'), t('session.error.updateRoutine'));
@@ -494,7 +500,7 @@ export default function SessionScreen() {
         order: (sessionExercises?.length ?? 0) + 1,
       });
       setShowPicker(false);
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('session.error.addExercise'));
     }
   };
@@ -505,7 +511,7 @@ export default function SessionScreen() {
     setSupersetPartnerMode(null);
     try {
       await createSuperSetPair.mutateAsync({ firstId, secondId: chosen.id, sessionId });
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
   };
@@ -542,7 +548,7 @@ export default function SessionScreen() {
         return;
       }
       await createSuperSetPair.mutateAsync({ firstId, secondId: newSe.id, sessionId });
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('session.error.createSuperSet'));
     }
   };

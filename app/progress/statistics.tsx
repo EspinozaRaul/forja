@@ -7,8 +7,7 @@ import { now } from '../../lib/utils/date';
 import { useGlobalStats } from '../../lib/hooks/useGlobalStats';
 import { useMostUsedExercises, useSessionCountByWeek } from '../../lib/hooks/useProgress';
 import { ProgressChart } from '../../components/ProgressChart';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { EmptyState } from '../../components/ui/EmptyState';
+import { QueryState } from '../../components/ui/QueryState';
 import { Screen } from '../../components/ui/Screen';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
@@ -77,9 +76,9 @@ export default function StatisticsScreen() {
   const { t, i18n } = useTranslation();
   const [period, setPeriod] = useState<Period>('12w');
 
-  const { data: stats, isLoading: statsLoading } = useGlobalStats();
-  const { data: exercises, isLoading: exercisesLoading } = useMostUsedExercises();
-  const { data: sessionCount, isLoading: sessionLoading } = useSessionCountByWeek();
+  const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useGlobalStats();
+  const { data: exercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useMostUsedExercises();
+  const { data: sessionCount, isLoading: sessionLoading, isError: sessionError, refetch: refetchSessionCount } = useSessionCountByWeek();
 
   // Filter data by period
   const filteredSessionCount = useMemo(() => {
@@ -134,18 +133,24 @@ export default function StatisticsScreen() {
   }, [exercises]);
 
   const isLoading = statsLoading || exercisesLoading || sessionLoading;
+  const hasError = statsError || exercisesError || sessionError;
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('common.loading')} />;
-  }
-
-  if (!stats) {
+  if (isLoading || hasError || !stats) {
     return (
-      <EmptyState
-        icon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
-        title={t('progress.statistics.noData')}
-        message={t('progress.statistics.startTraining')}
-      />
+      <QueryState
+        queries={[
+          { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
+          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+          { isLoading: sessionLoading, isError: sessionError, refetch: refetchSessionCount },
+        ]}
+        loadingMessage={t('common.loading')}
+        empty
+        emptyTitle={t('progress.statistics.noData')}
+        emptyMessage={t('progress.statistics.startTraining')}
+        emptyIcon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
+      >
+        {null}
+      </QueryState>
     );
   }
 

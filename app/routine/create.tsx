@@ -10,7 +10,7 @@ import { useCreateRoutine, useAddExerciseToRoutine } from '../../lib/hooks/useRo
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
 import { getExerciseName } from '../../lib/utils/exercise-names';
@@ -25,7 +25,7 @@ export default function CreateRoutineScreen() {
   const params = useLocalSearchParams<{ folderId?: string }>();
   const folderId = params.folderId ? Number(params.folderId) : undefined;
 
-  const { data: exercises, isLoading: exercisesLoading } = useExercises();
+  const { data: exercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useExercises();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const settings = useSettings();
@@ -130,8 +130,15 @@ export default function CreateRoutineScreen() {
     }
   };
 
-  if (exercisesLoading) {
-    return <LoadingSpinner message={t('routine.create.loading')} />;
+  if (exercisesLoading || exercisesError) {
+    return (
+      <QueryState
+        queries={[{ isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises }]}
+        loadingMessage={t('routine.create.loading')}
+      >
+        {null}
+      </QueryState>
+    );
   }
 
   return (

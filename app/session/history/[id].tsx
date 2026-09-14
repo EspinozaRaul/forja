@@ -6,8 +6,8 @@ import { useExercise } from '../../../lib/hooks/useExercises';
 import { useSets } from '../../../lib/hooks/useSets';
 import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/useRoutines';
 import { Button } from '../../../components/ui/Button';
-import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { QueryState } from '../../../components/ui/QueryState';
 import { MODAL } from '../../../lib/constants/layout';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { formatDuration, formatVolume } from '../../../lib/utils/format';
@@ -25,15 +25,14 @@ export default function SessionSummaryScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const sessionId = parseInt(id, 10);
-  const { data: sessions, isLoading: sessionLoading } = useSession(sessionId);
-  const { data: sessionExercises, isLoading: exercisesLoading } = useSessionExercises(sessionId);
+  const { data: sessions, isLoading: sessionLoading, isError: sessionError, refetch: refetchSession } = useSession(sessionId);
+  const { data: sessionExercises, isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises } = useSessionExercises(sessionId);
   const updateNotes = useUpdateSessionNotes();
   const createRoutine = useCreateRoutine();
   const addExerciseToRoutine = useAddExerciseToRoutine();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
 
   const session = sessions?.[0];
-  const isLoading = sessionLoading || exercisesLoading;
 
   const [notes, setNotes] = useState(session?.notes ?? '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -54,15 +53,19 @@ export default function SessionSummaryScreen() {
     );
   }
 
-  if (isLoading) {
-    return <LoadingSpinner message={t('session.history.loadingMessage')} />;
-  }
-
-  if (!session) {
+  if (sessionLoading || exercisesLoading || sessionError || exercisesError || !session) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('session.history.notFound')} />
-      </View>
+      <QueryState
+        queries={[
+          { isLoading: sessionLoading, isError: sessionError, refetch: refetchSession },
+          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+        ]}
+        loadingMessage={t('session.history.loadingMessage')}
+        empty
+        emptyTitle={t('session.history.notFound')}
+      >
+        {null}
+      </QueryState>
     );
   }
 

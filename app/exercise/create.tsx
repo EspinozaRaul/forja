@@ -7,7 +7,7 @@ import { useCreateExercise } from '../../lib/hooks/useExercises';
 import { useSettings } from '../../lib/utils/settings';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { QueryState } from '../../components/ui/QueryState';
 import { colors, spacing, fonts, fontSizes } from '../../lib/theme/tokens';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
@@ -15,7 +15,7 @@ import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 export default function CreateExerciseScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: categories, isLoading: categoriesLoading, isError: categoriesError, refetch: refetchCategories } = useCategories();
   const createExercise = useCreateExercise();
   const settings = useSettings();
   const { dialog, showAlert } = useConfirmDialog();
@@ -55,8 +55,15 @@ export default function CreateExerciseScreen() {
     }
   };
 
-  if (categoriesLoading) {
-    return <LoadingSpinner message={t('exercisePicker.loadingCategories')} />;
+  if (categoriesLoading || categoriesError) {
+    return (
+      <QueryState
+        queries={[{ isLoading: categoriesLoading, isError: categoriesError, refetch: refetchCategories }]}
+        loadingMessage={t('exercisePicker.loadingCategories')}
+      >
+        {null}
+      </QueryState>
+    );
   }
 
   return (
