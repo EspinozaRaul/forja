@@ -18,19 +18,21 @@ interface ButtonProps {
 const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
   primary: {
     container: { backgroundColor: colors.accent.primary },
-    text: { color: colors.text.primary },
+    text: { color: colors.text.onAccent },
   },
   secondary: {
     container: { backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary },
     text: { color: colors.text.primary },
   },
   danger: {
-    container: { backgroundColor: colors.error },
-    text: { color: colors.text.primary },
+    container: { backgroundColor: colors.errorStrong },
+    text: { color: colors.text.onAccent },
   },
   accent: {
+    // The tint is a coloured surface, so its foreground is the on-surface colour:
+    // accent.primary text on it measured 2.84:1.
     container: { backgroundColor: colors.accent.muted },
-    text: { color: colors.accent.primary },
+    text: { color: colors.text.onAccent },
   },
 };
 
@@ -70,7 +72,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={colors.text.primary} />
+        <ActivityIndicator size="small" color={styles.text.color} />
       ) : children ? (
         children
       ) : (

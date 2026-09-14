@@ -66,6 +66,20 @@ Consequences:
 `lib/theme/tokens.ts` is the only source for colours, spacing, font sizes, fonts
 and radii. Literal numbers for those are not allowed.
 
+**Colours are chosen by ROLE, not just by hue.** One colour cannot serve as both the fill
+under a light label and as text on a dark background, because those two need opposite
+luminance — that is how three button variants and the app's most-used text colour ended up
+below the 4.5:1 minimum. The tokens now carry the roles:
+
+- `text.muted` is the dimmest text that still clears 4.5:1 on **every** background it is used on. If you need text dimmer than this, it is decoration, not information.
+- `text.onAccent` is the foreground for anything sitting on a **coloured surface** (a filled or tinted button, a status chip). Never place `accent.primary` text on `accent.muted`; that pair measures 2.8:1.
+- `error` is the light cold red for text, borders and icons on dark; `errorStrong` is the same hue deep enough for a filled destructive button. Use the one that matches the role.
+
+Contrast is checkable without a device: compute the ratio from the two token values
+(relative luminance, then `(L1+0.05)/(L2+0.05)`). Text needs 4.5:1, or 3:1 when it is
+large (≥18pt, or ≥14pt bold). Anything that is not text — an icon, a border, a chart line —
+needs 3:1.
+
 ## 5. Every user-facing string goes through i18n
 
 `t('group.key')`, with the key present in **both** `lib/i18n/es.json` and

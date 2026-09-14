@@ -16,8 +16,15 @@ export const colors = {
   text: {
     primary: '#E9EDF0',
     secondary: '#9AA4AE',
-    muted: '#6C7680',
+    // Was #6C7680: raised to clear 4.5:1 on all three backgrounds it is used on
+    // (bg.card 5.2, bg.elevated 4.7, bg.primary 5.8) — it carries real information in
+    // 173 places, so it is not decorative text.
+    muted: '#899199',
     link: '#7A9AB5',      // steel blue — edit links, info links
+    // Foreground for anything sitting ON a coloured surface (a filled or tinted button,
+    // a status chip). Never put `accent.primary` text on `accent.muted`: that pair is
+    // 2.8:1. This one is 5.2:1 on accent.primary and 13:1 on an accent tint.
+    onAccent: '#FFFFFF',
   },
   // Accent — steel blue (the only cold hue, used with restraint)
   accent: {
@@ -34,7 +41,11 @@ export const colors = {
   // Status — cold, desaturated; each has one job
   success: '#6E9C8A',     // blue-green sage — completed sets ONLY
   warning: '#C2A05C',     // cold amber
-  error: '#C96F6F',       // cold red — destructive / validation
+  error: '#C96F6F',       // cold red — destructive / validation (text, border, icon)
+  // Same cold red, deep enough to carry an `onAccent` label on a FILLED destructive
+  // button: the light red above only reaches 2.98:1 under white, this one reaches 5.3:1.
+  // One colour cannot serve both roles, which is why they are separate tokens.
+  errorStrong: '#9B5859',
   // Borders — cold hairlines
   border: {
     primary: '#2A3138',   // main border color
