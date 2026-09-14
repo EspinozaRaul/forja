@@ -272,6 +272,36 @@ export async function deleteRoutine(id: number) {
     .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)));
 }
 
+/**
+ * Number of sessions logged per routine, keyed by routine id. One grouped count
+ * scoped to the active account. Routines with no sessions are absent from the
+ * result, so callers read a missing key as 0. Only completed sessions count,
+ * matching the routine comparison this feeds and every other session aggregate:
+ * a session still in progress (or abandoned) is not a logged workout.
+ */
+export async function getRoutineSessionCounts(): Promise<Record<number, number>> {
+  const rows = await db
+    .select({
+      routineId: sessions.routineId,
+      count: sql<number>`count(*)`,
+    })
+    .from(sessions)
+    .where(
+      and(
+        isNotNull(sessions.routineId),
+        isNotNull(sessions.completedAt),
+        ownedByCurrentUser(sessions.userId)
+      )
+    )
+    .groupBy(sessions.routineId);
+
+  const result: Record<number, number> = {};
+  for (const row of rows) {
+    if (row.routineId != null) result[row.routineId] = row.count;
+  }
+  return result;
+}
+
 // ─── Routine Exercises ─────────────────────────────────
 
 export async function getRoutineExercises(routineId: number) {

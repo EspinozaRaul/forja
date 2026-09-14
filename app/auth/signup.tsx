@@ -72,6 +72,7 @@ export default function SignupScreen() {
           style={[styles.input, { tintColor: colors.accent.primary } as any]}
           placeholder={t('auth.signup.email')}
           placeholderTextColor={colors.text.muted}
+          accessibilityLabel={t('auth.signup.email')}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -82,6 +83,7 @@ export default function SignupScreen() {
             style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.signup.password')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('auth.signup.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -105,6 +107,7 @@ export default function SignupScreen() {
             style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.signup.confirmPassword')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('auth.signup.confirmPassword')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}

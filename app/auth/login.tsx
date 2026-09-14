@@ -97,6 +97,7 @@ export default function LoginScreen() {
           style={[styles.input, { tintColor: colors.accent.primary } as any]}
           placeholder={t('auth.login.email')}
           placeholderTextColor={colors.text.muted}
+          accessibilityLabel={t('auth.login.email')}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -107,6 +108,7 @@ export default function LoginScreen() {
             style={[styles.input, styles.passwordInput, { tintColor: colors.accent.primary } as any]}
             placeholder={t('auth.login.password')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('auth.login.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}

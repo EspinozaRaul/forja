@@ -533,6 +533,8 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={3}
+                accessibilityLabel={t('accessibility.customRest.minutes')}
+                accessibilityHint={t('accessibility.customRest.minutesHint')}
                 style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
               />
               <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
@@ -544,6 +546,8 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                 placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={2}
+                accessibilityLabel={t('accessibility.customRest.seconds')}
+                accessibilityHint={t('accessibility.customRest.secondsHint')}
                 style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
               />
               <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>

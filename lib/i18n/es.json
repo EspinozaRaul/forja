@@ -750,6 +750,18 @@
       "searchHint": "Escribe para buscar rutinas por nombre",
       "select": "Seleccionar rutina: {{name}}"
     },
+    "customRest": {
+      "minutes": "Minutos de descanso",
+      "minutesHint": "Ingresá los minutos de descanso personalizados",
+      "seconds": "Segundos de descanso",
+      "secondsHint": "Ingresá los segundos de descanso personalizados"
+    },
+    "folder": {
+      "name": "Nombre de la carpeta",
+      "nameHint": "Escribí el nombre de la carpeta",
+      "description": "Descripción de la carpeta",
+      "descriptionHint": "Escribí una descripción de la carpeta"
+    },
     "periodChips": {
       "period": "Período: {{label}}"
     },

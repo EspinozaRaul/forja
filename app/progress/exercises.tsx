@@ -223,6 +223,9 @@ export default function ExercisesScreen() {
             }}
             placeholder={t('exercises.searchPlaceholder')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('accessibility.exercisePicker.search')}
+            accessibilityHint={t('accessibility.exercisePicker.searchHint')}
+            accessibilityRole="search"
             value={search}
             onChangeText={setSearch}
             autoCapitalize="none"

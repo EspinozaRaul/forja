@@ -184,6 +184,7 @@ export default function SessionSummaryScreen() {
             onChangeText={setNotes}
             placeholder={t('session.history.notesPlaceholder')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('session.history.notesLabel')}
           />
         ) : (
           <Text style={{ color: colors.text.secondary, fontFamily: fonts.body }}>
@@ -272,6 +273,7 @@ export default function SessionSummaryScreen() {
             onChangeText={setRoutineName}
             placeholder={t('session.history.routineNamePlaceholder')}
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel={t('routine.create.nameLabel')}
             autoFocus
           />
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>

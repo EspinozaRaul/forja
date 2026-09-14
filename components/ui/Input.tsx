@@ -27,6 +27,7 @@ export function Input({ label, error, className = '', ...props }: InputProps) {
       <TextInput
         style={inputStyle as TextStyle}
         placeholderTextColor={colors.text.muted}
+        accessibilityLabel={label}
         {...props}
       />
       {error && <Text style={{ color: colors.error, fontSize: fontSizes.sm, marginTop: spacing.xs }}>{error}</Text>}

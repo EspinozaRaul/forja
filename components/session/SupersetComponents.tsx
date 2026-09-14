@@ -76,6 +76,8 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
           placeholderTextColor={colors.text.muted}
           value={weight}
           onChangeText={handleWeightChange}
+          accessibilityLabel={t('accessibility.setLogger.weight')}
+          accessibilityHint={t('accessibility.setLogger.weightHint')}
         />
       </View>
       <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
@@ -86,6 +88,8 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
           placeholderTextColor={colors.text.muted}
           value={reps}
           onChangeText={handleRepsChange}
+          accessibilityLabel={t('accessibility.setLogger.reps')}
+          accessibilityHint={t('accessibility.setLogger.repsHint')}
         />
       </View>
       {onUnitChange && (

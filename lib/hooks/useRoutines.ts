@@ -15,6 +15,7 @@ import {
   getFolderById,
   getRoutinesByFolder,
   getFolderRoutineCount,
+  getRoutineSessionCounts,
   createFolder,
   updateFolder,
   deleteFolder,
@@ -41,6 +42,15 @@ export function useRoutine(id: number) {
     queryKey: [...ROUTINE_KEY, id, userId],
     queryFn: () => getRoutineById(id),
     enabled: !!id && !!userId,
+  });
+}
+
+export function useRoutineSessionCounts() {
+  const userId = useCurrentUserId();
+  return useQuery<Record<number, number>>({
+    queryKey: [...ROUTINE_KEY, 'sessionCounts', userId],
+    queryFn: getRoutineSessionCounts,
+    enabled: !!userId,
   });
 }
 

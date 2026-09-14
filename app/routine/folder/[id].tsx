@@ -235,6 +235,8 @@ export default function FolderDetailScreen() {
               onChangeText={setEditName}
               placeholder={t('routine.folder.namePlaceholder')}
               placeholderTextColor={colors.text.muted}
+              accessibilityLabel={t('accessibility.folder.name')}
+              accessibilityHint={t('accessibility.folder.nameHint')}
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 
@@ -244,6 +246,8 @@ export default function FolderDetailScreen() {
               onChangeText={setEditDescription}
               placeholder={t('routine.folder.descriptionPlaceholder')}
               placeholderTextColor={colors.text.muted}
+              accessibilityLabel={t('accessibility.folder.description')}
+              accessibilityHint={t('accessibility.folder.descriptionHint')}
               style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.md, padding: spacing.md, color: colors.text.primary, marginBottom: spacing.md }}
             />
 

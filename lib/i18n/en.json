@@ -640,6 +640,18 @@
       "searchHint": "Type to search routines by name",
       "select": "Select routine: {{name}}"
     },
+    "customRest": {
+      "minutes": "Rest minutes",
+      "minutesHint": "Enter the custom rest minutes",
+      "seconds": "Rest seconds",
+      "secondsHint": "Enter the custom rest seconds"
+    },
+    "folder": {
+      "name": "Folder name",
+      "nameHint": "Type the folder name",
+      "description": "Folder description",
+      "descriptionHint": "Type a folder description"
+    },
     "periodChips": {
       "period": "Period: {{label}}"
     },

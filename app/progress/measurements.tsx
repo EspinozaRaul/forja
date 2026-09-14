@@ -71,6 +71,7 @@ function MeasurementInput({
         placeholder="—"
         placeholderTextColor={colors.text.muted}
         keyboardType="decimal-pad"
+        accessibilityLabel={label}
         style={{
           flex: 1,
           fontSize: fontSizes.md,
