@@ -344,6 +344,9 @@ export default function RoutineDetailScreen() {
                 <TouchableOpacity
                   onPress={() => handleDragHandleTap(index)}
                   activeOpacity={0.7}
+                  hitSlop={8}
+                  accessibilityLabel={t('accessibility.common.reorder')}
+                  accessibilityRole="button"
                   style={{ gap: spacing.xs, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
                 >
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
@@ -351,9 +354,13 @@ export default function RoutineDetailScreen() {
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={(e) => { e.stopPropagation(); re.exercise && router.push(`/exercise/${re.exercise.id}`); }}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        if (re.exercise) router.push(`/exercise/${re.exercise.id}`);
+                      }}
                   style={{ flex: 1 }}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
                 >
                   <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
                     {re.exercise ? getExerciseName(re.exercise.name, i18n.language) : t('routine.detail.unknownExercise')}
@@ -369,12 +376,18 @@ export default function RoutineDetailScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); setReplaceIndex(index); setShowPicker(true); }}
+                  hitSlop={6}
+                  accessibilityLabel={t('accessibility.common.replaceExercise')}
+                  accessibilityRole="button"
                   style={{ padding: spacing.sm }}
                 >
                   <Text style={{ fontSize: fontSizes.md, color: colors.accent.primary }}>↻</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); handleRemoveExercise(re.id); }}
+                  hitSlop={6}
+                  accessibilityLabel={t('accessibility.common.removeExercise')}
+                  accessibilityRole="button"
                   style={{ padding: spacing.sm }}
                 >
                   <Text style={{ fontSize: fontSizes.md, color: colors.error }}>✕</Text>
@@ -407,8 +420,8 @@ export default function RoutineDetailScreen() {
       />
 
       <Modal accessible={true} visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)}>
-          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)} accessibilityLabel={t('accessibility.common.close')} accessibilityRole="button">
+          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
               {t('routine.detail.previousSessionMessage')}

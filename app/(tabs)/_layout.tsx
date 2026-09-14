@@ -44,8 +44,10 @@ export default function TabLayout() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push('/settings')}
+              accessibilityLabel={t('accessibility.common.settings')}
+              accessibilityRole="button"
               style={{ padding: spacing.sm }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              hitSlop={{ top: 11, bottom: 11, left: 11, right: 11 }}
             >
               <Ionicons name="settings-outline" size={22} color={colors.text.secondary} />
             </TouchableOpacity>

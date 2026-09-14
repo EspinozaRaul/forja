@@ -108,6 +108,8 @@ export default function SettingsScreen() {
                 <TouchableOpacity
                   key={lang}
                   onPress={() => handleLanguageChange(lang)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
                   <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
@@ -130,6 +132,8 @@ export default function SettingsScreen() {
                 <TouchableOpacity
                   key={unit}
                   onPress={() => handleUnitChange(unit)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
                   <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
@@ -182,7 +186,7 @@ export default function SettingsScreen() {
             t('settings.signOutConfirm'),
             handleSignOut,
             { confirmLabel: t('settings.signOut'), destructive: true }
-          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
+          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }} accessibilityRole="button">
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.signOut')}</Text>
           </TouchableOpacity>
         </Row>
@@ -196,7 +200,7 @@ export default function SettingsScreen() {
             t('settings.deleteAccountConfirm'),
             handleDeleteAccount,
             { confirmLabel: t('settings.deleteAccount'), destructive: true }
-          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }}>
+          )} style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.xs }} accessibilityRole="button">
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.error }}>{t('settings.deleteAccount')}</Text>
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.xxs }}>{t('settings.deleteAccountDescription')}</Text>
           </TouchableOpacity>

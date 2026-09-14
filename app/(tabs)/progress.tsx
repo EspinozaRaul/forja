@@ -109,6 +109,7 @@ function SessionRow({
   return (
     <Pressable
       onPress={onOpen}
+      accessibilityRole="button"
       style={{
         backgroundColor: colors.bg.elevated,
         borderRadius: borderRadius.md,
@@ -174,6 +175,8 @@ function CalendarCard({
         <Pressable
           onPress={() => onMonthChange(-1)}
           hitSlop={10}
+          accessibilityLabel={t('accessibility.common.previousMonth')}
+          accessibilityRole="button"
           style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
           <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'<'}</Text>
@@ -189,6 +192,8 @@ function CalendarCard({
         <Pressable
           onPress={() => onMonthChange(1)}
           hitSlop={10}
+          accessibilityLabel={t('accessibility.common.nextMonth')}
+          accessibilityRole="button"
           style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
           <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'>'}</Text>
@@ -214,6 +219,9 @@ function CalendarCard({
             <Pressable
               key={day}
               onPress={() => onDayPress(day)}
+              accessibilityLabel={t('accessibility.common.calendarDay', { day })}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               style={[
                 cell,
                 hasSession ? { backgroundColor: colors.accent.muted, borderRadius: borderRadius.sm } : null,
@@ -318,7 +326,7 @@ export default function ProgressScreen() {
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
               {t('progress.daySessionsTitle', { day: selectedDay })}
             </Text>
-            <Pressable onPress={() => setSelectedDay(null)} hitSlop={8}>
+            <Pressable onPress={() => setSelectedDay(null)} hitSlop={8} accessibilityRole="button">
               <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('progress.viewAllMonth')}</Text>
             </Pressable>
           </View>
@@ -344,6 +352,8 @@ export default function ProgressScreen() {
               {hasMoreDaySessions ? (
                 <Pressable
                   onPress={() => setDayExpanded((value) => !value)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: dayExpanded }}
                   style={{
                     marginTop: spacing.sm,
                     backgroundColor: colors.bg.elevated,
@@ -391,6 +401,7 @@ export default function ProgressScreen() {
             {hasMoreMonthSessions ? (
               <Pressable
                 onPress={() => router.push('/session/history')}
+                accessibilityRole="button"
                 style={{
                   marginTop: spacing.sm,
                   backgroundColor: colors.bg.elevated,

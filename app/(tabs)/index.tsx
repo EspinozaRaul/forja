@@ -224,6 +224,7 @@ export default function HomeScreen() {
               const ex = allExercises?.find((e) => e.name === globalStats.mostFrequentExercise);
               if (ex) router.push(`/progress/exercise-detail/${ex.id}`);
             }}
+            accessibilityRole="button"
             style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
           >
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xxs }}>{t('tabs.home.mostFrequent')}</Text>
@@ -255,6 +256,7 @@ export default function HomeScreen() {
               <AnimatedListItem key={session.id} index={index} delay={100}>
                 <TouchableOpacity
                   onPress={() => router.push(`/session/history/${session.id}`)}
+                  accessibilityRole="button"
                   style={{ marginBottom: spacing.sm }}
                 >
                   <SessionCard session={session} routineName={routine?.name} />
@@ -284,16 +286,19 @@ export default function HomeScreen() {
         <Pressable
           style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
           onPress={() => setSelectedRoutineId(null)}
+          accessibilityLabel={t('accessibility.common.close')}
+          accessibilityRole="button"
         >
           <Pressable
             style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
             onPress={(e) => e.stopPropagation()}
+            accessible={false}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
                 {selectedRoutine?.name ?? t('tabs.home.startSession')}
               </Text>
-              <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }}>
+              <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }} accessibilityLabel={t('accessibility.common.close')} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
               </TouchableOpacity>
             </View>

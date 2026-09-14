@@ -246,6 +246,8 @@ export default function MeasurementsScreen() {
         right={
           <Pressable
             onPress={() => setShowForm(!showForm)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showForm }}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -297,6 +299,8 @@ export default function MeasurementsScreen() {
           <Pressable
             onPress={handleSave}
             disabled={createMeasurement.isPending}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: createMeasurement.isPending, busy: createMeasurement.isPending }}
             style={{
               backgroundColor: colors.accent.primary,
               borderRadius: borderRadius.md,
@@ -394,6 +398,8 @@ export default function MeasurementsScreen() {
             <Pressable
               key={key}
               onPress={() => setSelectedBodyPart(key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedBodyPart === key }}
               style={{
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm,
@@ -419,6 +425,8 @@ export default function MeasurementsScreen() {
           <Pressable
             onPress={() => handleAddPhoto('pick')}
             disabled={createPhoto.isPending}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: createPhoto.isPending, busy: createPhoto.isPending }}
             style={{
               flex: 1,
               flexDirection: 'row',
@@ -441,6 +449,8 @@ export default function MeasurementsScreen() {
           <Pressable
             onPress={() => handleAddPhoto('take')}
             disabled={createPhoto.isPending}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: createPhoto.isPending, busy: createPhoto.isPending }}
             style={{
               flex: 1,
               flexDirection: 'row',
@@ -469,6 +479,8 @@ export default function MeasurementsScreen() {
                 <Pressable
                   key={photo.id}
                   onLongPress={() => handleDeletePhoto(photo.id)}
+                  accessibilityLabel={t('progress.measurements.deletePhoto')}
+                  accessibilityRole="button"
                   style={{
                     width: THUMBNAIL.PHOTO_WIDTH,
                     height: THUMBNAIL.PHOTO_HEIGHT,
@@ -532,6 +544,7 @@ export default function MeasurementsScreen() {
             <Pressable
               key={measurement.id}
               onLongPress={() => handleDeleteMeasurement(measurement.id)}
+              accessibilityRole="button"
               style={{
                 backgroundColor: colors.bg.elevated,
                 borderRadius: borderRadius.sm,

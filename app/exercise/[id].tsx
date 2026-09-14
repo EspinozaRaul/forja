@@ -61,6 +61,7 @@ function RemoteGifPlayer({ url, visible, onClose }: { url: string; visible: bool
         style={{ flex: 1, backgroundColor: colors.overlay.deep, justifyContent: 'center', alignItems: 'center' }}
         activeOpacity={1}
         onPress={onClose}
+        accessibilityRole="button"
       >
         <Text style={{ color: colors.text.primary, fontSize: fontSizes.sm, marginBottom: spacing.sm + spacing.xs }}>{t('exerciseDetail.tapToClose')}</Text>
         {loading ? (
@@ -101,6 +102,7 @@ function BundledVideoPlayer({ source, visible, onClose }: { source: number; visi
         style={{ flex: 1, backgroundColor: colors.overlay.deep, justifyContent: 'center', alignItems: 'center' }}
         activeOpacity={1}
         onPress={onClose}
+        accessibilityRole="button"
       >
         <Text style={{ color: colors.text.primary, fontSize: fontSizes.sm, marginBottom: spacing.sm + spacing.xs }}>{t('exerciseDetail.tapToClose')}</Text>
         <View style={{ width: 300, height: 300, borderRadius: borderRadius.md, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
@@ -187,6 +189,7 @@ export default function ExerciseDetailScreen() {
           {hasAnimation && (
             <TouchableOpacity
               onPress={() => setShowGif(true)}
+              accessibilityRole="button"
               style={{ marginTop: spacing.sm, backgroundColor: colors.tag.muscle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
             >
               <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, color: colors.tag.text }}>{t('exerciseDetail.viewAnimation')}</Text>
@@ -362,6 +365,7 @@ export default function ExerciseDetailScreen() {
             <TouchableOpacity
               key={session.sessionId}
               onPress={() => router.push(`/session/history/${session.sessionId}`)}
+              accessibilityRole="button"
               style={{
                 backgroundColor: colors.bg.elevated,
                 borderRadius: borderRadius.md,

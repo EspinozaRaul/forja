@@ -89,6 +89,9 @@ export default function SignupScreen() {
           <TouchableOpacity
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
+            hitSlop={{ top: 8, bottom: 8, left: 0, right: 8 }}
+            accessibilityLabel={showPassword ? t('accessibility.common.hidePassword') : t('accessibility.common.showPassword')}
+            accessibilityRole="button"
           >
             <Ionicons
               name={showPassword ? 'eye-off' : 'eye'}
@@ -109,6 +112,9 @@ export default function SignupScreen() {
           <TouchableOpacity
             onPress={() => setShowConfirmPassword((p) => !p)}
             style={styles.toggleButton}
+            hitSlop={{ top: 8, bottom: 8, left: 0, right: 8 }}
+            accessibilityLabel={showConfirmPassword ? t('accessibility.common.hidePassword') : t('accessibility.common.showPassword')}
+            accessibilityRole="button"
           >
             <Ionicons
               name={showConfirmPassword ? 'eye-off' : 'eye'}
@@ -122,6 +128,8 @@ export default function SignupScreen() {
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleSignup}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: loading, busy: loading }}
         >
           <Text style={styles.buttonText}>
             {loading ? t('auth.signup.loading') : t('auth.signup.submit')}
@@ -131,6 +139,7 @@ export default function SignupScreen() {
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => router.push('/auth/login')}
+          accessibilityRole="link"
         >
           <Text style={styles.linkText}>
             {t('auth.signup.hasAccount')} <Text style={styles.linkBold}>{t('auth.signup.signIn')}</Text>

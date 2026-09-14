@@ -174,6 +174,8 @@ export default function StatisticsScreen() {
           <Pressable
             key={p}
             onPress={() => setPeriod(p)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: period === p }}
             style={{
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.sm,

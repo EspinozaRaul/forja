@@ -123,6 +123,7 @@ export default function RoutinesScreen() {
                 <TouchableOpacity
                   onPress={() => router.push(`/routine/folder/${folder.id}`)}
                   onLongPress={() => handleDeleteFolder(folder.id, folder.name)}
+                  accessibilityRole="button"
                   style={{ marginBottom: spacing.sm }}
                 >
                   <View style={{
@@ -161,6 +162,7 @@ export default function RoutinesScreen() {
                 <TouchableOpacity
                   onPress={() => router.push(`/routine/${routine.id}`)}
                   onLongPress={() => handleMoveToFolder(routine.id)}
+                  accessibilityRole="button"
                   style={{ marginBottom: spacing.sm }}
                 >
                   <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -235,6 +237,10 @@ export default function RoutinesScreen() {
                 <TouchableOpacity
                   key={color}
                   onPress={() => setNewFolderColor(color)}
+                  hitSlop={2}
+                  accessibilityLabel={t('accessibility.common.chooseColor')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: newFolderColor === color }}
                   style={{
                     width: 40,
                     height: 40,
@@ -250,12 +256,14 @@ export default function RoutinesScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <TouchableOpacity
                 onPress={() => setShowCreateModal(false)}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreateFolder}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.create')}</Text>
@@ -278,6 +286,7 @@ export default function RoutinesScreen() {
                   <TouchableOpacity
                     key={folder.id}
                     onPress={() => handleSelectFolder(folder.id)}
+                    accessibilityRole="button"
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -300,12 +309,14 @@ export default function RoutinesScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <TouchableOpacity
                 onPress={() => { setShowMoveModal(false); setMovingRoutineId(null); }}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleSelectFolder(null)}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, alignItems: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
               >
                 <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.noFolder')}</Text>

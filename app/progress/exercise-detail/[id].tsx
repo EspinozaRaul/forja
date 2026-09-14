@@ -109,6 +109,8 @@ function DateRangeSelector({
         <Pressable
           key={range}
           onPress={() => onChange(range)}
+          accessibilityRole="button"
+          accessibilityState={{ selected: selected === range }}
           style={{
             flex: 1,
             paddingVertical: spacing.sm,
@@ -531,6 +533,7 @@ export default function ExerciseDetailScreen() {
               <Pressable
                 key={session.sessionId}
                 onPress={() => router.push(`/session/history/${session.sessionId}`)}
+                accessibilityRole="button"
                 style={{
                   backgroundColor: colors.bg.elevated,
                   borderRadius: borderRadius.md,

@@ -144,7 +144,7 @@ export default function FolderDetailScreen() {
       {/* Header */}
       <View style={{ backgroundColor: colors.bg.card, paddingTop: insets.top + spacing.sm + spacing.xs, paddingBottom: spacing.sm + spacing.xs, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }} hitSlop={8} accessibilityLabel={t('accessibility.common.back')} accessibilityRole="button">
             <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
@@ -156,10 +156,10 @@ export default function FolderDetailScreen() {
             )}
           </View>
           <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }}>
+            <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }} accessibilityRole="button">
               <Text style={{ fontSize: fontSizes.sm, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: spacing.sm }}>
+            <TouchableOpacity onPress={handleDeleteFolder} style={{ padding: spacing.sm }} accessibilityRole="button">
               <Text style={{ fontSize: fontSizes.sm, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
@@ -179,6 +179,7 @@ export default function FolderDetailScreen() {
               <TouchableOpacity
                 onPress={() => router.push(`/routine/${routine.id}`)}
                 onLongPress={() => handleDeleteRoutine(routine.id, routine.name)}
+                accessibilityRole="button"
                 style={{ marginBottom: spacing.sm + spacing.xs }}
               >
                 <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -190,6 +191,9 @@ export default function FolderDetailScreen() {
                   </View>
                   <TouchableOpacity
                     onPress={() => handleUnlinkRoutine(routine.id, routine.name)}
+                    hitSlop={6}
+                    accessibilityLabel={t('routine.folder.unlinkTitle')}
+                    accessibilityRole="button"
                     style={{ padding: spacing.sm }}
                   >
                     <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
@@ -205,12 +209,14 @@ export default function FolderDetailScreen() {
       <View style={{ padding: spacing.md, paddingTop: spacing.sm, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary, flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
         <TouchableOpacity
           onPress={() => router.push(`/routine/create?folderId=${folderId}`)}
+          accessibilityRole="button"
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
           <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.md }}>+ {t('routine.folder.newRoutine')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
+          accessibilityRole="button"
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center', borderWidth: borderWidths.thin, borderColor: colors.border.light }}
         >
           <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('routine.folder.noFolder')}</Text>
@@ -247,6 +253,10 @@ export default function FolderDetailScreen() {
                 <TouchableOpacity
                   key={color}
                   onPress={() => setEditColor(color)}
+                  hitSlop={2}
+                  accessibilityLabel={t('accessibility.common.chooseColor')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: editColor === color }}
                   style={{
                     width: 40,
                     height: 40,
@@ -262,12 +272,14 @@ export default function FolderDetailScreen() {
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
                 onPress={() => setShowEditModal(false)}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.border.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveEdit}
+                accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>

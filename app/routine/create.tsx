@@ -205,6 +205,9 @@ export default function CreateRoutineScreen() {
                 <TouchableOpacity
                   onPress={() => handleDragHandleTap(index)}
                   activeOpacity={0.7}
+                  hitSlop={8}
+                  accessibilityLabel={t('accessibility.common.reorder')}
+                  accessibilityRole="button"
                   style={{ gap: spacing.xs, paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border.divider }}
                 >
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
@@ -222,11 +225,14 @@ export default function CreateRoutineScreen() {
                 )}
                 <TouchableOpacity
                   onPress={() => { setReplaceIndex(index); setShowPicker(true); }}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityLabel={t('accessibility.common.replaceExercise')}
+                  accessibilityRole="button"
                   style={{ paddingLeft: spacing.sm }}
                 >
                   <Text style={{ fontSize: fontSizes.md, color: colors.accent.primary }}>↻</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleRemoveExercise(exercise.id)} style={{ paddingLeft: spacing.sm }}>
+                <TouchableOpacity onPress={() => handleRemoveExercise(exercise.id)} style={{ paddingLeft: spacing.sm }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} accessibilityLabel={t('accessibility.common.removeExercise')} accessibilityRole="button">
                   <Text style={{ fontSize: fontSizes.md, color: colors.error }}>✕</Text>
                 </TouchableOpacity>
               </View>

@@ -30,6 +30,7 @@ export default function SessionHistoryScreen() {
               <AnimatedListItem key={session.id} index={index} delay={100}>
                 <TouchableOpacity
                   onPress={() => router.push(`/session/history/${session.id}`)}
+                  accessibilityRole="button"
                   style={{ marginBottom: spacing.sm }}
                 >
                   <SessionCard session={session} />

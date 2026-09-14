@@ -592,7 +592,7 @@ export default function SessionScreen() {
       {/* Timer + Header — fixed top */}
       <View style={{ backgroundColor: colors.bg.card, paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.md, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }} hitSlop={8} accessibilityLabel={t('accessibility.common.back')} accessibilityRole="button">
             <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
           </TouchableOpacity>
            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{t('session.title')}</Text>
@@ -621,6 +621,7 @@ export default function SessionScreen() {
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('session.exercises')}</Text>
             <TouchableOpacity
               onPress={() => setShowPicker(true)}
+              accessibilityRole="button"
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }}
             >
               <Text style={{ fontSize: fontSizes.sm, color: colors.accent.primary }}>{t('session.add')}</Text>
@@ -735,12 +736,14 @@ export default function SessionScreen() {
           <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, flexDirection: 'row', gap: spacing.sm }}>
             <TouchableOpacity
               onPress={cancelSessionAndLeave}
+              accessibilityRole="button"
               style={{ flex: 1, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
             >
               <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleEndSession}
+              accessibilityRole="button"
               style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
             >
               <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
@@ -774,6 +777,7 @@ export default function SessionScreen() {
                   <TouchableOpacity
                     key={se.id}
                     onPress={() => handlePairSuperset(se)}
+                    accessibilityRole="button"
                     style={{ paddingVertical: spacing.sm + spacing.xs, paddingHorizontal: spacing.sm, borderRadius: borderRadius.sm }}
                   >
                     <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>{getExerciseNameForSession(se)}</Text>
@@ -795,6 +799,7 @@ export default function SessionScreen() {
                     setShowSupersetCatalog(true);
                   }
                 }}
+                accessibilityRole="button"
                 style={{ marginTop: spacing.xs, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
                 <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.bg.primary }}>
@@ -803,6 +808,7 @@ export default function SessionScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setSupersetPartnerMode(null)}
+                accessibilityRole="button"
                 style={{ marginTop: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.divider }}
               >
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.cancel')}</Text>
@@ -831,8 +837,10 @@ export default function SessionScreen() {
             onPress={() => {
               if (!applyingRoutineUpdate) setShowRoutineDiffModal(false);
             }}
+            accessibilityLabel={t('accessibility.common.close')}
+            accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {t('session.diff.title')}
               </Text>
@@ -873,8 +881,10 @@ export default function SessionScreen() {
           <Pressable
             style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
             onPress={() => setConfirmAction(null)}
+            accessibilityLabel={t('accessibility.common.close')}
+            accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {confirmAction === 'cancel' ? t('session.confirm.cancelSession') : t('session.confirm.endSession')}
               </Text>

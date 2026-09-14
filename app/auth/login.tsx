@@ -76,6 +76,8 @@ export default function LoginScreen() {
           style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
           onPress={handleGoogleLogin}
           disabled={googleLoading || loading}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: googleLoading || loading, busy: googleLoading }}
         >
           <Ionicons name="logo-google" size={20} color={colors.text.primary} />
           <Text style={styles.googleButtonText}>
@@ -112,6 +114,9 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={() => setShowPassword((p) => !p)}
             style={styles.toggleButton}
+            hitSlop={{ top: 8, bottom: 8, left: 0, right: 8 }}
+            accessibilityLabel={showPassword ? t('accessibility.common.hidePassword') : t('accessibility.common.showPassword')}
+            accessibilityRole="button"
           >
             <Ionicons
               name={showPassword ? 'eye-off' : 'eye'}
@@ -125,6 +130,8 @@ export default function LoginScreen() {
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleLogin}
           disabled={loading || googleLoading}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: loading || googleLoading, busy: loading }}
         >
           <Text style={styles.buttonText}>
             {loading ? t('auth.login.loading') : t('auth.login.submit')}
@@ -133,6 +140,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.forgotButton}
+          accessibilityRole="button"
           onPress={async () => {
             if (!email) {
               showAlert(t('common.error'), t('auth.login.error.emptyFields'));
@@ -154,6 +162,7 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => router.push('/auth/signup')}
+          accessibilityRole="link"
         >
           <Text style={styles.linkText}>
             {t('auth.login.noAccount')} <Text style={styles.linkBold}>{t('auth.login.signUp')}</Text>

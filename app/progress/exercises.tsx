@@ -78,6 +78,7 @@ export default function ExercisesScreen() {
     return (
       <Pressable
         onPress={() => router.push(`/progress/exercise-detail/${item.id}`)}
+        accessibilityRole="button"
         style={{
           backgroundColor: colors.bg.card,
           borderRadius: borderRadius.lg,
@@ -232,7 +233,7 @@ export default function ExercisesScreen() {
             autoCorrect={false}
           />
           {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
+            <Pressable onPress={() => setSearch('')} hitSlop={13} accessibilityLabel={t('accessibility.common.clearSearch')} accessibilityRole="button">
               <Ionicons name="close-circle" size={18} color={colors.text.muted} />
             </Pressable>
           )}

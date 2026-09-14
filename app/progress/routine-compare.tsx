@@ -129,6 +129,7 @@ export default function RoutineCompareScreen() {
         {/* Routine picker trigger */}
         <Pressable
           onPress={() => setPickerVisible(true)}
+          accessibilityRole="button"
           style={{
             flexDirection: 'row',
             alignItems: 'center',

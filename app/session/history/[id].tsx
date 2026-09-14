@@ -200,6 +200,7 @@ export default function SessionSummaryScreen() {
               setRoutineName(t('session.history.defaultRoutineName', { date: new Date().toLocaleDateString() }));
               setShowSaveAsRoutine(true);
             }}
+            accessibilityRole="button"
             style={{
               backgroundColor: colors.accent.muted,
               borderRadius: borderRadius.sm,
@@ -276,6 +277,7 @@ export default function SessionSummaryScreen() {
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <TouchableOpacity
               onPress={() => setShowSaveAsRoutine(false)}
+              accessibilityRole="button"
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.border.primary, alignItems: 'center' }}
             >
               <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold }}>{t('common.cancel')}</Text>
@@ -283,6 +285,8 @@ export default function SessionSummaryScreen() {
             <TouchableOpacity
               onPress={handleSaveAsRoutine}
               disabled={isSavingRoutine}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isSavingRoutine, busy: isSavingRoutine }}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
             >
               <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>
@@ -325,7 +329,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
   return (
     <View style={{ marginBottom: spacing.lg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-        <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)}>
+        <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)} accessibilityRole="link">
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
             {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
           </Text>
