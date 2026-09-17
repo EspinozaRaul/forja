@@ -8,6 +8,7 @@ import {
   loadSessionTimer,
   clearSessionTimer,
   calculateSessionElapsed,
+  computeRestoredElapsed,
 } from '../lib/utils/timer-persistence';
 
 interface TimerProps {
@@ -77,10 +78,11 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
     if (!sessionId) return;
 
     loadSessionTimer(sessionId).then((saved) => {
+      const now = Date.now();
+
       if (!saved) {
         // No saved state — start fresh if autoStart
         if (autoStart) {
-          const now = Date.now();
           startTimestampRef.current = now;
           pausedElapsedRef.current = 0;
           setRunning(true);
@@ -95,25 +97,28 @@ export function Timer({ sessionId, onTimeUpdate, autoStart = false }: TimerProps
         return;
       }
 
-      // Restore from saved state
-      startTimestampRef.current = saved.startTimestamp;
-      pausedElapsedRef.current = saved.pausedElapsed;
-      
-      // If autoStart, resume from paused state
+      // Absorb everything already elapsed before resetting the running start, so
+      // the time between the saved start and this restore is never dropped.
+      const restoredElapsed = computeRestoredElapsed(saved, now);
+
+      // If autoStart, resume from the restored state
       if (autoStart) {
-        const now = Date.now();
+        pausedElapsedRef.current = restoredElapsed;
         startTimestampRef.current = now;
         setRunning(true);
+        setElapsed(restoredElapsed);
         saveSessionTimer({
           sessionId,
           startTimestamp: now,
-          pausedElapsed: saved.pausedElapsed,
+          pausedElapsed: restoredElapsed,
           isRunning: true,
         });
       } else {
+        startTimestampRef.current = saved.startTimestamp;
+        pausedElapsedRef.current = saved.pausedElapsed;
         setRunning(saved.isRunning);
+        setElapsed(calculateSessionElapsed(saved));
       }
-      setElapsed(calculateSessionElapsed(saved));
     });
   }, [sessionId, autoStart]);
 
