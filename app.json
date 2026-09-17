@@ -24,7 +24,11 @@
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.espinoza21.fitnesstracker"
+      "package": "com.espinoza21.fitnesstracker",
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +38,12 @@
       "expo-router",
       "expo-status-bar",
       "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "microphonePermission": false
+        }
+      ],
       "expo-video",
       "expo-task-manager",
       [
