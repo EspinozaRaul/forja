@@ -76,6 +76,7 @@
     "loading": "Cargando...",
     "error": "Error",
     "unknownError": "Error desconocido",
+    "unexpectedError": "Algo salió mal. Cerrá y volvé a abrir la app.",
     "databaseError": "Error de base de datos",
     "databaseInitFailed": "Error al inicializar la base de datos. Por favor, reiniciá la app.",
     "cancel": "Cancelar",
