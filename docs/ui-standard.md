@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
-> Last updated: 2026-09-13
-> Status: v1.1 (Layout foundation + query states)
+> Last updated: 2026-09-20
+> Status: v1.2 (Layout foundation + query states + modal containment)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -134,6 +134,46 @@ return (
   working header), keep that inline empty — but still wrap the screen so the
   failure state stays reachable.
 
+## 8. A modal card is height-bounded, and its actions are outside the scroll
+
+**This is the target the repo is being brought to, not the state of every modal.**
+Two modals bound their card and their scroll body today: the start-session dialog in
+`app/routine/[id].tsx` and the reference `components/progress/RoutinePickerModal.tsx`.
+The other modal-bearing files still have no bound at all and are tracked as their own
+work unit.
+
+The rule: a modal card takes its height bound from `MODAL.MAX_HEIGHT`, and its
+scrollable body takes its own bound from `MODAL.MAX_BODY_HEIGHT`
+(`lib/constants/layout.ts`). Without a bound, variable-length content grows past the
+viewport; on a centred card the action row is the last child of the column, so it
+is pushed off-screen and there is nothing left to scroll. The user is then trapped:
+they cannot confirm and they cannot dismiss.
+
+- The **variable-length** part of the content (a list, a set summary, a long
+  message) goes inside a `ScrollView` carrying `flexShrink: 1` and, as a secondary
+  limit, a `maxHeight` of `MODAL.MAX_BODY_HEIGHT`. Containment comes from the card's
+  own `maxHeight` plus that `flexShrink`: below roughly 796pt of viewport the fixed
+  chrome plus the 360pt body cap does not fit, so the body must shrink for the
+  actions to stay on screen. The body cap only limits how tall the body grows on a
+  tall screen; it is not a containment proof. Fixed copy — the title and the message
+  — stays outside it. Only a device run with a long session confirms the actions stay
+  reachable; no static check can.
+- The **actions stay as siblings after** the scroll region, so scrolling the list can
+  never carry them away. That placement on its own is not containment: in the
+  original defect the actions were already outside any scroll region and were pushed
+  off-screen anyway. What keeps them reachable is the card's `maxHeight` plus the
+  body's `flexShrink` `1`, described above.
+- The bound is also the escape hatch. A centred card capped at 70% leaves a strip of
+  backdrop above and below, so tapping outside still dismisses the dialog. Keep
+  `onRequestClose` wired for the Android hardware back button.
+
+`components/progress/RoutinePickerModal.tsx` already demonstrates the **principle** —
+a bounded body with its actions outside it — and is the shape to follow. It does not
+demonstrate the tokens: it uses the literals `'70%'` and `360`, and no `flexShrink`.
+Replacing those literals with the shared `MODAL` values belongs to the work unit that
+brings the remaining modals onto this rule; following the reference means following
+the principle, not copying its structure literally.
+
 ## Checklist for a new screen
 
 - [ ] Root is `<Screen>` (or `<Screen edges={[]}>` under a native header)
@@ -143,12 +183,16 @@ return (
 - [ ] Every string goes through `t()` and exists in both catalogues
 - [ ] Query-backed data routes loading / failure / empty through `<QueryState>`
       (failure always offers a retry) — never a bare `!data` fallback
+- [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), its variable-length
+      content scrolls inside `MODAL.MAX_BODY_HEIGHT`, and its actions sit outside
+      the scroll region
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green
 
 ## Why this file exists
 
 Every rule here comes from something that actually went wrong: titles under the
 Dynamic Island, tab labels under the Android navigation bar, five screens with
-two different header designs, and a fixed tab bar height that looked wrong on
-gesture devices. The standard is the memory of those fixes; the components are
-what keeps them from coming back.
+two different header designs, a fixed tab bar height that looked wrong on
+gesture devices, and a start-session dialog whose unbounded exercise list pushed
+its buttons off-screen and trapped the user with no way to close it. The standard
+is the memory of those fixes; the components are what keeps them from coming back.

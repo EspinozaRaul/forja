@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
+import { MODAL } from '../../lib/constants/layout';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
 import { useExercises, useLastWorkoutPerExercise } from '../../lib/hooks/useExercises';
 import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, useDuplicateSessionData } from '../../lib/hooks/useSessions';
@@ -421,13 +422,16 @@ export default function RoutineDetailScreen() {
 
       <Modal accessible={true} visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
         <Pressable style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)} accessibilityLabel={t('accessibility.common.close')} accessibilityRole="button">
-          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
+          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
               {t('routine.detail.previousSessionMessage')}
             </Text>
             {lastSession && (
-              <View style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.md, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+              <ScrollView
+                style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT, marginBottom: spacing.md, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
+                contentContainerStyle={{ padding: spacing.sm + spacing.xs }}
+              >
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
                 {lastSession.exercises?.map((se) => {
                   const unit = resolveUnit(
@@ -451,7 +455,7 @@ export default function RoutineDetailScreen() {
                   </View>
                   );
                 })}
-              </View>
+              </ScrollView>
             )}
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <View style={{ flex: 1 }}>
