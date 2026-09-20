@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { colors, fonts, fontSizes, fontWeights } from '../lib/theme/tokens';
+import i18n from '../lib/i18n';
 
 interface State {
   hasError: boolean;
@@ -26,23 +27,37 @@ export class ErrorBoundary extends React.Component<
   }
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.title}>ERROR</Text>
-          <ScrollView style={styles.scroll}>
-            <Text style={styles.message}>{this.state.error?.message}</Text>
-            {this.state.error?.stack && (
-              <Text style={styles.stack}>{this.state.error.stack}</Text>
-            )}
-            {this.state.errorInfo && (
-              <Text style={styles.stack}>{this.state.errorInfo}</Text>
-            )}
-          </ScrollView>
-        </View>
-      );
-    }
-    return this.props.children;
+    if (!this.state.hasError) return this.props.children;
+
+    // Release must not surface internals. The raw stack and the React component
+    // stack expose file paths and library versions, and `error.message` is an
+    // English internal string; on a shared device that lands in a stranger's
+    // hands. Development keeps all of it so the crash stays debuggable.
+    //
+    // The generic copy is read off the i18n instance instead of the
+    // `useTranslation` hook because this boundary sits OUTSIDE the
+    // I18nextProvider in `app/_layout.tsx` on purpose: it has to render a
+    // fallback while the providers below it are the thing that broke.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>ERROR</Text>
+        <ScrollView style={styles.scroll}>
+          {__DEV__ ? (
+            <>
+              <Text style={styles.message}>{this.state.error?.message}</Text>
+              {this.state.error?.stack && (
+                <Text style={styles.stack}>{this.state.error.stack}</Text>
+              )}
+              {this.state.errorInfo && (
+                <Text style={styles.stack}>{this.state.errorInfo}</Text>
+              )}
+            </>
+          ) : (
+            <Text style={styles.message}>{i18n.t('common.unexpectedError')}</Text>
+          )}
+        </ScrollView>
+      </View>
+    );
   }
 }
 

@@ -41,6 +41,31 @@
         "created": "Cuenta creada. Verificá tu email para confirmar."
       }
     },
+    "resetPassword": {
+      "title": "Nueva contraseña",
+      "heading": "Elegí tu nueva contraseña",
+      "subtitle": "El enlace funcionó: definí una contraseña nueva para volver a entrar.",
+      "applying": "Validando el enlace...",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Guardar contraseña",
+      "success": "Contraseña actualizada. Ya podés entrar con ella.",
+      "backToLogin": "Volver a iniciar sesión",
+      "missingLink": {
+        "title": "Al enlace le faltan datos",
+        "message": "Este enlace no trae los datos para restablecer tu contraseña. Abrí de nuevo el enlace del email o pedí uno nuevo desde el inicio de sesión."
+      },
+      "invalidLink": {
+        "title": "El enlace ya no sirve",
+        "message": "El enlace venció o ya se usó. Pedí uno nuevo desde el inicio de sesión."
+      },
+      "error": {
+        "emptyFields": "Completá todos los campos",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "passwordTooShort": "La contraseña debe tener al menos {{min}} caracteres",
+        "updateFailed": "No se pudo actualizar la contraseña. Intentá de nuevo."
+      }
+    },
     "errors": {
       "googleRequiresDevBuild": "Google Sign-In requiere un development build, no Expo Go",
       "loginCancelled": "Inicio de sesión cancelado",
@@ -51,6 +76,7 @@
     "loading": "Cargando...",
     "error": "Error",
     "unknownError": "Error desconocido",
+    "unexpectedError": "Algo salió mal. Cerrá y volvé a abrir la app.",
     "databaseError": "Error de base de datos",
     "databaseInitFailed": "Error al inicializar la base de datos. Por favor, reiniciá la app.",
     "cancel": "Cancelar",

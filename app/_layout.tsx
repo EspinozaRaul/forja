@@ -27,8 +27,15 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === 'auth';
+    // The password reset screen is reached from the emailed recovery link and
+    // sets its own session from the tokens in that link, so it must render
+    // BEFORE the user is authenticated. It is not under the `auth` segment
+    // (the link target must stay `forja://reset-password`), so it needs its own
+    // exemption here — otherwise the gate bounces the user to login and the
+    // reset can never complete.
+    const inPasswordReset = segments[0] === 'reset-password';
 
-    if (!user && !inAuthGroup) {
+    if (!user && !inAuthGroup && !inPasswordReset) {
       // Not logged in, redirect to login
       router.replace('/auth/login');
     } else if (user && inAuthGroup) {
@@ -59,6 +66,10 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="reset-password"
+        options={{ title: t('auth.resetPassword.title'), headerShown: false }}
+      />
       <Stack.Screen
         name="exercise/create"
         options={{ title: t('exercise.create.title'), presentation: 'modal' }}

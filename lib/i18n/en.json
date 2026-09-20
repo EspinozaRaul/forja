@@ -41,6 +41,31 @@
         "created": "Account created. Check your email to confirm."
       }
     },
+    "resetPassword": {
+      "title": "New password",
+      "heading": "Choose your new password",
+      "subtitle": "The link worked: set a new password to get back in.",
+      "applying": "Checking the link...",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Save password",
+      "success": "Password updated. You can sign in with it now.",
+      "backToLogin": "Back to sign in",
+      "missingLink": {
+        "title": "The link is missing data",
+        "message": "This link does not carry the data needed to reset your password. Open the email link again or request a new one from the sign-in screen."
+      },
+      "invalidLink": {
+        "title": "This link no longer works",
+        "message": "The link expired or was already used. Request a new one from the sign-in screen."
+      },
+      "error": {
+        "emptyFields": "Please fill in all fields",
+        "passwordMismatch": "Passwords don't match",
+        "passwordTooShort": "Password must be at least {{min}} characters",
+        "updateFailed": "Could not update the password. Please try again."
+      }
+    },
     "errors": {
       "googleRequiresDevBuild": "Google Sign-In requires a development build, not Expo Go",
       "loginCancelled": "Login cancelled",
@@ -51,6 +76,7 @@
     "loading": "Loading...",
     "error": "Error",
     "unknownError": "Unknown error",
+    "unexpectedError": "Something went wrong. Close and reopen the app.",
     "databaseError": "Database Error",
     "databaseInitFailed": "Failed to initialize database. Please restart the app.",
     "cancel": "Cancel",
