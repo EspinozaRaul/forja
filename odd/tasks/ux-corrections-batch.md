@@ -414,6 +414,21 @@ modal-local task. A sane large-text strategy is its own work unit and deserves i
 
 ---
 
+## Backlog — findings recorded, not yet scheduled
+
+Surfaced while working T1–T3. None is a blocker; each carries its evidence so it is not lost or
+rediscovered from scratch.
+
+| # | Finding | Severity | Where |
+| --- | --- | --- | --- |
+| B1 | Two session modals lack `stopPropagation`: a tap on non-interactive card content bubbles to the backdrop and dismisses the dialog | low | `app/session/[id].tsx` (routine diff, cancel/end) |
+| B2 | Bottom sheets have no backdrop press, no `onRequestClose` and no bottom safe-area inset, while §1 of the UI standard expects a sheet to clear its own bottom inset | medium | `app/(tabs)/routines.tsx`, `app/routine/folder/[id].tsx` |
+| B3 | The custom-rest dialog is bound-only, so the largest accessibility text sizes can still clip its buttons — the residual of Obs-06 | low | `components/session/SessionExerciseItem.tsx` |
+| B4 | `useAuth` exports `signIn` and `signUp` that no screen calls; the screens use `supabase.auth` directly — dead code, and the reason the hook's error shape never mattered | low | `lib/hooks/useAuth.ts` |
+| B5 | `signOut` and `deleteAccount` return raw errors. Nothing leaks today because `app/settings.tsx` shows its own catalogue copy, but the shape is inconsistent with the auth screens | low | `lib/hooks/useAuth.ts` |
+| B6 | The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header | medium | `app/routine/[id].tsx` (context already noted in T6) |
+| B7 | Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`. A cold-start `forja://reset-password` against a build of `main` lands on expo-router's unmatched-route screen — the reset is broken on `main` today | **high** | repo branches |
+
 ## Order
 
 T1 → T2 → T3 → T4 → T5 → T6 → T7.
