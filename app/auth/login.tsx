@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths} from '../../lib/theme/tokens';
 import { EMBER_DOT } from '../../lib/constants/layout';
 import { supabase } from '../../lib/supabase';
+import { authErrorMessageKey } from '../../lib/auth/auth-error-message';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
@@ -36,7 +37,10 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (error) {
-      showAlert(t('common.error'), error.message);
+      // Raw SDK text stays in the console; the user sees catalogue copy. Same
+      // convention as lib/utils/mutation-error.ts.
+      if (__DEV__) console.error('Sign-in failed:', error);
+      showAlert(t('common.error'), t(authErrorMessageKey(error, 'login')));
     } else {
       router.replace('/(tabs)');
     }
@@ -48,11 +52,8 @@ export default function LoginScreen() {
     setGoogleLoading(false);
 
     if (error) {
-      // Translate error message if it's a translation key
-      const errorMessage = error.message.startsWith('auth.')
-        ? t(error.message)
-        : error.message;
-      showAlert(t('common.error'), errorMessage);
+      if (__DEV__) console.error('Google sign-in failed:', error);
+      showAlert(t('common.error'), t(authErrorMessageKey(error, 'login')));
     } else {
       router.replace('/(tabs)');
     }
@@ -152,9 +153,10 @@ export default function LoginScreen() {
               redirectTo: 'forja://reset-password',
             });
             if (error) {
-              showAlert(t('common.error'), error.message);
+              if (__DEV__) console.error('Password reset request failed:', error);
+              showAlert(t('common.error'), t(authErrorMessageKey(error, 'login')));
             } else {
-              showAlert(t('common.success'), t('auth.login.forgotPassword'));
+              showAlert(t('common.success'), t('auth.login.resetEmailSent'));
             }
           }}
         >

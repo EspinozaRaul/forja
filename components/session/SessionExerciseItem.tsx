@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts, fontSizes, fontWeights, borderWidths } from '../../lib/theme/tokens';
-import { SET_LOGGER } from '../../lib/constants/layout';
+import { SET_LOGGER, MODAL } from '../../lib/constants/layout';
 import { TIMER_CONFIG } from '../../lib/constants/config';
 import { DEFAULT_REST_SECONDS } from '../../lib/constants/routine-defaults';
 import { useExercise } from '../../lib/hooks/useExercises';
@@ -523,7 +523,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
       {/* Custom rest time modal */}
       <Modal accessible={true} visible={showCustomRest} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.md + spacing.xs }}>
               <TextInput

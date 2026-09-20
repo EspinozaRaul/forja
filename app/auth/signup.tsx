@@ -7,6 +7,7 @@ import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths} from '..
 import { EMBER_DOT } from '../../lib/constants/layout';
 import { AUTH_CONFIG } from '../../lib/constants/config';
 import { supabase } from '../../lib/supabase';
+import { authErrorMessageKey } from '../../lib/auth/auth-error-message';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
@@ -48,7 +49,10 @@ export default function SignupScreen() {
     setLoading(false);
 
     if (error) {
-      showAlert(t('common.error'), error.message);
+      // Raw SDK text stays in the console; the user sees catalogue copy. Same
+      // convention as lib/utils/mutation-error.ts.
+      if (__DEV__) console.error('Sign-up failed:', error);
+      showAlert(t('common.error'), t(authErrorMessageKey(error, 'signup')));
     } else {
       showAlert(t('common.success'), t('auth.signup.success.created'));
       router.replace('/auth/login');

@@ -12,10 +12,14 @@
       "loading": "Iniciando...",
       "noAccount": "¿Sin cuenta?",
       "signUp": "Crear cuenta",
+      "resetEmailSent": "Te enviamos un email para restablecer tu contraseña. Revisá tu bandeja de entrada.",
       "error": {
         "emptyFields": "Completá todos los campos",
         "invalidEmail": "Ingresá un email válido",
         "invalidCredentials": "Email o contraseña incorrectos",
+        "network": "Sin conexión. Para iniciar sesión necesitás conectarte a internet.",
+        "emailNotConfirmed": "Confirmá tu email antes de iniciar sesión. Revisá tu bandeja de entrada.",
+        "rateLimited": "Demasiados intentos. Esperá un momento antes de volver a intentar.",
         "generic": "Error al iniciar sesión"
       }
     },
@@ -35,6 +39,10 @@
         "invalidEmail": "Ingresá un email válido",
         "passwordMismatch": "Las contraseñas no coinciden",
         "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+        "network": "Sin conexión. Para crear tu cuenta necesitás conectarte a internet.",
+        "emailExists": "Este email no está disponible para crear una cuenta. Si ya te registraste, iniciá sesión.",
+        "weakPassword": "Elegí una contraseña más segura.",
+        "rateLimited": "Demasiados intentos. Esperá un momento antes de volver a intentar.",
         "generic": "Error al crear cuenta"
       },
       "success": {

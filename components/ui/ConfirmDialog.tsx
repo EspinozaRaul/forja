@@ -1,4 +1,4 @@
-import { Modal, View, Text, TouchableOpacity } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
 import { MODAL } from '../../lib/constants/layout';
@@ -40,8 +40,10 @@ export function ConfirmDialog({
     <Modal accessible={true} visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>{title}</Text>
-          {message && <Text style={styles.message}>{message}</Text>}
+          <ScrollView style={styles.body}>
+            <Text style={styles.title}>{title}</Text>
+            {message && <Text style={styles.message}>{message}</Text>}
+          </ScrollView>
 
           {/* 3-button layout — vertical stack for better readability */}
           {hasThird ? (
@@ -118,8 +120,13 @@ const styles = {
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     width: MODAL.WIDTH,
+    maxHeight: MODAL.MAX_HEIGHT,
     borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
+  },
+  body: {
+    flexShrink: 1,
+    maxHeight: MODAL.MAX_BODY_HEIGHT,
   },
   title: {
     fontSize: fontSizes.md,

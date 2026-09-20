@@ -12,10 +12,14 @@
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
       "signUp": "Create account",
+      "resetEmailSent": "We sent you an email to reset your password. Check your inbox.",
       "error": {
         "emptyFields": "Please fill in all fields",
         "invalidEmail": "Please enter a valid email",
         "invalidCredentials": "Invalid email or password",
+        "network": "No connection. You need to be online to sign in.",
+        "emailNotConfirmed": "Confirm your email before signing in. Check your inbox.",
+        "rateLimited": "Too many attempts. Please wait a moment before trying again.",
         "generic": "Error signing in"
       }
     },
@@ -35,6 +39,10 @@
         "invalidEmail": "Please enter a valid email",
         "passwordMismatch": "Passwords don't match",
         "passwordTooShort": "Password must be at least 6 characters",
+        "network": "No connection. You need to be online to create your account.",
+        "emailExists": "This email isn't available for a new account. If you already signed up, sign in instead.",
+        "weakPassword": "Please choose a stronger password.",
+        "rateLimited": "Too many attempts. Please wait a moment before trying again.",
         "generic": "Error creating account"
       },
       "success": {

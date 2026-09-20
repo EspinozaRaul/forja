@@ -16,6 +16,7 @@ import { QueryState } from '../../components/ui/QueryState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { colors, spacing, borderRadius, fonts, fontSizes , fontWeights, borderWidths} from '../../lib/theme/tokens';
+import { MODAL } from '../../lib/constants/layout';
 import { haptics } from '../../lib/utils/haptics';
 import { useSettings } from '../../lib/utils/settings';
 import { resolveUnit, formatWeight } from '../../lib/utils/weight-unit';
@@ -290,10 +291,11 @@ export default function HomeScreen() {
           accessibilityRole="button"
         >
           <Pressable
-            style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
+            style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
             onPress={(e) => e.stopPropagation()}
             accessible={false}
           >
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
                 {selectedRoutine?.name ?? t('tabs.home.startSession')}
@@ -333,8 +335,11 @@ export default function HomeScreen() {
                     })}
                   </View>
                 )}
-                <Button title={t('tabs.home.startSession')} onPress={handleStartRoutineSession} loading={createSession.isPending} />
               </>
+            )}
+            </ScrollView>
+            {!exercisesLoading && (
+              <Button title={t('tabs.home.startSession')} onPress={handleStartRoutineSession} loading={createSession.isPending} />
             )}
           </Pressable>
         </Pressable>

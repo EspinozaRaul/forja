@@ -9,6 +9,7 @@ import { AnimatedListItem } from '../../components/ui/AnimatedListItem';
 import { Button } from '../../components/ui/Button';
 import { haptics } from '../../lib/utils/haptics';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
+import { MODAL } from '../../lib/constants/layout';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
@@ -210,7 +211,8 @@ export default function RoutinesScreen() {
       {/* Create Folder Modal */}
       <Modal accessible={true} visible={showCreateModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
+          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.newFolderTitle')}</Text>
 
             <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('tabs.routines.name')}</Text>
@@ -256,6 +258,7 @@ export default function RoutinesScreen() {
                 />
               ))}
             </View>
+            </ScrollView>
 
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <TouchableOpacity
@@ -280,7 +283,8 @@ export default function RoutinesScreen() {
       {/* Move to Folder Modal */}
       <Modal accessible={true} visible={showMoveModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
+          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.moveToFolder')}</Text>
 
             {folders && folders.length > 0 && (
@@ -309,6 +313,7 @@ export default function RoutinesScreen() {
                 ))}
               </View>
             )}
+            </ScrollView>
 
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <TouchableOpacity
