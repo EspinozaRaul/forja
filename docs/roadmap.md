@@ -1,11 +1,77 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-14
-> Status: after the full audit session (facet 1–5) + the release work
+> Last updated: 2026-09-17
+> Status: two unmerged branches ready for review, plus one unresolved release-credential risk
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
 worth checking. The standard for building screens lives in `docs/ui-standard.md`; `AGENTS.md`
 points there.
+
+---
+
+## 0. This session (2026-09-17) — read this first
+
+### The lesson: read this file before planning
+
+The security audit in `docs/audits/` is dated 2026-09-13, and section 1 below already records the
+per-user isolation as done. Planning from the audit alone made its critical findings look open when
+they were not, and it nearly produced a needless design cycle. **Read `docs/roadmap.md` before
+turning any audit into work.**
+
+### Closed this session
+
+| Finding | Fix | Commit |
+| --- | --- | --- |
+| SEC-13 — the password reset could not complete: no route existed for `forja://reset-password`, and the auth gate would have bounced an unauthenticated visitor to login anyway | new route, plus a pure fragment parser in `lib/auth/reset-link.ts` (the project uses Supabase's implicit flow, so the tokens arrive in the URL **fragment**, which expo-router drops), plus a gate exemption by segment | `0707898` |
+| SEC-15 — the error boundary rendered the raw stack and the component stack in release | internals gated behind `__DEV__`; release shows one generic i18n string | `5c4e088` |
+| SEC-06 — `allowBackup` (Expo's default is **true**) let adb backup / Google Auto Backup extract the unencrypted SQLite | `android.allowBackup: false` | `b82b0b1` |
+| SEC-10 — `RECORD_AUDIO` in a shipping app that records no audio | `["expo-image-picker", { "microphonePermission": false }]` | `b82b0b1` |
+
+Also in that batch: `SYSTEM_ALERT_WINDOW` blocked through `android.blockedPermissions`.
+**Deliberately NOT blocked:** `CAMERA` and the API<=32 storage permissions — `useProgressPhotos`
+calls both `launchCameraAsync` and `launchImageLibraryAsync`, so removing them would break photo
+capture. The audit was wrong about those entries.
+
+Useful detail for later: `RECORD_AUDIO` came from no library manifest at all — it is injected by
+`expo-image-picker`'s config plugin, which is autolinked even when it is absent from `app.json`'s
+`plugins` array. Adding it there is how you pass it options.
+
+### The other branch
+
+`fix/timer-restore-and-exercise-repair`, three commits, each with tests: elapsed time is no longer
+dropped when a session is restored with `autoStart` (`7b4e905`); the startup exercise migration no
+longer `DELETE`s and re-seeds, which was orphaning `routine_exercises` / `session_exercises` and
+destroying user-created exercises (`8ab7ca7`); `.pi/` ignored (`6245cd4`).
+
+### Unresolved — the release keystore
+
+`npx expo prebuild` **clears** `android/` and `ios/` (it prints "Clearing android, ios"); it does not
+sync. Both are gitignored, so there is no repo diff, but anything hand-edited inside them is gone.
+
+The newest root APK is signed with certificate SHA-256 `38e23aa3…`, which is **not** the debug
+keystore the template regenerates (`FA:C6:17:45…`), so a separate release key existed, and no
+`.jks`/`.keystore` is on disk. It is most likely held by EAS: `eas.json` sets no
+`credentialsSource: local`, `~/Library/Caches/eas-cli` exists, and the root APK names
+(`build-<epoch-ms>.apk`) are EAS local-build output, which regenerates the native project every
+build anyway.
+
+**Do this before any release:** run `npx eas credentials` and confirm the Android keystore is still
+listed. Losing it means no future update can be published under the same identity.
+
+### Still unverified
+
+1. **The Supabase redirect allowlist must cover `forja://reset-password`.** No repo file can prove
+   it. If the dashboard entry is a bare `forja://`, the reset flow is still broken and nothing in
+   this session would have revealed it.
+2. **The reset link has never been exercised on a device.** The `forja://` scheme does not work in
+   Expo Go; it needs a dev build. Cold-start deep-link delivery and `segments[0] === 'reset-password'`
+   under expo-router are both untested.
+
+### Housekeeping worth a minute
+
+- **24 APKs, 3.0 GB, in the repo root.** Untracked (`.gitignore` has `*.apk` and `build-*/`), so no
+  clone is affected — local disk only, but still 3 GB.
+- `docs/audits/`, `odd/` and `.pi/gentle-ai/` are untracked, and nothing is staged by accident.
 
 ---
 
@@ -23,7 +89,17 @@ points there.
 | Animations | 1324 exercise GIFs converted to MP4 (122.8 MB → 10.7 MB), bundled so they work offline, no longer dependent on a third-party GitHub repo | `scripts/convert-exercise-gifs.sh`, the guard test, and the APK contents |
 | Release | `preview` now increments the version code (root cause of 21 APKs all reporting `versionCode=2`); x86/x86_64 native libs dropped; R8 enabled; releases published | `aapt2`/`apksigner` on the artifact: 145 MB → 93.5 MB → 82.5 MB, certificate unchanged |
 
-Current state: **138 tests green**, `npx tsc --noEmit` clean, working tree clean, nothing unpushed.
+Current state (2026-09-17), per branch:
+
+| Branch | Suite | Notes |
+| --- | --- | --- |
+| `main` @ `616a25a` | 17 suites / 138 tests | unchanged |
+| `fix/timer-restore-and-exercise-repair` | 19 suites / 147 tests | 3 commits, unpushed |
+| `fix/security-hardening-batch` | 19 suites / 152 tests | 3 commits, unpushed |
+
+`npx tsc --noEmit` is clean on every branch. The working tree is **not** clean: `docs/audits/`,
+`odd/` and `.pi/gentle-ai/` are untracked, and each branch carries its own untracked `odd/tasks/*.md`.
+The two branches are split on purpose — together their diffs exceed the 400-line review threshold.
 
 ---
 
@@ -116,7 +192,8 @@ Ordered by what I would do first.
 
 ## 6. How this repo works (for the next session)
 
-- **Gate**: `npx tsc --noEmit` clean and `npx jest` green (138 tests) before anything is called done.
+- **Gate**: `npx tsc --noEmit` clean and `npx jest` green (138 on `main`, 147 on the timer/db branch,
+  152 on the hardening branch) before anything is called done.
 - **Tests that prove things**: every security fix in this session shipped with a negative control —
   reintroduce the bug, watch the test fail, restore it. A test that cannot fail proves nothing.
 - **Verify before committing**, and never let a commit depend on a script that can abort before
