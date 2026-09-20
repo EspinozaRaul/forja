@@ -601,14 +601,118 @@ export async function updateSessionExerciseOrder(id: number, order: number) {
     .returning();
 }
 
+/**
+ * True when the user has actually touched a set: it was completed, it carries any
+ * real value (reps/weight/rir/partialReps), it uses a non-linear method, or it
+ * starts a drop group. A freshly materialised session-start template set — only
+ * `setNumber`, everything else null/default — returns false.
+ *
+ * `completed`/`isDropGroup` are declared `boolean` in the schema, but SQLite hands
+ * them back as booleans only when the driver applies the column mode; both shapes
+ * are accepted so the predicate stays correct without the database.
+ */
+export function setHasRealData(
+  set: Pick<Set, 'completed' | 'reps' | 'weight' | 'rir' | 'partialReps' | 'method' | 'isDropGroup'>
+): boolean {
+  const asFlag = (value: unknown): boolean => value === true || value === 1;
+  return (
+    asFlag(set.completed) ||
+    asFlag(set.isDropGroup) ||
+    set.reps != null ||
+    set.weight != null ||
+    set.rir != null ||
+    set.partialReps != null ||
+    (set.method != null && set.method !== 'linear')
+  );
+}
+
 export async function replaceSessionExercise(id: number, exerciseId: number) {
-  return db
-    .update(sessionExercises)
-    .set({ exerciseId })
-    .where(
-      and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-    )
-    .returning();
+  return db.transaction(async (tx) => {
+    // 1. Load the target row, ownership-checked. Nothing to do when it is not ours.
+    const [row] = await tx
+      .select()
+      .from(sessionExercises)
+      .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
+      .limit(1);
+    if (!row) return [];
+
+    // 2. Load the slot's sets in order.
+    const slotSets = await tx
+      .select()
+      .from(sets)
+      .where(
+        and(eq(sets.sessionExerciseId, id), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
+      )
+      .orderBy(asc(sets.setNumber));
+
+    // 3/4. Nothing loaded: keep today's behaviour — swap the exercise in place.
+    // The row keeps its id, order and supersetPairId, and the empty template sets
+    // stay put, so the incoming exercise's prefill resolves by its own id.
+    if (!slotSets.some(setHasRealData)) {
+      return tx
+        .update(sessionExercises)
+        .set({ exerciseId })
+        .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
+        .returning();
+    }
+
+    // 5. The slot carries real data. Park the OUTGOING exercise as its own entry so
+    // the record of what the user actually did stays attributed to it, then recycle
+    // the slot for the incoming exercise with a fresh empty template.
+    const [maxOrderRow] = await tx
+      .select({ value: sql<number | null>`max(${sessionExercises.order})` })
+      .from(sessionExercises)
+      .where(
+        and(
+          eq(sessionExercises.sessionId, row.sessionId),
+          sessionOwnedByCurrentUser(sessionExercises.sessionId)
+        )
+      );
+    const parkedOrder = (maxOrderRow?.value ?? 0) + 1;
+
+    // 5a. The parked entry never inherits the pair: the superset link follows the
+    // slot, not the exercise, so a group of two can never grow into three.
+    const [parked] = await tx
+      .insert(sessionExercises)
+      .values({
+        sessionId: row.sessionId,
+        exerciseId: row.exerciseId,
+        order: parkedOrder,
+        restTime: row.restTime,
+        notes: row.notes,
+        noteType: row.noteType,
+        supersetPairId: null,
+      })
+      .returning();
+
+    // 5b. Every set of the slot moves with the outgoing exercise, including the
+    // untouched ones, so the parked record is faithful and complete.
+    await tx
+      .update(sets)
+      .set({ sessionExerciseId: parked.id })
+      .where(eq(sets.sessionExerciseId, id));
+
+    // 5c. Recycle the slot for the incoming exercise. Same id/order/supersetPairId.
+    const [recycled] = await tx
+      .update(sessionExercises)
+      .set({ exerciseId })
+      .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
+      .returning();
+
+    // 5d. Rebuild an empty template of the same size on the recycled slot.
+    if (slotSets.length > 0) {
+      await tx.insert(sets).values(
+        slotSets.map((_, index) => ({
+          sessionExerciseId: id,
+          setNumber: index + 1,
+          completed: false,
+          createdAt: now(),
+        }))
+      );
+    }
+
+    return [recycled];
+  });
 }
 
 export async function deleteSessionExercise(id: number) {

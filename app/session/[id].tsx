@@ -253,17 +253,16 @@ export default function SessionScreen() {
 
   const handleReplaceExercise = async (exercise: { id: number }) => {
     if (replaceId === null) return;
-    
-    const previousExercises = sessionExercises;
-    const updated = sessionExercises?.map((se) =>
-      se.id === replaceId ? { ...se, exerciseId: exercise.id } : se
-    );
-    queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], updated);
-    
+
+    // No optimistic cache patch here. The observed key is
+    // [...SESSION_KEY, sessionId, 'exercises', userId] (see useSessionExercises),
+    // and setQueryData matches an exact key — writing the userId-less key only
+    // creates a phantom entry with no observers. The mutation's invalidateQueries
+    // already refetches both session-exercise queries by prefix, and the new
+    // park/recycle behaviour could not be expressed as a single-key patch anyway.
     try {
       await replaceSessionExercise.mutateAsync({ id: replaceId, exerciseId: exercise.id, sessionId });
     } catch {
-      queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
       showAlert(t('common.error'), t('session.error.replace'));
     }
     setReplaceId(null);

@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
+**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed (`a21a982`); T4 closed; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
 
 ---
 
@@ -22,7 +22,7 @@ from the report.
 | --- | --- | --- | --- |
 | 04 | Start-session modal with a long list traps the user; the start button is unreachable **and there is no way to close it** | critical | closed — T1 fixed in `195a611c` and `baea66b` |
 | 05 | Login surfaces a raw SDK network error and the app becomes unusable without a network: the auth gate depends on connectivity while all user data is local | critical | **layer (a) closed by T3**; the layer (b) premise is corrected in T3 — a valid session already works offline, so what remains is a genuinely signed-out user needing network |
-| 03 | Replacing an exercise mid-session keeps the previous exercise's numbers | high | behavior decided; superset case open |
+| 03 | Replacing an exercise mid-session keeps the previous exercise's numbers | high | closed — T4 fixed |
 | 06 | The app has no large-text strategy; non-modal surfaces overflow at accessibility text sizes | high | open — out of scope for this batch |
 | 02 | Exercise picker is missing the example images on many rows | medium | needs one user datum |
 | 01 | Routine header's Edit/Delete buttons are oversized and eat vertical space | low | needs one style decision |
@@ -307,7 +307,7 @@ suite measures.
 
 ## T4 — Replace-exercise data reset (Obs-03)
 
-**Severity**: high. **Behavior decided; superset case open.**
+**Severity**: high. **Closed — superset case resolved and implemented.**
 
 ### Verified cause
 
@@ -333,11 +333,48 @@ suite measures.
    starts clean — no extra entry is added.
 4. The replaced exercise's data is never modified or deleted.
 
-### Open question before implementing
+### Superset rule — decided (user, this session)
 
-Superset pairs (`session_exercises.superset_pair_id`, `createSuperSetPair`, `unlinkSuperSet` in
-`lib/hooks/useSessions.ts`): what happens to the link when one member of a pair is replaced is
-**undefined**. Resolve before writing.
+**The link follows the slot, not the exercise.** The recycled row keeps its `superset_pair_id`, so the
+superset continues with the incoming exercise, and the parked entry never inherits the pair. Reasons:
+that is already what the no-data path does today (the row keeps its id, so it keeps its pair), so the
+same user action should not behave differently depending on whether series were loaded; and the
+renderer draws a superset block only when `members.length === 2`, falling through to the orphan path
+otherwise, so a group of three would make the superset vanish from the UI with no error.
+
+### Outcome
+
+`replaceSessionExercise` is now transactional and predicate-gated:
+
+- It loads the slot's sets and asks an exported pure predicate, `setHasRealData`, whether the user
+touched any of them (`completed`, `isDropGroup`, `reps`, `weight`, `rir`, `partialReps`, or a `method`
+other than `linear`; tolerant of both the boolean and 1/0 shapes).
+- **Nothing loaded** → the in-place swap, unchanged. This was already correct (the template sets are
+truly empty and the "Anterior" placeholder re-resolves by exercise id) and is now asserted.
+- **Real data** → the outgoing exercise is parked as its own `session_exercises` row (order = session
+  max + 1, `superset_pair_id` null, `rest_time`/`notes`/`note_type` copied), **every** set of the slot is
+  re-pointed to it so the record is faithful and complete, the recycled slot keeps its id, order and
+  pair, and receives a fresh empty template of the same size.
+
+Ownership is unchanged and enforced on both `session_exercises` updates.
+
+Removing the optimistic cache patch in `handleReplaceExercise` was part of this: it wrote to
+`[...SESSION_KEY, sessionId, 'exercises']` while the observed keys end with the user id, and
+`setQueryData` matches an exact key, so it only ever populated a phantom entry. The mutation's
+`invalidateQueries` already refetches both session-exercise queries by prefix.
+
+### Tests, and what they cannot prove
+
+`__tests__/lib/db/replace-session-exercise.test.ts` (13 tests) covers the predicate as a genuine unit
+and pins the orchestration against a mocked `tx`. **The harness mocks Drizzle, so the orchestration
+tests cannot prove the resulting database state** — they pin the call sequence and arguments, and the
+file says so at the top. The behavioural outcome is a data-integrity claim and is NOT verified by
+that suite.
+
+### Runtime verification
+
+_Pending: to be measured against real data in the simulator. A data-integrity fix is not called
+verified on the strength of a mocked-Drizzle suite._
 
 ### Confirmed correct — do not touch
 
@@ -428,6 +465,8 @@ rediscovered from scratch.
 | B5 | `signOut` and `deleteAccount` return raw errors. Nothing leaks today because `app/settings.tsx` shows its own catalogue copy, but the shape is inconsistent with the auth screens | low | `lib/hooks/useAuth.ts` |
 | B6 | The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header | medium | `app/routine/[id].tsx` (context already noted in T6) |
 | B7 | Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`. A cold-start `forja://reset-password` against a build of `main` lands on expo-router's unmatched-route screen — the reset is broken on `main` today | **high** | repo branches |
+| B8 | A superset group with anything other than exactly two members silently stops rendering as a superset: the renderer only builds a `SupersetBlock` when `members.length === 2` and otherwise falls through to the orphan path, drawing each member standalone with no error | medium | `app/session/[id].tsx` |
+| B9 | `handleDragHandleTap` has the same dead optimistic patch as the replace path had: it writes `setQueryData([...SESSION_KEY, sessionId, 'exercises'], ...)` plus a rollback to a key with no observers, so reordering has no optimistic update at all. Dead on arrival, not a live bug — either remove it or point it at the real key to make reordering snappy | low | `app/session/[id].tsx` |
 
 ## Order
 
