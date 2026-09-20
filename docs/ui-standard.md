@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
-> Last updated: 2026-09-20
-> Status: v1.2 (Layout foundation + query states + modal containment)
+> Last updated: 2026-09-21
+> Status: v1.3 (Layout foundation + query states + modal containment)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -149,20 +149,32 @@ viewport; on a centred card the action row is the last child of the column, so i
 is pushed off-screen and there is nothing left to scroll. The user is then trapped:
 they cannot confirm and they cannot dismiss.
 
-- The **variable-length** part of the content (a list, a set summary, a long
-  message) goes inside a `ScrollView` carrying `flexShrink: 1` and, as a secondary
-  limit, a `maxHeight` of `MODAL.MAX_BODY_HEIGHT`. Containment comes from the card's
-  own `maxHeight` plus that `flexShrink`: below roughly 796pt of viewport the fixed
-  chrome plus the 360pt body cap does not fit, so the body must shrink for the
-  actions to stay on screen. The body cap only limits how tall the body grows on a
-  tall screen; it is not a containment proof. Fixed copy — the title and the message
-  — stays outside it. Only a device run with a long session confirms the actions stay
-  reachable; no static check can.
+- **Only the action row is outside the scroll region.** The title, the message and
+  every other piece of variable-length body content (a list, a set summary) go
+  inside the `ScrollView`, which carries `flexShrink: 1` and, as a secondary limit,
+  a `maxHeight` of `MODAL.MAX_BODY_HEIGHT`. Containment comes from the card's own
+  `maxHeight` plus that `flexShrink`: when the content does not fit, the body is the
+  node that gives up height, so the actions keep theirs. The body cap only limits how
+  tall the body grows on a tall screen; it is not a containment proof.
+- **Why the title and the message must be inside the scroll region.** Text grows with
+  the OS accessibility size, and so does every piece of chrome left outside the
+  `ScrollView`. Measured on a 667pt viewport: the card's content box is ~383pt, and
+  the action row alone is 70pt at the default text size and 185pt at
+  `accessibility-extra-extra-extra-large`. With the body's 16pt bottom margin that
+  leaves the body about 180pt at the largest size. Any text left outside the scroll region is subtracted
+  from the actions' budget, and at that size the title and the message need far more
+  than the box has. This is arithmetic, not a rendering detail: fix outside the scroll
+  only what must stay visible, and let the body absorb the rest.
 - The **actions stay as siblings after** the scroll region, so scrolling the list can
   never carry them away. That placement on its own is not containment: in the
   original defect the actions were already outside any scroll region and were pushed
   off-screen anyway. What keeps them reachable is the card's `maxHeight` plus the
   body's `flexShrink` `1`, described above.
+- The bound resolves **against the parent's content box, not the screen.**
+  `MODAL.MAX_HEIGHT: '70%'` is a Yoga percentage resolved against the backdrop
+  `Pressable`'s content box, not the viewport: on a 667pt device with 24pt of
+  backdrop padding the card is capped at `(667 - 2 * 24) * 0.70 ≈ 433pt`, not 467pt.
+  The card's real budget is smaller than a naive read of the percentage suggests.
 - The bound is also the escape hatch. A centred card capped at 70% leaves a strip of
   backdrop above and below, so tapping outside still dismisses the dialog. Keep
   `onRequestClose` wired for the Android hardware back button.
@@ -183,9 +195,9 @@ the principle, not copying its structure literally.
 - [ ] Every string goes through `t()` and exists in both catalogues
 - [ ] Query-backed data routes loading / failure / empty through `<QueryState>`
       (failure always offers a retry) — never a bare `!data` fallback
-- [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), its variable-length
-      content scrolls inside `MODAL.MAX_BODY_HEIGHT`, and its actions sit outside
-      the scroll region
+- [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), **only its actions** sit
+      outside the scroll region, and the title, the message and all variable-length
+      content scroll inside `MODAL.MAX_BODY_HEIGHT`
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green
 
 ## Why this file exists

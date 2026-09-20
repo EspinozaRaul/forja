@@ -12,8 +12,9 @@ import path from 'node:path';
  * `__tests__/a11y/interactive-elements.test.ts`. The properties checked are
  * exactly the ones the broken code lacked:
  *   1. the card is height-bounded by the shared `MODAL.MAX_HEIGHT`,
- *   2. the variable-length list lives inside a `ScrollView` that is itself
- *      bounded by `MODAL.MAX_BODY_HEIGHT` and carries `flexShrink: 1`,
+ *   2. all variable-length content — the title, the message and the exercise
+ *      list — lives inside a `ScrollView` that is itself bounded by
+ *      `MODAL.MAX_BODY_HEIGHT` and carries `flexShrink: 1`,
  *   3. both actions render after the scroll region, so scrolling can never
  *      push them away.
  */
@@ -53,6 +54,16 @@ describe('start-session modal containment', () => {
     expect(block).toContain('</ScrollView>');
   });
 
+  it('renders the scroll region unconditionally', () => {
+    // The scroll region now carries the title and the message as well as the
+    // list, so guarding it with `{lastSession && ( … )}` would put the title
+    // and the message outside the scroll region whenever there is no previous
+    // session. Every other assertion in this file is index-based against the
+    // source, so a guarded region would still satisfy them — which is why this
+    // property needs its own check.
+    expect(block).not.toMatch(/\{\s*lastSession\s*&&\s*\(\s*<ScrollView/);
+  });
+
   it('bounds the scroll region itself, not just its parent card', () => {
     // The body cap is a secondary limit, so a dialog does not grow to fill a
     // tall screen. Removing it, or swapping it for an unbounded value, fails here.
@@ -73,11 +84,17 @@ describe('start-session modal containment', () => {
     expect(block.indexOf('routine.detail.continueLast')).toBeGreaterThan(scrollEnd);
   });
 
-  it('keeps the title and message outside the scroll region', () => {
+  it('keeps the title and message inside the scroll region', () => {
     const scrollStart = block.indexOf('<ScrollView');
+    const scrollEnd = block.indexOf('</ScrollView>');
     expect(scrollStart).toBeGreaterThan(-1);
-    expect(block.indexOf('routine.detail.startSession')).toBeLessThan(scrollStart);
-    expect(block.indexOf('routine.detail.previousSessionMessage')).toBeLessThan(scrollStart);
+    expect(scrollEnd).toBeGreaterThan(scrollStart);
+    const title = block.indexOf('routine.detail.startSession');
+    const message = block.indexOf('routine.detail.previousSessionMessage');
+    expect(title).toBeGreaterThan(scrollStart);
+    expect(title).toBeLessThan(scrollEnd);
+    expect(message).toBeGreaterThan(scrollStart);
+    expect(message).toBeLessThan(scrollEnd);
   });
 });
 
