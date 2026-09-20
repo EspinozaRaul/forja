@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 unblocked and authorized; T3 authorized; T5/T6/T7 blocked on decisions
+**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 code complete and gate-green; T3 authorized; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
 
 ---
 
@@ -187,26 +187,39 @@ The simulator run then found what those rounds could not:
 The user explicitly asked for every occurrence of this situation to be fixed, not just the one
 that bit them.
 
-**18 `<Modal>` usages across 11 files. One file has the guard.**
+**17 `<Modal>` usages across 11 files.** (This said 18 until the sweep counted them and reconciled
+it against the source; the per-file counts were right and only the total was off by one.) T1 fixed
+`app/routine/[id].tsx`, and `components/progress/RoutinePickerModal.tsx` was already the reference.
 
-| File | Modals | has `maxHeight` |
+| File | Modals | Result |
 | --- | --- | --- |
-| `app/routine/[id].tsx` | 1 | **yes** — T1 |
-| `app/session/[id].tsx` | 3 | no |
-| `components/ExercisePicker.tsx` | 3 | no |
-| `app/(tabs)/routines.tsx` | 2 | no |
-| `app/exercise/[id].tsx` | 2 | no |
-| `app/(tabs)/index.tsx` | 1 | no |
-| `app/routine/folder/[id].tsx` | 1 | no |
-| `components/ui/ConfirmDialog.tsx` | 1 | no (and no `ScrollView`) |
-| `components/IntensityMethodPicker.tsx` | 1 | no (and no `ScrollView`) |
-| `components/session/SessionExerciseItem.tsx` | 1 | no (and no `ScrollView`) |
-| `components/progress/RoutinePickerModal.tsx` | 1 | **yes** — the reference |
+| `app/routine/[id].tsx` | 1 | bounded + scroll region — T1 |
+| `components/progress/RoutinePickerModal.tsx` | 1 | already bounded — the reference |
+| `app/session/[id].tsx` | 3 | all three bounded + scroll region: superset picker, routine diff, cancel/end confirm |
+| `app/(tabs)/routines.tsx` | 2 | both bounded + scroll region: create-folder form, move-to-folder list |
+| `app/(tabs)/index.tsx` | 1 | bounded + scroll region; the start action moved outside the scroll under the same loading condition |
+| `app/routine/folder/[id].tsx` | 1 | bounded + scroll region: edit-folder form |
+| `components/ui/ConfirmDialog.tsx` | 1 | bounded + scroll region around title/message; API, props, behaviour and dismissal unchanged |
+| `components/IntensityMethodPicker.tsx` | 1 | bounded + scroll region around title/subtitle/options; cancel stays outside |
+| `components/session/SessionExerciseItem.tsx` | 1 | bounded only — the custom-rest dialog is a short fixed body that cannot grow |
+| `components/ExercisePicker.tsx` | 3 | **unchanged, with reason**: full-screen `presentationStyle="pageSheet"` modals already bounded by the screen, each with its own scroll region and fixed header/footer rows |
+| `app/exercise/[id].tsx` | 2 | **unchanged, with reason**: fixed 300x300 media lightboxes — no card, no action row, no growing content |
 
-Each file is judged on its own content, not blanket-patched: a short static confirm dialog does
-not need a scroll region, but it still needs a height bound so a long translated message (or a
-large font-size accessibility setting) cannot push its buttons off-screen. `ConfirmDialog` is the
-shared component behind many destructive confirmations and carries the same defect.
+Each file was judged on its own content rather than blanket-patched. Leaving a file unchanged is a
+legitimate outcome only with a written reason, and both files above carry one.
+
+### Findings the sweep surfaced, deliberately NOT fixed here (they are not containment)
+
+1. `app/session/[id].tsx`: the routine-diff and cancel/end card `Pressable`s carry `accessible={false}`
+   but no `stopPropagation`, unlike T1's routine modal. A tap on non-interactive card content bubbles to
+   the backdrop `Pressable` and dismisses the dialog. Pre-existing, and changing it would alter dismissal
+   semantics — its own decision.
+2. The bottom sheets (`app/(tabs)/routines.tsx`, `app/routine/folder/[id].tsx`) have no backdrop press,
+   no `onRequestClose` and no bottom safe-area inset padding, while §1 of the UI standard expects a bottom
+   sheet to clear its own bottom inset, as `RoutinePickerModal` does. Pre-existing.
+3. `components/session/SessionExerciseItem.tsx` is bound-only by design, so at the largest accessibility
+   text sizes a bound-only card with no scroll region can still clip its buttons. That is a residual of the
+   Obs-06 large-text gap, not of this sweep.
 
 ### Gate
 

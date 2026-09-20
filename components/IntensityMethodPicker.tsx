@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fontSizes, fontWeights, borderWidths, fonts } from '../lib/theme/tokens';
@@ -38,28 +38,30 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
         accessibilityRole="button"
       >
         <View style={styles.container}>
-          <Text style={styles.title}>{t('methods.title')}</Text>
-          <Text style={styles.subtitle}>{t('methods.subtitle')}</Text>
+          <ScrollView style={styles.body}>
+            <Text style={styles.title}>{t('methods.title')}</Text>
+            <Text style={styles.subtitle}>{t('methods.subtitle')}</Text>
 
-          {INTENSITY_METHODS.map((method) => (
-            <TouchableOpacity
-              key={method.id}
-              onPress={() => {
-                onSelect(method.id);
-                onClose();
-              }}
-              style={styles.option}
-              accessibilityLabel={t('accessibility.intensityPicker.select', { name: t(`methods.${method.id}.label`) })}
-              accessibilityRole="button"
-            >
-              <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />
-              <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>{t(`methods.${method.id}.label`)}</Text>
-                <Text style={styles.optionDescription}>{t(`methods.${method.id}.description`)}</Text>
-              </View>
-              <Text style={styles.optionArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
+            {INTENSITY_METHODS.map((method) => (
+              <TouchableOpacity
+                key={method.id}
+                onPress={() => {
+                  onSelect(method.id);
+                  onClose();
+                }}
+                style={styles.option}
+                accessibilityLabel={t('accessibility.intensityPicker.select', { name: t(`methods.${method.id}.label`) })}
+                accessibilityRole="button"
+              >
+                <Ionicons name={method.icon} size={20} color={colors.accent.primary} style={styles.optionIcon} />
+                <View style={styles.optionText}>
+                  <Text style={styles.optionLabel}>{t(`methods.${method.id}.label`)}</Text>
+                  <Text style={styles.optionDescription}>{t(`methods.${method.id}.description`)}</Text>
+                </View>
+                <Text style={styles.optionArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           <TouchableOpacity onPress={onClose} style={styles.cancelButton} accessibilityLabel={t('accessibility.intensityPicker.cancel')} accessibilityRole="button">
             <Text style={styles.cancelText}>{t('common.cancel')}</Text>
@@ -84,8 +86,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     width: '100%',
     maxWidth: MODAL.MAX_WIDTH,
+    maxHeight: MODAL.MAX_HEIGHT,
     borderWidth: borderWidths.thin,
     borderColor: colors.border.primary,
+  },
+  body: {
+    flexShrink: 1,
+    maxHeight: MODAL.MAX_BODY_HEIGHT,
   },
   title: {
     fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,

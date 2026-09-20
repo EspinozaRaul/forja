@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, Modal, Pressable, BackHandler, Platform } from 'react-native';
+import { Text, View, TouchableOpacity, Modal, Pressable, ScrollView, BackHandler, Platform } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -763,7 +763,8 @@ export default function SessionScreen() {
 
       <Modal accessible={true} visible={supersetPartnerMode !== null} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.xs }}>
               {t('session.superset.title')}
             </Text>
@@ -789,6 +790,7 @@ export default function SessionScreen() {
                     {t('session.superset.noAvailable')}
                   </Text>
                 )}
+              </ScrollView>
               <TouchableOpacity
                 onPress={() => {
                   if (supersetPartnerMode) {
@@ -840,7 +842,8 @@ export default function SessionScreen() {
             accessibilityLabel={t('accessibility.common.close')}
             accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+              <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {t('session.diff.title')}
               </Text>
@@ -854,6 +857,7 @@ export default function SessionScreen() {
                   </Text>
                 ))}
               </View>
+              </ScrollView>
               <Button
                 title={t('session.diff.updateRoutine')}
                 variant="primary"
@@ -884,7 +888,8 @@ export default function SessionScreen() {
             accessibilityLabel={t('accessibility.common.close')}
             accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+              <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {confirmAction === 'cancel' ? t('session.confirm.cancelSession') : t('session.confirm.endSession')}
               </Text>
@@ -893,6 +898,7 @@ export default function SessionScreen() {
                   ? t('session.confirm.cancelSessionMessage')
                   : t('session.confirm.endSessionMessage')}
               </Text>
+              </ScrollView>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <Button

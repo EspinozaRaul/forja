@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../../lib/theme/tokens';
+import { MODAL } from '../../../lib/constants/layout';
 import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine, useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { QueryState } from '../../../components/ui/QueryState';
@@ -226,7 +227,8 @@ export default function FolderDetailScreen() {
       {/* Edit Modal */}
       <Modal accessible={true} visible={showEditModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg }}>
+          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('routine.folder.editTitle')}</Text>
 
             <Text style={{ color: colors.text.secondary, fontFamily: fonts.bodyMedium, marginBottom: spacing.sm }}>{t('routine.folder.name')}</Text>
@@ -272,6 +274,7 @@ export default function FolderDetailScreen() {
                 />
               ))}
             </View>
+            </ScrollView>
 
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
