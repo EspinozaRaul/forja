@@ -41,16 +41,28 @@ export async function clearSessionTimer(): Promise<void> {
 }
 
 /**
+ * Elapsed seconds to restore from a persisted session timer at instant `now`.
+ *
+ * A running timer keeps whatever was already banked plus everything since its last
+ * start (including time the app spent killed). A paused timer keeps only its banked
+ * elapsed, so a long wall-clock gap adds nothing. No saved state restores zero.
+ */
+export function computeRestoredElapsed(
+  state: SessionTimerState | null | undefined,
+  now: number
+): number {
+  if (!state) return 0;
+  if (!state.isRunning) return state.pausedElapsed;
+  const elapsedSinceStart = Math.floor((now - state.startTimestamp) / 1000);
+  return state.pausedElapsed + elapsedSinceStart;
+}
+
+/**
  * Calculate elapsed seconds based on persisted state.
  * If running, computes from startTimestamp. If paused, returns pausedElapsed.
  */
 export function calculateSessionElapsed(state: SessionTimerState): number {
-  if (state.isRunning) {
-    const now = Date.now();
-    const elapsedSinceStart = Math.floor((now - state.startTimestamp) / 1000);
-    return state.pausedElapsed + elapsedSinceStart;
-  }
-  return state.pausedElapsed;
+  return computeRestoredElapsed(state, Date.now());
 }
 
 // --- Rest Timer ---

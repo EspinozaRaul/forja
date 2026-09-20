@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseSync } from 'expo-sqlite';
 import { categories, exercises } from './schema';
-import { sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, like, or, sql } from 'drizzle-orm';
 import exercisesData from './exercises-data.json';
 import { getExerciseNameEs } from '../i18n/exercise-translations';
 import { now } from '../utils/date';
@@ -47,6 +47,87 @@ interface LeanExercise {
   es: string;  // spanish instructions
   en: string;  // english instructions
   gf?: string; // gif filename (e.g. "0001-2gPfomN.gif")
+}
+
+/** Minimal view of a dataset row needed to repair seeded exercise metadata. */
+export interface ExerciseRepairSource {
+  id: string;   // dataset id, mirrored into exercises.original_id
+  c: string;    // dataset category == exercises.body_part
+  gf?: string;  // gif filename without the repository URL
+}
+
+const OLD_GIF_PREFIX = 'assets/exercises/gifs/';
+
+/** Builds the raw GitHub URL the dataset gif files are served from. */
+function datasetGifUrl(gifFile: string): string {
+  return `https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/${gifFile}`;
+}
+
+/**
+ * Repairs seeded exercise metadata in place.
+ *
+ * Exercise ids are referenced by `routine_exercises.exercise_id` and
+ * `session_exercises.exercise_id`, and user-created exercises live in the same
+ * table. A migration must therefore never delete and re-seed: doing so orphans
+ * every routine, every historical session, and destroys user customs. Only rows
+ * that carry a dataset `original_id` are matched; rows with `original_id IS NULL`
+ * (user customs) are never touched.
+ */
+export async function repairExerciseMetadata(
+  database: typeof db,
+  dataset: ExerciseRepairSource[]
+): Promise<void> {
+  const gifByOriginalId = new Map<string, string>();
+  const bodyPartByOriginalId = new Map<string, string>();
+
+  for (const source of dataset) {
+    if (source.gf) gifByOriginalId.set(source.id, datasetGifUrl(source.gf));
+    if (source.c) bodyPartByOriginalId.set(source.id, source.c);
+  }
+
+  // Old seeded rows stored a local asset path instead of the dataset URL.
+  const brokenGifRows = await database
+    .select({ originalId: exercises.originalId })
+    .from(exercises)
+    .where(and(like(exercises.gifUrl, `${OLD_GIF_PREFIX}%`), isNotNull(exercises.originalId)));
+
+  for (const { originalId } of brokenGifRows) {
+    if (!originalId) continue;
+    const gifUrl = gifByOriginalId.get(originalId);
+    if (!gifUrl) continue;
+    await database
+      .update(exercises)
+      .set({ gifUrl })
+      .where(
+        and(eq(exercises.originalId, originalId), like(exercises.gifUrl, `${OLD_GIF_PREFIX}%`))
+      );
+  }
+
+  // Rows seeded before `body_part` existed have an empty/NULL value.
+  const missingBodyPartRows = await database
+    .select({ originalId: exercises.originalId })
+    .from(exercises)
+    .where(
+      and(
+        isNotNull(exercises.originalId),
+        or(isNull(exercises.bodyPart), eq(exercises.bodyPart, ''))
+      )
+    );
+
+  for (const { originalId } of missingBodyPartRows) {
+    if (!originalId) continue;
+    const bodyPart = bodyPartByOriginalId.get(originalId);
+    if (!bodyPart) continue;
+    await database
+      .update(exercises)
+      .set({ bodyPart })
+      .where(
+        and(
+          eq(exercises.originalId, originalId),
+          or(isNull(exercises.bodyPart), eq(exercises.bodyPart, ''))
+        )
+      );
+  }
 }
 
 export async function initializeDatabase() {
@@ -168,28 +249,19 @@ export async function initializeDatabase() {
   // Check if exercises already imported
   const exerciseCount = await db.select({ count: sql<number>`count(*)` }).from(exercises);
   if (exerciseCount[0].count > 0) {
-    // Migration: check if body_part column exists and has data
-    const sampleBodyPart = await db.select({ bodyPart: exercises.bodyPart }).from(exercises).limit(1);
-    const sampleGif = await db.select({ gifUrl: exercises.gifUrl }).from(exercises).limit(1);
-
-    const needsMigration =
-      !sampleBodyPart[0]?.bodyPart || // body_part column is empty/missing
-      sampleGif[0]?.gifUrl?.startsWith('assets/exercises/gifs/'); // old broken gif URLs
-
-    if (needsMigration) {
-      if (__DEV__) console.log('🔄 Migrating exercises (body_part + gif URLs)...');
-      // Try to add body_part column if it doesn't exist
-      try {
-        expoDb.execSync('ALTER TABLE exercises ADD COLUMN body_part TEXT');
-      } catch {
-        // Column already exists, ignore
-      }
-      await db.delete(exercises);
-      // Fall through to re-seed below
-    } else {
-      if (__DEV__) console.log(`✅ Database already has ${exerciseCount[0].count} exercises`);
-      return;
+    // Databases created before `body_part` was added to the DDL need the column
+    // before the repair query can reference it.
+    try {
+      expoDb.execSync('ALTER TABLE exercises ADD COLUMN body_part TEXT');
+    } catch {
+      // Column already exists, ignore
     }
+
+    // Repair seeded metadata in place. Deleting and re-seeding here would mint new
+    // ids and orphan `routine_exercises` / `session_exercises` references.
+    await repairExerciseMetadata(db, exercisesData as LeanExercise[]);
+    if (__DEV__) console.log(`✅ Database already has ${exerciseCount[0].count} exercises`);
+    return;
   }
 
   // Seed categories (idempotent: skip if already exist)
@@ -226,9 +298,7 @@ export async function initializeDatabase() {
       const categoryId = categoryMap[appName];
 
       // Build correct GitHub raw URL for GIF (files have hash suffix)
-      const gifUrl = ex.gf
-        ? `https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/${ex.gf}`
-        : null;
+      const gifUrl = ex.gf ? datasetGifUrl(ex.gf) : null;
 
       await db.insert(exercises).values({
         name: ex.n,
