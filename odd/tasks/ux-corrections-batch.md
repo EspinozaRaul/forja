@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 code complete and gate-green; T3 authorized; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
+**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
 
 ---
 
@@ -21,7 +21,7 @@ from the report.
 | # | Observation | Severity | Status |
 | --- | --- | --- | --- |
 | 04 | Start-session modal with a long list traps the user; the start button is unreachable **and there is no way to close it** | critical | closed — T1 fixed in `195a611c` and `baea66b` |
-| 05 | Login surfaces a raw SDK network error and the app becomes unusable without a network: the auth gate depends on connectivity while all user data is local | critical | cause verified; layer (a) authorized |
+| 05 | Login surfaces a raw SDK network error and the app becomes unusable without a network: the auth gate depends on connectivity while all user data is local | critical | **layer (a) closed by T3**; the layer (b) premise is corrected in T3 — a valid session already works offline, so what remains is a genuinely signed-out user needing network |
 | 03 | Replacing an exercise mid-session keeps the previous exercise's numbers | high | behavior decided; superset case open |
 | 06 | The app has no large-text strategy; non-modal surfaces overflow at accessibility text sizes | high | open — out of scope for this batch |
 | 02 | Exercise picker is missing the example images on many rows | medium | needs one user datum |
@@ -253,19 +253,57 @@ Verified in this session:
   `:53-54` translates only `auth.*` keys.
 - `lib/hooks/useAuth.ts:84` → `onAuthStateChange((_event, session) => applySession(session))`
   applies **every** event without distinguishing them, and `applySession(null)` clears the query
-  cache and drops the user at the login screen.
+  cache and drops the user at the login screen. This was recorded as the likely lockout mechanism.
+  **It is wrong, and correcting it matters.** `@supabase/auth-js`'s `_refreshAccessToken` catch
+  block guards the only path that can remove a session with `if (!isAuthRetryableFetchError(error))`:
+  a network failure produces exactly that error type, so it is excluded from session removal, and the
+  code carries a comment explaining the proactive-vs-reactive distinction. A network blip never signs
+  a user out, and with a valid stored session `getSession()` reads from SecureStore — so the app does
+  reach its logged-in state offline. **The real sequence was: his session was genuinely gone, and then
+  he could not sign back in because there was no network — while the app told him nothing about why.**
+  That makes this task the whole fix for the reported case rather than the cheap half of it.
 
 ### Approach
 
-Distinguish "there is no connection" from "these credentials are wrong", translate both, and stop
-rendering SDK internals. This continues the SEC-15 decision (release must not surface internals).
-Offer a retry on the network branch.
+Distinguish "there is no connection" from "these credentials are wrong", translate every case, and
+stop rendering SDK internals. This continues the SEC-15 decision (release must not surface
+internals). No retry button was added: the message tells the user to get online, and the sign-in
+button is one tap away, so a second button would duplicate it.
+
+### Outcome
+
+`lib/auth/auth-error-message.ts` classifies an auth error into a category using only its structured
+fields — `name`, `status`, `code` — and never `error.message`, because that text is
+environment-specific (on Android a Java class name, an IP and the project hostname). It exposes
+`classifyAuthError` and `authErrorMessageKey(error, namespace)`, and the app's own Google sentinels
+travel through a `LocalizedAuthError` marker so they keep their key through a real field instead of a
+message-string sniff. Both auth screens route every error path through it and log the raw error in
+`__DEV__` only, matching `lib/utils/mutation-error.ts`. The previously dead
+`auth.login.error.invalidCredentials` and `generic` keys are now used, and the password-reset success
+message no longer reuses the "¿Olvidaste tu contraseña?" question.
+
+`app/auth/signup.tsx` carried the same raw pass-through and was fixed in the same unit.
+`app/settings.tsx` was already correct, so the defect was confined to the two auth screens.
 
 ### Gate
 
-A forced network failure renders a translated, actionable message and no internal detail
-(class name, hostname, IP). A wrong password still renders the credentials message. Tests use a
-negative control: reintroduce the raw pass-through and watch the test fail.
+`npx tsc --noEmit` exit 0; `npx jest` 19 suites / 178 tests (baseline 18 / 147). The suite's negative
+control reintroduces the raw pass-through and fails with the exact leak
+(`Expected: "auth.login.error.network" / Received: "fetch failed: java.net.ConnectException: ..."`).
+The i18n catalogues were checked for key parity: 659 keys in both, no orphans.
+
+A real forced network failure was NOT observed at runtime. The classification is asserted against
+fixtures carrying the real error shape, which is what the message-honesty claim needs; that the SDK
+reports a given failure as `AuthRetryableFetchError` is the library's contract, not something this
+suite measures.
+
+### Findings recorded, not fixed here
+
+1. `lib/hooks/useAuth.ts` exports `signIn` and `signUp`, and **no screen calls them** — the login and
+   signup screens call `supabase.auth` directly. Dead code, and the reason the hook's error shape
+   never mattered.
+2. `signOut` and `deleteAccount` still return raw errors. `app/settings.tsx` shows its own catalogue
+   string for each, so nothing leaks today; recorded rather than chased.
 
 ## T4 — Replace-exercise data reset (Obs-03)
 

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import { claimLegacyRows, deleteUserLocalData, repairRoutineTargetDefaults } from '../db/queries';
 import { getCurrentUserId, setCurrentUserId } from '../db/user-scope';
+import { LocalizedAuthError } from '../auth/auth-error-message';
 import { User, Session } from '@supabase/supabase-js';
 
 // expo-web-browser is a native module — only available in dev builds, not Expo Go
@@ -116,7 +117,7 @@ export function useAuth() {
       if (data?.url) {
         // Open the OAuth URL in the browser
         if (!WebBrowser) {
-          return { error: new Error('auth.errors.googleRequiresDevBuild') };
+          return { error: new LocalizedAuthError('auth.errors.googleRequiresDevBuild') };
         }
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
@@ -127,11 +128,11 @@ export function useAuth() {
           // The session will be set via onAuthStateChange
           return { error: null };
         } else {
-          return { error: new Error('auth.errors.loginCancelled') };
+          return { error: new LocalizedAuthError('auth.errors.loginCancelled') };
         }
       }
 
-      return { error: new Error('auth.errors.noOAuthUrl') };
+      return { error: new LocalizedAuthError('auth.errors.noOAuthUrl') };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error(String(err)) };
     }
