@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed (`a21a982`); **T4 code complete, runtime verification pending**; T6 closed; T5 needs a visual reproduction; T7 blocked on a product decision. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
+**Status**: integrated — T1–T4 and T6 are in `main` together with the security, timer/db and iOS 27 branches, as four separate merge commits. **T4's runtime verification is still pending**; T5 needs a visual reproduction; T7 is blocked on a product decision. Nothing has been pushed: `main` is 24 commits ahead of `origin/main`.
 
 ---
 
@@ -502,13 +502,45 @@ rediscovered from scratch.
 | B4 | `useAuth` exports `signIn` and `signUp` that no screen calls; the screens use `supabase.auth` directly — dead code, and the reason the hook's error shape never mattered | low | `lib/hooks/useAuth.ts` |
 | B5 | `signOut` and `deleteAccount` return raw errors. Nothing leaks today because `app/settings.tsx` shows its own catalogue copy, but the shape is inconsistent with the auth screens | low | `lib/hooks/useAuth.ts` |
 | B6 | The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header | medium | `app/routine/[id].tsx` (context already noted in T6) |
-| B7 | Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`. A cold-start `forja://reset-password` against a build of `main` lands on expo-router's unmatched-route screen — the reset is broken on `main` today | **high** | repo branches |
+| B7 | ~~Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`~~ **Resolved**: all four branches are merged into `main` as separate merge commits, so SEC-13's password-reset route — and the timer and exercise repairs — are no longer stranded | **high** | closed |
 | B8 | A superset group with anything other than exactly two members silently stops rendering as a superset: the renderer only builds a `SupersetBlock` when `members.length === 2` and otherwise falls through to the orphan path, drawing each member standalone with no error | medium | `app/session/[id].tsx` |
 | B9 | `handleDragHandleTap` has the same dead optimistic patch as the replace path had: it writes `setQueryData([...SESSION_KEY, sessionId, 'exercises'], ...)` plus a rollback to a key with no observers, so reordering has no optimistic update at all. Dead on arrival, not a live bug — either remove it or point it at the real key to make reordering snappy | low | `app/session/[id].tsx` |
 
+### Integration record (2026-09-20)
+
+The four branches with real work were merged into `main` as four separate merge commits, in this
+order, each one gated by `tsc` and `jest` immediately after the merge:
+
+| merge | brings | gate right after |
+| --- | --- | --- |
+| `06cec6d` | `fix/security-hardening-batch` — password reset (SEC-13), crash-screen internals, Android backup and mic permissions, plus the audit reports | 19 suites / 152 tests |
+| `bb40d23` | `fix/timer-restore-and-exercise-repair` — timer elapsed time on restore, in-place exercise repair | 21 / 161 |
+| `bfb6bf9` | `fix/ios27-scene-lifecycle` — UIKit scene lifecycle via `ios.enableSceneSupport` | 21 / 161 |
+| `80c73e8` | `fix/ux-corrections` — T1–T6 | 24 / 214 |
+
+Verified BEFORE merging, in a throwaway worktree: each branch merges cleanly against `main` on its
+own and in sequence, with zero textual conflicts, and the combined tree passes `tsc` and `jest`. The
+four files touched by more than one branch (`.gitignore`, `app.json`, `lib/i18n/es.json`,
+`lib/i18n/en.json`) were then checked by hand so that no side's change was silently dropped:
+`app.json` carries both the Android hardening and `enableSceneSupport: true`, and both catalogues
+hold 677 keys with no orphans.
+
+**Correction to this backlog's own B7 entry**: it said four branches carried unmerged work. Two of
+them — `progress-restructure-pr1` and `progress-restructure-pr2` — were already ancestors of `main`;
+their merge-base with `main` was their own tip. The real count of unmerged branches with work was
+two, plus the two created in this batch. All six are contained in `main` now and can be deleted.
+
+**Nothing was pushed.** `main` sits 24 commits ahead of `origin/main`, which is still at `616a25a`.
+Pushing is a separate decision.
+
+The merge also settled the branch-hygiene note that had been carried since this batch started:
+`fix/security-hardening-batch`'s `.gitignore` adds `.pi/` (line 57), so the local Pi agent state is
+ignored and the working tree is clean.
+
 ## Order
 
-T1 → T2 → T3 → T4 → T5 → T6 → T7.
+T1 → T2 → T3 → T4 → T5 → T6 → T7. Closed: T1, T2, T3, T6. T4 is code-complete with its runtime
+verification still pending; T5 needs a visual reproduction; T7 is blocked on a product decision.
 
 ## Gate
 
