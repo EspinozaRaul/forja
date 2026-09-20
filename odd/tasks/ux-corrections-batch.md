@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 implemented, verified and committed; T2 and T3 authorized; T5/T6/T7 blocked on decisions
+**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 unblocked and authorized; T3 authorized; T5/T6/T7 blocked on decisions
 
 ---
 
@@ -20,9 +20,10 @@ from the report.
 
 | # | Observation | Severity | Status |
 | --- | --- | --- | --- |
-| 04 | Start-session modal with a long list traps the user; the start button is unreachable **and there is no way to close it** | critical | cause verified; start here |
+| 04 | Start-session modal with a long list traps the user; the start button is unreachable **and there is no way to close it** | critical | closed — T1 fixed in `195a611c` and `baea66b` |
 | 05 | Login surfaces a raw SDK network error and the app becomes unusable without a network: the auth gate depends on connectivity while all user data is local | critical | cause verified; layer (a) authorized |
 | 03 | Replacing an exercise mid-session keeps the previous exercise's numbers | high | behavior decided; superset case open |
+| 06 | The app has no large-text strategy; non-modal surfaces overflow at accessibility text sizes | high | open — out of scope for this batch |
 | 02 | Exercise picker is missing the example images on many rows | medium | needs one user datum |
 | 01 | Routine header's Edit/Delete buttons are oversized and eat vertical space | low | needs one style decision |
 
@@ -65,12 +66,14 @@ pattern needs to be invented.
 
 ### Approach
 
-1. Add `MAX_HEIGHT` to the `MODAL` constant in `lib/constants/layout.ts`. It currently exports
+1. Add `MAX_HEIGHT` to the `MODAL` constant in `lib/constants/layout.ts`. At the time it exported
    only `WIDTH`, `MAX_WIDTH`, `HANDLE_HEIGHT`, `HANDLE_WIDTH`; the missing bound is the root of
    this whole class of defect.
-2. In `app/routine/[id].tsx`, bound the card with that constant, put **only the scrollable list**
-   inside a `ScrollView` that can shrink (`flexShrink: 1`), and keep the action row **outside** the
-   scroll region so it is always visible and always reachable.
+2. In `app/routine/[id].tsx`, bound the card with that constant, put the **variable-length body
+   content** inside a `ScrollView` that can shrink (`flexShrink: 1`), and keep the action row
+   **outside** the scroll region so it is always visible and always reachable. The first commit
+   scoped the scroll region to the list only; the correction moved the title and the message in as
+   well, because text grows with the OS accessibility size (see *Correction history*).
 3. Keep the backdrop-close escape reachable: the bounded card leaves tappable overlay, and the
    modal keeps `onRequestClose` for the Android back button.
 4. Add the rule to `docs/ui-standard.md`, which today says nothing about modals beyond "clears its
@@ -82,23 +85,61 @@ pattern needs to be invented.
 The reported case is reproduced with a session long enough to overflow, and the start button is
 reachable with the actions visible. `npx tsc --noEmit` clean and `npx jest` green.
 
-**The runtime half of this gate is NOT satisfied.** No device or simulator run has been done, so
-"a long session overflows and the start button stays reachable" is asserted structurally, not
-observed. That check belongs to the user on a real phone.
+**The runtime half is now satisfied** on a clean cold start on the iOS simulator; the measurements
+are below.
+
+### Runtime verification (Obs-04)
+
+The check ran on the iOS simulator, device `Forja-SE3` (iPhone SE 3rd gen, 375x667pt), on a **clean
+cold start**, against a seeded fixture: a routine of 15 exercises with a completed previous session
+of 15 exercises x 3 sets, which overflows the viewport by a wide margin. The figures come from
+screenshot pixel analysis, not from visual impression.
+
+| measurement (667pt viewport) | default text size | `accessibility-extra-extra-extra-large` |
+| --- | --- | --- |
+| dialog card | 432.5pt tall, centred (y 117.0 -> 549.5pt) | 432.5pt, same |
+| `MODAL.MAX_HEIGHT: '70%'` resolved | ~433pt = `(667 - 2 * 24) * 0.70`, i.e. against the parent's content box, not the viewport (70% of 667 would be 467pt) | same |
+| body / scroll region | ~180pt available | ~180pt available |
+| action row (primary button bbox) | 70.0pt (y 453.0 -> 523.0pt) | 185.0pt (y 338.0 -> 523.0pt) |
+| geometry at the default text size | pixel-identical before and after the correction: 35,524 accent-coloured pixels, same y range | n/a |
+
+**Corrected rule.** Only the action row sits outside the scroll region; the title, the message and
+every other variable-length body content live inside it. The reason is arithmetic, not a rendering
+detail: text grows with the OS accessibility size, so anything left outside the scroll region is
+subtracted from the actions' budget. On this viewport the card's content box is ~383pt; at the
+largest text size the action row alone is 185pt, leaving the body about 180pt.
+
+Two honest gaps remain:
+
+- **The `lastSession === null` path was not measured.** It is structurally changed: where the title
+  and the message were previously direct children of the card, they now sit inside a `ScrollView`
+  that carries a 16pt bottom margin, so that dialog may render about 16pt taller. Not a containment
+  risk, but unverified.
+- **The elevated "last session" box now scrolls with the content** instead of being the scroll frame
+  itself, so its border scrolls away with it. An intentional consequence of the correction, not
+  verified visually beyond the default-size render.
+
+The check ran on a simulator, not on a physical phone; the user's own device remains untested.
 
 ### Evidence
 
-Implemented on `fix/ux-corrections` (branched from `main` @ `616a25a2`) and committed as `195a611c`:
+Implemented on `fix/ux-corrections` (branched from `main` @ `616a25a2`) and committed in two work
+units:
+
+- `195a611c` — the containment fix: the card bounded by `MODAL.MAX_HEIGHT`, and the previous-session
+  list moved into a `ScrollView` carrying `flexShrink: 1` and `MODAL.MAX_BODY_HEIGHT`.
+- `baea66b` — the correction: the title and the message joined the scroll region, so only the action
+  row stays outside it; the guard assertion was inverted and §8 of the UI standard was rewritten.
 
 | File | Change |
 | --- | --- |
 | `lib/constants/layout.ts` | `MODAL.MAX_HEIGHT: '70%'` and `MODAL.MAX_BODY_HEIGHT: 360`, each with the reasoning as a comment |
-| `app/routine/[id].tsx` | card bound by `MAX_HEIGHT`; the previous-session list moved into a `ScrollView` carrying `flexShrink: 1` and `MAX_BODY_HEIGHT`; title, message and the action row outside the scroll region |
-| `docs/ui-standard.md` | new §8 plus a checklist item, written as a target rather than as shipped state; header metadata bumped |
-| `__tests__/components/routine-start-modal.test.ts` | new source-scanning guard, 8 tests |
+| `app/routine/[id].tsx` | card bound by `MAX_HEIGHT`; the title, the message and the previous-session list inside one unconditional `ScrollView` carrying `flexShrink: 1` and `MAX_BODY_HEIGHT`; only the action row outside it |
+| `docs/ui-standard.md` | §8 plus a checklist item, written as a target rather than as shipped state; header metadata bumped |
+| `__tests__/components/routine-start-modal.test.ts` | source-scanning guard, 9 tests |
 
-Gate on this branch: `npx tsc --noEmit` exit 0; `npx jest` → **18 suites / 146 tests**, from a
-baseline of 17 / 138. The delta is the single new suite; no tracked test file was modified.
+Gate on the second commit: `npx tsc --noEmit` exit 0; `npx jest` → **18 suites / 147 tests**, from a
+baseline of 17 / 138. The delta is the single new suite.
 
 ### What the guard does and does not prove
 
@@ -109,24 +150,35 @@ after the scroll region.
 Known gaps, accepted rather than hidden:
 
 - **Dismissal is unguarded**: deleting `onRequestClose`, the backdrop `onPress`, or the card's
-  `stopPropagation` leaves all 8 tests green, even though §8 requires the escape hatch.
+  `stopPropagation` leaves all 9 tests green, even though §8 requires the escape hatch.
 - **Constant values are unguarded**: the assertions check the shape of the values, not that they are
   safe. `MAX_HEIGHT: '100%'` would pass while removing the tappable backdrop strip.
-- **Runtime containment is unprovable statically.** The arithmetic is real: fixed chrome ≈ 197pt
-  plus a 360pt body needs ≈ 796pt of viewport for the card's 70% bound to contain it without any
-  shrink, so on a 667pt phone the deficit is ≈ 90pt and on a 568pt device ≈ 160pt. Below that,
-  the actions stay on screen **only if Yoga applies `flexShrink: 1`** to the scroll node inside a
-  content-driven, `maxHeight`-clamped card. The body cap is a secondary limit, not a proof. Only a
-  device run with a long session settles it.
+- **Runtime containment is unprovable statically.** No static check can show that Yoga applies the
+  `flexShrink: 1` at runtime; the body cap is a secondary limit, not a proof. The simulator run
+  above now supplies that evidence on a 667pt viewport.
 
 ### Correction history
 
-Three independent verification rounds ran against this task, not one. They refuted, in order: a
-guard test that could not fail on the very property the fix depends on; a doc that contradicted
-its own reference and claimed a universal standard while one of eleven files was fixed; and a
-hard cap that was described as removing the shrink dependency while the arithmetic shows it does
-not. Each correction was itself re-verified. The prose now states what is true, including what
-remains unproven.
+Three independent verification rounds ran against the first commit, `195a611c`. They refuted, in
+order: a guard test that could not fail on the very property the fix depends on; a doc that
+contradicted its own reference and claimed a universal standard while one of eleven files was
+fixed; and a hard cap that was described as removing the shrink dependency while the arithmetic
+shows it does not. Each correction was itself re-verified.
+
+The simulator run then found what those rounds could not:
+
+- The guard contained an assertion named `keeps the title and message outside the scroll region`.
+  It froze the defective arrangement as a requirement, which is why the suite could not catch it.
+  It is now inverted, and the scroll region gained an unconditional-render check so a guarded
+  region cannot satisfy the indices silently.
+- Section 8 of the UI standard stated the same inverted rule and carried a containment threshold
+  (a viewport figure) that the arithmetic does not support. Both were corrected; the paragraph now
+  states the rule as arithmetic.
+- **Process lesson.** After a STRUCTURAL JSX change, Fast Refresh left a stale native layout in the
+  simulator. That produced a fake measurement — an action row of 382.5pt with 222pt of empty space
+  inside a card whose content box is ~383pt — and a fake diagnosis. A change was built on top of
+  that artifact and then reverted. Simulator measurements of a layout change must be taken on a
+  clean cold start, never on a Fast-Refreshed tree.
 
 ## T2 — Modal sweep (Obs-04)
 
@@ -139,7 +191,7 @@ that bit them.
 
 | File | Modals | has `maxHeight` |
 | --- | --- | --- |
-| `app/routine/[id].tsx` | 1 | no — T1 |
+| `app/routine/[id].tsx` | 1 | **yes** — T1 |
 | `app/session/[id].tsx` | 3 | no |
 | `components/ExercisePicker.tsx` | 3 | no |
 | `app/(tabs)/routines.tsx` | 2 | no |
@@ -158,8 +210,11 @@ shared component behind many destructive confirmations and carries the same defe
 
 ### Gate
 
-Every modal file is either bounded or has a written reason it cannot overflow. `npx tsc --noEmit`
-clean and `npx jest` green.
+Every modal file is either bounded or has a written reason it cannot overflow. The sweep applies
+the corrected rule from T1: the card is bounded, **only the action row** sits outside the scroll
+region, and the title, the message and all variable-length content scroll inside
+`MODAL.MAX_BODY_HEIGHT` with `flexShrink: 1`. The sweep is unblocked now that T1 is closed.
+`npx tsc --noEmit` clean and `npx jest` green.
 
 ## T3 — Login error honesty (Obs-05, layer a)
 
@@ -289,6 +344,25 @@ It is deliberately separated from T3, which is the cheap and verifiable half.
 
 ---
 
+## Obs-06 — The app has no large-text strategy; non-modal surfaces overflow at accessibility text sizes
+
+**Severity**: high. **Not started. Out of scope for this batch.**
+
+Evidence: on a clean cold start at `accessibility-extra-extra-extra-large` on the same simulator,
+the routine detail screen overflows with no modal involved: the "Agregar ejercicio" button is
+clipped at its card's edge, the routine description occupies most of the viewport, and the
+"Ejercicios" heading overruns. The modal was never special — the whole app assumes text does not
+scale.
+
+What was tried and rejected: capping the OS text-scale multiplier on the shared
+`components/ui/Button.tsx` (`maxFontSizeMultiplier`) was implemented and then **reverted**. It was
+justified by the artifact described in T1's correction history; once measured on a clean cold start
+the action row was 185pt with and without the cap, so the cap solved nothing. Reverting it also
+avoided an app-wide behavioural change (that component is imported by 9 files) inside a
+modal-local task. A sane large-text strategy is its own work unit and deserves its own decision.
+
+---
+
 ## Order
 
 T1 → T2 → T3 → T4 → T5 → T6 → T7.
@@ -300,5 +374,6 @@ changes behavior ships with a test that fails without it — a test that cannot 
 
 ## Revert
 
-One work-unit commit per task on the feature branch; each task reverts independently with
-`git revert <sha>`.
+One work-unit commit per task on the feature branch; each task reverts independently — a task
+with more than one commit (T1 has two, `195a611c` and `baea66b`) reverts with `git revert` over
+its whole commit set, newest first, so the branch states stay consistent.
