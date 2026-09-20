@@ -290,13 +290,28 @@ export default function RoutineDetailScreen() {
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
               <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
-              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <View style={{ flex: 1 }}>
-                  <Button title={t('common.edit')} variant="secondary" onPress={handleStartEdit} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button title={t('common.delete')} variant="danger" onPress={handleDeleteRoutine} />
-                </View>
+              {/* Header actions are text links, not Buttons, matching the folder screen's
+                  header (app/routine/folder/[id].tsx). Two full-size Buttons in this row
+                  claimed the whole width and collapsed the routine name to zero, so the
+                  name — the reason the row exists — was invisible even for a short one.
+                  Text links are sized to their content and leave the name its space. */}
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity
+                  onPress={handleStartEdit}
+                  style={{ padding: spacing.sm, marginRight: spacing.xs }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.edit')}
+                >
+                  <Text style={{ fontSize: fontSizes.sm, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleDeleteRoutine}
+                  style={{ padding: spacing.sm }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.delete')}
+                >
+                  <Text style={{ fontSize: fontSizes.sm, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
+                </TouchableOpacity>
               </View>
             </View>
             {routine.description && (

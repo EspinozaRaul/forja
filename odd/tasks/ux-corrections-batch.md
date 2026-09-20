@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed (`a21a982`); T4 closed; T5/T6/T7 blocked on decisions. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
+**Status**: in progress — T1 closed (`195a611c` + `baea66b`, verified on the iOS simulator); T2 closed (`ad867b1`); T3 closed (`a21a982`); **T4 code complete, runtime verification pending**; T6 closed; T5 needs a visual reproduction; T7 blocked on a product decision. Separately, the iOS 27 launch blocker is closed on `fix/ios27-scene-lifecycle` (`25f0e11`).
 
 ---
 
@@ -25,7 +25,7 @@ from the report.
 | 03 | Replacing an exercise mid-session keeps the previous exercise's numbers | high | closed — T4 fixed |
 | 06 | The app has no large-text strategy; non-modal surfaces overflow at accessibility text sizes | high | open — out of scope for this batch |
 | 02 | Exercise picker is missing the example images on many rows | medium | needs one user datum |
-| 01 | Routine header's Edit/Delete buttons are oversized and eat vertical space | low | needs one style decision |
+| 01 | Routine header's Edit/Delete buttons are oversized and eat vertical space — and they collapsed the routine name to zero width | low | closed — T6 fixed |
 
 ---
 
@@ -405,21 +405,59 @@ Two branches meet here, and both cut the wrong way:
 **Needed**: whether one specific exercise is consistently missing its image (data) or the same row
 alternates (render). A by-name repair has never existed in any branch and would be new work.
 
+### Measured outcome — the data hypothesis is refuted
+
+Measured against the real device database (the simulator's, holding the user's own rows): of **1324
+exercises, 0 have `original_id` NULL**, and **0 rows** of `routine_exercises` or `session_exercises`
+reference an exercise without one. There are no user-created custom exercises either. Since
+`EXERCISE_IMAGES` carries all 1324 ids, the placeholder branch (`item.originalId ? … : null` →
+`t('exercisePicker.exercise')`) cannot be reached with this data: **the missing image is not a data
+problem.**
+
+So the remaining hypothesis is render-side — an asset that resolves but does not paint, or a
+thumbnail that renders blank while loading. That needs a visual reproduction in the picker, deferred
+with the simulator work. Recorded rather than guessed.
+
 ## T6 — Routine header buttons (Obs-01)
 
-**Severity**: low. **Blocked on one style decision.**
+**Severity**: low. **Closed.**
 
-`app/routine/[id].tsx:290-302`. Each button sits in a `<View style={{ flex: 1 }}>` inside a row
-container with no `flex` and no width, which is a real layout smell. `components/ui/Button.tsx`
-without `compact` applies `paddingHorizontal: spacing.lg` (24) and `paddingVertical: spacing.md`
-(16) — about 53pt tall. `compact` already exists and nothing on this screen uses it. A discreet
-precedent already ships in `app/routine/folder/[id].tsx:159-166` (small text links).
+### The real mechanism (measured, not inferred)
 
-An empty band between the native header and the buttons suggests the routine name is not visible;
-the mechanism is unproven and must be rendered before it is claimed.
+The routine name **was** rendered all along (the `!isEditing` branch of `app/routine/[id].tsx`). The
+defect is that it had no width: the name is a `<Text style={{ flex: 1 }}>` in a `space-between` row
+whose sibling — a `<View style={{ flexDirection: 'row' }}>` holding two full-size `Button`s, each
+wrapped in `<View style={{ flex: 1 }}>` — claimed the whole row. Measured on the simulator with a
+**seven-character** name: the name rendered at zero width and was invisible. That is the "empty band"
+between the native header and the buttons; the mechanism was previously unproven.
 
-Separate context, do not fold into this task: this screen is not migrated to `docs/ui-standard.md`
-§1/§2 — it uses a raw `<ScrollView>` root with the native header (`app/_layout.tsx:86`).
+### The fix
+
+The header actions became text links, copying the pattern the app already ships in
+`app/routine/folder/[id].tsx`: `fontSizes.sm`, `fonts.bodyMedium`, `colors.text.link` for edit and
+`colors.error` for delete, with padding, `accessibilityRole` and an accessibility label. The token
+itself documents `text.link` as "steel blue — edit links, info links", so this is the app's own
+convention rather than a new one. `compact` was NOT used: it narrows a `Button`, but two `Button`s
+still compete with the name for the row, which is the actual defect.
+
+### Evidence — before / after, same screen, same data, cold start both times
+
+| | before | after |
+| --- | --- | --- |
+| routine name | not rendered (zero width) | "Prueba" visible, large, top-left |
+| destructive action | filled red block, 80,953 px | text link, 15 px |
+| header | two ~53pt buttons dominating the row | one compact row |
+
+Both captures came from a cold start, not from a Fast Refresh tree: a stale native layout already
+produced one fake measurement in this batch, so layout claims are not made that way.
+
+### Still open on this screen, recorded rather than folded in
+
+- "Agregar ejercicio" is still a full-size `Button` in a section header. It squeezes nothing, so it
+  is cosmetic, but it is the same oversizing class.
+- The native header still reads the generic "Rutina" instead of the routine's name.
+- The screen is still not migrated to `docs/ui-standard.md` §1/§2: a raw `<ScrollView>` root under the
+  native header (`app/_layout.tsx:86`). Tracked as B6.
 
 ## T7 — Offline path (Obs-05, layer b)
 
