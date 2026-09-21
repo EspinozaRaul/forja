@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
 > Last updated: 2026-09-21
-> Status: v1.3 (Layout foundation + query states + modal containment)
+> Status: v1.4 (Layout foundation + query states + modal containment + action roles)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -186,12 +186,66 @@ Replacing those literals with the shared `MODAL` values belongs to the work unit
 brings the remaining modals onto this rule; following the reference means following
 the principle, not copying its structure literally.
 
+## 9. Actions are a button, a pill or a link — never a glyph
+
+- **A button is `components/ui/Button.tsx`.** Do not hand-roll one as a
+  `TouchableOpacity` with its own `backgroundColor`: that is how padding, radius
+  and font size drifted into three shapes, and how the routine detail header
+  became a row of full-size buttons that collapsed the screen title to zero
+  width — measured with a seven-character routine name. The name was the reason
+  the row existed and it was invisible.
+- **Variant by role** (§4). `primary` for the screen's single main action, at
+  most one per screen; `secondary` for every other real button; `danger` for a
+  destructive **filled** action; `accent` for the low-emphasis tinted one.
+  `colors.error` is the destructive **text or icon** red and `colors.errorStrong`
+  the fill under a **filled** destructive action — the same split §4 draws,
+  because the light red reaches only 2.97:1 under a near-white label.
+- **Size by context.** Full size is for the bottom action bar and a screen's main
+  action. `compact` is for an action that shares a row with other content — a
+  header, a list row, a section header — because a full-size button is about
+  53pt tall and its intrinsic width can claim the whole row.
+- **Header actions are pills**, in `ScreenHeader`'s `right` slot:
+  `borderRadius.full`, `paddingHorizontal: spacing.md`,
+  `paddingVertical: spacing.sm`, an Ionicons icon at 16 and a short label at
+  `fontSizes.sm`, filled with `colors.accent.primary` — `colors.errorStrong` for
+  a destructive one — and icon and label in `colors.text.onAccent`. The
+  reference is the "new measurement" control in `app/progress/measurements.tsx`;
+  its label is `colors.text.primary` (4.3:1 on the accent fill) where §4 asks
+  for the on-surface token (5.1:1).
+- **Never a text glyph as an action** (`✕`, `›`, `←`, `×`, `↻`). Use Ionicons: a
+  glyph has no accessible name and renders differently per platform and font.
+  24 in a header (§2), 14–16 inline.
+- **Radii: three shapes, no fourth.** `borderRadius.md` for a rectangular button
+  (what `Button` uses), `borderRadius.sm` for its `compact` size,
+  `borderRadius.full` for pills and round icon-only actions.
+- **A text link is not a button.** A link is for navigation inside copy, or for a
+  row of tertiary actions below content (the session screen's "add series ·
+  unlink" row). A header action is a pill, not a link.
+
+**This is the target, not the state of the repo.** The divergences below were
+measured, not guessed, and each is its own migration work unit. `<Button>` is used
+28 times, but only 14 of those call sites choose a variant (11 `secondary`, 2
+`primary`, 1 `danger`) — the other 14 fall through to `primary`, so most buttons
+are loud by accident. The `compact` size is passed at 4 call sites. 31 files
+still mount a bare `TouchableOpacity` (131 tags in total) and 28 of them paint
+their own `backgroundColor`, so most buttons in the app are not the button.
+`borderRadius.md` (83), `.lg` (37) and `.full` (20) still compete for the same
+rectangular job. Text glyphs are still the action in 14 places (`✕` 4, `›` 4,
+`←` 2, `×` 2, `↻` 2), including the replace and remove controls in the routine
+detail exercise list. `app/routine/[id].tsx` is the first screen brought onto
+this section; the rest is backlog.
+
 ## Checklist for a new screen
 
 - [ ] Root is `<Screen>` (or `<Screen edges={[]}>` under a native header)
 - [ ] Header is `<ScreenHeader>`, with `divider` only when the header is fixed
 - [ ] No `paddingTop` / `paddingBottom` in `style` fighting the safe area
 - [ ] Colours, spacing, fonts and radii come from `tokens.ts`
+- [ ] Actions are `<Button>` (never a hand-rolled `TouchableOpacity`) or a header
+      pill, and no text glyph stands in for an icon
+- [ ] The `variant` matches the role (`primary` at most once per screen), the size
+      matches the context (`compact` in a row shared with other content), and a
+      destructive pill uses `colors.errorStrong`, never `colors.error`
 - [ ] Every string goes through `t()` and exists in both catalogues
 - [ ] Query-backed data routes loading / failure / empty through `<QueryState>`
       (failure always offers a retry) — never a bare `!data` fallback

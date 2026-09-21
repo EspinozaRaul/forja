@@ -245,6 +245,12 @@ export default function MeasurementsScreen() {
         icon="body"
         onBack={() => router.back()}
         right={
+          /* Coloured surface, so the pill's label and icon use the on-surface token (§4).
+              Measured: text.onAccent on accent.primary = 5.11:1; the previous
+              text.primary there was 4.34:1, under the 4.5:1 floor. The open state is a
+              FILLED destructive action, so its fill is errorStrong (5.34:1 under
+              text.onAccent); colors.error stayed the 2.98:1 light red and is still the
+              text/icon red on dark. Do not merge these roles back. */
           <Pressable
             onPress={() => setShowForm(!showForm)}
             accessibilityRole="button"
@@ -253,14 +259,14 @@ export default function MeasurementsScreen() {
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.xs,
-              backgroundColor: showForm ? colors.error : colors.accent.primary,
+              backgroundColor: showForm ? colors.errorStrong : colors.accent.primary,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.sm,
               borderRadius: borderRadius.full,
             }}
           >
-            <Ionicons name={showForm ? 'close' : 'add'} size={16} color={colors.text.primary} />
-            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.primary }}>
+            <Ionicons name={showForm ? 'close' : 'add'} size={16} color={colors.text.onAccent} />
+            <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>
               {showForm ? t('common.cancel') : t('progress.measurements.new')}
             </Text>
           </Pressable>
