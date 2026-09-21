@@ -1,4 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -146,7 +147,7 @@ export default function FolderDetailScreen() {
       <View style={{ backgroundColor: colors.bg.card, paddingTop: insets.top + spacing.sm + spacing.xs, paddingBottom: spacing.sm + spacing.xs, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }} hitSlop={8} accessibilityLabel={t('accessibility.common.back')} accessibilityRole="button">
-            <Text style={{ fontSize: fontSizes.xl, color: colors.accent.primary }}>←</Text>
+            <Ionicons name="arrow-back" size={24} color={colors.accent.primary} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -197,7 +198,7 @@ export default function FolderDetailScreen() {
                     accessibilityRole="button"
                     style={{ padding: spacing.sm }}
                   >
-                    <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
+                    <Ionicons name="close" size={14} color={colors.text.muted} />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>

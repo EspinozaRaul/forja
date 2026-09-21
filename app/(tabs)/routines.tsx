@@ -1,4 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -144,7 +145,7 @@ export default function RoutinesScreen() {
                         </Text>
                       )}
                     </View>
-                    <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>›</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.text.muted} />
                   </View>
                 </TouchableOpacity>
               </AnimatedListItem>
@@ -173,7 +174,7 @@ export default function RoutinesScreen() {
                         <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{routine.description}</Text>
                       )}
                     </View>
-                    <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>›</Text>
+                    <Ionicons name="chevron-forward" size={24} color={colors.text.muted} />
                   </View>
                 </TouchableOpacity>
               </AnimatedListItem>
@@ -308,7 +309,7 @@ export default function RoutinesScreen() {
                     }}
                   >
                     <Text style={{ flex: 1, fontSize: fontSizes.md, color: colors.text.primary }}>{folder.name}</Text>
-                    <Text style={{ fontSize: fontSizes.md, color: colors.text.muted }}>›</Text>
+                    <Ionicons name="chevron-forward" size={15} color={colors.text.muted} />
                   </TouchableOpacity>
                 ))}
               </View>

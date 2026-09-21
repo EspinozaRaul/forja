@@ -58,7 +58,7 @@ export function IntensityMethodPicker({ visible, onSelect, onClose }: IntensityM
                   <Text style={styles.optionLabel}>{t(`methods.${method.id}.label`)}</Text>
                   <Text style={styles.optionDescription}>{t(`methods.${method.id}.description`)}</Text>
                 </View>
-                <Text style={styles.optionArrow}>›</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.text.muted} />
               </TouchableOpacity>
             ))}
           </ScrollView>
