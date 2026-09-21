@@ -306,7 +306,7 @@ function DropRow({
           accessibilityRole="button"
           accessibilityHint={t('accessibility.dropActions.deleteDropHint')}
         >
-          <Text style={{ fontSize: fontSizes.sm, color: colors.error }}>×</Text>
+          <Ionicons name="close" size={14} color={colors.error} />
         </TouchableOpacity>
       ) : (
         <View style={styles.checkButton} />

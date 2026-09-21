@@ -478,7 +478,7 @@ export function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, e
             accessibilityRole="button"
             style={{ marginLeft: 'auto', paddingVertical: spacing.xs, paddingLeft: spacing.sm, paddingRight: spacing.xs }}
           >
-            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.muted }}>×</Text>
+            <Ionicons name="close" size={14} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
         {row.a ? (

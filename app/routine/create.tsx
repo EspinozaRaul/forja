@@ -1,4 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -230,10 +231,10 @@ export default function CreateRoutineScreen() {
                   accessibilityRole="button"
                   style={{ paddingLeft: spacing.sm }}
                 >
-                  <Text style={{ fontSize: fontSizes.md, color: colors.accent.primary }}>↻</Text>
+                  <Ionicons name="repeat" size={14} color={colors.accent.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleRemoveExercise(exercise.id)} style={{ paddingLeft: spacing.sm }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} accessibilityLabel={t('accessibility.common.removeExercise')} accessibilityRole="button">
-                  <Text style={{ fontSize: fontSizes.md, color: colors.error }}>✕</Text>
+                  <Ionicons name="close" size={14} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </Animated.View>

@@ -1,4 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, Modal, Pressable, StyleSheet, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useState, useMemo, useCallback } from 'react';
 import type { Exercise } from '../../lib/types';
 import { useRouter } from 'expo-router';
@@ -301,7 +302,7 @@ export default function HomeScreen() {
                 {selectedRoutine?.name ?? t('tabs.home.startSession')}
               </Text>
               <TouchableOpacity onPress={() => setSelectedRoutineId(null)} style={{ padding: spacing.xs }} accessibilityLabel={t('accessibility.common.close')} accessibilityRole="button" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>✕</Text>
+                <Ionicons name="close" size={14} color={colors.text.muted} />
               </TouchableOpacity>
             </View>
             {selectedRoutine?.description && (
