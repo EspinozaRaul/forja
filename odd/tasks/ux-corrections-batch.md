@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: integrated — T1–T4 and T6 are in `main` together with the security, timer/db and iOS 27 branches, as four separate merge commits. **T4's runtime verification is still pending**; T5 needs a visual reproduction; T7 is blocked on a product decision. Nothing has been pushed: `main` is 24 commits ahead of `origin/main`.
+**Status**: integrated — everything except the items below is merged into `main`, together with the security, timer/db, iOS 27 and action-standard branches, as separate merge commits. Still open here: **T4's runtime verification** (merged and gated, but its data outcome is unobserved), **T5's visual reproduction**, **T7's product decision**, and **Obs-06**. Nothing has been pushed: `main` is 46 commits ahead of `origin/main`.
 
 ---
 
@@ -501,7 +501,7 @@ rediscovered from scratch.
 | B3 | The custom-rest dialog is bound-only, so the largest accessibility text sizes can still clip its buttons — the residual of Obs-06 | low | `components/session/SessionExerciseItem.tsx` |
 | B4 | `useAuth` exports `signIn` and `signUp` that no screen calls; the screens use `supabase.auth` directly — dead code, and the reason the hook's error shape never mattered | low | resolved |
 | B5 | `signOut` and `deleteAccount` return raw errors. Nothing leaks today because `app/settings.tsx` shows its own catalogue copy, but the shape is inconsistent with the auth screens | low | `lib/hooks/useAuth.ts` |
-| B6 | The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header | medium | `app/routine/[id].tsx` (context already noted in T6) |
+| B6 | ~~The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header~~ **Resolved**: `app/routine/[id].tsx` now uses `<Screen edges={['top']}>` and `<ScreenHeader>` (verified at line 276). Migrated as part of the action standard, not as its own unit | medium | closed |
 | B7 | ~~Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`~~ **Resolved**: all four branches are merged into `main` as separate merge commits, so SEC-13's password-reset route — and the timer and exercise repairs — are no longer stranded | **high** | closed |
 | B8 | A superset group with anything other than exactly two members silently stops rendering as a superset: the renderer only builds a `SupersetBlock` when `members.length === 2` and otherwise falls through to the orphan path, drawing each member standalone with no error | medium | `app/session/[id].tsx` |
 | B9 | `handleDragHandleTap` has the same dead optimistic patch as the replace path had: it writes `setQueryData([...SESSION_KEY, sessionId, 'exercises'], ...)` plus a rollback to a key with no observers, so reordering has no optimistic update at all. Dead on arrival, not a live bug — either remove it or point it at the real key to make reordering snappy | low | resolved |

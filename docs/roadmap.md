@@ -1,7 +1,7 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-17
-> Status: two unmerged branches ready for review, plus one unresolved release-credential risk
+> Last updated: 2026-09-20
+> Status: 46 commits ahead of `origin/main`, nothing pushed; fourteen units merged end to end, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
 worth checking. The standard for building screens lives in `docs/ui-standard.md`; `AGENTS.md`
@@ -9,7 +9,88 @@ points there.
 
 ---
 
-## 0. This session (2026-09-17) — read this first
+## 0. This session (2026-09-20) — read this first
+
+Fourteen units were merged into `main` this session, each one gated by `npx tsc --noEmit` and
+`npx jest`. The suite went from **17 suites / 138 tests** on `616a25a` to **25 / 220** here, and the
+working tree is clean. Nothing was pushed: `main` is **46 commits ahead of `origin/main`**.
+
+### Landed this session
+
+- **The UX corrections batch, T1–T6.** Modal containment across all 17 modals, the login-error
+  honesty fix, the replace-exercise data fix, and the routine-name fix. Detail lives in
+  `odd/tasks/ux-corrections-batch.md`.
+- **The iOS 27 launch blocker.** The app trapped at launch on iOS 27
+  (`UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`). It now adopts the UIKit scene
+  lifecycle through `expo-build-properties`' `ios.enableSceneSupport`, verified on iOS 27 and still
+  working on iOS 26.5.
+- **The branch integration.** The four branches carrying real unmerged work were merged as four
+  separate merge commits, after verifying in a throwaway worktree that each one merges cleanly
+  against `main` on its own and in sequence, that they do not overlap semantically, and that the
+  combined tree passes the gate. `SEC-13`'s password-reset route is no longer stranded.
+- **The UI action standard (§9), and its application.** Fourteen text-glyph actions became
+  Ionicons; all 27 `<Button>` call sites now choose a variant explicitly; there is one destructive
+  fill everywhere, at a measured 5.34:1; fourteen plain and sixteen conditional foregrounds moved
+  off `colors.bg.primary` onto `text.onAccent`; and the reference that §9 itself cites carried a
+  contrast defect, now fixed. Detail lives in `odd/tasks/ui-action-standard.md`.
+- **The superset replace gap.** A paired exercise could not be replaced at all; it can now.
+
+### Pending — what each item needs
+
+#### Needs your decision or your eyes
+
+1. **Push.** `main` is **46 commits ahead of `origin/main`** and nothing has been pushed. This is
+   your decision and the single largest outstanding risk: all of this work exists only on this
+   machine.
+2. **T4's runtime verification.** The replace-exercise fix is merged and gated, but its *data*
+   behaviour was never observed: the DB-layer tests mock Drizzle and cannot prove the row outcome. A
+   fixture is prepared and waiting on the iPhone 17 Pro simulator — session `24`, where row `35`
+   holds three completed sets with weights 35 / 40 / 45. It needs three taps (open the session → the
+   `repeat` action on that exercise → pick another exercise), then a look at the rows.
+3. **T5's visual.** The exercise-picker images. The data hypothesis is **refuted by measurement**:
+   of 1324 exercises, **0 have `original_id` NULL** and **0 rows** of `routine_exercises` /
+   `session_exercises` reference one, so the placeholder branch cannot be reached with this data. The
+   defect is render-side, and it needs a visual reproduction in the picker.
+4. **T7, the offline path.** A product decision. Its premise was corrected this session: a network
+   failure does **not** drop the session (`@supabase/auth-js` excludes retryable fetch errors from
+   session removal), and with a valid stored session the app does enter its logged-in state offline.
+   What remains is a genuinely signed-out user needing a network to get back in.
+5. **Deleting the branches.** Seventeen branches exist and every one is contained in `main`.
+   Deleting them needs your OK; do not do it on your own.
+6. **Obs-06, the app-wide large-text strategy.** The largest remaining piece. Its concrete
+   instances, recorded as B2 and B3: the bottom sheets have no bottom inset, and the custom-rest
+   dialog is bound-only, so the largest accessibility text sizes can still clip its buttons.
+
+#### Decided — no user input needed
+
+7. **The candidate button conversions.** An audit of three dense files found that only **10 of 29**
+   pressables are actually buttons, and that **no conversion is a pure equivalence** — each one moves
+   padding, radius, font size or fill. They are *per-site decisions*, not a sweep, with the
+   near-equivalent sites named: `app/(tabs)/routines.tsx` 265 / 272 / 320 / 327,
+   `app/session/[id].tsx` 743 / 750 / 800, `components/session/SessionExerciseItem.tsx` 556 / 563,
+   and 385 as the highest-risk one, because it lives in a gesture slot. **This is not a defect
+   list** — the whole point of the audit was that it is not.
+8. **B2.** The bottom sheets (`app/(tabs)/routines.tsx`, `app/routine/folder/[id].tsx`) have no
+   backdrop press, no `onRequestClose`, and no bottom safe-area inset.
+9. **B5.** `signOut` and `deleteAccount` still return raw errors. Nothing leaks today because
+   `app/settings.tsx` shows its own copy, but the shape is inconsistent with the auth screens.
+
+### The process note: strict TDD was declared, not run
+
+`.pi/project.json` declares `gentlePi.strictTDD: true`, and **no unit in this session was run under
+strict TDD.** Three separate writers reported it as "not activated", because it was never forwarded.
+The declaration and the practice disagreed for the whole session. Next session should decide whether
+to honour the declaration or change it — but say it plainly: this session ran without strict TDD.
+
+### The measurement scripts were never committed
+
+The scripts that produced the counts quoted in `odd/tasks/ui-action-standard.md` and in this section
+lived in a temporary directory and were **not committed**, so those numbers cannot currently be
+re-derived from the repository. Either commit a script or stop quoting precise counts.
+
+---
+
+## 0b. Previous session (2026-09-17)
 
 ### The lesson: read this file before planning
 
@@ -192,8 +273,8 @@ Ordered by what I would do first.
 
 ## 6. How this repo works (for the next session)
 
-- **Gate**: `npx tsc --noEmit` clean and `npx jest` green (138 on `main`, 147 on the timer/db branch,
-  152 on the hardening branch) before anything is called done.
+- **Gate**: `npx tsc --noEmit` clean and `npx jest` green (25 suites / 220 tests on `main` after this
+  session's fourteen units, from 17 / 138 at `616a25a`) before anything is called done.
 - **Tests that prove things**: every security fix in this session shipped with a negative control —
   reintroduce the bug, watch the test fail, restore it. A test that cannot fail proves nothing.
 - **Verify before committing**, and never let a commit depend on a script that can abort before
