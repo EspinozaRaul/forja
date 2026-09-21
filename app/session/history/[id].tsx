@@ -1,6 +1,7 @@
 import { Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useSession, useSessionExercises, useUpdateSessionNotes } from '../../../lib/hooks/useSessions';
 import { useExercise } from '../../../lib/hooks/useExercises';
 import { useSets } from '../../../lib/hooks/useSets';
@@ -358,9 +359,11 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
               <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>
                 {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
               </Text>
-              <Text style={{ fontSize: fontSizes.md, color: set.completed ? colors.success : colors.text.muted }}>
-                {set.completed ? '✓' : '○'}
-              </Text>
+              <Ionicons
+                name={set.completed ? 'checkmark' : 'ellipse-outline'}
+                size={14}
+                color={set.completed ? colors.success : colors.text.muted}
+              />
             </View>
           ))}
         </View>
