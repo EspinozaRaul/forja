@@ -84,7 +84,7 @@ function RootLayoutNav() {
       />
       <Stack.Screen
         name="routine/[id]"
-        options={{ title: t('routine.detail.title') }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="settings"

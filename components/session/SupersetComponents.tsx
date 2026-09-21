@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Text, View, TouchableOpacity, TextInput, LayoutAnimation } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fonts, fontSizes, fontWeights, borderWidths } from '../../lib/theme/tokens';
 import { SET_LOGGER } from '../../lib/constants/layout';
@@ -123,7 +124,7 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
   );
 }
 
-export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onDeletePair }: {
+export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeightFor, maxWeightFor, onSetCompleted, onNewRecord, onReplace, onDeletePair }: {
   exercises: SessionExercise[];
   sessionId: number;
   nameA: string;
@@ -132,6 +133,7 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
   maxWeightFor?: (exerciseId: number) => number | null;
   onSetCompleted?: (exerciseName: string, restTime: number) => void;
   onNewRecord?: (exerciseName: string, weight: number, unit: string) => void;
+  onReplace?: (sessionExerciseId: number) => void;
   onDeletePair?: () => void;
 }) {
   const { t } = useTranslation();
@@ -306,9 +308,39 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
       >
       <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.sm, padding: spacing.sm + spacing.xs, marginBottom: spacing.sm + spacing.xs, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>
-            {nameA} ⟷ {nameB}
-          </Text>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xxs }}>
+            <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+              {nameA}
+            </Text>
+            {a?.id != null && onReplace && (
+              <TouchableOpacity
+                onPress={(e) => { e.stopPropagation(); onReplace(a.id); }}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                accessibilityLabel={t('accessibility.common.replaceExercise')}
+                accessibilityRole="button"
+                style={{ padding: spacing.xxs }}
+              >
+                <Ionicons name="repeat" size={14} color={colors.accent.primary} />
+              </TouchableOpacity>
+            )}
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+              ⟷
+            </Text>
+            <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
+              {nameB}
+            </Text>
+            {b?.id != null && onReplace && (
+              <TouchableOpacity
+                onPress={(e) => { e.stopPropagation(); onReplace(b.id); }}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                accessibilityLabel={t('accessibility.common.replaceExercise')}
+                accessibilityRole="button"
+                style={{ padding: spacing.xxs }}
+              >
+                <Ionicons name="repeat" size={14} color={colors.accent.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
           <CollapseChevron collapsed={collapsed} onPress={toggleCollapsed} />
         </View>
         {!collapsed && (

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { MODAL } from '../../lib/constants/layout';
 import { useRoutine, useRoutineExercises, useUpdateRoutine, useAddExerciseToRoutine, useRemoveExerciseFromRoutine, useDeleteRoutine, useUpdateRoutineExerciseOrder, useReplaceRoutineExercise } from '../../lib/hooks/useRoutines';
@@ -12,6 +13,8 @@ import { useCreateSession, useAddExerciseToSession, useLastSessionForRoutine, us
 import { useCreateSet } from '../../lib/hooks/useSets';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { QueryState } from '../../components/ui/QueryState';
@@ -270,62 +273,62 @@ export default function RoutineDetailScreen() {
 
   return (
     <>
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Routine Info */}
-      <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        {isEditing ? (
-          <>
-            <Input label={t('routine.detail.nameLabel')} value={editName} onChangeText={setEditName} placeholder={t('routine.detail.namePlaceholder')} />
-            <Input label={t('routine.detail.descriptionLabel')} value={editDescription} onChangeText={setEditDescription} placeholder={t('routine.detail.descriptionPlaceholder')} multiline />
+    <Screen edges={['top']}>
+      <ScreenHeader
+        title={routine.name}
+        onBack={() => router.back()}
+        divider
+        right={
+          isEditing ? undefined : (
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <View style={{ flex: 1 }}>
-                <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
-              </View>
+              <Pressable
+                onPress={handleStartEdit}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.edit')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.accent.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
+              >
+                <Ionicons name="create-outline" size={16} color={colors.text.onAccent} />
+                <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.edit')}</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleDeleteRoutine}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.delete')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.errorStrong, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
+              >
+                <Ionicons name="trash-outline" size={16} color={colors.text.onAccent} />
+                <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.delete')}</Text>
+              </Pressable>
             </View>
-          </>
-        ) : (
-          <>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-              <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }}>{routine.name}</Text>
-              {/* Header actions are text links, not Buttons, matching the folder screen's
-                  header (app/routine/folder/[id].tsx). Two full-size Buttons in this row
-                  claimed the whole width and collapsed the routine name to zero, so the
-                  name — the reason the row exists — was invisible even for a short one.
-                  Text links are sized to their content and leave the name its space. */}
-              <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity
-                  onPress={handleStartEdit}
-                  style={{ padding: spacing.sm, marginRight: spacing.xs }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.edit')}
-                >
-                  <Text style={{ fontSize: fontSizes.sm, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleDeleteRoutine}
-                  style={{ padding: spacing.sm }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.delete')}
-                >
-                  <Text style={{ fontSize: fontSizes.sm, color: colors.error, fontFamily: fonts.bodyMedium }}>{t('common.delete')}</Text>
-                </TouchableOpacity>
-              </View>
+          )
+        }
+      />
+      <ScrollView style={{ flex: 1 }}>
+      {/* Routine Info */}
+      {isEditing ? (
+        <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+          <Input label={t('routine.detail.nameLabel')} value={editName} onChangeText={setEditName} placeholder={t('routine.detail.namePlaceholder')} />
+          <Input label={t('routine.detail.descriptionLabel')} value={editDescription} onChangeText={setEditDescription} placeholder={t('routine.detail.descriptionPlaceholder')} multiline />
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
             </View>
-            {routine.description && (
-              <Text style={{ color: colors.text.secondary, fontFamily: fonts.body, marginBottom: spacing.sm + spacing.xs }}>{routine.description}</Text>
-            )}
-          </>
-        )}
-      </View>
+            <View style={{ flex: 1 }}>
+              <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
+            </View>
+          </View>
+        </View>
+      ) : routine.description ? (
+        <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
+          <Text style={{ color: colors.text.secondary, fontFamily: fonts.body, marginBottom: spacing.sm + spacing.xs }}>{routine.description}</Text>
+        </View>
+      ) : null}
 
       {/* Exercises List */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('routine.detail.exercises')}</Text>
-          <Button title={t('routine.detail.addExercise')} variant="secondary" onPress={() => setShowPicker(true)} />
+          <Button title={t('routine.detail.addExercise')} variant="secondary" compact onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (
@@ -397,7 +400,7 @@ export default function RoutineDetailScreen() {
                   accessibilityRole="button"
                   style={{ padding: spacing.sm }}
                 >
-                  <Text style={{ fontSize: fontSizes.md, color: colors.accent.primary }}>↻</Text>
+                  <Ionicons name="repeat" size={14} color={colors.accent.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation(); handleRemoveExercise(re.id); }}
@@ -406,13 +409,14 @@ export default function RoutineDetailScreen() {
                   accessibilityRole="button"
                   style={{ padding: spacing.sm }}
                 >
-                  <Text style={{ fontSize: fontSizes.md, color: colors.error }}>✕</Text>
+                  <Ionicons name="close" size={14} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </Animated.View>
           ))
         )}
       </View>
+      </ScrollView>
 
       {/* Start Session Button */}
       <View style={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
@@ -486,7 +490,7 @@ export default function RoutineDetailScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </ScrollView>
+    </Screen>
     <ConfirmDialog
       visible={dialog.visible}
       title={dialog.title}
