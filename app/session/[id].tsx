@@ -750,9 +750,9 @@ export default function SessionScreen() {
             <TouchableOpacity
               onPress={handleEndSession}
               accessibilityRole="button"
-              style={{ flex: 1, backgroundColor: colors.error, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
+              style={{ flex: 1, backgroundColor: colors.errorStrong, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center' }}
             >
-              <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
+              <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.lg }}>{t('session.endButton')}</Text>
             </TouchableOpacity>
           </View>
         )}

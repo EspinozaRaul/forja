@@ -453,13 +453,13 @@ const styles = StyleSheet.create({
   },
   // --- Swipeable delete ---
   deleteAction: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.errorStrong,
     justifyContent: 'center',
     alignItems: 'center',
     width: SET_LOGGER.DELETE_WIDTH,
   },
   deleteText: {
-    color: colors.text.primary,
+    color: colors.text.onAccent,
     fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
     fontSize: fontSizes.sm
   },

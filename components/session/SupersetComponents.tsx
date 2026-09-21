@@ -290,9 +290,9 @@ export function SupersetBlock({ exercises, sessionId, nameA, nameB, previousWeig
       <TouchableOpacity
         onPress={handleSwipeDeletePair}
         accessibilityRole="button"
-        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
+        style={{ backgroundColor: colors.errorStrong, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
+        <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
@@ -452,9 +452,9 @@ export function SupersetSeries({ row, nameA, nameB, unitA, unitB, exerciseIdA, e
       <TouchableOpacity
         onPress={handleSwipeDelete}
         accessibilityRole="button"
-        style={{ backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
+        style={{ backgroundColor: colors.errorStrong, justifyContent: 'center', alignItems: 'center', width: SET_LOGGER.DELETE_WIDTH, borderRadius: borderRadius.sm, marginLeft: spacing.sm }}
       >
-        <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
+        <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>{t('session.swipe.delete')}</Text>
       </TouchableOpacity>
     );
   };
