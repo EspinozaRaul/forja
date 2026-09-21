@@ -183,7 +183,10 @@ const styles = {
     alignItems: 'center' as const,
   },
   confirmDestructive: {
-    backgroundColor: colors.error,
+    // Destructive fills use `errorStrong`, not `error`: an `onAccent` label measures
+    // 5.34:1 on this fill but only 3.51:1 on the light red (`text.primary` on the
+    // light red was 2.98:1). Do not "fix" this back to `colors.error`.
+    backgroundColor: colors.errorStrong,
   },
   confirmSingle: {
     flex: 1,
@@ -194,6 +197,6 @@ const styles = {
     fontSize: fontSizes.sm,
   },
   confirmTextDestructive: {
-    color: colors.text.primary,
+    color: colors.text.onAccent,
   },
 };

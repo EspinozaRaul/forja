@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.primary,
   },
   deleteAction: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.errorStrong,
     justifyContent: 'center',
     alignItems: 'center',
     width: SET_LOGGER.DELETE_WIDTH,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   deleteText: {
-    color: colors.text.primary,
+    color: colors.text.onAccent,
     fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     fontSize: fontSizes.sm
   },
