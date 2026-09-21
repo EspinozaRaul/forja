@@ -194,9 +194,11 @@ the principle, not copying its structure literally.
   became a row of full-size buttons that collapsed the screen title to zero
   width — measured with a seven-character routine name. The name was the reason
   the row existed and it was invisible.
-- **Variant by role** (§4). `primary` for the screen's single main action, at
-  most one per screen; `secondary` for every other real button; `danger` for a
-  destructive **filled** action; `accent` for the low-emphasis tinted one.
+- **Variant by role** (§4). `primary` for the screen's main action in that
+  state, at most one primary **visible at a time** — two primaries in mutually
+  exclusive states (a form and its success screen) are one main action, not two;
+  `secondary` for every other real button; `danger` for a destructive **filled**
+  action; `accent` for the low-emphasis tinted one.
   `colors.error` is the destructive **text or icon** red and `colors.errorStrong`
   the fill under a **filled** destructive action — the same split §4 draws,
   because the light red reaches only 2.97:1 under a near-white label.

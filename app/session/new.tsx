@@ -118,6 +118,7 @@ export default function NewSessionScreen() {
 
       <Button
         title={t('session.new.startButton')}
+        variant="primary"
         onPress={handleStartSession}
         loading={createSession.isPending}
       />

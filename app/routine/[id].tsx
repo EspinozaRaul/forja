@@ -311,7 +311,7 @@ export default function RoutineDetailScreen() {
           <Input label={t('routine.detail.descriptionLabel')} value={editDescription} onChangeText={setEditDescription} placeholder={t('routine.detail.descriptionPlaceholder')} multiline />
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <View style={{ flex: 1 }}>
-              <Button title={t('common.save')} onPress={handleSaveEdit} loading={updateRoutine.isPending} />
+              <Button title={t('common.save')} variant="primary" onPress={handleSaveEdit} loading={updateRoutine.isPending} />
             </View>
             <View style={{ flex: 1 }}>
               <Button title={t('common.cancel')} variant="secondary" onPress={() => setIsEditing(false)} />
@@ -422,6 +422,7 @@ export default function RoutineDetailScreen() {
       <View style={{ padding: spacing.md, paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.bg.card, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
         <Button
           title={t('routine.detail.startSession')}
+          variant={isEditing ? 'secondary' : 'primary'}
           onPress={handleStartPress}
           loading={createSession.isPending}
           disabled={routineExercisesWithDetails.length === 0}
@@ -484,7 +485,7 @@ export default function RoutineDetailScreen() {
                 <Button title={t('routine.detail.startFresh')} variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
               </View>
               <View style={{ flex: 1 }}>
-                <Button title={t('routine.detail.continueLast')} onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
+                <Button title={t('routine.detail.continueLast')} variant="primary" onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
               </View>
             </View>
           </Pressable>
