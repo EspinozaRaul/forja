@@ -92,16 +92,6 @@ export function useAuth() {
     };
   }, [queryClient]);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
-  };
-
   const signInWithGoogle = async () => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -177,8 +167,6 @@ export function useAuth() {
     user,
     session,
     loading,
-    signUp,
-    signIn,
     signInWithGoogle,
     signOut,
     deleteAccount,

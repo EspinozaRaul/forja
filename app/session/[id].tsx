@@ -11,6 +11,7 @@ import { useSession, useSessionExercises, useSessionExercisesWithSets, useComple
 
 const SESSION_KEY = ['sessions'];
 import { useExercises, useMaxWeightByExerciseIds, useLastWeightByExerciseIds, useLastRepsByExerciseIds, useLastRirByRoutineExerciseIds } from '../../lib/hooks/useExercises';
+import { useCurrentUserId } from '../../lib/hooks/useCurrentUser';
 import { useRoutineExercises, useRemoveExerciseFromRoutine, useAddExerciseToRoutine, useUpdateRoutineExerciseOrder, useUpdateRoutineExerciseTargets } from '../../lib/hooks/useRoutines';
 import { Timer } from '../../components/Timer';
 import { RestTimer } from '../../components/RestTimer';
@@ -35,6 +36,7 @@ export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const userId = useCurrentUserId();
   const insets = useSafeAreaInsets();
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
   const sessionId = parseInt(id, 10);
@@ -231,20 +233,23 @@ export default function SessionScreen() {
       const target = sortedExercises[index];
       if (!source || !target) return;
 
-      // Optimistic update
+      // Optimistic update. The cache key must carry the user id: the observed key
+      // is [...SESSION_KEY, sessionId, 'exercises', userId] (see useSessionExercises),
+      // and setQueryData matches an exact key, so a userId-less key would write a
+      // phantom entry with no observers.
       const previousExercises = sessionExercises;
       const reordered = sortedExercises.map((se, i) => {
         if (i === dragIndex) return { ...se, order: index + 1 };
         if (i === index) return { ...se, order: dragIndex + 1 };
         return se;
       });
-      queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], reordered);
+      queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises', userId], reordered);
 
       try {
         await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1, sessionId });
         await updateOrder.mutateAsync({ id: source.id, order: index + 1, sessionId });
       } catch {
-        queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises'], previousExercises);
+        queryClient.setQueryData([...SESSION_KEY, sessionId, 'exercises', userId], previousExercises);
         showAlert(t('common.error'), t('session.error.reorder'));
       }
       setDragIndex(null);
@@ -841,7 +846,7 @@ export default function SessionScreen() {
             accessibilityLabel={t('accessibility.common.close')}
             accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
               <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {t('session.diff.title')}
@@ -887,7 +892,7 @@ export default function SessionScreen() {
             accessibilityLabel={t('accessibility.common.close')}
             accessibilityRole="button"
           >
-            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} accessible={false}>
+            <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
               <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
               <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm }}>
                 {confirmAction === 'cancel' ? t('session.confirm.cancelSession') : t('session.confirm.endSession')}
