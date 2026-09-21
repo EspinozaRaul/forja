@@ -671,6 +671,7 @@ export default function SessionScreen() {
                         previousWeightFor={getPreviousForExercise}
                         maxWeightFor={getMaxWeightForExercise}
                         onNewRecord={handleNewRecord}
+                        onReplace={(id) => { setReplaceId(id); setShowPicker(true); }}
                         onDeletePair={() => handleDeleteSuperSet(members)}
                         onSetCompleted={(exerciseName, restTime) => {
                           setRestExerciseName(exerciseName);
