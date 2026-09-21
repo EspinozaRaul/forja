@@ -29,7 +29,7 @@ export function ActiveSessionBar({
         </Text>
         <View style={styles.actions}>
           <TouchableOpacity onPress={onResume} style={styles.resumeBtn} accessibilityRole="button">
-            <Ionicons name="arrow-forward" size={13} color={colors.bg.primary} />
+            <Ionicons name="arrow-forward" size={13} color={colors.text.onAccent} />
             <Text style={styles.resumeText}>{t('session.activeBar.resume')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onDiscard} style={styles.discardBtn} accessibilityRole="button">

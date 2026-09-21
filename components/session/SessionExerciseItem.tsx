@@ -490,7 +490,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
               >
                 <Text style={{
                   fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
-                  color: currentRestTime === dur ? colors.bg.primary : colors.text.secondary,
+                  color: currentRestTime === dur ? colors.text.onAccent : colors.text.secondary,
                 }}>
                   {dur >= 60 ? `${dur / 60}m` : `${dur}s`}
                 </Text>

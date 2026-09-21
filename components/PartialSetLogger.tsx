@@ -192,7 +192,7 @@ export function PartialSetLogger({
             accessibilityState={{ checked: set.completed }}
           >
             {set.completed && (
-              <Ionicons name="checkmark" size={14} color={colors.bg.primary} />
+              <Ionicons name="checkmark" size={14} color={colors.text.onAccent} />
             )}
           </TouchableOpacity>
         </View>

@@ -232,7 +232,7 @@ function CalendarCard({
                 style={{
                   fontSize: fontSizes.sm,
                   fontFamily: isSelected ? fonts.bodySemiBold : fonts.body,
-                  color: isSelected ? colors.bg.primary : hasSession ? colors.text.primary : colors.text.secondary,
+                  color: isSelected ? colors.text.onAccent : hasSession ? colors.text.primary : colors.text.secondary,
                 }}
               >
                 {day}

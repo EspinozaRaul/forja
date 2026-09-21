@@ -112,7 +112,7 @@ export default function SettingsScreen() {
                   accessibilityState={{ selected: active }}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
-                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.text.onAccent : colors.text.secondary }}>
                     {t(`settings.languageOptions.${lang}`)}
                   </Text>
                 </TouchableOpacity>
@@ -136,7 +136,7 @@ export default function SettingsScreen() {
                   accessibilityState={{ selected: active }}
                   style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: active ? colors.accent.primary : 'transparent' }}
                 >
-                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.bg.primary : colors.text.secondary }}>
+                  <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: active ? colors.text.onAccent : colors.text.secondary }}>
                     {unit}
                   </Text>
                 </TouchableOpacity>

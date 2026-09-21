@@ -309,7 +309,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                 >
                   <Text style={{
                     fontSize: fontSizes.xs, fontFamily: selectedMuscle === muscle.key ? fonts.bodySemiBold : fonts.body,
-                    color: selectedMuscle === muscle.key ? colors.bg.primary : colors.text.muted,
+                    color: selectedMuscle === muscle.key ? colors.text.onAccent : colors.text.muted,
                   }}>
                     {t(`exercisePicker.muscle.${muscle.key}`)}
                   </Text>
@@ -382,7 +382,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       accessibilityState={{ selected: isSelected }}
                     >
                       {isSelected && (
-                        <Ionicons name="checkmark" size={12} color={colors.bg.primary} />
+                        <Ionicons name="checkmark" size={12} color={colors.text.onAccent} />
                       )}
                     </TouchableOpacity>
                   )}
@@ -461,7 +461,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
               >
                 <Text style={{
                   fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold,
-                  color: selectedIds.size > 0 ? colors.bg.primary : colors.text.muted,
+                  color: selectedIds.size > 0 ? colors.text.onAccent : colors.text.muted,
                 }}>
                   {t('exercisePicker.done')}
                 </Text>

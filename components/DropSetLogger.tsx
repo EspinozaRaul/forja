@@ -120,7 +120,7 @@ export function DropSetLogger({
         accessibilityState={{ checked: allCompleted }}
       >
         {allCompleted && (
-          <Ionicons name="checkmark" size={14} color={colors.bg.primary} />
+          <Ionicons name="checkmark" size={14} color={colors.text.onAccent} />
         )}
       </TouchableOpacity>
     </View>

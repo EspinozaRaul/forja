@@ -74,7 +74,7 @@ export function PeriodChips({
               style={{
                 fontSize: fontSizes.xs,
                 fontFamily: fonts.bodyMedium,
-                color: isSelected ? colors.bg.primary : colors.text.secondary,
+                color: isSelected ? colors.text.onAccent : colors.text.secondary,
               }}
             >
               {formatPeriodLabel(periodKey, t)}
