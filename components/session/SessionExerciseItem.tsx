@@ -573,7 +573,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                 accessibilityRole="button"
                 style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>{t('session.dropSet.save')}</Text>
+                <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>{t('session.dropSet.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>

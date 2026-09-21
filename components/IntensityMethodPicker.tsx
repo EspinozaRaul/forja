@@ -129,9 +129,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs, color: colors.text.muted,
     marginTop: spacing.xxs,
   },
-  optionArrow: {
-    fontSize: fontSizes.lg, color: colors.text.muted,
-  },
   cancelButton: {
     marginTop: spacing.sm,
     paddingVertical: spacing.sm,

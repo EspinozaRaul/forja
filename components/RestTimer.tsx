@@ -372,7 +372,7 @@ export function RestTimer({
           accessibilityRole="button"
           style={{ backgroundColor: colors.accent.primary, borderRadius: borderRadius.sm, paddingVertical: spacing.sm, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
+          <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm }}>{t('restTimer.startRest')}</Text>
         </TouchableOpacity>
       </View>
     );

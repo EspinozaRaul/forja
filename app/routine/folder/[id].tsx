@@ -214,7 +214,7 @@ export default function FolderDetailScreen() {
           accessibilityRole="button"
           style={{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
         >
-          <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.md }}>+ {t('routine.folder.newRoutine')}</Text>
+          <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.md }}>+ {t('routine.folder.newRoutine')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push('/routine/create')}
@@ -290,7 +290,7 @@ export default function FolderDetailScreen() {
                 accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>
+                <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
           </View>

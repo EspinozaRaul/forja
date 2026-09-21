@@ -334,7 +334,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
             accessibilityRole="button"
             accessibilityHint={t('accessibility.exercisePicker.createNewHint')}
           >
-            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>{t('exercisePicker.createNew')}</Text>
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.onAccent }}>{t('exercisePicker.createNew')}</Text>
           </TouchableOpacity>
 
           {/* Exercise List */}
@@ -423,7 +423,7 @@ export function ExercisePicker({ visible, exercises, onSelect, onMultiSelect, on
                       accessibilityLabel={t('accessibility.exercisePicker.addExercise', { name: getExerciseNameFromExercise(item, i18n.language) })}
                       accessibilityRole="button"
                     >
-                      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>+</Text>
+                      <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.onAccent }}>+</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -592,7 +592,7 @@ function ExercisePreview({ exercise, visible, onClose, onAdd }: {
               accessibilityLabel={t('accessibility.exercisePicker.addHint')}
               accessibilityRole="button"
             >
-              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.bg.primary }}>{t('exercisePicker.addExercise')}</Text>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.onAccent }}>{t('exercisePicker.addExercise')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
