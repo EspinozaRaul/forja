@@ -810,7 +810,7 @@ export default function SessionScreen() {
                 accessibilityRole="button"
                 style={{ marginTop: spacing.xs, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.bg.primary }}>
+                <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.onAccent }}>
                   {t('session.superset.searchCatalog')}
                 </Text>
               </TouchableOpacity>

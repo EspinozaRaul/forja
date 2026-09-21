@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: colors.bg.primary,
+    color: colors.text.onAccent,
     fontSize: fontSizes.md,
     fontFamily: fonts.bodySemiBold,
   },

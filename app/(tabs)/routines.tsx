@@ -274,7 +274,7 @@ export default function RoutinesScreen() {
                 accessibilityRole="button"
                 style={{ flex: 1, padding: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.accent.primary, alignItems: 'center' }}
               >
-                <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.create')}</Text>
+                <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.create')}</Text>
               </TouchableOpacity>
             </View>
           </View>

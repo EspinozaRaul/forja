@@ -192,7 +192,12 @@ const styles = {
     flex: 1,
   },
   confirmText: {
-    color: colors.bg.primary,
+    // A dark label on the accent fill is the defect this token exists to prevent:
+    // `colors.bg.primary` measured 3.65:1 on `accent.primary` (and 3.49:1 on
+    // `errorStrong`) — below §4's 4.5:1 minimum. `text.onAccent` measures 5.11:1 on
+    // the accent fill and 5.34:1 on the destructive fill. Do not reintroduce a
+    // dark-on-colour label here.
+    color: colors.text.onAccent,
     fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold,
     fontSize: fontSizes.sm,
   },

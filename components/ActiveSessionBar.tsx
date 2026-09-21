@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   resumeText: {
     fontSize: fontSizes.sm,
     fontFamily: fonts.bodySemiBold,
-    color: colors.bg.primary,
+    color: colors.text.onAccent,
   },
   discardBtn: {
     flex: 1,

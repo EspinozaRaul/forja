@@ -292,7 +292,7 @@ export default function SessionSummaryScreen() {
               accessibilityState={{ disabled: isSavingRoutine, busy: isSavingRoutine }}
               style={{ flex: 1, paddingVertical: spacing.sm + spacing.xs, borderRadius: borderRadius.sm, backgroundColor: colors.accent.primary, alignItems: 'center', opacity: isSavingRoutine ? 0.6 : 1 }}
             >
-              <Text style={{ color: colors.bg.primary, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>
+              <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold }}>
                 {isSavingRoutine ? t('session.history.saving') : t('common.save')}
               </Text>
             </TouchableOpacity>
