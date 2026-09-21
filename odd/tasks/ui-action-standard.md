@@ -77,24 +77,46 @@ replace either of them** — the capability existed only on the standalone item.
 now carries its own replace control, which is the only unambiguous placement: one icon for the pair
 could not say which exercise it replaces.
 
+## The pressable audit — and why there is no sweep to run
+
+The last apparent divergence was "42 files mount a bare pressable and 69 of them look like a
+button". That figure was **wrong in a way that matters**, and it was measured rather than argued:
+
+- The heuristic (its own `backgroundColor` + `borderRadius` + a text label) **cannot tell a button
+  from a tappable card**, because both match it.
+- It **does not even reproduce its own per-file counts.** In the audited sample,
+  `app/(tabs)/routines.tsx` matched 5 of 8 pressables under the stated rule rather than 7, and
+  `app/session/[id].tsx` matched 3 of 11 rather than 7 — because in the cards the fill and the radius
+  live on an **inner `View`**, not on the pressable.
+- Classified by reading instead of by paint, **only 10 of the 29 pressables in the three sampled
+  files are buttons**. The other 19 are chips, segmented preset selectors, a drag handle, an inline
+  icon action, text links, navigation and selection cards, disclosure rows, and modal cards and
+  backdrops.
+- **No `is-a-button` site is a pixel-perfect match for `Button`.** Converting them would move padding,
+  radius, font size (the session bottom bar's labels are 18pt against `Button`'s 15), fill and weight.
+  Some of those deltas are the point: the session screen is a dense logging UI, not a column of app
+  buttons.
+
+**Verdict: the pressable count is not a defect list and must not be swept.** Rewriting those controls
+as `<Button>` would make the app uniform and worse. §9 says a button is `Button`; it does not say
+every pressable is a button, and `TouchableOpacity` is the right primitive for a row, a card and a
+backdrop. A conversion is a per-site decision, taken only where `Button` reproduces the control
+faithfully — and none of the sampled sites qualifies cleanly.
+
+## Found by the audit, and fixed
+
+The audit did surface one objective defect, and it was arithmetic rather than taste: **nine filled
+destructive surfaces used `colors.error` as their fill, seven of them labelled with
+`colors.text.primary` — 2.98:1 against §4's 4.5:1 minimum.** White on that fill is 3.51:1, also below.
+All nine now use `errorStrong` with `text.onAccent` at **5.34:1** (`f90e636`): the session screen's
+"Finalizar sesión", the active-session bar's "Descartar", the five swipe-to-delete reveals, and the
+shared `ConfirmDialog` — whose fill and label had to move together, because its label passed on the
+light red by luck at 5.31:1 and would have landed at 3.49:1 on `errorStrong`. The app now has one
+destructive treatment instead of two. Checked after: **0 `backgroundColor: colors.error` remain**,
+and the 22 remaining `colors.error` uses are text, borders and icons, which is the role §4 assigns it.
+
 ## Still open
 
-**The 31 files that mount a bare `TouchableOpacity`.** This is the remaining piece, and it is not a
-sweep: most of those pressables are legitimately *not* buttons — they are tappable rows, cards and
-list items, which is exactly what a `TouchableOpacity` is for. Turning them all into `<Button>`
-would be wrong, and it is why this needs an audit rather than a patch. The classification to
-produce, per file:
-
-- a pressable that **looks like a button** (its own `backgroundColor` + `borderRadius` + a text
-  label, i.e. it reimplements `Button`) → replace with `<Button>` or a pill per §9;
-- a pressable that is a **row or card** → leave it; it is not an action of that kind;
-- a pressable that is an **icon-only action** → keep it, but its icon comes from Ionicons at §9's
-  sizes, which the glyph sweep already enforced.
-
-When that audit runs, keep it to reviewable batches by screen rather than one change touching 31
-files, and re-measure the baseline at that moment instead of trusting the counts above — they were
-taken on 2026-09-20 and the three preceding units have changed some of them.
-
-**Also open, small**: `components/IntensityMethodPicker.tsx` still carries an `optionArrow` style
-that nothing references since its glyph became an icon. Dead style, harmless, delete it in the next
-unit that touches that file.
+**Small**: `components/IntensityMethodPicker.tsx` still carries an `optionArrow` style that nothing
+references since its glyph became an icon. Dead style, harmless; delete it in the next unit that
+touches that file.
