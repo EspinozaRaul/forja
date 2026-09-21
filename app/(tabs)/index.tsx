@@ -240,7 +240,7 @@ export default function HomeScreen() {
       {/* Quick Start — compact, below routines */}
       <View style={styles.card}>
         <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.sm }}>{t('tabs.home.quickStart')}</Text>
-        <Button title={t('tabs.home.newSession')} onPress={handleStartEmptySession} compact />
+        <Button title={t('tabs.home.newSession')} variant="primary" onPress={handleStartEmptySession} compact />
       </View>
 
       {/* Recent Sessions */}
@@ -340,7 +340,7 @@ export default function HomeScreen() {
             )}
             </ScrollView>
             {!exercisesLoading && (
-              <Button title={t('tabs.home.startSession')} onPress={handleStartRoutineSession} loading={createSession.isPending} />
+              <Button title={t('tabs.home.startSession')} variant="primary" onPress={handleStartRoutineSession} loading={createSession.isPending} />
             )}
           </Pressable>
         </Pressable>

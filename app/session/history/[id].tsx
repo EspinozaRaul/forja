@@ -243,6 +243,7 @@ export default function SessionSummaryScreen() {
       <View style={{ padding: spacing.md, marginTop: spacing.sm }}>
         <Button
           title={t('session.history.backToHome')}
+          variant="secondary"
           onPress={() => router.push('/')}
         />
       </View>

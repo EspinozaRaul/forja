@@ -181,6 +181,7 @@ export default function ResetPasswordScreen() {
 
               <Button
                 title={t('auth.resetPassword.submit')}
+                variant="primary"
                 onPress={handleSubmit}
                 loading={saving}
                 disabled={saving}
@@ -196,14 +197,14 @@ export default function ResetPasswordScreen() {
               icon="alert-circle-outline"
               title={t('auth.resetPassword.invalidLink.title')}
               message={t('auth.resetPassword.invalidLink.message')}
-              action={<Button title={t('auth.resetPassword.backToLogin')} onPress={goToLogin} />}
+              action={<Button title={t('auth.resetPassword.backToLogin')} variant="secondary" onPress={goToLogin} />}
             />
           ) : (
             <EmptyState
               icon="link-outline"
               title={t('auth.resetPassword.missingLink.title')}
               message={t('auth.resetPassword.missingLink.message')}
-              action={<Button title={t('auth.resetPassword.backToLogin')} onPress={goToLogin} />}
+              action={<Button title={t('auth.resetPassword.backToLogin')} variant="secondary" onPress={goToLogin} />}
             />
           ))}
       </Screen>

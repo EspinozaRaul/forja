@@ -244,6 +244,7 @@ export default function CreateRoutineScreen() {
 
       <Button
         title={t('routine.create.submit')}
+        variant="primary"
         onPress={handleSubmit}
         loading={createRoutine.isPending || addExerciseToRoutine.isPending}
         disabled={createRoutine.isPending || addExerciseToRoutine.isPending}

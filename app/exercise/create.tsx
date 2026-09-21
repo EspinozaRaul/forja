@@ -93,11 +93,14 @@ export default function CreateExerciseScreen() {
         <Text style={{ color: colors.error, fontSize: fontSizes.sm, marginBottom: spacing.sm }} className="text-red-500 text-sm mb-2">{errors.category}</Text>
       )}
       <View className="flex-row flex-wrap mb-4">
+        {/* Selected uses `accent`, not `primary`: §9 allows one primary visible at a time
+            and the submit below owns it. accent.muted is a tinted fill that still reads as
+            selected next to a `secondary` chip, and white on it measures 14.5:1. */}
         {categories?.map((category) => (
           <Button
             key={category.id}
             title={category.name}
-            variant={selectedCategoryId === category.id ? 'primary' : 'secondary'}
+            variant={selectedCategoryId === category.id ? 'accent' : 'secondary'}
             onPress={() => setSelectedCategoryId(category.id)}
             style={{ marginRight: spacing.sm, marginBottom: spacing.sm }}
           />
@@ -106,6 +109,7 @@ export default function CreateExerciseScreen() {
 
       <Button
         title={t('exercisePicker.createScreen.submit')}
+        variant="primary"
         onPress={handleSubmit}
         loading={createExercise.isPending}
         disabled={createExercise.isPending}
