@@ -496,15 +496,43 @@ rediscovered from scratch.
 
 | # | Finding | Severity | Where |
 | --- | --- | --- | --- |
-| B1 | Two session modals lack `stopPropagation`: a tap on non-interactive card content bubbles to the backdrop and dismisses the dialog | low | `app/session/[id].tsx` (routine diff, cancel/end) |
+| B1 | Two session modals lack `stopPropagation`: a tap on non-interactive card content bubbles to the backdrop and dismisses the dialog | low | resolved |
 | B2 | Bottom sheets have no backdrop press, no `onRequestClose` and no bottom safe-area inset, while §1 of the UI standard expects a sheet to clear its own bottom inset | medium | `app/(tabs)/routines.tsx`, `app/routine/folder/[id].tsx` |
 | B3 | The custom-rest dialog is bound-only, so the largest accessibility text sizes can still clip its buttons — the residual of Obs-06 | low | `components/session/SessionExerciseItem.tsx` |
-| B4 | `useAuth` exports `signIn` and `signUp` that no screen calls; the screens use `supabase.auth` directly — dead code, and the reason the hook's error shape never mattered | low | `lib/hooks/useAuth.ts` |
+| B4 | `useAuth` exports `signIn` and `signUp` that no screen calls; the screens use `supabase.auth` directly — dead code, and the reason the hook's error shape never mattered | low | resolved |
 | B5 | `signOut` and `deleteAccount` return raw errors. Nothing leaks today because `app/settings.tsx` shows its own catalogue copy, but the shape is inconsistent with the auth screens | low | `lib/hooks/useAuth.ts` |
 | B6 | The routine detail screen is not migrated to the UI standard: a raw `<ScrollView>` root under the native header | medium | `app/routine/[id].tsx` (context already noted in T6) |
 | B7 | ~~Four branches carry real unmerged work, and SEC-13 (the password-reset route) exists only on `fix/security-hardening-batch`~~ **Resolved**: all four branches are merged into `main` as separate merge commits, so SEC-13's password-reset route — and the timer and exercise repairs — are no longer stranded | **high** | closed |
 | B8 | A superset group with anything other than exactly two members silently stops rendering as a superset: the renderer only builds a `SupersetBlock` when `members.length === 2` and otherwise falls through to the orphan path, drawing each member standalone with no error | medium | `app/session/[id].tsx` |
-| B9 | `handleDragHandleTap` has the same dead optimistic patch as the replace path had: it writes `setQueryData([...SESSION_KEY, sessionId, 'exercises'], ...)` plus a rollback to a key with no observers, so reordering has no optimistic update at all. Dead on arrival, not a live bug — either remove it or point it at the real key to make reordering snappy | low | `app/session/[id].tsx` |
+| B9 | `handleDragHandleTap` has the same dead optimistic patch as the replace path had: it writes `setQueryData([...SESSION_KEY, sessionId, 'exercises'], ...)` plus a rollback to a key with no observers, so reordering has no optimistic update at all. Dead on arrival, not a live bug — either remove it or point it at the real key to make reordering snappy | low | resolved |
+
+### Hygiene batch (2026-09-20)
+
+B1, B4 and B9 were fixed in one unit, each with the evidence the backlog asked for:
+
+- **B1** — both defective session-modal cards now carry `onPress={(e) => e.stopPropagation()}`,
+matching the start-session modal that was the reference. The inspection also settled a question the
+backlog left open: the **superset-partner picker** draws its backdrop as a plain `<View>` with no
+`onPress`, so there is no bubbling path and it had no defect. It was deliberately left alone, as were
+both backdrops' dismissal handlers and the diff modal's `onRequestClose` guard.
+- **B4** — the two dead methods were removed after confirming no consumer destructures them: the only
+`useAuth` consumers are `app/settings.tsx`, `app/auth/login.tsx`, `app/_layout.tsx` and the hook's own
+test, and none reference `signIn` or `signUp`.
+- **B9** — the optimistic patch was **fixed, not deleted**: both the write and the rollback now target
+`[...SESSION_KEY, sessionId, 'exercises', userId]`, the key the query actually registers, so the drag
+reorder is optimistic again. The patched value was already faithful — the handler persists exactly the
+orders it patches.
+
+A source-scanning guard was added for the dismissal behaviour
+(`__tests__/components/session-modal-dismissal.test.ts`, 6 tests, one assertion per modal so a single
+missing handler fails one test). Its negative control removed one handler and failed **exactly** the
+routine-diff assertion. The file states in its header that it pins the source arrangement and cannot
+observe real touch propagation.
+
+Gate: `npx tsc --noEmit` exit 0; `npx jest` **25 suites / 220 tests**, from 24 / 214.
+
+**Not observed at runtime**: no touch or reorder behaviour was exercised, because none of the three is
+provable from the source alone. B4 is compiler-verified; B1 and B9 are arrangement-verified only.
 
 ### Integration record (2026-09-20)
 
