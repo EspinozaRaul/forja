@@ -217,6 +217,22 @@ the principle, not copying its structure literally.
 - **Never a text glyph as an action** (`✕`, `›`, `←`, `×`, `↻`). Use Ionicons: a
   glyph has no accessible name and renders differently per platform and font.
   24 in a header (§2), 14–16 inline.
+- **A sweep for glyphs can report a clean tree and still miss them.** Searching for
+  `>X<` finds only a glyph that is a `<Text>`'s sole child; a glyph written as a string
+  literal — one branch of a ternary (`set.completed ? '✓' : '○'`), or a value in a map —
+  is invisible to that pattern and survived an earlier sweep. Search the character as a
+  **string literal** too (`'✓'`, `'↑'`), or the check says the tree is clean while
+  conditionals still hold glyphs.
+- **Only a glyph that *does* something is an action.** A chevron, a close, a back arrow,
+  a check, a remove, or a forward arrow that means "tap to go" is an affordance: an
+  Ionicons icon under the rule above, and the class the sweep is looking for. A glyph that
+  is a **data annotation inside a string the app composes** — a delta arrow in a label
+  (`▲ 5kg`), or a separator between items (`·`) — is typography, not a control, and is
+  allowed. It is not a target, it carries no interaction, and converting it would mean
+  composing a React node where the app composes a string today: a real refactor for no
+  accessibility gain. A sweep that chases every non-ASCII character stops being an
+  affordance check and becomes a rename of the app's typography; this rule was written
+  about controls.
 - **Radii: three shapes, no fourth.** `borderRadius.md` for a rectangular button
   (what `Button` uses), `borderRadius.sm` for its `compact` size,
   `borderRadius.full` for pills and round icon-only actions.

@@ -231,7 +231,8 @@ export default function HomeScreen() {
           >
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xxs }}>{t('tabs.home.mostFrequent')}</Text>
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
-              {getExerciseName(globalStats.mostFrequentExercise, i18n.language)} →
+              {getExerciseName(globalStats.mostFrequentExercise, i18n.language)}{' '}
+              <Ionicons name="arrow-forward" size={15} color={colors.accent.primary} />
             </Text>
           </TouchableOpacity>
         )}
