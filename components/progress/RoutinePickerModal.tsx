@@ -262,7 +262,7 @@ export function RoutinePickerModal({
                 style={{
                   fontSize: fontSizes.sm,
                   fontFamily: fonts.bodySemiBold,
-                  color: selectedId != null ? colors.bg.primary : colors.text.muted,
+                  color: selectedId != null ? colors.text.onAccent : colors.text.muted,
                 }}
               >
                 {t('progress.routineCompare.select')}

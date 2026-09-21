@@ -122,7 +122,7 @@ function DateRangeSelector({
             style={{
               fontSize: fontSizes.sm,
               fontFamily: selected === range ? fonts.bodySemiBold : fonts.body,
-              color: selected === range ? colors.bg.primary : colors.text.secondary,
+              color: selected === range ? colors.text.onAccent : colors.text.secondary,
             }}
           >
             {getDateRangeLabel(range)}

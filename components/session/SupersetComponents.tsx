@@ -116,9 +116,7 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
             : { backgroundColor: 'transparent', borderWidth: borderWidths.medium, borderColor: colors.border.primary },
         ]}
       >
-        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, color: set.completed ? colors.bg.primary : colors.text.secondary }}>
-          {set.completed ? '✓' : ''}
-        </Text>
+        {set.completed && <Ionicons name="checkmark" size={14} color={colors.text.onAccent} />}
       </TouchableOpacity>
     </View>
   );

@@ -361,7 +361,7 @@ export function RestTimer({
               accessibilityState={{ selected: selectedDuration === dur }}
               style={{ backgroundColor: selectedDuration === dur ? colors.accent.primary : colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderWidth: selectedDuration === dur ? 0 : borderWidths.thin, borderColor: colors.border.primary }}
             >
-              <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedDuration === dur ? colors.bg.primary : colors.text.secondary }}>
+              <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, color: selectedDuration === dur ? colors.text.onAccent : colors.text.secondary }}>
                 {dur >= 60 ? `${dur / 60}m` : `${dur}s`}
               </Text>
             </TouchableOpacity>
