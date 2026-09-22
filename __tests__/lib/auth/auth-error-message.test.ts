@@ -30,6 +30,20 @@ const ALL_CATEGORIES: AuthErrorCategory[] = [
   'generic',
 ];
 
+// Every namespace the classifier serves. Login and signup belong to the auth
+// screens; signOut and deleteAccount belong to the settings screen, where the
+// operation that failed has to be named because the copy is not shared.
+const ALL_NAMESPACES = ['login', 'signup', 'signOut', 'deleteAccount'] as const;
+
+// Resolves a dotted catalogue key, so a test can assert on the copy actually
+// shipped for a namespace instead of trusting the classifier's output alone.
+function resolve(catalog: unknown, key: string): unknown {
+  return key.split('.').reduce<unknown>((node, part) => {
+    if (typeof node !== 'object' || node === null) return undefined;
+    return (node as Record<string, unknown>)[part];
+  }, catalog);
+}
+
 // One representative input per category, so the mapping tests exercise every
 // branch instead of a single one.
 const CATEGORY_INPUTS: Record<AuthErrorCategory, unknown> = {
@@ -190,6 +204,61 @@ describe('authErrorMessageKey', () => {
     }
   });
 
+  it('maps every category to a sign-out key', () => {
+    for (const category of ALL_CATEGORIES) {
+      const key = authErrorMessageKey(CATEGORY_INPUTS[category], 'signOut');
+      expect({ category, key }).toEqual({
+        category,
+        key: expect.stringMatching(/^auth\.signOut\.error\./),
+      });
+    }
+  });
+
+  it('maps every category to a delete-account key', () => {
+    for (const category of ALL_CATEGORIES) {
+      const key = authErrorMessageKey(CATEGORY_INPUTS[category], 'deleteAccount');
+      expect({ category, key }).toEqual({
+        category,
+        key: expect.stringMatching(/^auth\.deleteAccount\.error\./),
+      });
+    }
+  });
+
+  it('returns the marker i18n key for the account namespaces', () => {
+    // The marker short-circuits the key tables: an app-composed message must
+    // survive regardless of which operation is asking.
+    const marker = new LocalizedAuthError('auth.errors.loginCancelled');
+    expect(authErrorMessageKey(marker, 'signOut')).toBe('auth.errors.loginCancelled');
+    expect(authErrorMessageKey(marker, 'deleteAccount')).toBe('auth.errors.loginCancelled');
+  });
+
+  it('gives the new namespaces their own copy instead of reusing login or signup wording', () => {
+    // The classifier's namespace prefix is not enough on its own: a table
+    // could point at the right namespace and still hold copy that talks about
+    // signing in. Sign-out and delete-account copy must name their own
+    // operation, so it must differ from both auth-screen namespaces.
+    const problems: string[] = [];
+    for (const [label, catalog] of [
+      ['es', es],
+      ['en', en],
+    ] as const) {
+      for (const namespace of ['signOut', 'deleteAccount'] as const) {
+        for (const category of ['network', 'rateLimited', 'generic'] as const) {
+          const own = resolve(catalog, `auth.${namespace}.error.${category}`);
+          for (const other of ALL_NAMESPACES) {
+            if (other === namespace) continue;
+            if (own === resolve(catalog, `auth.${other}.error.${category}`)) {
+              problems.push(
+                `${label}: auth.${namespace}.error.${category} reuses auth.${other}.error.${category} copy`
+              );
+            }
+          }
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
   it('gives the signup categories their own copy', () => {
     expect(authErrorMessageKey({ status: 0 }, 'signup')).toBe('auth.signup.error.network');
     expect(authErrorMessageKey({ code: 'user_already_exists' }, 'signup')).toBe(
@@ -204,14 +273,8 @@ describe('authErrorMessageKey', () => {
   it('resolves every mapped key in both catalogues as a string', () => {
     // A typo in the key tables would otherwise only show up on a device, in
     // one language, as a literal `auth.signup.error.network` on screen.
-    const resolve = (catalog: unknown, key: string): unknown =>
-      key.split('.').reduce<unknown>((node, part) => {
-        if (typeof node !== 'object' || node === null) return undefined;
-        return (node as Record<string, unknown>)[part];
-      }, catalog);
-
     const problems: string[] = [];
-    for (const namespace of ['login', 'signup'] as const) {
+    for (const namespace of ALL_NAMESPACES) {
       for (const category of ALL_CATEGORIES) {
         const key = authErrorMessageKey(CATEGORY_INPUTS[category], namespace);
         for (const [label, catalog] of [
@@ -245,7 +308,7 @@ describe('raw SDK text never reaches the user', () => {
     expect(result).not.toContain('message');
   });
 
-  it.each(['login', 'signup'] as const)(
+  it.each(ALL_NAMESPACES)(
     'maps the network leak to a catalogue key in the %s namespace',
     (namespace) => {
       const key = authErrorMessageKey(networkError(), namespace);
