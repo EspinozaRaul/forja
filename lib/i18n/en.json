@@ -208,7 +208,6 @@
   },
   "session": {
     "title": "Session",
-    "exerciseCount": "{{count}} exercises",
     "create": {
       "title": "New Session"
     },

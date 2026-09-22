@@ -284,8 +284,8 @@ accessibilityLabelSites = 118
 accessibilityHintSites = 35
 accessibilityHintKeys = 29
 roleHeaderOccurrences = 0
-catalogueKeysEs = 683
-catalogueKeysEn = 683
+catalogueKeysEs = 682
+catalogueKeysEn = 682
 <!-- ui-metrics:end -->
 ```
 
