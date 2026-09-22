@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { Text, View, Pressable, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button';
 import { haptics } from '../../lib/utils/haptics';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../../lib/theme/tokens';
 import { MODAL } from '../../lib/constants/layout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
@@ -23,6 +24,7 @@ export default function RoutinesScreen() {
   const deleteFolder = useDeleteFolder();
   const updateRoutine = useUpdateRoutine();
   const { dialog, showAlert, showConfirm } = useConfirmDialog();
+  const insets = useSafeAreaInsets();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -30,6 +32,12 @@ export default function RoutinesScreen() {
   const [newFolderColor, setNewFolderColor] = useState(colors.accent.primary);
   const [movingRoutineId, setMovingRoutineId] = useState<number | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
+
+  const closeCreateFolderSheet = () => setShowCreateModal(false);
+  const closeMoveSheet = () => {
+    setShowMoveModal(false);
+    setMovingRoutineId(null);
+  };
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
@@ -210,9 +218,18 @@ export default function RoutinesScreen() {
       </View>
 
       {/* Create Folder Modal */}
-      <Modal accessible={true} visible={showCreateModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+      <Modal accessible={true} visible={showCreateModal} transparent animationType="slide" onRequestClose={closeCreateFolderSheet}>
+        <Pressable
+          onPress={closeCreateFolderSheet}
+          accessibilityLabel={t('accessibility.common.close')}
+          accessibilityRole="button"
+          style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            accessible={false}
+            style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, maxHeight: MODAL.MAX_HEIGHT, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl + insets.bottom }}
+          >
             <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.newFolderTitle')}</Text>
 
@@ -277,14 +294,23 @@ export default function RoutinesScreen() {
                 <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.create')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       {/* Move to Folder Modal */}
-      <Modal accessible={true} visible={showMoveModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+      <Modal accessible={true} visible={showMoveModal} transparent animationType="slide" onRequestClose={closeMoveSheet}>
+        <Pressable
+          onPress={closeMoveSheet}
+          accessibilityLabel={t('accessibility.common.close')}
+          accessibilityRole="button"
+          style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            accessible={false}
+            style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, maxHeight: MODAL.MAX_HEIGHT, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl + insets.bottom }}
+          >
             <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('tabs.routines.moveToFolder')}</Text>
 
@@ -332,8 +358,8 @@ export default function RoutinesScreen() {
                 <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold }}>{t('tabs.routines.noFolder')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
     <ConfirmDialog

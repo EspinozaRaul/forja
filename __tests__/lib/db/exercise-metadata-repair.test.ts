@@ -5,13 +5,60 @@ import { CREATE_TABLES_SQL } from '../../../lib/db/ddl';
 // exercise here is database-agnostic (it receives its `db`), so the native module
 // only needs to stop the import from throwing. Every assertion below runs the SQL
 // that ships, against an in-memory node:sqlite database.
-jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: () => ({ execSync: jest.fn() }),
-}));
+//
+// The seed path (`initializeDatabase`) runs through the real drizzle expo-sqlite
+// session, so the native boundary is faked with a node:sqlite-backed client that
+// implements the sync API the session calls. That is what lets the seed's own
+// `name_es` write be asserted, instead of a copy of the mapping.
+jest.mock('expo-sqlite', () => {
+  const { DatabaseSync } = require('node:sqlite');
+  const sqlite = new DatabaseSync(':memory:');
+  const isRowReturning = (sql: string) =>
+    /^\s*(select|pragma|with)\b/i.test(sql) || /\breturning\b/i.test(sql);
+
+  const client = {
+    execSync: (sql: string) => sqlite.exec(sql),
+    prepareSync(sql: string) {
+      const statement = sqlite.prepare(sql);
+      return {
+        executeSync(params: unknown[] = []) {
+          if (isRowReturning(sql)) {
+            statement.setReturnArrays(true);
+            const rows = statement.all(...params);
+            return {
+              changes: 0,
+              lastInsertRowId: 0,
+              getAllSync: () => rows,
+              getFirstSync: () => rows[0],
+            };
+          }
+          const info = statement.run(...params);
+          return {
+            changes: info.changes,
+            lastInsertRowId: info.lastInsertRowId,
+            getAllSync: () => [],
+            getFirstSync: () => undefined,
+          };
+        },
+        executeForRawResultSync(params: unknown[] = []) {
+          statement.setReturnArrays(true);
+          const rows = statement.all(...params);
+          return { getAllSync: () => rows, getFirstSync: () => rows[0] };
+        },
+      };
+    },
+  };
+
+  return { __esModule: true, openDatabaseSync: () => client, __sqlite: sqlite };
+});
 
 import { DatabaseSync } from 'node:sqlite';
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
-import { repairExerciseMetadata, type ExerciseRepairSource } from '../../../lib/db/index';
+import {
+  initializeDatabase,
+  repairExerciseMetadata,
+  type ExerciseRepairSource,
+} from '../../../lib/db/index';
 
 const OLD_GIF = 'assets/exercises/gifs/0001.gif';
 const DATASET_GIF = '0001-2gPfomN.gif';
@@ -139,5 +186,39 @@ describe('repairExerciseMetadata (bug C1: never delete exercises as a migration)
     expect(unknown.gif_url).toBe(OLD_GIF);
     expect(unknown.body_part).toBeNull();
     expect(count(sqlite, 'SELECT COUNT(*) AS c FROM exercises')).toBe(4);
+  });
+});
+
+// U3: the seed must write `name_es` from the single source of truth
+// (`EXERCISE_NAMES_ES`, 1211 entries), not from the smaller
+// `EXERCISE_NAME_TRANSLATIONS` map, which disagrees with it on 10 of their 22
+// shared keys. Latent data-integrity: `name_es` has no consumers today.
+describe('initializeDatabase seed writes name_es from EXERCISE_NAMES_ES', () => {
+  let expo: any;
+
+  beforeAll(async () => {
+    expo = require('expo-sqlite').__sqlite;
+    await initializeDatabase();
+  });
+
+  function seededNameEs(name: string): string | null {
+    const row = expo.prepare('SELECT name_es FROM exercises WHERE name = ?').get(name);
+    return row ? row.name_es : null;
+  }
+
+  it('writes the big map value where the two maps disagree (dumbbell bench press)', () => {
+    // Big map: "Press de banca con mancuerna"; small map: "…con mancuernas".
+    expect(seededNameEs('dumbbell bench press')).toBe('Press de banca con mancuerna');
+  });
+
+  it('writes the same value where the two maps agree (barbell bench press)', () => {
+    // Both maps say "Press de banca con barra": proves the fix is not a blanket
+    // change of every seeded string.
+    expect(seededNameEs('barbell bench press')).toBe('Press de banca con barra');
+  });
+
+  it('writes the big map value for a name the small map never had (air bike)', () => {
+    // 1190 dataset names are big-map-only; before the fix these kept their English name.
+    expect(seededNameEs('air bike')).toBe('Bicicleta aérea');
   });
 });

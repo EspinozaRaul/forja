@@ -497,22 +497,38 @@ export async function updateSessionNotes(id: number, notes: string | null) {
 }
 
 export async function deleteSession(id: number) {
-  // Delete child records first in case old DB lacks CASCADE. Every delete is
-  // scoped to the active account so another user's session cannot be touched.
+  // Delete child records first, atomically. Every statement is scoped to the active
+  // account so another user's session cannot be touched.
+  //
+  // The callback MUST stay synchronous. This database is opened with
+  // `openDatabaseSync`, and drizzle's expo-sqlite session runs `begin`, calls the
+  // callback, then `commit` without awaiting it. The builders' async executors suspend
+  // at their first `await`, so `COMMIT` would fire mid-callback and every later
+  // statement would run in autocommit. `.run()` reaches `stmt.executeSync`, and the
+  // child id list is expressed as a subquery rather than a `.all()` round-trip, so the
+  // whole callback runs inside the transaction on the shipping driver.
+  //
+  // The function itself stays `async` on purpose: the callback throws synchronously on
+  // failure, and callers — including the atomicity test's `.rejects` assertion — rely on
+  // receiving a rejected promise rather than a synchronous throw.
   const ownedSession = and(
     eq(sessionExercises.sessionId, id),
     sessionOwnedByCurrentUser(sessionExercises.sessionId)
   );
-  const seIds = (
-    await db.select({ id: sessionExercises.id }).from(sessionExercises).where(ownedSession)
-  ).map((r) => r.id);
-  if (seIds.length > 0) {
-    await db.delete(sets).where(inArray(sets.sessionExerciseId, seIds));
-  }
-  await db.delete(sessionExercises).where(ownedSession);
-  return db
-    .delete(sessions)
-    .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)));
+  return db.transaction((tx) => {
+    tx.delete(sets)
+      .where(
+        inArray(
+          sets.sessionExerciseId,
+          tx.select({ id: sessionExercises.id }).from(sessionExercises).where(ownedSession)
+        )
+      )
+      .run();
+    tx.delete(sessionExercises).where(ownedSession).run();
+    tx.delete(sessions)
+      .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
+      .run();
+  });
 }
 
 // ─── Session Exercises ─────────────────────────────────

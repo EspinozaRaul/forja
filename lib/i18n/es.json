@@ -74,6 +74,20 @@
         "updateFailed": "No se pudo actualizar la contraseña. Intentá de nuevo."
       }
     },
+    "signOut": {
+      "error": {
+        "network": "Sin conexión. Para cerrar sesión necesitás conectarte a internet.",
+        "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentar cerrar sesión.",
+        "generic": "No se pudo cerrar sesión. Intentá de nuevo."
+      }
+    },
+    "deleteAccount": {
+      "error": {
+        "network": "Sin conexión. Para eliminar tu cuenta necesitás conectarte a internet.",
+        "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentar eliminar tu cuenta.",
+        "generic": "No se pudo eliminar la cuenta. Intentá de nuevo."
+      }
+    },
     "errors": {
       "googleRequiresDevBuild": "Google Sign-In requiere un development build, no Expo Go",
       "loginCancelled": "Inicio de sesión cancelado",
@@ -818,7 +832,6 @@
     "deleteAccount": "Eliminar cuenta",
     "deleteAccountConfirm": "¿Eliminar tu cuenta permanentemente? Se borran todos tus datos, entrenamientos y ajustes. Esta acción no se puede deshacer.",
     "deleteAccountDescription": "Elimina tu cuenta permanentemente y todos los datos asociados.",
-    "deleteAccountFailed": "No se pudo eliminar la cuenta.",
     "language": "Idioma",
     "languageOptions": {
       "es": "Español",
@@ -826,7 +839,6 @@
     },
     "signOut": "Cerrar sesión",
     "signOutConfirm": "¿Seguro que querés cerrar sesión?",
-    "signOutFailed": "No se pudo cerrar sesión.",
     "sound": "Sonido",
     "soundDescription": "Sonido del temporizador de descanso.",
     "vibration": "Vibración",

@@ -2,13 +2,15 @@
 // This file is only used on web (Metro resolves .web.ts over .ts)
 
 import { useQuery } from '@tanstack/react-query';
+import { useCurrentUserId } from './useCurrentUser';
 import type { ProgressDataPoint, WeeklyVolume } from '../types';
 
 const PROGRESS_KEY = ['progress'];
 
 export function useExerciseProgress(exerciseId: number, startDate?: Date, endDate?: Date) {
+  const userId = useCurrentUserId();
   return useQuery<WeeklyVolume[]>({
-    queryKey: [...PROGRESS_KEY, 'exercise', exerciseId, startDate, endDate],
+    queryKey: [...PROGRESS_KEY, 'exercise', exerciseId, startDate, endDate, userId],
     queryFn: async () => {
       if (!exerciseId) return [];
       // Return sample weekly volume data
@@ -18,13 +20,14 @@ export function useExerciseProgress(exerciseId: number, startDate?: Date, endDat
         { week: '2026-W26', exerciseId, exerciseName: '', totalVolume: 1800 },
       ];
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseId && !!userId,
   });
 }
 
 export function useSessionCountByWeek(exerciseId?: number) {
+  const userId = useCurrentUserId();
   return useQuery<ProgressDataPoint[]>({
-    queryKey: [...PROGRESS_KEY, 'sessionCount', exerciseId],
+    queryKey: [...PROGRESS_KEY, 'sessionCount', exerciseId, userId],
     queryFn: async () => {
       return [
         { date: '2026-W28', value: 3 },
@@ -33,12 +36,14 @@ export function useSessionCountByWeek(exerciseId?: number) {
         { date: '2026-W25', value: 1 },
       ];
     },
+    enabled: !!userId,
   });
 }
 
 export function useTotalVolumeByWeek(exerciseId: number) {
+  const userId = useCurrentUserId();
   return useQuery<ProgressDataPoint[]>({
-    queryKey: [...PROGRESS_KEY, 'totalVolume', exerciseId],
+    queryKey: [...PROGRESS_KEY, 'totalVolume', exerciseId, userId],
     queryFn: async () => {
       if (!exerciseId) return [];
       return [
@@ -47,6 +52,6 @@ export function useTotalVolumeByWeek(exerciseId: number) {
         { date: '2026-W26', value: 5200 },
       ];
     },
-    enabled: !!exerciseId,
+    enabled: !!exerciseId && !!userId,
   });
 }

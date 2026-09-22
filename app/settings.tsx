@@ -5,6 +5,7 @@ import i18n from '../lib/i18n';
 import { colors, spacing, borderRadius, fonts, fontSizes, borderWidths } from '../lib/theme/tokens';
 import { useSettings, type WeightUnit, type AppLanguage } from '../lib/utils/settings';
 import { useAuth } from '../lib/hooks/useAuth';
+import { authErrorMessageKey } from '../lib/auth/auth-error-message';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { haptics } from '../lib/utils/haptics';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -75,8 +76,11 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) {
+      // Raw SDK text stays in the console; the user sees catalogue copy. Same
+      // convention as app/auth/login.tsx.
+      if (__DEV__) console.error('Sign-out failed:', error);
       await haptics.error();
-      showAlert(t('common.error'), t('settings.signOutFailed'));
+      showAlert(t('common.error'), t(authErrorMessageKey(error, 'signOut')));
       return;
     }
     router.replace('/auth/login');
@@ -85,8 +89,9 @@ export default function SettingsScreen() {
   const handleDeleteAccount = async () => {
     const { error } = await deleteAccount();
     if (error) {
+      if (__DEV__) console.error('Account deletion failed:', error);
       await haptics.error();
-      showAlert(t('common.error'), t('settings.deleteAccountFailed'));
+      showAlert(t('common.error'), t(authErrorMessageKey(error, 'deleteAccount')));
       return;
     }
     router.replace('/auth/login');

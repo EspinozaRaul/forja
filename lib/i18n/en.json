@@ -74,6 +74,20 @@
         "updateFailed": "Could not update the password. Please try again."
       }
     },
+    "signOut": {
+      "error": {
+        "network": "No connection. You need to be online to sign out.",
+        "rateLimited": "Too many attempts. Please wait a moment and try signing out again.",
+        "generic": "Could not sign out. Please try again."
+      }
+    },
+    "deleteAccount": {
+      "error": {
+        "network": "No connection. You need to be online to delete your account.",
+        "rateLimited": "Too many attempts. Please wait a moment and try deleting your account again.",
+        "generic": "Could not delete account. Please try again."
+      }
+    },
     "errors": {
       "googleRequiresDevBuild": "Google Sign-In requires a development build, not Expo Go",
       "loginCancelled": "Login cancelled",
@@ -357,12 +371,10 @@
     "account": "Account",
     "signOut": "Sign out",
     "signOutConfirm": "Are you sure you want to sign out?",
-    "signOutFailed": "Could not sign out.",
     "dangerZone": "Danger Zone",
     "deleteAccount": "Delete account",
     "deleteAccountConfirm": "Permanently delete your account? All your data, workouts, and settings will be erased. This action cannot be undone.",
-    "deleteAccountDescription": "Permanently delete your account and all associated data.",
-    "deleteAccountFailed": "Could not delete account."
+    "deleteAccountDescription": "Permanently delete your account and all associated data."
   },
   "tabs": {
     "home": {

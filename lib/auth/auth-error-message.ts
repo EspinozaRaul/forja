@@ -1,8 +1,9 @@
 /**
  * Pure classification of Supabase auth errors into i18n keys.
  *
- * The returned value is always a catalogue key under `auth.login.error.*` or
- * `auth.signup.error.*`, never a user-facing string and never derived from
+ * The returned value is always a catalogue key under one of the
+ * `auth.<namespace>.error.*` groups (`login`, `signup`, `signOut`,
+ * `deleteAccount`), never a user-facing string and never derived from
  * `error.message`. That message is environment-specific — on Android it can be
  * a Java exception such as
  * `fetch failed: java.net.ConnectException ...` carrying a raw IP and the
@@ -29,6 +30,16 @@ export type AuthErrorCategory =
   | 'emailExists'
   | 'weakPassword'
   | 'generic';
+
+/**
+ * The operation whose failure produced the error.
+ *
+ * One namespace per operation, because the copy names the operation: a shared
+ * namespace would force operation-neutral wording, and "we could not sign you
+ * out" is the wrong message for a failed account deletion (and vice versa).
+ * This mirrors the login/signup split, which exists for the same reason.
+ */
+export type AuthErrorNamespace = 'login' | 'signup' | 'signOut' | 'deleteAccount';
 
 /**
  * Marker error for messages this app composes itself.
@@ -70,6 +81,42 @@ const SIGNUP_KEYS: Record<AuthErrorCategory, string> = {
   invalidCredentials: 'auth.signup.error.generic',
   emailNotConfirmed: 'auth.signup.error.generic',
   generic: 'auth.signup.error.generic',
+};
+
+const SIGN_OUT_KEYS: Record<AuthErrorCategory, string> = {
+  network: 'auth.signOut.error.network',
+  rateLimited: 'auth.signOut.error.rateLimited',
+  // A sign-out request cannot produce these: the user is already
+  // authenticated, so credential, confirmation, availability and password
+  // policy failures fall back to the sign-out generic message instead of
+  // borrowing the auth screens' copy.
+  invalidCredentials: 'auth.signOut.error.generic',
+  emailNotConfirmed: 'auth.signOut.error.generic',
+  emailExists: 'auth.signOut.error.generic',
+  weakPassword: 'auth.signOut.error.generic',
+  generic: 'auth.signOut.error.generic',
+};
+
+const DELETE_ACCOUNT_KEYS: Record<AuthErrorCategory, string> = {
+  network: 'auth.deleteAccount.error.network',
+  rateLimited: 'auth.deleteAccount.error.rateLimited',
+  // Same reasoning as sign-out: account deletion runs against an already
+  // authenticated account, so these cannot be produced and fall back to the
+  // delete-account generic message.
+  invalidCredentials: 'auth.deleteAccount.error.generic',
+  emailNotConfirmed: 'auth.deleteAccount.error.generic',
+  emailExists: 'auth.deleteAccount.error.generic',
+  weakPassword: 'auth.deleteAccount.error.generic',
+  generic: 'auth.deleteAccount.error.generic',
+};
+
+// One key table per namespace, selected exhaustively so a new namespace cannot
+// silently fall through to another operation's copy.
+const NAMESPACE_KEYS: Record<AuthErrorNamespace, Record<AuthErrorCategory, string>> = {
+  login: LOGIN_KEYS,
+  signup: SIGNUP_KEYS,
+  signOut: SIGN_OUT_KEYS,
+  deleteAccount: DELETE_ACCOUNT_KEYS,
 };
 
 function structuredError(
@@ -141,10 +188,9 @@ export function classifyAuthError(error: unknown): AuthErrorCategory {
   return 'generic';
 }
 
-export function authErrorMessageKey(error: unknown, namespace: 'login' | 'signup'): string {
+export function authErrorMessageKey(error: unknown, namespace: AuthErrorNamespace): string {
   const key = localizedKey(error);
   if (key) return key;
 
-  const table = namespace === 'signup' ? SIGNUP_KEYS : LOGIN_KEYS;
-  return table[classifyAuthError(error)];
+  return NAMESPACE_KEYS[namespace][classifyAuthError(error)];
 }
