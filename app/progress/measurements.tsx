@@ -212,15 +212,24 @@ export default function MeasurementsScreen() {
   
   if (measurementsLoading || photosLoading || measurementsError || photosError) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: measurementsLoading, isError: measurementsError, refetch: refetchMeasurements },
-          { isLoading: photosLoading, isError: photosError, refetch: refetchPhotos },
-        ]}
-        loadingMessage={t('common.loading')}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body header uses the same string. The add-toggle in
+            the body's `right` slot is data-independent but not needed here. */}
+        <ScreenHeader
+          title={t('progress.measurements.title')}
+          icon="body"
+          onBack={() => router.back()}
+        />
+        <QueryState
+          queries={[
+            { isLoading: measurementsLoading, isError: measurementsError, refetch: refetchMeasurements },
+            { isLoading: photosLoading, isError: photosError, refetch: refetchPhotos },
+          ]}
+          loadingMessage={t('common.loading')}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
   

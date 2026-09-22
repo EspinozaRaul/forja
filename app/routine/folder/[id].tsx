@@ -9,6 +9,8 @@ import { MODAL } from '../../../lib/constants/layout';
 import { useFolder, useRoutinesByFolder, useDeleteFolder, useUpdateFolder, useUpdateRoutine, useDeleteRoutine } from '../../../lib/hooks/useRoutines';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { QueryState } from '../../../components/ui/QueryState';
+import { Screen } from '../../../components/ui/Screen';
+import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { AnimatedListItem } from '../../../components/ui/AnimatedListItem';
 import { haptics } from '../../../lib/utils/haptics';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -24,9 +26,14 @@ export default function FolderDetailScreen() {
   // Guard against NaN from malformed route params
   if (isNaN(folderId)) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('common.invalidId')}</Text>
-      </View>
+      <Screen>
+        {/* Static title: the body's hand-rolled header uses the folder name,
+            absent for an invalid id. The branch keeps its way back. */}
+        <ScreenHeader title={t('routine.folder.title')} onBack={() => router.back()} divider />
+        <View style={{ flex: 1, backgroundColor: colors.bg.primary, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: colors.text.primary, fontSize: fontSizes.lg }}>{t('common.invalidId')}</Text>
+        </View>
+      </Screen>
     );
   }
 
@@ -128,17 +135,22 @@ export default function FolderDetailScreen() {
 
   if (loadingFolder || loadingRoutines || folderError || routinesError || !folder) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: loadingFolder, isError: folderError, refetch: refetchFolder },
-          { isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines },
-        ]}
-        loadingMessage={t('routine.folder.loading')}
-        empty
-        emptyTitle={t('routine.folder.notFound')}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body's hand-rolled header uses the folder name,
+            absent while loading / on failure / on not-found. */}
+        <ScreenHeader title={t('routine.folder.title')} onBack={() => router.back()} divider />
+        <QueryState
+          queries={[
+            { isLoading: loadingFolder, isError: folderError, refetch: refetchFolder },
+            { isLoading: loadingRoutines, isError: routinesError, refetch: refetchRoutines },
+          ]}
+          loadingMessage={t('routine.folder.loading')}
+          empty
+          emptyTitle={t('routine.folder.notFound')}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 

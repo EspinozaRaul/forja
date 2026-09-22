@@ -9,6 +9,7 @@ import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/us
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { QueryState } from '../../../components/ui/QueryState';
+import { Screen } from '../../../components/ui/Screen';
 import { MODAL } from '../../../lib/constants/layout';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { formatDuration, formatVolume } from '../../../lib/utils/format';
@@ -48,9 +49,15 @@ export default function SessionSummaryScreen() {
 
   if (isNaN(sessionId)) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('common.error')} message={t('common.invalidId')} />
-      </View>
+      <Screen edges={[]}>
+        {/* This screen KEEPS the native header, so the container clears no inset
+            of its own (`edges={[]}`) and needs no `<ScreenHeader>` — the native
+            header already provides the title and the way back. What is fixed
+            here is the literal §1 rule: a raw `View` was the screen root. */}
+        <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+          <EmptyState title={t('common.error')} message={t('common.invalidId')} />
+        </View>
+      </Screen>
     );
   }
 

@@ -19,6 +19,8 @@ import { RestTimer } from '../../components/RestTimer';
 import { Button } from '../../components/ui/Button';
 import { ExercisePicker } from '../../components/ExercisePicker';
 import { QueryState } from '../../components/ui/QueryState';
+import { Screen } from '../../components/ui/Screen';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { SessionExerciseItem } from '../../components/session/SessionExerciseItem';
 import { SupersetBlock } from '../../components/session/SupersetComponents';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -309,9 +311,14 @@ export default function SessionScreen() {
   // differs. The invalid-id output is unchanged.
   if (isNaN(sessionId)) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('session.notFound')} />
-      </View>
+      <Screen>
+        {/* Static title: the body's hand-rolled header uses `session.title` too,
+            so the branch keeps its way back without inventing a name. */}
+        <ScreenHeader title={t('session.title')} onBack={() => router.back()} divider />
+        <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+          <EmptyState title={t('session.notFound')} />
+        </View>
+      </Screen>
     );
   }
 
@@ -320,17 +327,22 @@ export default function SessionScreen() {
   // the rest of the screen by the `!session` term in this guard.
   if (sessionLoading || exercisesLoading || sessionError || exercisesError || !session) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: sessionLoading, isError: sessionError, refetch: refetchSession },
-          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
-        ]}
-        loadingMessage={t('session.loadingMessage')}
-        empty
-        emptyTitle={t('session.notFound')}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body's hand-rolled header uses `session.title`.
+            The branch keeps its container and its way back. */}
+        <ScreenHeader title={t('session.title')} onBack={() => router.back()} divider />
+        <QueryState
+          queries={[
+            { isLoading: sessionLoading, isError: sessionError, refetch: refetchSession },
+            { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+          ]}
+          loadingMessage={t('session.loadingMessage')}
+          empty
+          emptyTitle={t('session.notFound')}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 

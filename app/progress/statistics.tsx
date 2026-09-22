@@ -137,20 +137,29 @@ export default function StatisticsScreen() {
 
   if (isLoading || hasError || !stats) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
-          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
-          { isLoading: sessionLoading, isError: sessionError, refetch: refetchSessionCount },
-        ]}
-        loadingMessage={t('common.loading')}
-        empty
-        emptyTitle={t('progress.statistics.noData')}
-        emptyMessage={t('progress.statistics.startTraining')}
-        emptyIcon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body header uses the same string. No divider — the
+            body's header scrolls, and this branch has no scroll of its own. */}
+        <ScreenHeader
+          title={t('progress.statistics.title')}
+          icon="bar-chart"
+          onBack={() => router.back()}
+        />
+        <QueryState
+          queries={[
+            { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
+            { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+            { isLoading: sessionLoading, isError: sessionError, refetch: refetchSessionCount },
+          ]}
+          loadingMessage={t('common.loading')}
+          empty
+          emptyTitle={t('progress.statistics.noData')}
+          emptyMessage={t('progress.statistics.startTraining')}
+          emptyIcon={<Ionicons name="bar-chart-outline" size={48} color={colors.text.muted} />}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 
