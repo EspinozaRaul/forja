@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -130,7 +131,7 @@ function SessionRow({
             {formatVolume(session.totalVolume, unit)}
           </Text>
         </View>
-        <Text style={{ fontSize: fontSizes.lg, color: colors.text.muted }}>{'>'}</Text>
+        <Ionicons name="chevron-forward" size={16} color={colors.text.muted} />
       </View>
     </Pressable>
   );
@@ -179,7 +180,7 @@ function CalendarCard({
           accessibilityRole="button"
           style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'<'}</Text>
+          <Ionicons name="chevron-back" size={20} color={colors.text.secondary} />
         </Pressable>
         <View style={{ alignItems: 'center', flex: 1 }}>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>
@@ -196,7 +197,7 @@ function CalendarCard({
           accessibilityRole="button"
           style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, backgroundColor: colors.bg.elevated, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
         >
-          <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary }}>{'>'}</Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
         </Pressable>
       </View>
 

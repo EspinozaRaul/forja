@@ -183,6 +183,28 @@ The map **could not diagnose it from the source, and proved the two candidate ca
 
 ---
 
+## V9 — The ASCII arrows were the blind spot §9 warned about (found during V1)
+
+V1's sweep for the five named glyphs (`✕ › ← × ↻`) reported zero and was **structurally blind** to the three that survived: `{'<'}` and `{'>'}` as standalone JSX children in `app/(tabs)/progress.tsx`. The script reports them separately as `glyphAsciiCandidates` precisely so they could never be folded into a comfortable zero — that decision is what surfaced this unit.
+
+**The three sites — all actions, none typography:**
+
+| Site | Today | Replaced with | Copied from |
+| --- | --- | --- | --- |
+| `app/(tabs)/progress.tsx:133` — session-row chevron | `{'>'}` | `chevron-forward` size 16, `text.muted` | `components/progress/NavigationButton.tsx:50` (the app's row chevron) |
+| `:182` — month back | `{'<'}` | `chevron-back` size 20, `text.secondary` | counterpart of the row chevron; keeps the 36×36 control balanced |
+| `:199` — month forward | `{'>'}` | `chevron-forward` size 20, `text.secondary` | same |
+
+All three sit inside already-labelled `Pressable`s (`accessibilityLabel` + `accessibilityRole="button"`). The labels were not touched, so `unlabelledInteractive` stays **0**; the icon carries no separate accessible name, which is the app's convention for an icon inside a labelled pressable (`components/ui/ScreenHeader.tsx:58-60`).
+
+**The invariant.** `__tests__/lib/metrics.test.ts` now asserts `glyphAsciiCandidates === 0` next to `glyphActions === 0`. It failed before the fix — **Expected: 0, Received: 3** — and is the only thing that keeps this class from creeping back silently. A second, source-structural test pins the three Ionicons and the two month labels, because the metric's `unlabelledInteractive` counter accepts a label OR a role and would stay green if a site lost its label.
+
+**Measured before/after** (`node scripts/ui-metrics.js`): `glyphAsciiCandidates` **3 → 0**, and no other metric moved. All three candidates were actions, so the remainder after the fix is empty — **the predicate was not changed**, and no refinement was needed. §9's typography boundary was not exercised by this unit.
+
+**Allowed edit surfaces**: `app/(tabs)/progress.tsx`, `scripts/ui-metrics.js`, `__tests__/lib/metrics.test.ts`, `docs/ui-standard.md`.
+
+---
+
 ## Closed here, deliberately
 
 - **S3-e** (`accessibilityHint` / `role="header"`) — closed as a decision in V1: no origin in the repository, and the hint policy is already implemented at 35 sites.

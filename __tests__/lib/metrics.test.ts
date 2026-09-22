@@ -75,12 +75,51 @@ describe('ui-standard.md current-state invariants', () => {
     expect(metrics.glyphActions).toBe(0);
   });
 
+  it('no ASCII arrow survives as an action either', () => {
+    // The named sweep above is clean and always will be: it searches
+    // [✕›←×↻] and is structurally blind to ASCII `<` and `>`. That is exactly
+    // how three standalone arrow actions (`{'<'}` / `{'>'}` in
+    // app/(tabs)/progress.tsx) survived every earlier sweep. Pinning the
+    // separate number is what closes the class instead of the five characters.
+    expect(metrics.glyphAsciiCandidates).toBe(0);
+  });
+
   it('no interactive element is unlabelled', () => {
     expect(metrics.unlabelledInteractive).toBe(0);
   });
 
   it('both catalogues carry the same number of keys', () => {
     expect(metrics.catalogueKeysEs).toBe(metrics.catalogueKeysEn);
+  });
+});
+
+describe('app/(tabs)/progress.tsx arrow affordances', () => {
+  const progress = fs.readFileSync(
+    path.join(__dirname, '..', '..', 'app', '(tabs)', 'progress.tsx'),
+    'utf8',
+  );
+
+  // Source-structural by design. The metric above proves the *outcome* (no ASCII
+  // arrow action survives anywhere), but its `unlabelledInteractive` counter
+  // accepts a label OR a role on a Pressable, so it would stay green if one of
+  // these sites lost its label. This pins the shape the fix chose and the names
+  // that must not drift back to a glyph.
+  it('renders the three arrow affordances as Ionicons, not ASCII children', () => {
+    expect(progress).toContain(
+      '<Ionicons name="chevron-forward" size={16} color={colors.text.muted} />',
+    );
+    expect(progress).toContain(
+      '<Ionicons name="chevron-back" size={20} color={colors.text.secondary} />',
+    );
+    expect(progress).toContain(
+      '<Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />',
+    );
+    expect(progress).not.toMatch(/>\s*['"][<>]['"]\s*</);
+  });
+
+  it('keeps the labels on the month controls that already had them', () => {
+    expect(progress).toContain("accessibilityLabel={t('accessibility.common.previousMonth')}");
+    expect(progress).toContain("accessibilityLabel={t('accessibility.common.nextMonth')}");
   });
 });
 

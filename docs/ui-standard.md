@@ -252,9 +252,13 @@ measured, not guessed, and each is its own migration work unit. `<Button>` is us
 (83), `.lg` (37) and `.full` (22) still compete for the same rectangular job. No
 named text glyph (`✕`, `›`, `←`, `×`, `↻`) survives as an action: the remaining
 occurrences are separators inside strings the app composes, which the boundary above
-allows. **Three ASCII arrows do survive as actions** — `{'<'}` and `{'>'}` in
-`app/(tabs)/progress.tsx` (month back, month forward, and the session-row chevron) —
-and a sweep for the named characters is structurally blind to them. `app/routine/[id].tsx`
+allows. **The ASCII arrow class is closed too.** The three standalone arrows that once
+survived were `{'<'}` and `{'>'}` in `app/(tabs)/progress.tsx` (month back, month forward,
+and the session-row chevron) — a sweep for the named characters is structurally blind to
+them, which is why they outlived every earlier pass. They are Ionicons now
+(`chevron-back` / `chevron-forward`, the convention in `components/progress/NavigationButton.tsx`),
+and `glyphAsciiCandidates` is quoted in the block below and pinned at 0 by
+`__tests__/lib/metrics.test.ts` so the class cannot return silently. `app/routine/[id].tsx`
 is the first screen brought onto this section; the rest is backlog.
 
 The counts above are the output of `scripts/ui-metrics.js`, not prose. The block
@@ -278,7 +282,7 @@ radiusMd = 83
 radiusLg = 37
 radiusFull = 22
 glyphActions = 0
-glyphAsciiCandidates = 3
+glyphAsciiCandidates = 0
 unlabelledInteractive = 0
 accessibilityLabelSites = 118
 accessibilityHintSites = 35

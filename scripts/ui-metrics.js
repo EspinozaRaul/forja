@@ -16,10 +16,13 @@
  *     against the `ui-metrics` block in `docs/ui-standard.md`.
  *
  * The glyph metric deliberately reports two separate numbers. A sweep for the
- * five named glyphs (`✕ › ← × ↻`) reports a clean tree forever, because the
- * app's surviving arrow glyphs are ASCII `<` and `>` (see `app/(tabs)/progress.tsx`).
- * `glyphActions` counts only standalone named-glyph children; `glyphAsciiCandidates`
- * counts standalone ASCII arrows. They are never folded together.
+ * five named glyphs (`✕ › ← × ↻`) reports a clean tree forever, because it is
+ * structurally blind to ASCII `<` and `>` — which is how three standalone arrow
+ * actions survived every earlier pass in `app/(tabs)/progress.tsx` (now Ionicons,
+ * see docs/ui-standard.md §9). `glyphActions` counts only standalone named-glyph
+ * children; `glyphAsciiCandidates` counts standalone ASCII arrows. They are never
+ * folded together, and the ASCII half is pinned at 0 by `__tests__/lib/metrics.test.ts`
+ * so the class cannot creep back in silently.
  */
 
 const fs = require('node:fs');
