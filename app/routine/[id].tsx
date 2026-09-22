@@ -36,9 +36,14 @@ export default function RoutineDetailScreen() {
 
   if (isNaN(routineId)) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('common.error')} message={t('common.invalidId')} />
-      </View>
+      <Screen>
+        {/* Static title: the body's header uses the routine name, which does not
+            exist for an invalid id. The branch keeps its way back. */}
+        <ScreenHeader title={t('routine.detail.title')} onBack={() => router.back()} divider />
+        <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+          <EmptyState title={t('common.error')} message={t('common.invalidId')} />
+        </View>
+      </Screen>
     );
   }
 
@@ -261,18 +266,25 @@ export default function RoutineDetailScreen() {
 
   if (routineLoading || exercisesLoading || allExercisesLoading || routineError || exercisesError || allExercisesError || !routine) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: routineLoading, isError: routineError, refetch: refetchRoutine },
-          { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
-          { isLoading: allExercisesLoading, isError: allExercisesError, refetch: refetchAllExercises },
-        ]}
-        loadingMessage={t('routine.detail.loading')}
-        empty
-        emptyTitle={t('routine.detail.notFound')}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body's header uses the routine name, absent while
+            loading / on failure / on not-found. No bottom action bar here, so
+            the default edges clear both insets (the body passes ['top'] only
+            because its fixed bottom bar clears its own). */}
+        <ScreenHeader title={t('routine.detail.title')} onBack={() => router.back()} divider />
+        <QueryState
+          queries={[
+            { isLoading: routineLoading, isError: routineError, refetch: refetchRoutine },
+            { isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises },
+            { isLoading: allExercisesLoading, isError: allExercisesError, refetch: refetchAllExercises },
+          ]}
+          loadingMessage={t('routine.detail.loading')}
+          empty
+          emptyTitle={t('routine.detail.notFound')}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 

@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, TextInput, Modal, LayoutAnimation } from 'react-native';
+import { Text, View, TouchableOpacity, TextInput, Modal, ScrollView, LayoutAnimation } from 'react-native';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -521,37 +521,39 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
       )}
 
       {/* Custom rest time modal */}
-      <Modal accessible={true} visible={showCustomRest} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: 280, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
-            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.md + spacing.xs }}>
-              <TextInput
-                value={customMinutes}
-                onChangeText={setCustomMinutes}
-                placeholder="0"
-                placeholderTextColor={colors.text.muted}
-                keyboardType="number-pad"
-                maxLength={3}
-                accessibilityLabel={t('accessibility.customRest.minutes')}
-                accessibilityHint={t('accessibility.customRest.minutesHint')}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
-              />
-              <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
-              <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>:</Text>
-              <TextInput
-                value={customSeconds}
-                onChangeText={setCustomSeconds}
-                placeholder="0"
-                placeholderTextColor={colors.text.muted}
-                keyboardType="number-pad"
-                maxLength={2}
-                accessibilityLabel={t('accessibility.customRest.seconds')}
-                accessibilityHint={t('accessibility.customRest.secondsHint')}
-                style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
-              />
-              <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>
-            </View>
+      <Modal accessible={true} visible={showCustomRest} transparent animationType="fade" onRequestClose={() => setShowCustomRest(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
+            <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT, marginBottom: spacing.md }}>
+              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>{t('session.dropSet.title')}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md + spacing.xs }}>
+                <TextInput
+                  value={customMinutes}
+                  onChangeText={setCustomMinutes}
+                  placeholder="0"
+                  placeholderTextColor={colors.text.muted}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                  accessibilityLabel={t('accessibility.customRest.minutes')}
+                  accessibilityHint={t('accessibility.customRest.minutesHint')}
+                  style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
+                />
+                <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
+                <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>:</Text>
+                <TextInput
+                  value={customSeconds}
+                  onChangeText={setCustomSeconds}
+                  placeholder="0"
+                  placeholderTextColor={colors.text.muted}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  accessibilityLabel={t('accessibility.customRest.seconds')}
+                  accessibilityHint={t('accessibility.customRest.secondsHint')}
+                  style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
+                />
+                <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>
+              </View>
+            </ScrollView>
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>
               <TouchableOpacity
                 onPress={() => setShowCustomRest(false)}

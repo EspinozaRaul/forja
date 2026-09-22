@@ -137,8 +137,11 @@ return (
 ## 8. A modal card is height-bounded, and its actions are outside the scroll
 
 **This is the target the repo is being brought to, not the state of every modal.**
-Two modals bound their card and their scroll body today: the start-session dialog in
-`app/routine/[id].tsx` and the reference `components/progress/RoutinePickerModal.tsx`.
+Two modals bound their card and their scroll body with the shared `MODAL` tokens
+today: the start-session dialog in `app/routine/[id].tsx` and the custom-rest dialog in
+`components/session/SessionExerciseItem.tsx`. The reference
+`components/progress/RoutinePickerModal.tsx` bounds both as well, but with the literals
+`'70%'` and `360` and no `flexShrink`, so it carries the principle and not the tokens.
 The other modal-bearing files still have no bound at all and are tracked as their own
 work unit.
 
@@ -242,16 +245,53 @@ the principle, not copying its structure literally.
 
 **This is the target, not the state of the repo.** The divergences below were
 measured, not guessed, and each is its own migration work unit. `<Button>` is used
-28 times, but only 14 of those call sites choose a variant (11 `secondary`, 2
-`primary`, 1 `danger`) — the other 14 fall through to `primary`, so most buttons
-are loud by accident. The `compact` size is passed at 4 call sites. 31 files
-still mount a bare `TouchableOpacity` (131 tags in total) and 28 of them paint
-their own `backgroundColor`, so most buttons in the app are not the button.
-`borderRadius.md` (83), `.lg` (37) and `.full` (20) still compete for the same
-rectangular job. Text glyphs are still the action in 14 places (`✕` 4, `›` 4,
-`←` 2, `×` 2, `↻` 2), including the replace and remove controls in the routine
-detail exercise list. `app/routine/[id].tsx` is the first screen brought onto
-this section; the rest is backlog.
+27 times, and all 27 call sites choose a variant explicitly — none falls through to
+`primary`. The `compact` size is passed at 5 call sites. 31 files still mount a bare
+`TouchableOpacity` (129 tags in total) and 28 of them paint their own
+`backgroundColor`, so most buttons in the app are not the button. `borderRadius.md`
+(83), `.lg` (37) and `.full` (22) still compete for the same rectangular job. No
+named text glyph (`✕`, `›`, `←`, `×`, `↻`) survives as an action: the remaining
+occurrences are separators inside strings the app composes, which the boundary above
+allows. **The ASCII arrow class is closed too.** The three standalone arrows that once
+survived were `{'<'}` and `{'>'}` in `app/(tabs)/progress.tsx` (month back, month forward,
+and the session-row chevron) — a sweep for the named characters is structurally blind to
+them, which is why they outlived every earlier pass. They are Ionicons now
+(`chevron-back` / `chevron-forward`, the convention in `components/progress/NavigationButton.tsx`),
+and `glyphAsciiCandidates` is quoted in the block below and pinned at 0 by
+`__tests__/lib/metrics.test.ts` so the class cannot return silently. `app/routine/[id].tsx`
+is the first screen brought onto this section; the rest is backlog.
+
+The counts above are the output of `scripts/ui-metrics.js`, not prose. The block
+below is those numbers in a shape a test can read. `__tests__/lib/metrics.test.ts`
+re-runs the script and fails when any quoted count drifts from the tree, so this
+paragraph cannot go stale silently again.
+
+```text
+<!-- ui-metrics:begin -->
+modals = 17
+buttonCallsites = 27
+buttonVariants = 27
+buttonVariantFallthroughs = 0
+buttonCompactCallsites = 5
+pressables = 174
+pressableAuditDenominator = 33
+bareTouchableOpacityFiles = 31
+bareTouchableOpacityTags = 129
+ownBackgroundColorFiles = 28
+radiusMd = 83
+radiusLg = 37
+radiusFull = 22
+glyphActions = 0
+glyphAsciiCandidates = 0
+unlabelledInteractive = 0
+accessibilityLabelSites = 118
+accessibilityHintSites = 35
+accessibilityHintKeys = 29
+roleHeaderOccurrences = 0
+catalogueKeysEs = 682
+catalogueKeysEn = 682
+<!-- ui-metrics:end -->
+```
 
 ## Checklist for a new screen
 

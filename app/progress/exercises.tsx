@@ -175,12 +175,22 @@ export default function ExercisesScreen() {
 
   if (exercisesLoading || exercisesError) {
     return (
-      <QueryState
-        queries={[{ isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises }]}
-        loadingMessage={t('exercises.loading')}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* Static title: the body header uses the same string, so the branch
+            keeps its container and its way back. */}
+        <ScreenHeader
+          title={t('exercises.title')}
+          icon="barbell"
+          onBack={() => router.back()}
+          divider
+        />
+        <QueryState
+          queries={[{ isLoading: exercisesLoading, isError: exercisesError, refetch: refetchExercises }]}
+          loadingMessage={t('exercises.loading')}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 

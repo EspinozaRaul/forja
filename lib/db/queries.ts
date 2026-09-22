@@ -732,11 +732,71 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
 }
 
 export async function deleteSessionExercise(id: number) {
-  return db
-    .delete(sessionExercises)
-    .where(
-      and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-    );
+  const owned = and(
+    eq(sessionExercises.id, id),
+    // Guard through the owning session. `sessionExerciseOwnedByCurrentUser` is for child
+    // columns that reference a session_exercise id (e.g. `sets.sessionExerciseId`); used
+    // on `session_exercises.sessionId` it resolves as `inner.id = inner.session_id` and
+    // stops matching once that row is deleted, which breaks a multi-row delete.
+    sessionOwnedByCurrentUser(sessionExercises.sessionId)
+  );
+  // One transaction: dissolve the pair the row belongs to, then delete the row. The
+  // pair id is cleared on the survivors BEFORE the delete, so deleting one member of a
+  // group can never leave a partner holding a pair id whose other member is gone — the
+  // dangling one-member pair the renderer works around. Deleting a member therefore
+  // unpairs its group, which is the honest outcome: a super set needs two.
+  //
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver never awaits it, so an `await` would let COMMIT fire mid-callback and every
+  // later statement would run in autocommit.
+  return db.transaction((tx) => {
+    tx.update(sessionExercises)
+      .set({ supersetPairId: null })
+      .where(
+        and(
+          isNotNull(sessionExercises.supersetPairId),
+          eq(
+            sessionExercises.supersetPairId,
+            tx.select({ pairId: sessionExercises.supersetPairId }).from(sessionExercises).where(owned)
+          )
+        )
+      )
+      .run();
+    tx.delete(sessionExercises).where(owned).run();
+  });
+}
+
+/**
+ * Deletes every member of a super set atomically: the unlink and the member deletes
+ * share one transaction, with a synchronous callback (the same constraint as
+ * `deleteSession` and `deleteSessionExercise`). The previous screen-level version
+ * awaited three separate mutations, so a failure between them left a half-deleted
+ * group behind.
+ */
+export async function deleteSuperSetMembers(memberIds: number[], pairId: number | null) {
+  return db.transaction((tx) => {
+    if (pairId != null) {
+      tx.update(sessionExercises)
+        .set({ supersetPairId: null })
+        .where(
+          and(
+            eq(sessionExercises.supersetPairId, pairId),
+            sessionOwnedByCurrentUser(sessionExercises.sessionId)
+          )
+        )
+        .run();
+    }
+    for (const memberId of memberIds) {
+      tx.delete(sessionExercises)
+        .where(
+          and(
+            eq(sessionExercises.id, memberId),
+            sessionOwnedByCurrentUser(sessionExercises.sessionId)
+          )
+        )
+        .run();
+    }
+  });
 }
 
 export async function updateSessionExerciseNotes(

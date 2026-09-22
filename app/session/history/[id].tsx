@@ -9,6 +9,7 @@ import { useCreateRoutine, useAddExerciseToRoutine } from '../../../lib/hooks/us
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { QueryState } from '../../../components/ui/QueryState';
+import { Screen } from '../../../components/ui/Screen';
 import { MODAL } from '../../../lib/constants/layout';
 import { getExerciseName } from '../../../lib/utils/exercise-names';
 import { formatDuration, formatVolume } from '../../../lib/utils/format';
@@ -48,9 +49,15 @@ export default function SessionSummaryScreen() {
 
   if (isNaN(sessionId)) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
-        <EmptyState title={t('common.error')} message={t('common.invalidId')} />
-      </View>
+      <Screen edges={[]}>
+        {/* This screen KEEPS the native header, so the container clears no inset
+            of its own (`edges={[]}`) and needs no `<ScreenHeader>` — the native
+            header already provides the title and the way back. What is fixed
+            here is the literal §1 rule: a raw `View` was the screen root. */}
+        <View style={{ flex: 1, backgroundColor: colors.bg.primary, padding: spacing.md }}>
+          <EmptyState title={t('common.error')} message={t('common.invalidId')} />
+        </View>
+      </Screen>
     );
   }
 
@@ -339,7 +346,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
           </Text>
         </TouchableOpacity>
         <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted }}>
-          {completedSets.length} sets • {formatVolume(totalVolume, unit)}
+          {completedSets.length} {t('session.sets')} • {formatVolume(totalVolume, unit)}
         </Text>
       </View>
       {sets && sets.length > 0 ? (
@@ -357,7 +364,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
             >
               <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
               <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>
-                {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
+                {set.reps ?? '-'} {t('session.reps')} × {formatWeight(set.weight, unit)}
               </Text>
               <Ionicons
                 name={set.completed ? 'checkmark' : 'ellipse-outline'}

@@ -301,22 +301,33 @@ export default function ExerciseDetailScreen() {
 
   if (isLoading || hasError || !exercise) {
     return (
-      <QueryState
-        queries={[
-          { isLoading: exerciseLoading, isError: exerciseError, refetch: refetchExercise },
-          { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
-          { isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions },
-          { isLoading: prsLoading, isError: prsError, refetch: refetchPrs },
-          { isLoading: volumeLoading, isError: volumeError, refetch: refetchVolume },
-          { isLoading: progressionLoading, isError: progressionError, refetch: refetchProgression },
-        ]}
-        loadingMessage={t('exerciseDetail.loading')}
-        empty
-        emptyTitle={t('exerciseDetail.notFound')}
-        emptyIcon={<Ionicons name="alert-circle-outline" size={48} color={colors.error} />}
-      >
-        {null}
-      </QueryState>
+      <Screen>
+        {/* The body's title is the exercise name, which is exactly what is absent
+            in these states. A static screen-level title keeps the way back and the
+            orientation without inventing a name. */}
+        <ScreenHeader
+          title={t('exercises.title')}
+          icon="barbell"
+          onBack={() => router.back()}
+          divider
+        />
+        <QueryState
+          queries={[
+            { isLoading: exerciseLoading, isError: exerciseError, refetch: refetchExercise },
+            { isLoading: statsLoading, isError: statsError, refetch: refetchStats },
+            { isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions },
+            { isLoading: prsLoading, isError: prsError, refetch: refetchPrs },
+            { isLoading: volumeLoading, isError: volumeError, refetch: refetchVolume },
+            { isLoading: progressionLoading, isError: progressionError, refetch: refetchProgression },
+          ]}
+          loadingMessage={t('exerciseDetail.loading')}
+          empty
+          emptyTitle={t('exerciseDetail.notFound')}
+          emptyIcon={<Ionicons name="alert-circle-outline" size={48} color={colors.error} />}
+        >
+          {null}
+        </QueryState>
+      </Screen>
     );
   }
 

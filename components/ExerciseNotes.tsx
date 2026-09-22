@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
   },
   typeChipText: {
-    fontSize: fontSizes.xs2, fontWeight: fontWeights.medium,
+    fontSize: fontSizes.xs2, fontFamily: fonts.bodyMedium, fontWeight: fontWeights.medium,
     color: colors.text.muted,
   },
 });

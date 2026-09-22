@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Badge } from './ui/Badge';
 import { colors, spacing, borderRadius, fonts, fontSizes } from '../lib/theme/tokens';
 import type { RoutineWithExercises } from '../lib/types';
@@ -8,6 +9,7 @@ interface RoutineCardProps {
 }
 
 export function RoutineCard({ routine }: RoutineCardProps) {
+  const { t } = useTranslation();
   const exerciseCount = routine.exercises.length;
 
   return (
@@ -17,7 +19,7 @@ export function RoutineCard({ routine }: RoutineCardProps) {
           {routine.name}
         </Text>
         <Badge
-          label={`${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''}`}
+          label={`${exerciseCount} ${exerciseCount === 1 ? t('routine.exercise') : t('routine.exercises')}`}
           color={colors.accent.primary}
         />
       </View>

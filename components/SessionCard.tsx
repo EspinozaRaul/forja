@@ -6,11 +6,10 @@ import { formatRelativeDate } from '../lib/utils/format';
 
 interface SessionCardProps {
   session: Session;
-  exerciseCount?: number;
   routineName?: string;
 }
 
-export function SessionCard({ session, exerciseCount, routineName }: SessionCardProps) {
+export function SessionCard({ session, routineName }: SessionCardProps) {
   const { t } = useTranslation();
   const dateStr = formatRelativeDate(session.startedAt, t);
   const displayName = routineName || t('tabs.home.quickRoutine');
@@ -25,12 +24,6 @@ export function SessionCard({ session, exerciseCount, routineName }: SessionCard
           {dateStr}
         </Text>
       </View>
-
-      {exerciseCount !== undefined && (
-        <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.muted }}>
-          {t('session.exerciseCount', { count: exerciseCount })}
-        </Text>
-      )}
 
       {session.notes && (
         <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.muted, marginTop: spacing.sm }} numberOfLines={2}>
