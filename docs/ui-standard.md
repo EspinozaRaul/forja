@@ -137,8 +137,11 @@ return (
 ## 8. A modal card is height-bounded, and its actions are outside the scroll
 
 **This is the target the repo is being brought to, not the state of every modal.**
-Two modals bound their card and their scroll body today: the start-session dialog in
-`app/routine/[id].tsx` and the reference `components/progress/RoutinePickerModal.tsx`.
+Two modals bound their card and their scroll body with the shared `MODAL` tokens
+today: the start-session dialog in `app/routine/[id].tsx` and the custom-rest dialog in
+`components/session/SessionExerciseItem.tsx`. The reference
+`components/progress/RoutinePickerModal.tsx` bounds both as well, but with the literals
+`'70%'` and `360` and no `flexShrink`, so it carries the principle and not the tokens.
 The other modal-bearing files still have no bound at all and are tracked as their own
 work unit.
 
