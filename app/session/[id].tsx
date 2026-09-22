@@ -1,7 +1,7 @@
 import { Text, View, TouchableOpacity, Modal, Pressable, ScrollView, BackHandler, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { KeyboardAwareScrollView, KeyboardStickyView, useKeyboardState } from 'react-native-keyboard-controller';
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,11 +24,13 @@ import { SupersetBlock } from '../../components/session/SupersetComponents';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { NewRecordBanner } from '../../components/NewRecordBanner';
 import { getExerciseName } from '../../lib/utils/exercise-names';
+import { planSupersetRows } from '../../lib/utils/superset-grouping';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS, DEFAULT_REST_SECONDS } from '../../lib/constants/routine-defaults';
 import { haptics } from '../../lib/utils/haptics';
 import { detectRoutineDiff, summarizeDiff, type RoutineDiff, type DiffSetRow } from '../../lib/utils/routine-diff';
 import type { SessionExercise, Exercise, RoutineExercise } from '../../lib/types';
 import type { SessionExerciseWithSets } from '../../lib/db/queries';
+import { deleteSuperSetMembers } from '../../lib/db/queries';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 import { useTranslation } from 'react-i18next';
@@ -62,6 +64,9 @@ export default function SessionScreen() {
   const updateRoutineExerciseTargets = useUpdateRoutineExerciseTargets();
 
   const sortedExercises = sessionExercises ? [...sessionExercises].sort((a, b) => a.order - b.order) : [];
+
+  // Pair/standalone classification, plus the pair ids whose member count cannot render.
+  const supersetPlan = planSupersetRows(sortedExercises);
 
   // Previous-session data for the "peso previo" placeholders (guidance only).
   const { data: lastSession } = useLastSessionForRoutine(session?.routineId ?? 0);
@@ -174,6 +179,27 @@ export default function SessionScreen() {
   const createSuperSetPair = useCreateSuperSetPair();
   const unlinkSuperSet = useUnlinkSuperSet();
   const deleteSessionExercise = useDeleteSessionExercise();
+  // A super set renders only when its pair id is shared by exactly two rows — that is
+  // all SupersetBlock can show. Any other size used to fall through to the standalone
+  // path behind a source comment, leaving the pair id in the database where no control
+  // could remove it. Dissolve it deliberately: the rows keep their sets and can be
+  // paired again from the row itself.
+  const dissolvedPairIds = useRef(new Set<number>());
+  const unrenderablePairKey = supersetPlan.unrenderablePairIds.join(',');
+  useEffect(() => {
+    dissolvedPairIds.current.clear();
+  }, [sessionId]);
+  useEffect(() => {
+    if (unrenderablePairKey === '') return;
+    unrenderablePairKey.split(',').map(Number).forEach((pairId) => {
+      if (dissolvedPairIds.current.has(pairId)) return;
+      dissolvedPairIds.current.add(pairId);
+      unlinkSuperSet.mutateAsync({ pairId, sessionId }).catch(() => {
+        // The hook's onError already surfaced the failure. Keep the id recorded so a
+        // persistent failure cannot turn this effect into a retry loop.
+      });
+    });
+  }, [unrenderablePairKey, sessionId, unlinkSuperSet]);
   const [showRoutineDiffModal, setShowRoutineDiffModal] = useState(false);
   const [pendingDiff, setPendingDiff] = useState<RoutineDiff | null>(null);
   const [applyingRoutineUpdate, setApplyingRoutineUpdate] = useState(false);
@@ -571,7 +597,7 @@ export default function SessionScreen() {
   };
 
   const handleDeleteSuperSet = (members: SessionExercise[]) => {
-    const pairId = members[0]?.supersetPairId;
+    const pairId = members[0]?.supersetPairId ?? null;
     const nameA = getExerciseNameForSession(members[0]);
     const nameB = getExerciseNameForSession(members[1]);
     showConfirm(
@@ -579,12 +605,16 @@ export default function SessionScreen() {
       t('session.confirm.deleteSuperSetMessage', { nameA, nameB }),
       async () => {
         await haptics.warning();
-        if (pairId != null) {
-          await unlinkSuperSet.mutateAsync({ pairId, sessionId });
-        }
-        await deleteSessionExercise.mutateAsync({ id: members[0].id, sessionId });
-        if (members[1]) {
-          await deleteSessionExercise.mutateAsync({ id: members[1].id, sessionId });
+        try {
+          // The unlink and both member deletes share one transaction in the DB layer.
+          // Splitting them into separate awaited mutations is exactly what could leave
+          // a half-deleted group behind.
+          await deleteSuperSetMembers(members.map((member) => member.id), pairId);
+          queryClient.invalidateQueries({ queryKey: [...SESSION_KEY, sessionId, 'exercises'] });
+          queryClient.invalidateQueries({ queryKey: [...SESSION_KEY, sessionId, 'exercises', 'withSets'] });
+        } catch {
+          await haptics.error();
+          showAlert(t('common.error'), t('common.databaseError'));
         }
       },
       { confirmLabel: t('session.confirm.delete'), destructive: true }
@@ -644,75 +674,57 @@ export default function SessionScreen() {
           {sortedExercises.length === 0 ? (
             <EmptyState title={t('session.noExercises')} message={t('session.noExercisesMessage')} />
           ) : (
-            (() => {
-              const pairs = new Map<number, SessionExercise[]>();
-              sortedExercises.forEach((se) => {
-                if (se.supersetPairId == null) return;
-                const members = pairs.get(se.supersetPairId) ?? [];
-                members.push(se);
-                pairs.set(se.supersetPairId, members);
-              });
-
-              const rows: ReactNode[] = [];
-              const renderedInPair = new Set<number>();
-              sortedExercises.forEach((se, index) => {
-                if (renderedInPair.has(se.id)) return;
-                if (se.supersetPairId != null) {
-                  const members = pairs.get(se.supersetPairId) ?? [];
-                  if (members.length === 2) {
-                    renderedInPair.add(members[0].id);
-                    renderedInPair.add(members[1].id);
-                    rows.push(
-                      <SupersetBlock
-                        key={members[0].id}
-                        exercises={members}
-                        sessionId={sessionId}
-                        nameA={getExerciseNameForSession(members[0])}
-                        nameB={getExerciseNameForSession(members[1])}
-                        previousWeightFor={getPreviousForExercise}
-                        maxWeightFor={getMaxWeightForExercise}
-                        onNewRecord={handleNewRecord}
-                        onReplace={(id) => { setReplaceId(id); setShowPicker(true); }}
-                        onDeletePair={() => handleDeleteSuperSet(members)}
-                        onSetCompleted={(exerciseName, restTime) => {
-                          setRestExerciseName(exerciseName);
-                          setRestDuration(restTime);
-                          setAutoStartTimer(true);
-                          setRestartKey((k) => k + 1);
-                          setShowRestTimer(true);
-                        }}
-                      />
-                    );
-                    return;
-                  }
-                  // Orphan: pairId set but only one row has it → render standalone below.
-                }
-                rows.push(
-                  <Animated.View key={se.id} layout={LinearTransition.duration(200)}>
-                    <SessionExerciseItem
-                      sessionExercise={se}
-                      sessionId={sessionId}
-                      previousWeightFor={getPreviousForExercise}
-                      maxWeightFor={getMaxWeightForExercise}
-                      onNewRecord={handleNewRecord}
-                      onSetCompleted={(exerciseName, restTime) => {
-                        setRestExerciseName(exerciseName);
-                        setRestDuration(restTime);
-                        setAutoStartTimer(true);
-                        setRestartKey((k) => k + 1);
-                        setShowRestTimer(true);
-                      }}
-                      onReplace={() => { setReplaceId(se.id); setShowPicker(true); }}
-                      onDragTap={() => handleDragHandleTap(index)}
-                      isDragging={dragIndex === index}
-                      onPairSuperset={() => setSupersetPartnerMode({ id: se.id })}
-                      onDelete={() => handleDeleteExercise(se)}
-                    />
-                  </Animated.View>
+            supersetPlan.rows.map((row) => {
+              if (row.kind === 'pair') {
+                const [first, second] = row.members;
+                return (
+                  <SupersetBlock
+                    key={first.id}
+                    exercises={row.members}
+                    sessionId={sessionId}
+                    nameA={getExerciseNameForSession(first)}
+                    nameB={getExerciseNameForSession(second)}
+                    previousWeightFor={getPreviousForExercise}
+                    maxWeightFor={getMaxWeightForExercise}
+                    onNewRecord={handleNewRecord}
+                    onReplace={(id) => { setReplaceId(id); setShowPicker(true); }}
+                    onDeletePair={() => handleDeleteSuperSet(row.members)}
+                    onSetCompleted={(exerciseName, restTime) => {
+                      setRestExerciseName(exerciseName);
+                      setRestDuration(restTime);
+                      setAutoStartTimer(true);
+                      setRestartKey((k) => k + 1);
+                      setShowRestTimer(true);
+                    }}
+                  />
                 );
-              });
-              return rows;
-            })()
+              }
+              const se = row.exercise;
+              const index = sortedExercises.indexOf(se);
+              return (
+                <Animated.View key={se.id} layout={LinearTransition.duration(200)}>
+                  <SessionExerciseItem
+                    sessionExercise={se}
+                    sessionId={sessionId}
+                    previousWeightFor={getPreviousForExercise}
+                    maxWeightFor={getMaxWeightForExercise}
+                    onNewRecord={handleNewRecord}
+                    onSetCompleted={(exerciseName, restTime) => {
+                      setRestExerciseName(exerciseName);
+                      setRestDuration(restTime);
+                      setAutoStartTimer(true);
+                      setRestartKey((k) => k + 1);
+                      setShowRestTimer(true);
+                    }}
+                    onReplace={() => { setReplaceId(se.id); setShowPicker(true); }}
+                    onDragTap={() => handleDragHandleTap(index)}
+                    isDragging={dragIndex === index}
+                    onPairSuperset={() => setSupersetPartnerMode({ id: se.id })}
+                    onDelete={() => handleDeleteExercise(se)}
+                  />
+                </Animated.View>
+              );
+            })
           )}
         </View>
       </KeyboardAwareScrollView>
