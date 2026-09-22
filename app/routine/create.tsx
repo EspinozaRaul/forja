@@ -215,7 +215,7 @@ export default function CreateRoutineScreen() {
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
                   <View style={{ width: 16, height: 2, backgroundColor: dragIndex === index ? colors.accent.primary : colors.text.muted, borderRadius: borderRadius.xs }} />
                 </TouchableOpacity>
-                <Text style={{ fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.text.muted, width: 20 }}>{index + 1}</Text>
+                <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.bold, color: colors.text.muted, width: 20 }}>{index + 1}</Text>
                 <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.primary, flex: 1 }} numberOfLines={1}>
                   {getExerciseName(exercise.name, i18n.language)}
                 </Text>

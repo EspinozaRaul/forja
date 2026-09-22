@@ -128,6 +128,8 @@
     }
   },
   "routine": {
+    "exercise": "ejercicio",
+    "exercises": "ejercicios",
     "detail": {
       "title": "Rutina",
       "loading": "Cargando rutina...",

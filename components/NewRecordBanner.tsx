@@ -83,7 +83,7 @@ export function NewRecordBanner({ exerciseName, weight, unit, onDismiss }: NewRe
       >
         <Text
           numberOfLines={1}
-          style={{ color: colors.bg.primary, fontSize: fontSizes.sm, fontWeight: fontWeights.bold, fontFamily: fonts.bodyMedium }}
+          style={{ color: colors.bg.primary, fontSize: fontSizes.sm, fontWeight: fontWeights.bold, fontFamily: fonts.bodySemiBold }}
         >
           {t('session.newRecord')} {exerciseName} · {weight} {unit}
         </Text>

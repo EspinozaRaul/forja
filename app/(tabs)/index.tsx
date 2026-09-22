@@ -209,13 +209,13 @@ export default function HomeScreen() {
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xs }}>{t('tabs.home.workouts')}</Text>
-            <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
               {globalStats?.totalWorkouts ?? 0}
             </Text>
           </View>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xs }}>{t('tabs.home.streak')}</Text>
-            <Text style={{ fontSize: fontSizes.xl, fontWeight: fontWeights.bold, color: colors.warning }}>
+            <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.warning }}>
               {globalStats?.currentStreak ?? 0}d
             </Text>
           </View>

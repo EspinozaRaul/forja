@@ -538,7 +538,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                   accessibilityHint={t('accessibility.customRest.minutesHint')}
                   style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
                 />
-                <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
+                <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.minutes')}</Text>
                 <Text style={{ fontSize: fontSizes.xl, color: colors.text.muted }}>:</Text>
                 <TextInput
                   value={customSeconds}
@@ -551,7 +551,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                   accessibilityHint={t('accessibility.customRest.secondsHint')}
                   style={{ backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + spacing.xs, color: colors.text.primary, fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, width: 80, textAlign: 'center' }}
                 />
-                <Text style={{ fontSize: fontSizes.xl, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>
+                <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.text.secondary, fontWeight: fontWeights.semibold }}>{t('session.dropSet.seconds')}</Text>
               </View>
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: spacing.sm + spacing.xs }}>

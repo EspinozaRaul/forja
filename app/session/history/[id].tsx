@@ -339,7 +339,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
           </Text>
         </TouchableOpacity>
         <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted }}>
-          {completedSets.length} sets • {formatVolume(totalVolume, unit)}
+          {completedSets.length} {t('session.sets')} • {formatVolume(totalVolume, unit)}
         </Text>
       </View>
       {sets && sets.length > 0 ? (
@@ -357,7 +357,7 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
             >
               <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
               <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>
-                {set.reps ?? '-'} reps × {formatWeight(set.weight, unit)}
+                {set.reps ?? '-'} {t('session.reps')} × {formatWeight(set.weight, unit)}
               </Text>
               <Ionicons
                 name={set.completed ? 'checkmark' : 'ellipse-outline'}
