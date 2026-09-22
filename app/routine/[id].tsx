@@ -230,12 +230,17 @@ export default function RoutineDetailScreen() {
           // Materialize the planned set template (empty sets guide the user)
           const sessionExerciseId = se[0].id;
           const plannedSets = re.targetSets ?? DEFAULT_TARGET_SETS;
+          // Create all sets for this exercise in parallel (fan-out, not a batch insert)
+          const setPromises = [];
           for (let i = 1; i <= plannedSets; i++) {
-            await createSet.mutateAsync({
-              sessionExerciseId,
-              setNumber: i,
-            });
+            setPromises.push(
+              createSet.mutateAsync({
+                sessionExerciseId,
+                setNumber: i,
+              })
+            );
           }
+          await Promise.all(setPromises);
         }
       }
 
