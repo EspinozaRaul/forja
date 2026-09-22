@@ -143,21 +143,24 @@ search against the sweep's own pattern (`app/session/history/[id].tsx`, `'✓'` 
 
 Three separate counts quoted during the session were corrected by measurement before they could
 drive a change; the modal total (18 → 17) and the pressable-as-button figure (69, reduced by reading
-to 10 of 29) are two of them. The measurement, not the grep, decided.
+to 10 of 33) are two of them. The measurement, not the grep, decided.
 
 ## Still open
 
-- **The candidate button conversions.** The audit of three dense files found only **10 of 29**
+- **The candidate button conversions.** The audit of three dense files found only **10 of 33**
   pressables are actually buttons, and **no conversion is a pure equivalence** — each one moves
   padding, radius, font size or fill. They are per-site decisions, not a sweep, and 385 is the
   highest-risk one because it lives in a gesture slot:
   - `app/(tabs)/routines.tsx` 265 / 272 / 320 / 327
   - `app/session/[id].tsx` 743 / 750 / 800
   - `components/session/SessionExerciseItem.tsx` 556 / 563, and 385
-- **The counts cannot be re-derived.** The measurement scripts behind the figures quoted above and
-  in `docs/roadmap.md` lived in a temporary directory and were **not committed**, so the numbers
-  cannot currently be reproduced from the repository. Either commit a script or stop quoting precise
-  counts.
+  The denominator is the 33 `<Pressable>` + `<TouchableOpacity>` tags across those three files,
+  reported by `scripts/ui-metrics.js` as `pressableAuditDenominator`. It was 29 before the previous
+  batch's modal-dismissal unit added four `Pressable`s to `app/session/[id].tsx`.
+- **The counts are re-derivable again.** `scripts/ui-metrics.js` reports the current counts and
+  `__tests__/lib/metrics.test.ts` fails when `docs/ui-standard.md`'s quoted numbers drift from the
+  tree. The scripts behind the audit verdict itself still lived in a temporary directory and were
+  **not committed**, so the per-site reading (the "10") remains a judgment, not a measurement.
 
 (The dead `optionArrow` style formerly listed here is gone — it was removed in the plain on-surface
 unit, `175884c`.)

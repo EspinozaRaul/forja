@@ -1,7 +1,7 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-20
-> Status: 46 commits ahead of `origin/main`, nothing pushed; fourteen units merged end to end, with a decision list still open
+> Last updated: 2026-09-21
+> Status: everything through `30a7e89` is pushed to `origin/main`; the 2026-09-20 session's fourteen units and the following six-unit technical batch are both in `main`, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
 worth checking. The standard for building screens lives in `docs/ui-standard.md`; `AGENTS.md`
@@ -13,7 +13,13 @@ points there.
 
 Fourteen units were merged into `main` this session, each one gated by `npx tsc --noEmit` and
 `npx jest`. The suite went from **17 suites / 138 tests** on `616a25a` to **25 / 220** here, and the
-working tree is clean. Nothing was pushed: `main` is **46 commits ahead of `origin/main`**.
+working tree is clean.
+
+**Delivery status, updated 2026-09-21.** All of it is now pushed. `main` went `616a25a..79df39e`
+(this session's fourteen units plus the handoff), then `79df39e..30a7e89`, which lands
+`fix/technical-defects-batch` as **six units**: `deleteSession` atomicity, the routine
+materialisation fan-out, the EN→ES seed, the web hook account guard, the sign-out error shape, and
+the three bottom sheets. `origin/main` is at `30a7e89`.
 
 ### Landed this session
 
@@ -39,9 +45,8 @@ working tree is clean. Nothing was pushed: `main` is **46 commits ahead of `orig
 
 #### Needs your decision or your eyes
 
-1. **Push.** `main` is **46 commits ahead of `origin/main`** and nothing has been pushed. This is
-   your decision and the single largest outstanding risk: all of this work exists only on this
-   machine.
+1. **Push.** Done: `main` was pushed through `30a7e89` — `616a25a..79df39e`, then
+   `79df39e..30a7e89` (see the delivery status above). No longer outstanding.
 2. **T4's runtime verification.** The replace-exercise fix is merged and gated, but its *data*
    behaviour was never observed: the DB-layer tests mock Drizzle and cannot prove the row outcome. A
    fixture is prepared and waiting on the iPhone 17 Pro simulator — session `24`, where row `35`
@@ -63,7 +68,7 @@ working tree is clean. Nothing was pushed: `main` is **46 commits ahead of `orig
 
 #### Decided — no user input needed
 
-7. **The candidate button conversions.** An audit of three dense files found that only **10 of 29**
+7. **The candidate button conversions.** An audit of three dense files found that only **10 of 33**
    pressables are actually buttons, and that **no conversion is a pure equivalence** — each one moves
    padding, radius, font size or fill. They are *per-site decisions*, not a sweep, with the
    near-equivalent sites named: `app/(tabs)/routines.tsx` 265 / 272 / 320 / 327,
@@ -226,11 +231,19 @@ Ordered by what I would do first.
 1. **Observability: there is none.** No Sentry, no Crashlytics, and the local build's `mapping.txt`
    is deleted with EAS's temp directory. A crash on someone else's phone leaves no trace, and R8
    obfuscation makes any stack they could send unreadable. This is the biggest operational hole left.
-2. **`deleteSession` runs its three deletes without a transaction** (`lib/db/queries.ts`) — a failure
-   between them leaves orphan rows.
-3. **Sequential writes in a loop**: `app/routine/[id].tsx:220-230` awaits `createSet` per set, so
-   materialising a routine is O(exercises × sets) round trips. The N+1 fix landed for the session and
-   home paths but not this one.
+2. **`deleteSession`'s transaction is fixed; N2, its five siblings, are not.** `deleteSession` is now
+   atomic (`392e7d3`), and the original framing here was wrong: its three deletes run children-first,
+   so nothing is orphaned. The residue of a mid-sequence failure is a **half-deleted session** — a
+   surviving `sessions` row whose children are already gone, which `getActiveSession` still returns.
+   The same sync-driver defect is live in the five other `db.transaction` sites:
+   `lib/db/queries.ts:388`, `:646`, `:760`, `:937`, `:1126`. Their `async` callbacks hit the trap
+   `deleteSession` avoids — the driver commits at the first `await`, so later statements run in
+   autocommit. `deleteSession`'s own callback is synchronous on purpose (`:518`).
+3. **Sequential writes in a loop**: `app/routine/[id].tsx:220-230` awaited `createSet` per set, so
+   materialising a routine was O(exercises × sets) round trips. It now fans them out through one
+   `Promise.all` (`7338fcd`), matching the session and home paths. That is **fan-out, not batching**:
+   the round-trip count is unchanged and only the serialised latency is gone. A real batch insert is
+   still unstarted.
 4. **The two EN→ES exercise-name maps** (`lib/db/exercise-names-es.ts` and
    `lib/i18n/exercise-translations.ts`) can disagree, so the same exercise can be named differently
    depending on where it is read.
@@ -245,9 +258,16 @@ Ordered by what I would do first.
 8. **The two `.web.ts` mocks** (`useProgress.web.ts`, `useProgressionBubble.web.ts`) have no account
    guard or key, unlike their native counterparts.
 9. **Cosmetic leftovers reported but not fixed**: 6 `fontWeight` without `fontFamily`; the
-   `accessibilityHint` and `role="header"` suggestions (deliberately not blanket-added); the
    `!exercise` branch of `exercise-detail` not migrated to `<Screen>`; `session/history/[id].tsx`
    still builds "sets"/"reps" by concatenation; the a11y guard test does not cover `TextInput`.
+   (The `accessibilityHint` / `role="header"` item is closed as a decision — see §5.6.)
+10. **N1 — `PRAGMA foreign_keys` is never enabled, so every `ON DELETE CASCADE` is inert.** No file
+    in the repository turns the pragma on. `deleteSessionExercise` (`lib/db/queries.ts:734`) deletes
+    only the `session_exercises` row and relies on the declared cascade for its `sets`, so it leaves
+    genuinely orphaned `sets` rows — a live data-integrity bug. It is not a one-liner: enabling the
+    pragma on a database that already contains orphans can make later operations fail, so the
+    existing rows need an audit or a cleanup first. Listed last only to keep the §4.2 / §4.3
+    references in the earlier batch documents valid; by severity it belongs near the top.
 
 ---
 
@@ -256,8 +276,14 @@ Ordered by what I would do first.
 1. **The empty card on the Progreso tab.** It showed up in a simulator screenshot: a card between
    the title and "Sesiones del mes" with nothing in it. Never investigated.
 2. **`session.exerciseCount`,** which I added to both catalogues: the key is real but the branch that
-   renders it is unreachable today because no caller passes a count. Decide whether to wire it or
-   delete the branch.
+   renders it is unreachable today because no caller passes a count. It is also an **orphan with two
+   live namesakes** — `session.new.exerciseCount` and `progress.exerciseCount` are used, only
+   `session.exerciseCount` is dead — so deleting the wrong one is easy. Three audit records already
+   say delete it (`docs/audits/03-dead-code.md` F2 and cleanup step 6, and
+   `docs/audits/00-consolidated.md` row 18). One honest counterpoint before that decision: wiring it
+   is smaller than this list implies — `app/(tabs)/index.tsx` already has per-session counts from
+   `lib/progress/queries.ts`, so only the history index would need a new grouped count, with
+   `getRoutineSessionCounts` as precedent. Delete it deliberately, not for cost.
 3. **Whether the app still needs a web target.** `useProgress.web.ts` and
    `useProgressionBubble.web.ts`, plus `react-dom` and `react-native-web`, suggest it was once
    intended; nothing else does.
@@ -265,9 +291,22 @@ Ordered by what I would do first.
    `packages/precompile` does not exist, which forces several pods to compile from source. Neither
    blocks anything today, but a fresh iOS build will need the same `rm -rf Pods Podfile.lock` dance
    that the Android side did not.
-5. **`jest.config.js`'s `transformIgnorePatterns` still lists `@sentry/react-native`**, a package that
-   is not installed — the same "config references something that is not there" shape as the
-   `expo-updates` hit knip reported.
+5. **`jest.config.js`'s `transformIgnorePatterns` names two packages that are not installed** —
+   `@sentry/react-native` and `native-base` — while the rest of the list is live. Its remedy
+   (`docs/audits/00-consolidated.md` row 15) includes pruning the config. Do not budget against the
+   `expo-updates` comparison this line used to make: `expo-updates` appears nowhere in the tree
+   (`package.json`, `package-lock.json`, `app.json`, `node_modules`), knip is not a dependency here,
+   and the comparison had no artifact behind it. Removal is safe: the pattern is a transpilation
+   allow-list, so an entry naming an absent package is inert.
+6. **`accessibilityHint` and `role="header"` — closed as a decision, not done.** The item has no
+   origin in this repository: nothing under `docs/audits/` mentions it (the one a11y line there
+   praises the existing guard), and its only reference was a single roadmap line with no provenance,
+   no per-site list and no reason. What it asked for already exists. `accessibilityHint` is applied
+   selectively at **35 sites** backed by **29** catalogue keys — on inputs, toggles and
+   expand/collapse controls — and deliberately omitted where the label plus role already states the
+   outcome; that is the policy, and it is implemented. `role="header"` has **zero** occurrences and
+   no candidate list, so adding one would be a new convention with no rule to violate. Do not
+   re-open this item without a named site that fails.
 
 ---
 

@@ -242,16 +242,49 @@ the principle, not copying its structure literally.
 
 **This is the target, not the state of the repo.** The divergences below were
 measured, not guessed, and each is its own migration work unit. `<Button>` is used
-28 times, but only 14 of those call sites choose a variant (11 `secondary`, 2
-`primary`, 1 `danger`) — the other 14 fall through to `primary`, so most buttons
-are loud by accident. The `compact` size is passed at 4 call sites. 31 files
-still mount a bare `TouchableOpacity` (131 tags in total) and 28 of them paint
-their own `backgroundColor`, so most buttons in the app are not the button.
-`borderRadius.md` (83), `.lg` (37) and `.full` (20) still compete for the same
-rectangular job. Text glyphs are still the action in 14 places (`✕` 4, `›` 4,
-`←` 2, `×` 2, `↻` 2), including the replace and remove controls in the routine
-detail exercise list. `app/routine/[id].tsx` is the first screen brought onto
-this section; the rest is backlog.
+27 times, and all 27 call sites choose a variant explicitly — none falls through to
+`primary`. The `compact` size is passed at 5 call sites. 31 files still mount a bare
+`TouchableOpacity` (129 tags in total) and 28 of them paint their own
+`backgroundColor`, so most buttons in the app are not the button. `borderRadius.md`
+(83), `.lg` (37) and `.full` (22) still compete for the same rectangular job. No
+named text glyph (`✕`, `›`, `←`, `×`, `↻`) survives as an action: the remaining
+occurrences are separators inside strings the app composes, which the boundary above
+allows. **Three ASCII arrows do survive as actions** — `{'<'}` and `{'>'}` in
+`app/(tabs)/progress.tsx` (month back, month forward, and the session-row chevron) —
+and a sweep for the named characters is structurally blind to them. `app/routine/[id].tsx`
+is the first screen brought onto this section; the rest is backlog.
+
+The counts above are the output of `scripts/ui-metrics.js`, not prose. The block
+below is those numbers in a shape a test can read. `__tests__/lib/metrics.test.ts`
+re-runs the script and fails when any quoted count drifts from the tree, so this
+paragraph cannot go stale silently again.
+
+```text
+<!-- ui-metrics:begin -->
+modals = 17
+buttonCallsites = 27
+buttonVariants = 27
+buttonVariantFallthroughs = 0
+buttonCompactCallsites = 5
+pressables = 174
+pressableAuditDenominator = 33
+bareTouchableOpacityFiles = 31
+bareTouchableOpacityTags = 129
+ownBackgroundColorFiles = 28
+radiusMd = 83
+radiusLg = 37
+radiusFull = 22
+glyphActions = 0
+glyphAsciiCandidates = 3
+unlabelledInteractive = 0
+accessibilityLabelSites = 118
+accessibilityHintSites = 35
+accessibilityHintKeys = 29
+roleHeaderOccurrences = 0
+catalogueKeysEs = 681
+catalogueKeysEn = 681
+<!-- ui-metrics:end -->
+```
 
 ## Checklist for a new screen
 
