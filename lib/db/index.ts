@@ -3,7 +3,7 @@ import { openDatabaseSync } from 'expo-sqlite';
 import { categories, exercises } from './schema';
 import { and, eq, isNotNull, isNull, like, or, sql } from 'drizzle-orm';
 import exercisesData from './exercises-data.json';
-import { getExerciseNameEs } from '../i18n/exercise-translations';
+import { EXERCISE_NAMES_ES } from './exercise-names-es';
 import { now } from '../utils/date';
 import { CREATE_TABLES_SQL } from './ddl';
 
@@ -302,7 +302,7 @@ export async function initializeDatabase() {
 
       await db.insert(exercises).values({
         name: ex.n,
-        nameEs: getExerciseNameEs(ex.n),
+        nameEs: EXERCISE_NAMES_ES[ex.n.toLowerCase().trim()] ?? ex.n,
         categoryId,
         description: ex.en,
         descriptionEs: ex.es,
