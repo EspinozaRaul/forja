@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { Text, View, Pressable, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -42,6 +42,8 @@ export default function FolderDetailScreen() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editColor, setEditColor] = useState(colors.accent.primary);
+
+  const closeEditSheet = () => setShowEditModal(false);
 
   const folder = folders?.[0];
 
@@ -226,9 +228,18 @@ export default function FolderDetailScreen() {
       </View>
 
       {/* Edit Modal */}
-      <Modal accessible={true} visible={showEditModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, padding: spacing.lg, maxHeight: MODAL.MAX_HEIGHT }}>
+      <Modal accessible={true} visible={showEditModal} transparent animationType="slide" onRequestClose={closeEditSheet}>
+        <Pressable
+          onPress={closeEditSheet}
+          accessibilityLabel={t('accessibility.common.close')}
+          accessibilityRole="button"
+          style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'flex-end' }}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            accessible={false}
+            style={{ backgroundColor: colors.bg.card, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, maxHeight: MODAL.MAX_HEIGHT, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl + insets.bottom }}
+          >
             <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md + spacing.xs }}>{t('routine.folder.editTitle')}</Text>
 
@@ -293,8 +304,8 @@ export default function FolderDetailScreen() {
                 <Text style={{ color: colors.text.onAccent, fontFamily: fonts.bodySemiBold }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
     <ConfirmDialog

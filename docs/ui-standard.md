@@ -270,6 +270,8 @@ this section; the rest is backlog.
 - [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), **only its actions** sit
       outside the scroll region, and the title, the message and all variable-length
       content scroll inside `MODAL.MAX_BODY_HEIGHT`
+- [ ] Tapping outside a modal dismisses it: the backdrop is a `Pressable` with a
+      translated label and role, and the card swallows the tap (`stopPropagation`)
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green
 
 ## Why this file exists
