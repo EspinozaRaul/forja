@@ -315,10 +315,13 @@ Ordered by what I would do first.
    atomic (`392e7d3`), and the original framing here was wrong: its three deletes run children-first,
    so nothing is orphaned. The residue of a mid-sequence failure is a **half-deleted session** — a
    surviving `sessions` row whose children are already gone, which `getActiveSession` still returns.
-   The same sync-driver defect is live in the five other `db.transaction` sites:
-   `lib/db/queries.ts:388`, `:646`, `:760`, `:937`, `:1126`. Their `async` callbacks hit the trap
-   `deleteSession` avoids — the driver commits at the first `await`, so later statements run in
-   autocommit. `deleteSession`'s own callback is synchronous on purpose (`:518`).
+   The same sync-driver defect is live in the five other `db.transaction` sites, **re-measured on
+   2026-09-24: `lib/db/queries.ts:388`, `:646`, `:820`, `:997`, `:1186`.** This list used to read
+   `:760`, `:937`, `:1126` — those were stale. The earlier count of five was right and the places were
+   wrong: `:752` and `:777` are already synchronous, and `:937` is a leaf-set read region with no
+   transaction. Their `async` callbacks hit the trap `deleteSession` avoids — the driver commits at
+   the first `await`, so later statements run in autocommit. `deleteSession`'s own callback is
+   synchronous on purpose (`:518`). Tracked as N2 in `odd/tasks/db-integrity-foreign-keys.md`.
 3. **Sequential writes in a loop**: `app/routine/[id].tsx:220-230` awaited `createSet` per set, so
    materialising a routine was O(exercises × sets) round trips. It now fans them out through one
    `Promise.all` (`7338fcd`), matching the session and home paths. That is **fan-out, not batching**:
@@ -357,6 +360,16 @@ Ordered by what I would do first.
     pragma on a database that already contains orphans can make later operations fail, so the
     existing rows need an audit or a cleanup first. Listed last only to keep the §4.2 / §4.3
     references in the earlier batch documents valid; by severity it belongs near the top.
+
+    **Its scope is wider than this entry, re-measured on 2026-09-24.** Three cascade dependencies are
+    inert, not one: `deleteRoutine` also orphans `routine_exercises` and leaves `sessions.routine_id`
+    dangling, and `deleteFolder` leaves `routines.folder_id` pointing at a deleted folder — which its
+    own comment says the FK handles. The knock-on effect: **`deleteExercise` is poisoned by those
+    ghosts**, because it counts references without joining against a live parent, so it refuses to
+    delete an exercise cited only by routines that no longer exist. And **three confirmation strings
+    are false** today, not one: the exercise and superset deletes promise *"Se eliminan sus series"*,
+    and the folder delete promises the routines are merely unlinked. Full map, the two premises
+    verified before coding, and the unit split: `odd/tasks/db-integrity-foreign-keys.md`.
 
 ---
 
