@@ -246,6 +246,21 @@ export async function initializeDatabase() {
     // Column already exists, ignore
   }
 
+  // One-time cleanup of the unambiguous orphan rows left behind while
+  // `PRAGMA foreign_keys` was never enabled (see U2). Every read joins through a
+  // live parent, so these rows render nowhere and they poison `deleteExercise`,
+  // which counts references without joining the live parent. It must run before
+  // the "exercises already imported" early return below: that is the branch every
+  // installed database containing orphans takes, and `routines.folder_id` exists
+  // by this point because the ALTER above it already ran. Idempotent by
+  // construction: a second pass matches no rows.
+  expoDb.execSync(`
+    DELETE FROM sets              WHERE session_exercise_id NOT IN (SELECT id FROM session_exercises);
+    DELETE FROM routine_exercises WHERE routine_id          NOT IN (SELECT id FROM routines);
+    UPDATE routines SET folder_id  = NULL WHERE folder_id IS NOT NULL AND folder_id NOT IN (SELECT id FROM routine_folders);
+    UPDATE sessions SET routine_id = NULL WHERE routine_id IS NOT NULL AND routine_id NOT IN (SELECT id FROM routines);
+  `);
+
   // Check if exercises already imported
   const exerciseCount = await db.select({ count: sql<number>`count(*)` }).from(exercises);
   if (exerciseCount[0].count > 0) {
