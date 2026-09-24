@@ -11,6 +11,18 @@ const DATABASE_NAME = 'fitness-tracker.db';
 
 const expoDb = openDatabaseSync(DATABASE_NAME);
 
+// SQLite defaults `foreign_keys` OFF, and expo-sqlite 57.0.2 does not enable it
+// on either platform, which makes every declared `ON DELETE CASCADE` / `SET NULL`
+// action inert: deleting a parent silently leaves its children behind (and a
+// `folder_id`/`routine_id` pointing at a row that no longer exists).
+//
+// It must be issued here, at module scope, and not inside `initializeDatabase`:
+// the connection exists from import time, while `initializeDatabase` runs later,
+// gated by `useDatabase`. Some writers therefore run before it ever did, and this
+// statement is what makes the schema's own declarations true for all of them.
+// It is a no-op on `lib/db/index.web.ts`, which has no foreign-key concept.
+expoDb.execSync('PRAGMA foreign_keys = ON');
+
 export const db = drizzle(expoDb);
 
 // Categories for the app
