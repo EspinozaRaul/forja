@@ -1,7 +1,15 @@
 # db-integrity-foreign-keys
 
-**Status**: in progress — **U1 and U2 (N1) authorized to land now**; **U3–U5 (N2) scheduled next** in the same
-feature. The user's decision (2026-09-24): clean only the unambiguous orphans automatically, and do N1 first.
+**Status**: **U1 and U2 (N1) landed.** **U3–U5 (N2) scheduled next**, not started. The user's decision
+(2026-09-24): clean only the unambiguous orphans automatically, and do N1 first.
+
+### Landed on this branch
+
+| Unit | Commit | What landed |
+| --- | --- | --- |
+| tracking | `8104f03` | this document, plus N2's stale line numbers corrected in the roadmap |
+| U1 | `7dff330` | the idempotent orphan cleanup in `initializeDatabase`, pragma still OFF |
+| U2 | `(this commit)` | `PRAGMA foreign_keys = ON` at module scope, plus the boundary and behaviour tests |
 
 **Branch**: `fix/db-integrity-foreign-keys`, branched from `main` @ `af8c436`. Merge and push stay the user's
 decision.
@@ -155,10 +163,26 @@ redesign alongside the conversion. Each gets a negative-control atomicity test i
 
 ## Recorded, deliberately not fixed here
 
-- `deleteUserLocalData` (`queries.ts:2018`) deletes children keyed off *live* parents, so pre-existing orphans
-  in an account survive "delete my account". U1 removes them at startup instead, which covers the same rows.
-- The roadmap's N2 line numbers (`760`, `937`, `1126`) were wrong. The roadmap carries them; correcting it belongs
-  to this batch's first commit rather than to a silent edit.
+- **`createRoutine` and `updateRoutine` accept `categoryId` / `folderId` with no existence assert**
+  (`lib/db/queries.ts:246-256` and `:258-267`). They insert/`set` whatever the caller passes, so with
+  enforcement on a stale or invalid id now raises a **raw SQLite foreign-key error** where it previously
+  stored a dead reference silently. The window is narrow — the UI picks from loaded lists — but the
+  failure mode changed from silent corruption to a raw error string, and DB errors are not classified
+  the way auth errors were in T3. Fixing it means either an existence assert (a small, honest pre-check)
+  or classifying DB errors at the UI layer. **Needs its own decision.**
+- **`createSession({ routineId })` is already safe**: it goes through `assertRoutineOwned`
+  (existence plus ownership), so the routine case is covered where the category/folder ones are not.
+- `deleteUserLocalData` (`queries.ts:2018`) deletes children keyed off *live* parents, so pre-existing
+  orphans in an account survive "delete my account". U1 removes them at startup instead, which covers the
+  same rows.
+- The web mock (`lib/db/index.web.ts`) keeps its divergence: it is an in-memory store with no FK concept,
+  so `deleteSessionExercise` still leaves mock `sets` behind there. The store is non-persistent, so the
+  residue dies on reload. Recorded as a decision, not a bug.
+- The two insert-only script connections (`scripts/import-exercises.ts:46`,
+  `lib/db/import-exercises.ts:53`) are left without the pragma: they delete no parent and depend on no
+  cascade.
+- The roadmap's N2 line numbers (`760`, `937`, `1126`) were wrong. Corrected in the roadmap commit on this
+  branch rather than silently edited.
 
 ## Gate
 
