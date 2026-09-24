@@ -225,6 +225,8 @@ The five existing `await db.transaction(async (tx) => …)` sites — `lib/db/qu
 
 `docs/roadmap.md:16` and `odd/tasks/ux-corrections-batch.md:5,561` still say nothing was pushed and quote 24 / 46 commits ahead. `main` was pushed on 2026-09-21 (`616a25a..79df39e`) and is now 0/0 against `origin/main`. The roadmap also still carries the two claims this batch corrects (U1's failure mode, U2's line range and "N+1 fix landed"). Refresh both documents when this batch closes.
 
+**Resolved 2026-09-22.** Both documents were refreshed: `docs/roadmap.md` by this batch's V1 and then again for `30a7e89..893eda8`, and `odd/tasks/ux-corrections-batch.md`'s two push claims (its Status line and its "Nothing was pushed" paragraph). The two corrected claims no longer appear in the roadmap. The finding stands as written; only its premise is now false, which is why it is annotated here instead of deleted.
+
 ---
 
 ## Gate

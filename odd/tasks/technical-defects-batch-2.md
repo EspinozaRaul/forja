@@ -1,14 +1,30 @@
 # technical-defects-batch-2
 
-**Status**: in progress — V1 implemented (the documents are corrected, `scripts/ui-metrics.js` and `__tests__/lib/metrics.test.ts` added), awaiting the parent's commit. V2–V7 pending; V8 blocked on an observation; S3-e closed as a decision, not a defect.
+**Status**: **CLOSED** — V1–V7 and V9 landed in `main` as `893eda8`, the merge of `fix/technical-defects-batch-2` (based on `30a7e89`), and pushed to `origin/main`. Gate observed on `893eda8`: `npx tsc --noEmit` exit 0 and `npx jest` **36 suites / 347 tests** (baseline on `30a7e89`: 29 / 271). **V8 was deliberately excluded from the batch**: it is blocked on one observation, not on work. V5's scope decision was taken as all 14 files plus the raw-`View` root. S3-e was closed as a decision, not a defect.
 
-**Branch**: `fix/technical-defects-batch-2`, branched from `main` @ `30a7e89` (pushed to `origin/main`).
+**Branch**: `fix/technical-defects-batch-2`, branched from `main` @ `30a7e89` and merged as `893eda8`. The branch is deleted; `main` is the only branch and it is 0/0 with `origin/main`.
 
 **TDD**: **strict, ON**. Source: `.pi/project.json` → `gentlePi.strictTDD: true`, plus the user's explicit choice on 2026-09-21. Runner: `npx jest` (focused: `npx jest <path>`). A unit that cannot have a meaningful pre-implementation behaviour test must declare that as a narrow, named exception.
 
 **Gate**: `npx tsc --noEmit` clean and `npx jest` green. Baseline on `30a7e89`: **29 suites / 271 tests**.
 
 **Provenance**: every unit below was mapped read-only on 2026-09-21. The map **corrected the roadmap on five of the seven items and found three defects nobody had listed**. The corrections are load-bearing — acting on the original notes would have fixed a non-bug as if it were live, missed a real one of the same class as the previous batch's, and left two false paragraphs in the document `AGENTS.md` tells every contributor to read before building UI.
+
+---
+
+## Outcome — the nine units against their commits
+
+| Unit | Commit | What landed |
+| --- | --- | --- |
+| V1 | `619a5c3` | the living documents corrected against `scripts/ui-metrics.js`, plus `__tests__/lib/metrics.test.ts` as the anti-drift invariant |
+| V2 | `2a3f421` | the superset delete is atomic, and the group sizes other than two are a visible outcome instead of a silent fallthrough |
+| V3 | `a64bca9` | the custom-rest dialog stops clipping: scroll body, `100%` / `MODAL.MAX_WIDTH` instead of `width: 280`, `onRequestClose` |
+| V4 | `e27ef95` | every `fontWeight` sits on a font family; the last counted nouns are translated |
+| V5 | `d1d5de2` | all 14 header-hidden screens get a real container in their states |
+| V6 | `fe2fd84` | `session.exerciseCount` and its orphan catalogue key deleted |
+| V7 | `f4fe925` | `@sentry/react-native` and `native-base` pruned from the Jest transform allow-list |
+| V9 | `ebfef50` | the three ASCII arrows became Ionicons; `glyphAsciiCandidates === 0` is now an asserted invariant |
+| V8 | — | **not landed, by design** — blocked on the screenshot discriminator; see V8 |
 
 ---
 
@@ -133,9 +149,9 @@ The same bare early return exists at: `app/progress/exercise-detail/[id].tsx:302
 
 **Two traps**: the three tab screens keep the native header and must pass `edges={[]}` (`docs/ui-standard.md:32-34`) or they will double-pad; and `app/session/history/[id].tsx:49-55` uses a **raw `View`** as its `isNaN` root — a literal §1 violation the note does not mention.
 
-**This needs a scope decision** (one screen, or all 14) before it is a unit, because it is a 14-file sweep and it changes layout on nearly every screen. Not started.
+**The scope decision was taken: all 14, and it landed as `d1d5de2`.** The three tab screens keep the native header and pass `edges={[]}`, so they do not double-pad; the raw `View` root at `app/session/history/[id].tsx:49-55` was migrated with the rest. It remains a 14-file sweep that changed layout on nearly every screen, which is exactly why it needed the decision before it was a unit.
 
-**Allowed edit surfaces**: TBD pending the decision.
+**Allowed edit surfaces** (as executed): `app/progress/`, `app/(tabs)/`, `app/session/`, `app/exercise/`, `app/routine/`.
 
 ---
 
@@ -215,7 +231,7 @@ All three sit inside already-labelled `Pressable`s (`accessibilityLabel` + `acce
 ## Gate
 
 - `npx tsc --noEmit` — clean.
-- `npx jest` — green. Baseline on `30a7e89`: 29 suites / 271 tests. Every unit states the numbers it observed.
+- `npx jest` — green. Baseline on `30a7e89`: 29 suites / 271 tests. Every unit states the numbers it observed. **Observed on the merge, `893eda8`: `npx tsc --noEmit` exit 0 and `npx jest` 36 suites / 347 tests.**
 - Per unit: the focused test observed failing first (RED), then passing (GREEN), with the exact commands reported; exceptions declared by name.
 - One work-unit commit per unit on `fix/technical-defects-batch-2`. Merge and push stay the user's decision.
 

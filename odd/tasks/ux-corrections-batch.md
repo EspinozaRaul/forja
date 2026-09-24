@@ -2,7 +2,7 @@
 
 **Workflow**: ODD (Organic Driven Development)
 **Scope**: Forja application code (`app/`, `components/`, `lib/`, `docs/`)
-**Status**: integrated — everything except the items below is merged into `main`, together with the security, timer/db, iOS 27 and action-standard branches, as separate merge commits. Still open here: **T4's runtime verification** (merged and gated, but its data outcome is unobserved), **T5's visual reproduction**, **T7's product decision**, and **Obs-06**. Nothing has been pushed: `main` is 46 commits ahead of `origin/main`.
+**Status**: integrated — everything except the items below is merged into `main`, together with the security, timer/db, iOS 27 and action-standard branches, as separate merge commits. Still open here: **T4's runtime verification** (merged and gated, but its data outcome is unobserved), **T5's visual reproduction**, **T7's product decision**, and **Obs-06** — of which **B3 is now closed** (the custom-rest dialog, `a64bca9`) and **B2 remains** (the bottom sheets). **All of it is pushed**: `main` is at `893eda8` and 0/0 with `origin/main`.
 
 ---
 
@@ -558,8 +558,11 @@ them — `progress-restructure-pr1` and `progress-restructure-pr2` — were alre
 their merge-base with `main` was their own tip. The real count of unmerged branches with work was
 two, plus the two created in this batch. All six are contained in `main` now and can be deleted.
 
-**Nothing was pushed.** `main` sits 24 commits ahead of `origin/main`, which is still at `616a25a`.
-Pushing is a separate decision.
+**Nothing was pushed at the time this was written.** `main` then sat 24 commits ahead of
+`origin/main`, which was still at `616a25a`; pushing was correctly treated as a separate decision.
+**It has since been pushed**, in three steps: `616a25a..79df39e`, `79df39e..30a7e89`, and
+`30a7e89..893eda8`. `main` is at `893eda8` and 0/0 with `origin/main`. Read the rest of this
+document's push claims as history, not as current state.
 
 The merge also settled the branch-hygiene note that had been carried since this batch started:
 `fix/security-hardening-batch`'s `.gitignore` adds `.pi/` (line 57), so the local Pi agent state is

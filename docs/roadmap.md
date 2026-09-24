@@ -1,7 +1,7 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-21
-> Status: everything through `30a7e89` is pushed to `origin/main`; the 2026-09-20 session's fourteen units and the following six-unit technical batch are both in `main`, with a decision list still open
+> Last updated: 2026-09-24
+> Status: everything through `893eda8` is pushed to `origin/main`; the 2026-09-20 session's fourteen units, the six-unit technical batch and the second eight-unit technical batch are all in `main`, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
 worth checking. The standard for building screens lives in `docs/ui-standard.md`; `AGENTS.md`
@@ -20,6 +20,16 @@ working tree is clean.
 `fix/technical-defects-batch` as **six units**: `deleteSession` atomicity, the routine
 materialisation fan-out, the EN→ES seed, the web hook account guard, the sign-out error shape, and
 the three bottom sheets. `origin/main` is at `30a7e89`.
+
+**Delivery status, updated 2026-09-24.** `main` then went `30a7e89..893eda8` (merge commit dated
+2026-09-21 22:47), which lands
+`fix/technical-defects-batch-2` as **eight units**: the living documents corrected against a
+committed measurement script, the superset delete made atomic, the custom-rest dialog unclipped,
+the typography and the last counted nouns, the fourteen header-hidden screens given a real
+container, the dead `session.exerciseCount` deleted, the Jest allow-list pruned, and the three ASCII
+arrows turned into Ionicons. `origin/main` is at `893eda8`, the tree is clean, and the gate on it is
+`npx tsc --noEmit` exit 0 with `npx jest` **36 suites / 347 tests** (from 29 / 271). The branch was
+deleted; `main` is the only branch left.
 
 ### Landed this session
 
@@ -59,12 +69,16 @@ the three bottom sheets. `origin/main` is at `30a7e89`.
 4. **T7, the offline path.** A product decision. Its premise was corrected this session: a network
    failure does **not** drop the session (`@supabase/auth-js` excludes retryable fetch errors from
    session removal), and with a valid stored session the app does enter its logged-in state offline.
-   What remains is a genuinely signed-out user needing a network to get back in.
+   What remains is a genuinely signed-out user needing a network to get back in. **It now has a real
+   case, measured on 2026-09-22 — see "The T7 case" below.**
 5. **Deleting the branches.** Seventeen branches exist and every one is contained in `main`.
    Deleting them needs your OK; do not do it on your own.
-6. **Obs-06, the app-wide large-text strategy.** The largest remaining piece. Its concrete
-   instances, recorded as B2 and B3: the bottom sheets have no bottom inset, and the custom-rest
-   dialog is bound-only, so the largest accessibility text sizes can still clip its buttons.
+6. **Obs-06, the app-wide large-text strategy.** The largest remaining piece. Of its two recorded
+   instances, **B3 is closed** — the custom-rest dialog was unclipped in `a64bca9`. It already
+   carried `maxHeight`; what it actually needed was a scrollable body, its `width: 280` literal
+   replaced by `100%` / `MODAL.MAX_WIDTH`, and an `onRequestClose`. **B2 remains**: the bottom sheets
+   (`app/(tabs)/routines.tsx`, `app/routine/folder/[id].tsx`) have no backdrop press, no
+   `onRequestClose` and no bottom safe-area inset.
 
 #### Decided — no user input needed
 
@@ -80,6 +94,41 @@ the three bottom sheets. `origin/main` is at `30a7e89`.
 9. **B5.** `signOut` and `deleteAccount` still return raw errors. Nothing leaks today because
    `app/settings.tsx` shows its own copy, but the shape is inconsistent with the auth screens.
 
+### The T7 case: your brother's phone (2026-09-22)
+
+T7 stopped being hypothetical. Your brother cannot sign in, and the diagnosis is **his phone's
+network — not the app, and not the backend**.
+
+The evidence, in order:
+
+- The screenshot from his phone reads `fetch failed: java.net.ConnectException: Failed to connect to
+  tvhirldahraymahvthfq.supabase.co/172.64.149.246:443`. That is a **TCP connect failure**, so the
+  request never left the device — which is why "the emails were never registered": the signup never
+  reached the server. No confirmation-email flow and no `auth.users` trigger is involved.
+- `dig +short tvhirldahraymahvthfq.supabase.co` → `172.64.149.246`, `104.18.38.10` (Cloudflare) —
+  the same IP his phone reports, and it resolves from the Mac.
+- `curl https://tvhirldahraymahvthfq.supabase.co/auth/v1/health` → **HTTP 401**
+  `{"message":"No API key found in request"}`. That is the Supabase gateway answering normally: the
+  project is alive, not paused, not deleted.
+- `scripts/supabase-schema.sql` declares **no `CREATE TRIGGER` on `auth.users`** and no
+  `handle_new_user`, so signup does not depend on a trigger that could fail.
+
+Ordered hypotheses, all on his side: an **IPv6-only mobile network with NAT64** (the error shows an
+IPv4 and the TCP dies — it fits exactly), a **VPN / Private DNS / ad-blocker** intercepting
+`*.supabase.co` (ad-blockers block "cloud" domains heuristically), or a **carrier block** of those
+Cloudflare IPs.
+
+**What he needs to do — one check, then act.** Open
+`https://tvhirldahraymahvthfq.supabase.co/auth/v1/health` in his phone's browser. If it loads, his
+network is fine and the problem is the app on that device; if it does not load, it is his network.
+Then: switch Wi-Fi ↔ mobile data, and turn off VPN / Private DNS / blockers.
+
+**Do not clear the app's data and do not reinstall.** His history lives only on that phone; there is
+no Supabase data migration. A new APK would not have fixed this either.
+
+One upside: it confirms T3 earned its cost. The raw text he saw — a Java `ConnectException` with a
+bare IP — is literally the string that motivated T3, and `main` already classifies it.
+
 ### The process note: strict TDD was declared, not run
 
 `.pi/project.json` declares `gentlePi.strictTDD: true`, and **no unit in this session was run under
@@ -87,11 +136,24 @@ strict TDD.** Three separate writers reported it as "not activated", because it 
 The declaration and the practice disagreed for the whole session. Next session should decide whether
 to honour the declaration or change it — but say it plainly: this session ran without strict TDD.
 
-### The measurement scripts were never committed
+**Decided 2026-09-21: honour it.** Strict TDD — mode, source and the exact runner — was forwarded on
+every delegation in the two technical batches that followed, and each unit that could not have a
+meaningful pre-implementation test declares that exception by name. The declaration and the practice
+now agree.
 
-The scripts that produced the counts quoted in `odd/tasks/ui-action-standard.md` and in this section
-lived in a temporary directory and were **not committed**, so those numbers cannot currently be
-re-derived from the repository. Either commit a script or stop quoting precise counts.
+### The measurement scripts are committed now
+
+**Resolved.** The counts quoted in `odd/tasks/ui-action-standard.md`, in `docs/ui-standard.md` and in
+this section are now produced by `scripts/ui-metrics.js` (Node stdlib only, no dependencies), and
+`__tests__/lib/metrics.test.ts` parses the machine-readable `ui-metrics` block out of
+`docs/ui-standard.md` and **fails if any quoted number drifts from the measurement**. Re-derive them
+with `node scripts/ui-metrics.js`. Three invariants are asserted next to the counts:
+`buttonVariants === buttonCallsites`, `glyphActions` and `glyphAsciiCandidates` both `0`, and
+`unlabelledInteractive === 0`.
+
+Be precise about what this repaired: it covers the UI counts that were moved into the script. The
+one-off audit scripts of 2026-09-20 are still lost, and any count in this document that did **not**
+move into `scripts/ui-metrics.js` remains unverifiable. Do not read this as a general amnesty.
 
 ---
 
@@ -129,20 +191,38 @@ dropped when a session is restored with `autoStart` (`7b4e905`); the startup exe
 longer `DELETE`s and re-seeds, which was orphaning `routine_exercises` / `session_exercises` and
 destroying user-created exercises (`8ab7ca7`); `.pi/` ignored (`6245cd4`).
 
-### Unresolved — the release keystore
+### Resolved — the release keystore, verified against the artifacts (2026-09-22)
 
-`npx expo prebuild` **clears** `android/` and `ios/` (it prints "Clearing android, ios"); it does not
-sync. Both are gitignored, so there is no repo diff, but anything hand-edited inside them is gone.
+**The identity is intact, and it has been a single one from the first APK to the last release.**
+Verified by measurement, not by reading this file:
 
-The newest root APK is signed with certificate SHA-256 `38e23aa3…`, which is **not** the debug
-keystore the template regenerates (`FA:C6:17:45…`), so a separate release key existed, and no
-`.jks`/`.keystore` is on disk. It is most likely held by EAS: `eas.json` sets no
-`credentialsSource: local`, `~/Library/Caches/eas-cli` exists, and the root APK names
-(`build-<epoch-ms>.apk`) are EAS local-build output, which regenerates the native project every
-build anyway.
+- `npx eas-cli@latest credentials` → Android → `production`: the **Default** keystore (`Z9ixc4KUGH`)
+  exists, is a JKS, is EAS-managed, with
+  `SHA256 = 38:E2:3A:A3:19:12:45:77:35:A0:CC:32:24:91:90:01:CD:54:6D:87:01:B5:B5:85:62:8A:45:43:E0:A5:50:98`.
+- `apksigner verify --print-certs` over **all 24 local APKs** (3/8 → 13/9): every single one reports
+  `38e23aa3…`. Not one carries a different key.
+- `gh release list` plus the GitHub API: each published asset matches its root file's `sha256`
+  exactly (v1.0.7 `3116c29aa556fada…`, v1.0.6 `28748fda228083bd…`, v1.0.4 `81a43ec725b64d5c…`), so
+  they are bit-for-bit the files that were measured.
 
-**Do this before any release:** run `npx eas credentials` and confirm the Android keystore is still
-listed. Losing it means no future update can be published under the same identity.
+**A second, orphan keystore exists.** `Configuration: Build Credentials tlXYEF09-q`, SHA256
+`CD:9B:C2:5F:DC:4C:0F:4C:35:01:06:4F:CE:E4:E4:63:95:5B:9B:26:DC:02:F4:16:77:55:58:15:55:76:F9:5C`,
+updated around 14/9. It signed **no** local APK and **no** published release — most likely generated
+by mistake with "Generate new keystore". **Decision: touch nothing.** The `(Default)` marker means
+`production` still resolves to the right one, and deleting credentials is destructive with no rush.
+
+**Two traps worth keeping from this verification.** The command this section used to give was wrong:
+`npx eas` fails with `npm error could not determine executable to run`, because an unrelated npm
+package named `eas` (0.1.0) shadows it and ships no binary — the CLI is
+**`npx eas-cli@latest credentials`**. And the APKs are signed v2/v3 only, so
+`keytool -printcert -jarfile` sees nothing; use `apksigner`.
+
+**Before the first Play submission:** confirm which configuration the profile resolves, and only
+then decide about the orphan.
+
+Still true and unrelated to the keystore: `npx expo prebuild` **clears** `android/` and `ios/` (it
+prints "Clearing android, ios"); it does not sync. Both are gitignored, so there is no repo diff, but
+anything hand-edited inside them is gone.
 
 ### Still unverified
 
@@ -257,10 +337,19 @@ Ordered by what I would do first.
    `legacy-peer-deps=true` hides exactly that class of break.
 8. **The two `.web.ts` mocks** (`useProgress.web.ts`, `useProgressionBubble.web.ts`) have no account
    guard or key, unlike their native counterparts.
-9. **Cosmetic leftovers reported but not fixed**: 6 `fontWeight` without `fontFamily`; the
-   `!exercise` branch of `exercise-detail` not migrated to `<Screen>`; `session/history/[id].tsx`
-   still builds "sets"/"reps" by concatenation; the a11y guard test does not cover `TextInput`.
-   (The `accessibilityHint` / `role="header"` item is closed as a decision — see §5.6.)
+9. **Cosmetic leftovers — three of the four closed, and the fourth reframed.** Closed in
+   `fix/technical-defects-batch-2`: the `fontWeight`-without-`fontFamily` sites, including the
+   family/weight mismatch the note had missed (`e27ef95`); the `!exercise` branch of `exercise-detail`
+   and the other thirteen header-hidden screens (`d1d5de2`); and the hand-concatenated
+   "sets"/"reps" in `session/history/[id].tsx` (`e27ef95`). **What remains is not a defect**: the
+   a11y guard test does not cover `TextInput`, but all 31 `<TextInput>` sites already carry an
+   `accessibilityLabel`, so such a guard has zero offenders and no test can fail against this tree.
+   It is coverage, not repair — and it hides two real design holes that need their own unit:
+   `components/ui/Input.tsx:30-31` sets `accessibilityLabel={label}` where `label` is optional and
+   `{...props}` spreads **after** it, so a caller can silence the label while the guard stays green;
+   and the guard's accepted list must be per-element-kind, because `accessible={false}` is not a
+   valid exemption on a text input. (The `accessibilityHint` / `role="header"` item is closed as a
+   decision — see §5.6.)
 10. **N1 — `PRAGMA foreign_keys` is never enabled, so every `ON DELETE CASCADE` is inert.** No file
     in the repository turns the pragma on. `deleteSessionExercise` (`lib/db/queries.ts:734`) deletes
     only the `session_exercises` row and relies on the declared cascade for its `sets`, so it leaves
@@ -273,17 +362,34 @@ Ordered by what I would do first.
 
 ## 5. Worth checking (my own list, not from the audit)
 
-1. **The empty card on the Progreso tab.** It showed up in a simulator screenshot: a card between
-   the title and "Sesiones del mes" with nothing in it. Never investigated.
-2. **`session.exerciseCount`,** which I added to both catalogues: the key is real but the branch that
-   renders it is unreachable today because no caller passes a count. It is also an **orphan with two
-   live namesakes** — `session.new.exerciseCount` and `progress.exerciseCount` are used, only
-   `session.exerciseCount` is dead — so deleting the wrong one is easy. Three audit records already
-   say delete it (`docs/audits/03-dead-code.md` F2 and cleanup step 6, and
-   `docs/audits/00-consolidated.md` row 18). One honest counterpoint before that decision: wiring it
-   is smaller than this list implies — `app/(tabs)/index.tsx` already has per-session counts from
-   `lib/progress/queries.ts`, so only the history index would need a new grouped count, with
-   `getRoutineSessionCounts` as precedent. Delete it deliberately, not for cost.
+1. **The empty card on the Progreso tab — now mapped, still waiting on one observation.** The map
+   proved the two candidate cards *cannot* render an empty interior: the calendar grid always renders
+   42 cells with day numbers (`lib/progress/calendar.ts:1-18`) and its month label and count always
+   resolve (`app/(tabs)/progress.tsx:316`), and the selected-day card has a hard-coded title
+   (`:326-328`). Leading hypothesis, and it is a shared-primitive problem:
+   `components/ui/EmptyState.tsx:31` and `components/ui/LoadingSpinner.tsx:9` are both `flex: 1`
+   **and** `backgroundColor: colors.bg.primary` — one shade below `bg.card` — so inside a
+   content-sized card (`:379-387`) a `flex: 1` child collapses to zero height and paints a
+   screen-coloured slab inside a card. `QueryState` picks that branch exactly when the month has no
+   sessions.
+
+   **The discriminator: is there a "Sesiones del mes" line above the empty box, inside the same
+   border?** If yes, it is the collapsed empty state; if no, it is a fourth container and the
+   screenshot predates `30a7e89`. Take it on a **clean cold start** — this repository already learned
+   that Fast Refresh after a structural JSX change fakes layout measurements. If confirmed, the fix
+   is a **presentation rule** — how `QueryState` should look *inside* a container, which
+   `docs/ui-standard.md` §7 does not say yet — and it touches primitives shared by 17 screens, so it
+   needs its own unit and its own decision.
+2. **`session.exerciseCount` — closed: deleted in `fe2fd84`.** It was an orphan with two live
+   namesakes (`session.new.exerciseCount` and `progress.exerciseCount` are both used), and deleting
+   the wrong one would have been easy, so the deletion was deliberate: three audit records already
+   said so (`docs/audits/03-dead-code.md` F2 and cleanup step 6, and `docs/audits/00-consolidated.md`
+   row 18). The honest counterpoint is recorded with it: wiring it was *smaller* than this list
+   implied — `app/(tabs)/index.tsx` already had per-session counts from `lib/progress/queries.ts`,
+   and only the history index would have needed a new grouped count, with
+   `getRoutineSessionCounts` as precedent. It was deleted deliberately, not for cost. The deletion
+   also had to fix `components/RoutineCard.tsx:20`, which hand-rolled English pluralisation and was
+   the only live exercise count in the app.
 3. **Whether the app still needs a web target.** `useProgress.web.ts` and
    `useProgressionBubble.web.ts`, plus `react-dom` and `react-native-web`, suggest it was once
    intended; nothing else does.
@@ -291,13 +397,13 @@ Ordered by what I would do first.
    `packages/precompile` does not exist, which forces several pods to compile from source. Neither
    blocks anything today, but a fresh iOS build will need the same `rm -rf Pods Podfile.lock` dance
    that the Android side did not.
-5. **`jest.config.js`'s `transformIgnorePatterns` names two packages that are not installed** —
-   `@sentry/react-native` and `native-base` — while the rest of the list is live. Its remedy
-   (`docs/audits/00-consolidated.md` row 15) includes pruning the config. Do not budget against the
-   `expo-updates` comparison this line used to make: `expo-updates` appears nowhere in the tree
-   (`package.json`, `package-lock.json`, `app.json`, `node_modules`), knip is not a dependency here,
-   and the comparison had no artifact behind it. Removal is safe: the pattern is a transpilation
-   allow-list, so an entry naming an absent package is inert.
+5. **`jest.config.js`'s `transformIgnorePatterns` — closed: pruned in `f4fe925`.** It named
+   `@sentry/react-native` and `native-base`, neither installed while the rest of the list is live.
+   Removal was safe for the reason recorded here: the pattern is a transpilation allow-list, so an
+   entry naming an absent package is inert. The warning that used to sit in this item still stands and
+   is unrelated — do not budget work against the `expo-updates` comparison, because `expo-updates`
+   appears nowhere in the tree (`package.json`, `package-lock.json`, `app.json`, `node_modules`), knip
+   is not a dependency of this repository, and the comparison had no artifact behind it.
 6. **`accessibilityHint` and `role="header"` — closed as a decision, not done.** The item has no
    origin in this repository: nothing under `docs/audits/` mentions it (the one a11y line there
    praises the existing guard), and its only reference was a single roadmap line with no provenance,
