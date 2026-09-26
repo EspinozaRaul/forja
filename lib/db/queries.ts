@@ -1009,17 +1009,24 @@ export async function replaceDropSetGroup(data: {
   drops: Array<{ reps?: number; weight?: number; rir?: number; completed?: boolean }>;
 }): Promise<typeof sets.$inferSelect[]> {
   await assertSessionExerciseOwned(data.sessionExerciseId);
-  return db.transaction(async (tx) => {
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire at the delete and leave the group destroyed when the
+  // replacement insert fails. The delete uses `.run()` and the inserted rows are read
+  // back through the returning query's synchronous `.all()`, so the whole callback runs
+  // inside the transaction on the shipping driver. The function itself stays `async` on
+  // purpose, so callers receive a rejected promise rather than a synchronous throw.
+  return db.transaction((tx) => {
     // Delete all existing drops in this group
-    await tx
-      .delete(sets)
+    tx.delete(sets)
       .where(
         and(
           eq(sets.sessionExerciseId, data.sessionExerciseId),
           eq(sets.setNumber, data.setNumber),
           sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
         )
-      );
+      )
+      .run();
 
     if (data.drops.length === 0) return [];
 
@@ -1038,7 +1045,7 @@ export async function replaceDropSetGroup(data: {
       createdAt: now(),
     }));
 
-    return tx.insert(sets).values(values).returning();
+    return tx.insert(sets).values(values).returning().all();
   });
 }
 
@@ -1198,14 +1205,24 @@ export async function duplicateSessionData(
 ) {
   await assertSessionOwned(sourceSessionId);
   await assertSessionOwned(targetSessionId);
-  return db.transaction(async (tx) => {
-    const sourceExercises = await tx
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire at the first source read and leave an exercise with
+  // no sets (or no exercises at all) behind when a later statement fails. Sources are
+  // read with `.all()`, the inserted exercise id comes from the returning query's
+  // synchronous `.get()`, and the copied sets are written with `.run()`. The loop stays
+  // sequential because each iteration depends on the id the previous insert returned.
+  // The function itself stays `async` on purpose, so callers receive a rejected
+  // promise rather than a synchronous throw when the callback throws.
+  return db.transaction((tx) => {
+    const sourceExercises = tx
       .select()
       .from(sessionExercises)
-      .where(eq(sessionExercises.sessionId, sourceSessionId));
+      .where(eq(sessionExercises.sessionId, sourceSessionId))
+      .all();
 
     for (const se of sourceExercises) {
-      const newExercise = await tx
+      const newExercise = tx
         .insert(sessionExercises)
         .values({
           sessionId: targetSessionId,
@@ -1215,28 +1232,32 @@ export async function duplicateSessionData(
           supersetPairId: se.supersetPairId,
           restTime: se.restTime,
         })
-        .returning();
+        .returning()
+        .get();
 
-      const sourceSets = await tx
+      const sourceSets = tx
         .select()
         .from(sets)
-        .where(eq(sets.sessionExerciseId, se.id));
+        .where(eq(sets.sessionExerciseId, se.id))
+        .all();
 
       if (sourceSets.length > 0) {
-        await tx.insert(sets).values(
-          sourceSets.map((s) => ({
-            sessionExerciseId: newExercise[0].id,
-            setNumber: s.setNumber,
-            reps: s.reps,
-            weight: s.weight,
-            completed: false,
-            method: s.method,
-            dropOrder: s.dropOrder,
-            isDropGroup: s.isDropGroup,
-            rir: s.rir,
-            createdAt: now(),
-          }))
-        );
+        tx.insert(sets)
+          .values(
+            sourceSets.map((s) => ({
+              sessionExerciseId: newExercise.id,
+              setNumber: s.setNumber,
+              reps: s.reps,
+              weight: s.weight,
+              completed: false,
+              method: s.method,
+              dropOrder: s.dropOrder,
+              isDropGroup: s.isDropGroup,
+              rir: s.rir,
+              createdAt: now(),
+            }))
+          )
+          .run();
       }
     }
   });

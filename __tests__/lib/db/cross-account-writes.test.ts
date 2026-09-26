@@ -186,23 +186,16 @@ describe('data layer cross-account gaps', () => {
       expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(beforeSets);
     });
 
-    it('duplicateSessionData copies rows for the owner (transaction path works)', async () => {
-      const { session: source, sessionExercise } = await seedCompletedSession('user-a', {
-        exerciseId: 1,
-        reps: 6,
-        weight: 90,
-      });
-      insertSet(sessionExercise.id, { setNumber: 2, reps: 6, weight: 95, completed: true });
-
-      const [target] = await queries.createSession({ startedAt: new Date(T1) });
-      await queries.duplicateSessionData(source.id, target.id);
-
-      // source (1 SE / 2 sets) + target (1 SE / 2 sets)
-      expect(count('SELECT COUNT(*) AS c FROM session_exercises')).toBe(2);
-      expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(4);
-      expect(count(`SELECT COUNT(*) AS c FROM session_exercises WHERE session_id = ${target.id}`)).toBe(1);
-      expect(count(`SELECT COUNT(*) AS c FROM sets WHERE completed = 0`)).toBe(2);
-    });
+    // The `duplicateSessionData` owner-copy case that lived here was relocated on
+    // 2026-09-26, not dropped. That function now has a synchronous callback, and this
+    // file's `sqlite-proxy` harness cannot run one: the adapter resolves with
+    // `Promise.resolve(...)`, so `.all()` is a promise and the copy loop throws on it.
+    // Its old name claimed "(transaction path works)" while the transaction path was
+    // broken, which is the proof that this harness cannot discriminate the two shapes.
+    // The coverage lives in `sync-transaction-atomicity.test.ts` now, on the driver
+    // that ships, and it asserts strictly more: every copied set hangs off its own
+    // copied exercise, the ids are new, the copy is unchecked, the source is
+    // untouched, and a failure mid-callback rolls the whole copy back.
   });
 
   describe('deleteSession cross-account', () => {

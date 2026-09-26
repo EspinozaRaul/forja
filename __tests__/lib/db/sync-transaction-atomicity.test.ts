@@ -2,10 +2,10 @@
 import { CREATE_TABLES_SQL } from '../../../lib/db/ddl';
 import { setCurrentUserId } from '../../../lib/db/user-scope';
 
-// U3: `repairRoutineTargetDefaults` and `createSuperSetPair` must be atomic on the
-// driver that actually ships.
+// Units U3 and U4: every `db.transaction` callback touched by the N2 fix must be
+// atomic on the driver that actually ships.
 //
-// Both used to pass an `async` callback to `db.transaction`. On
+// They used to pass an `async` callback to `db.transaction`. On
 // `drizzle-orm/expo-sqlite` the session runs `begin`, calls the callback, then
 // `commit` WITHOUT awaiting it (see `transaction()` in
 // `drizzle-orm/expo-sqlite/session.js`). An `async` callback runs synchronously up
@@ -97,13 +97,22 @@ let sqlite: any;
 
 /** Make the Nth `update <table>` statement throw, so an earlier write is at risk. */
 function injectFailureOnUpdate(table: string, occurrence: number): void {
+  injectFailureOn(table, 'update', occurrence);
+}
+
+/** Make the Nth `insert into <table>` statement throw, so an earlier write is at risk. */
+function injectFailureOnInsert(table: string, occurrence: number): void {
+  injectFailureOn(table, 'insert into', occurrence);
+}
+
+function injectFailureOn(table: string, verb: string, occurrence: number): void {
   let seen = 0;
-  const pattern = new RegExp('^update\\s+["`]?' + table + '["`]?', 'i');
+  const pattern = new RegExp('^' + verb + '\\s+["`]?' + table + '["`]?', 'i');
   mockedIndex.__hooks.onStatement = (sql: string) => {
     if (!pattern.test(sql.trim())) return;
     seen += 1;
     if (seen === occurrence) {
-      throw new Error(`injected ${table} update failure #${occurrence}`);
+      throw new Error(`injected ${table} ${verb.split(' ')[0]} failure #${occurrence}`);
     }
   };
 }
@@ -127,7 +136,7 @@ function setCount(sessionExerciseId: number): number {
     .get(sessionExerciseId).c;
 }
 
-describe('sync transaction atomicity for U3 callbacks (expo-sqlite driver)', () => {
+describe('sync transaction atomicity for the converted callbacks (expo-sqlite driver)', () => {
   beforeAll(() => {
     sqlite = mockedIndex.__sqlite;
     sqlite.exec(CREATE_TABLES_SQL);
@@ -264,6 +273,199 @@ describe('sync transaction atomicity for U3 callbacks (expo-sqlite driver)', () 
       // The balancing read stayed a read: side 2 got the matching empty set.
       expect(setCount(1)).toBe(1);
       expect(setCount(2)).toBe(1);
+    });
+  });
+
+  describe('replaceDropSetGroup', () => {
+    beforeEach(() => {
+      sqlite
+        .prepare('INSERT INTO sessions (id, user_id, started_at) VALUES (?, ?, ?)')
+        .run(SESSION_ID, OWNER, 0);
+      sqlite
+        .prepare(
+          'INSERT INTO session_exercises (id, session_id, exercise_id, "order", superset_pair_id)' +
+            ' VALUES (?, ?, ?, ?, ?)'
+        )
+        .run(1, SESSION_ID, 1, 0, null);
+      // The drop group the call replaces: two drops on set 1.
+      sqlite
+        .prepare(
+          'INSERT INTO sets (id, session_exercise_id, set_number, reps, weight, completed, method, drop_order, is_drop_group, created_at)' +
+            ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(1, 1, 1, 8, 40, 0, 'dropset', 1, 1, 0);
+      sqlite
+        .prepare(
+          'INSERT INTO sets (id, session_exercise_id, set_number, reps, weight, completed, method, drop_order, is_drop_group, created_at)' +
+            ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(2, 1, 1, 10, 30, 0, 'dropset', 2, 0, 0);
+    });
+
+    function dropGroupRows(): { id: number; reps: number | null; weight: number | null }[] {
+      return sqlite
+        .prepare(
+          'SELECT id, reps, weight FROM sets WHERE session_exercise_id = 1 AND set_number = 1' +
+            ' ORDER BY drop_order'
+        )
+        .all();
+    }
+
+    // DISCRIMINATING ASSERTION. Under the `async` callback COMMIT already fired at
+    // the delete's `await`, so by the time the insertion of the replacements throws
+    // the original two drops are permanently gone and the group is left empty.
+    // Only the synchronous callback keeps the delete inside the transaction that the
+    // driver rolls back on the throw.
+    it('rolls back the drop-group delete when the replacement insert throws', async () => {
+      injectFailureOnInsert('sets', 1);
+
+      await expect(
+        queries.replaceDropSetGroup({
+          sessionExerciseId: 1,
+          setNumber: 1,
+          drops: [{ reps: 9, weight: 45 }],
+        })
+      ).rejects.toThrow('injected sets insert failure #1');
+
+      expect(dropGroupRows()).toEqual([
+        { id: 1, reps: 8, weight: 40 },
+        { id: 2, reps: 10, weight: 30 },
+      ]);
+    });
+
+    it('returns the new rows and replaces the group on the success path', async () => {
+      const returned = await queries.replaceDropSetGroup({
+        sessionExerciseId: 1,
+        setNumber: 1,
+        drops: [
+          { reps: 9, weight: 45, completed: true },
+          { reps: 12, weight: 25 },
+        ],
+      });
+
+      // Callers render these rows to avoid a gap: they must be the new ones, not
+      // the deleted pair.
+      expect(returned).toHaveLength(2);
+      expect(returned.map((r) => r.id)).not.toContain(1);
+      expect(returned.map((r) => r.id)).not.toContain(2);
+      expect(returned[0]).toMatchObject({
+        sessionExerciseId: 1,
+        setNumber: 1,
+        reps: 9,
+        weight: 45,
+        completed: true,
+        isDropGroup: true,
+        dropOrder: 1,
+      });
+      expect(returned[1]).toMatchObject({ reps: 12, weight: 25, isDropGroup: false, dropOrder: 2 });
+
+      const rows = dropGroupRows();
+      expect(rows.map((r) => r.id)).toEqual(returned.map((r) => r.id));
+      expect(rows).toHaveLength(2);
+    });
+  });
+
+  describe('duplicateSessionData', () => {
+    beforeEach(() => {
+      sqlite.exec("INSERT INTO exercises (id, name, created_at) VALUES (2, 'Squat', 0);");
+      sqlite
+        .prepare('INSERT INTO sessions (id, user_id, started_at) VALUES (?, ?, ?)')
+        .run(1, OWNER, 0);
+      sqlite
+        .prepare('INSERT INTO sessions (id, user_id, started_at) VALUES (?, ?, ?)')
+        .run(2, OWNER, 1);
+      // Source: two exercises, two sets on the first and one on the second.
+      sqlite
+        .prepare(
+          'INSERT INTO session_exercises (id, session_id, exercise_id, "order", superset_pair_id)' +
+            ' VALUES (?, ?, ?, ?, ?)'
+        )
+        .run(1, 1, 1, 0, null);
+      sqlite
+        .prepare(
+          'INSERT INTO session_exercises (id, session_id, exercise_id, "order", superset_pair_id)' +
+            ' VALUES (?, ?, ?, ?, ?)'
+        )
+        .run(2, 1, 2, 1, null);
+      for (const [id, sessionExerciseId, setNumber, reps, weight] of [
+        [1, 1, 1, 8, 40],
+        [2, 1, 2, 6, 45],
+        [3, 2, 1, 10, 60],
+      ] as const) {
+        sqlite
+          .prepare(
+            'INSERT INTO sets (id, session_exercise_id, set_number, reps, weight, completed, created_at)' +
+              ' VALUES (?, ?, ?, ?, ?, ?, ?)'
+          )
+          .run(id, sessionExerciseId, setNumber, reps, weight, 1, 0);
+      }
+    });
+
+    function targetExerciseIds(): number[] {
+      return sqlite
+        .prepare('SELECT id FROM session_exercises WHERE session_id = 2 ORDER BY "order"')
+        .all()
+        .map((r: { id: number }) => r.id);
+    }
+
+    function targetSetRows(): { se: number; n: number; completed: number }[] {
+      return sqlite
+        .prepare(
+          'SELECT s.session_exercise_id AS se, s.set_number AS n, s.completed AS completed' +
+            ' FROM sets s JOIN session_exercises se ON se.id = s.session_exercise_id' +
+            ' WHERE se.session_id = 2 ORDER BY se, n'
+        )
+        .all();
+    }
+
+    // DISCRIMINATING ASSERTION. Under the `async` callback COMMIT fired at the first
+    // source read, so the copied `session_exercises` row of the first loop iteration
+    // was already permanent when the copied-set insert threw: an exercise with no
+    // sets survives. The synchronous callback rolls that insert back too.
+    it('rolls back the copied exercises when a copied-set insert throws', async () => {
+      injectFailureOnInsert('sets', 1);
+
+      await expect(queries.duplicateSessionData(1, 2)).rejects.toThrow(
+        'injected sets insert failure #1'
+      );
+
+      expect(targetExerciseIds()).toEqual([]);
+      expect(targetSetRows()).toEqual([]);
+    });
+
+    it('copies every exercise and attaches each copied set to its copied exercise', async () => {
+      const result = await queries.duplicateSessionData(1, 2);
+
+      // The function returns nothing, before and after the conversion.
+      expect(result).toBeUndefined();
+
+      const targetIds = targetExerciseIds();
+      expect(targetIds).toHaveLength(2);
+      // The copies are new rows, never the source ids the loop read.
+      expect(targetIds).not.toContain(1);
+      expect(targetIds).not.toContain(2);
+
+      const rows = targetSetRows();
+      expect(rows).toHaveLength(3);
+      // Each copied set hangs off the copied exercise of its source, grouped the
+      // same way: two sets on the first copy, one on the second.
+      expect(rows.filter((r) => r.se === targetIds[0]).map((r) => r.n)).toEqual([1, 2]);
+      expect(rows.filter((r) => r.se === targetIds[1]).map((r) => r.n)).toEqual([1]);
+      // A duplicated set starts unchecked, as before the conversion.
+      expect(rows.every((r) => r.completed === 0)).toBe(true);
+
+      // The source session is untouched.
+      expect(
+        sqlite.prepare('SELECT COUNT(*) AS c FROM session_exercises WHERE session_id = 1').get().c
+      ).toBe(2);
+      expect(
+        sqlite
+          .prepare(
+            'SELECT COUNT(*) AS c FROM sets s JOIN session_exercises se ON se.id = s.session_exercise_id' +
+              ' WHERE se.session_id = 1'
+          )
+          .get().c
+      ).toBe(3);
     });
   });
 });
