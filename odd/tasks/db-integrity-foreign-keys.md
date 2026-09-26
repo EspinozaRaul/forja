@@ -1,7 +1,9 @@
 # db-integrity-foreign-keys
 
-**Status**: **U1 and U2 (N1) landed.** **U3–U5 (N2) scheduled next**, not started. The user's decision
-(2026-09-24): clean only the unambiguous orphans automatically, and do N1 first.
+**Status**: **N1 and N2 both closed.** U1–U5 landed on this branch; nothing is merged or pushed. The user's
+decisions: clean only the unambiguous orphans automatically (N1), do N1 before N2, and **relocate** the
+`duplicateSessionData` owner-copy case to the synchronous harness rather than leave a proxy file asserting
+against a driver it cannot represent.
 
 ### Landed on this branch
 
@@ -9,7 +11,15 @@
 | --- | --- | --- |
 | tracking | `8104f03` | this document, plus N2's stale line numbers corrected in the roadmap |
 | U1 | `7dff330` | the idempotent orphan cleanup in `initializeDatabase`, pragma still OFF |
-| U2 | `(this commit)` | `PRAGMA foreign_keys = ON` at module scope, plus the boundary and behaviour tests |
+| U2 | `2338c70` | `PRAGMA foreign_keys = ON` at module scope, plus the boundary and behaviour tests |
+| U3 | `fd4cb4c` | `repairRoutineTargetDefaults` and `createSuperSetPair` converted to the synchronous shape |
+| U4 | `57ab1c4` | `replaceDropSetGroup` and `duplicateSessionData` converted; the owner-copy case relocated |
+| U5 | `b3d7d44` | `replaceSessionExercise` converted, and its fake `tx` made to model the driver |
+| docs | this commit | the plan below becomes the record |
+
+`grep -c "async (tx)" lib/db/queries.ts` is **0**, and all eight `db.transaction` callbacks now run inside one
+transaction on the shipping driver. The unit table below is the measured map from *before* the conversion;
+the file has grown since, so its line numbers are history rather than current addresses.
 
 **Branch**: `fix/db-integrity-foreign-keys`, branched from `main` @ `af8c436`. Merge and push stay the user's
 decision.
@@ -149,15 +159,35 @@ store with no FK concept; it keeps its divergence, which is now recorded in the 
 
 ---
 
-## U3–U5 — N2, scheduled but not authorized yet
+## U3–U5 — N2, landed
 
-Not started. **U3** `repairRoutineTargetDefaults` (`:388`) and `createSuperSetPair` (`:820`) — no dependent reads,
-the two easy ones. **U4** `replaceDropSetGroup` (`:997`) and `duplicateSessionData` (`:1186`) — need
-`.returning().all()` / `.get()` inside the callback. **U5** `replaceSessionExercise` (`:646`) — **the highest-risk
-unit**, because its existing test is structurally coupled to the async shape: the fake `tx` in
-`__tests__/lib/db/replace-session-exercise.test.ts` has no `.all()`/`.get()`/`.run()`, so the unit forces a harness
-redesign alongside the conversion. Each gets a negative-control atomicity test in the
-`delete-session-atomicity.test.ts` idiom (inject a failure mid-callback, assert full rollback).
+All three converted, each with a rollback test on the real expo-sqlite harness and a success-path parity
+test. The pattern is the same in every one: the outer function stays `async` (so a synchronous callback
+throw reaches callers as a rejected promise, which the tests pin with `rejects.toThrow`), while the
+callback itself contains no `await`.
+
+- **U3** — `repairRoutineTargetDefaults` (four repairs) and `createSuperSetPair` (two pair-id writes plus a
+  balancing insert). The `Promise.all` over the two set-number reads became two sequential `.all()` calls;
+  both read pre-update state, so their order carries no meaning.
+- **U4** — `replaceDropSetGroup` (returns the rows it inserted) and `duplicateSessionData` (needs each
+  inserted id to attach that exercise's copied sets). These are the two that needed values produced inside
+  the callback, and they are why the unit became a test problem: see the relocation note below.
+- **U5** — `replaceSessionExercise`, the highest-risk one, because its data-move step reassigns every set of
+  the slot to the parked row. Its fake `tx` now implements `.all()` / `.get()` / `.run()` beside `then`,
+  and `wire` invokes the callback synchronously and marks the driver's COMMIT boundary. The four
+  sequence-pinning assertions were kept exactly as they were; the diff touches setup lines only.
+
+### The relocated case, and why that is a gain rather than a deletion
+
+`cross-account-writes.test.ts` runs on drizzle's `sqlite-proxy`, whose `.all()` resolves with a promise, so
+**that harness cannot run a synchronous callback at all**. Its case `duplicateSessionData copies rows for the
+owner (transaction path works)` could not survive U4. It was relocated, not dropped: it was green for as
+long as the transaction path was broken, so its parenthetical was never verified, and it involved a single
+account, so it never tested cross-account behaviour either. Its coverage now lives in
+`sync-transaction-atomicity.test.ts` — new ids, each copied set attached to its own copied exercise, copies
+starting unchecked, the source untouched, and a mid-callback failure rolling the whole copy back — and a
+comment in its old place states the removal and the reason. The other 14 cases, including both ownership
+refusals, are untouched.
 
 ---
 
@@ -178,6 +208,12 @@ redesign alongside the conversion. Each gets a negative-control atomicity test i
 - The web mock (`lib/db/index.web.ts`) keeps its divergence: it is an in-memory store with no FK concept,
   so `deleteSessionExercise` still leaves mock `sets` behind there. The store is non-persistent, so the
   residue dies on reload. Recorded as a decision, not a bug.
+- **`cross-account-writes.test.ts` runs on a driver that cannot represent the shipping one.** Its
+  `sqlite-proxy` adapter resolves with promises, so no synchronous callback can run under it. Every case in
+  that file that touches a converted function is therefore limited to the refusal paths, which throw before
+  the transaction opens — that is why the 14 survivors still pass. Re-harnessing the file onto the expo-sqlite
+  sync harness is the real long-term fix, because a green run there says nothing about transaction semantics.
+  **Its own unit, not this batch.**
 - The two insert-only script connections (`scripts/import-exercises.ts:46`,
   `lib/db/import-exercises.ts:53`) are left without the pragma: they delete no parent and depend on no
   cascade.
