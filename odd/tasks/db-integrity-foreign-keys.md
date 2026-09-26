@@ -15,6 +15,7 @@ against a driver it cannot represent.
 | U3 | `fd4cb4c` | `repairRoutineTargetDefaults` and `createSuperSetPair` converted to the synchronous shape |
 | U4 | `57ab1c4` | `replaceDropSetGroup` and `duplicateSessionData` converted; the owner-copy case relocated |
 | U5 | `b3d7d44` | `replaceSessionExercise` converted, and its fake `tx` made to model the driver |
+| U6 | `200e0c1` | the referential contract pinned by test — no production change |
 | docs | this commit | the plan below becomes the record |
 
 `grep -c "async (tx)" lib/db/queries.ts` is **0**, and all eight `db.transaction` callbacks now run inside one
@@ -81,7 +82,7 @@ references without joining against the live parent, so an orphaned `routine_exer
 
 ---
 
-## Two premises verified **before** writing any code
+## Premises verified **before** writing any code
 
 1. **expo-sqlite v57.0.2 does not enable foreign keys.** `grep -rn "foreign_keys" node_modules/expo-sqlite/{ios,android}`
    over `*.swift/*.kt/*.java/*.m/*.mm` matches **only** inside `sqlite3.c` — the SQLite amalgamation's own
@@ -93,6 +94,14 @@ references without joining against the live parent, so an orphaned `routine_exer
    therefore disagrees with production on exactly the axis this feature fixes, and a naive *"delete the exercise,
    assert the sets are gone"* test would **pass in the harness while production still orphans**. Every test below
    must set the pragma explicitly, in both directions.
+3. **The module-scope pragma does not break the startup migrations.** `ALTER TABLE routines ADD COLUMN
+   folder_id INTEGER REFERENCES routine_folders(id) ON DELETE SET NULL` (`lib/db/index.ts`) now runs while
+   the pragma is already ON, and SQLite forbids a `REFERENCES` clause there only when the new column's
+   default is not NULL. Verified by execution with the pragma ON: the column **is** added. This was worth
+   checking precisely because that `ALTER` sits inside a `try/catch` that swallows its error — a rejection
+   would have silently left `folder_id` missing on older databases, a device-only failure that no test in
+   this repository would have seen, since every harness builds its tables from the DDL, where the column
+   already exists.
 
 ---
 
@@ -193,13 +202,23 @@ refusals, are untouched.
 
 ## Recorded, deliberately not fixed here
 
-- **`createRoutine` and `updateRoutine` accept `categoryId` / `folderId` with no existence assert**
-  (`lib/db/queries.ts:246-256` and `:258-267`). They insert/`set` whatever the caller passes, so with
-  enforcement on a stale or invalid id now raises a **raw SQLite foreign-key error** where it previously
-  stored a dead reference silently. The window is narrow — the UI picks from loaded lists — but the
-  failure mode changed from silent corruption to a raw error string, and DB errors are not classified
-  the way auth errors were in T3. Fixing it means either an existence assert (a small, honest pre-check)
-  or classifying DB errors at the UI layer. **Needs its own decision.**
+- **CLOSED, as a refuted premise (2026-09-26) — `createRoutine` / `updateRoutine` need no existence assert.**
+  This entry claimed that with enforcement on a stale id "raises a raw SQLite foreign-key error", and only
+  the first half held: the **data layer** raises, and the consequence was overstated, because **no caller
+  renders a raw error**. All five callers catch and show translated copy (`routine.detail.updateFailed`,
+  `routine.create.createFailed`, `tabs.routines.moveError`, `session.history.saveRoutineFailed`, or an
+  error haptic), and a grep over `app/` and `components/` finds **zero** places that render
+  `error.message` — the only module mapping raw text is `lib/auth/auth-error-message.ts`, which is
+  auth-only and was T3. Two further measurements shrank it: **no caller passes `categoryId` at all**, and
+  the only `folderId` that can go stale is the move modal's cached list.
+
+  **Decision: pin the contract in tests (U6), not in code.** An existence pre-check would restate the
+  invariant in a second place that nothing forces anyone to maintain, so the next FK column added would
+  leave that second place quietly wrong. `deleteExercise`'s pre-check is not a precedent: it exists to
+  phrase a count the database cannot ("used in N routines"), not because `RESTRICT` was insufficient.
+
+  Still open, and a UX question rather than a defect: the generic message could say *why* ("esa carpeta ya
+  no existe"), which would need DB-error classification in the shape of the auth one. Not scheduled.
 - **`createSession({ routineId })` is already safe**: it goes through `assertRoutineOwned`
   (existence plus ownership), so the routine case is covered where the category/folder ones are not.
 - `deleteUserLocalData` (`queries.ts:2018`) deletes children keyed off *live* parents, so pre-existing
