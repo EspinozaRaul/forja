@@ -468,4 +468,132 @@ describe('sync transaction atomicity for the converted callbacks (expo-sqlite dr
       ).toBe(3);
     });
   });
+
+  describe('replaceSessionExercise', () => {
+    // The highest-risk site: three reads and four writes inside one callback, and the
+    // data move reassigns EVERY set of the slot to the parked row. A half-applied run
+    // does not merely lose a row, it rewrites visible session history.
+    beforeEach(() => {
+      sqlite.exec("INSERT INTO exercises (id, name, created_at) VALUES (2, 'Squat', 0);");
+      sqlite
+        .prepare('INSERT INTO sessions (id, user_id, started_at) VALUES (?, ?, ?)')
+        .run(SESSION_ID, OWNER, 0);
+      sqlite
+        .prepare(
+          'INSERT INTO session_exercises (id, session_id, exercise_id, "order", rest_time, notes, note_type, superset_pair_id)' +
+            ' VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(1, SESSION_ID, 1, 0, 90, 'salida', 'rendimiento', 55);
+      // Two sets with real data on the slot, so the callback takes the park-and-move
+      // path instead of the in-place swap.
+      sqlite
+        .prepare(
+          'INSERT INTO sets (id, session_exercise_id, set_number, reps, weight, completed, created_at)' +
+            ' VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(1, 1, 1, 8, 40, 0, 0);
+      sqlite
+        .prepare(
+          'INSERT INTO sets (id, session_exercise_id, set_number, reps, weight, completed, created_at)' +
+            ' VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(2, 1, 2, 6, 45, 0, 0);
+    });
+
+    function slotRow(id: number): Record<string, unknown> {
+      return sqlite
+        .prepare(
+          'SELECT session_id AS sessionId, exercise_id AS exerciseId, "order" AS ord,' +
+            ' rest_time AS restTime, notes, note_type AS noteType, superset_pair_id AS pair' +
+            ' FROM session_exercises WHERE id = ?'
+        )
+        .get(id);
+    }
+
+    function slotSets(sessionExerciseId: number): Record<string, unknown>[] {
+      return sqlite
+        .prepare(
+          'SELECT id, set_number AS setNumber, reps, weight, completed FROM sets' +
+            ' WHERE session_exercise_id = ? ORDER BY set_number'
+        )
+        .all(sessionExerciseId);
+    }
+
+    function exerciseCount(): number {
+      return sqlite
+        .prepare('SELECT COUNT(*) AS c FROM session_exercises WHERE session_id = ?')
+        .get(SESSION_ID).c;
+    }
+
+    // DISCRIMINATING ASSERTION. The failure is injected on the LAST write of the
+    // callback (the template rebuild), after the parked insert, the set reassignment
+    // and the recycle have already run. Under the `async` callback COMMIT fired at the
+    // first `await`, so those three writes were already permanent: the user's sets
+    // would hang off a phantom parked row and the slot would already show the incoming
+    // exercise. Only the synchronous callback keeps all four writes in the one
+    // transaction the driver rolls back, leaving the record exactly as it was.
+    it('rolls back the park, the set move and the recycle when the template rebuild throws', async () => {
+      injectFailureOnInsert('sets', 1);
+
+      await expect(queries.replaceSessionExercise(1, 2)).rejects.toThrow(
+        'injected sets insert failure #1'
+      );
+
+      // Nothing parked: the session still holds exactly its one exercise slot.
+      expect(exerciseCount()).toBe(1);
+      // The slot is untouched: same exercise, order and superset pair, not recycled.
+      expect(slotRow(1)).toEqual({
+        sessionId: SESSION_ID,
+        exerciseId: 1,
+        ord: 0,
+        restTime: 90,
+        notes: 'salida',
+        noteType: 'rendimiento',
+        pair: 55,
+      });
+      // Every original set still points at the slot, unchanged and in order — the
+      // reassignment to the parked row was rolled back too.
+      expect(slotSets(1)).toEqual([
+        { id: 1, setNumber: 1, reps: 8, weight: 40, completed: 0 },
+        { id: 2, setNumber: 2, reps: 6, weight: 45, completed: 0 },
+      ]);
+    });
+
+    it('parks every set, recycles the slot and rebuilds an empty template on the success path', async () => {
+      const result = await queries.replaceSessionExercise(1, 2);
+
+      // The recycled slot is returned with the same id and order and its pair intact.
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: 1, exerciseId: 2, order: 0, supersetPairId: 55 });
+
+      // Exactly one parked row was added, above the session maximum, with the outgoing
+      // exercise, the slot's rest/notes and no superset pair (the link follows the slot).
+      expect(exerciseCount()).toBe(2);
+      const parked = sqlite
+        .prepare('SELECT id FROM session_exercises WHERE session_id = ? AND id <> 1')
+        .get(SESSION_ID) as { id: number };
+      expect(parked).toBeDefined();
+      expect(slotRow(parked.id)).toEqual({
+        sessionId: SESSION_ID,
+        exerciseId: 1,
+        ord: 1,
+        restTime: 90,
+        notes: 'salida',
+        noteType: 'rendimiento',
+        pair: null,
+      });
+
+      // Every original set moved to the parked row, unchanged.
+      expect(slotSets(parked.id)).toEqual([
+        { id: 1, setNumber: 1, reps: 8, weight: 40, completed: 0 },
+        { id: 2, setNumber: 2, reps: 6, weight: 45, completed: 0 },
+      ]);
+
+      // The recycled slot carries a fresh, empty template of the same size.
+      expect(slotSets(1)).toEqual([
+        { id: expect.any(Number), setNumber: 1, reps: null, weight: null, completed: 0 },
+        { id: expect.any(Number), setNumber: 2, reps: null, weight: null, completed: 0 },
+      ]);
+    });
+  });
 });

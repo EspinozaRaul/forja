@@ -8,8 +8,13 @@
  * fail because of how SQLite stored a row. The predicate cases are genuine unit
  * tests because `setHasRealData` is pure.
  *
- * The real behavioural outcome is measured separately against a real SQLite
- * harness; do not read a green run here as evidence of the data result.
+ * The one exception is the commit-boundary case at the end: the fake `transaction`
+ * commits exactly where the driver does (right after the callback returns), so
+ * `statementsAfterCommit` can tell a synchronous callback from an async one. That
+ * assertion is about transaction membership, not stored rows, and the real data
+ * outcome is measured against a real SQLite harness in
+ * `sync-transaction-atomicity.test.ts`; do not read a green run here as evidence of
+ * the data result.
  */
 
 import { setHasRealData, replaceSessionExercise } from '../../../lib/db/queries';
@@ -56,6 +61,24 @@ function createChain(result: unknown, onMethod?: (method: string, args: unknown[
       return chain;
     });
   }
+
+  // The real builder carries both paths on the same object: it is thenable AND it
+  // executes synchronously through `.all()` / `.get()` / `.run()`. The converted
+  // callback uses the synchronous path only; `then` stays because a real builder has
+  // it and a fake that drops it would not be modelling the driver.
+  const asRows = () => (Array.isArray(result) ? result : [result]);
+  chain.all = jest.fn(() => {
+    onMethod?.('all', []);
+    return asRows();
+  });
+  chain.get = jest.fn(() => {
+    onMethod?.('get', []);
+    return asRows()[0];
+  });
+  chain.run = jest.fn(() => {
+    onMethod?.('run', []);
+    return { changes: 1, lastInsertRowId: 1 };
+  });
   chain.then = (resolve: (value: unknown) => unknown) => resolve(result);
   return chain;
 }
@@ -74,24 +97,48 @@ function createStandIn(options: StandInOptions) {
   const insertValues: AnyRecord[] = [];
   const updateSets: AnyRecord[] = [];
 
+  // Model the driver's COMMIT boundary exactly: `transaction()` in
+  // `drizzle-orm/expo-sqlite/session.js` calls the callback and then `commit`
+  // WITHOUT awaiting it. A synchronous callback has issued every statement by the
+  // time it returns; an async one has not, and its remaining statements run after
+  // that commit, in autocommit. This SQL-free harness cannot observe a rollback, so
+  // recording what runs past the boundary is how it can still tell the two shapes
+  // apart.
+  let committed = false;
+  const statementsAfterCommit: string[] = [];
+  const record = (method: string) => {
+    if (committed) statementsAfterCommit.push(method);
+  };
+
   const select = jest.fn();
   for (const result of options.selects) {
-    select.mockReturnValueOnce(createChain(result));
+    select.mockReturnValueOnce(createChain(result, record));
   }
 
   const insert = jest.fn(() =>
     createChain(options.insertRows ?? [], (method, args) => {
       if (method === 'values') insertValues.push(args[0] as AnyRecord);
+      record(method);
     })
   );
 
   const update = jest.fn(() =>
     createChain(options.updateRows ?? [], (method, args) => {
       if (method === 'set') updateSets.push(args[0] as AnyRecord);
+      record(method);
     })
   );
 
-  return { tx: { select, insert, update } as any, insertValues, updateSets };
+  return {
+    tx: { select, insert, update } as any,
+    insertValues,
+    updateSets,
+    /** Called by `wire` at the exact point the driver commits. */
+    commit: () => {
+      committed = true;
+    },
+    statementsAfterCommit,
+  };
 }
 
 describe('setHasRealData', () => {
@@ -167,15 +214,20 @@ describe('replaceSessionExercise', () => {
   const recycledRow = { ...targetRow, exerciseId: 2 };
   const parkedRow = { ...targetRow, id: 99, order: 4, supersetPairId: null };
 
-  function wire(tx: unknown) {
-    (db.transaction as jest.Mock).mockImplementationOnce(async (cb: (t: unknown) => unknown) =>
-      cb(tx)
-    );
+  function wire(standIn: ReturnType<typeof createStandIn>) {
+    (db.transaction as jest.Mock).mockImplementationOnce((cb: (t: unknown) => unknown) => {
+      // A real driver callback is synchronous: `transaction()` calls it, then
+      // commits without awaiting whatever it returned.
+      const result = cb(standIn.tx);
+      standIn.commit();
+      return result;
+    });
   }
 
   it('does nothing when the row is not found (not owned)', async () => {
-    const { tx, insertValues, updateSets } = createStandIn({ selects: [[]] });
-    wire(tx);
+    const standIn = createStandIn({ selects: [[]] });
+    const { tx, insertValues, updateSets } = standIn;
+    wire(standIn);
 
     const result = await replaceSessionExercise(10, 2);
 
@@ -191,11 +243,12 @@ describe('replaceSessionExercise', () => {
       { setNumber: 1, completed: false, reps: null, weight: null, rir: null, partialReps: null, method: 'linear', isDropGroup: false },
       { setNumber: 2, completed: false, reps: null, weight: null, rir: null, partialReps: null, method: 'linear', isDropGroup: false },
     ];
-    const { tx, insertValues, updateSets } = createStandIn({
+    const standIn = createStandIn({
       selects: [[targetRow], emptyTemplate],
       updateRows: [recycledRow],
     });
-    wire(tx);
+    const { tx, insertValues, updateSets } = standIn;
+    wire(standIn);
 
     const result = await replaceSessionExercise(10, 2);
 
@@ -212,12 +265,13 @@ describe('replaceSessionExercise', () => {
       { setNumber: 1, completed: true, reps: 8, weight: 82.5, rir: null, partialReps: null, method: 'linear', isDropGroup: false },
       { setNumber: 2, completed: false, reps: 6, weight: 85, rir: 1, partialReps: null, method: 'linear', isDropGroup: false },
     ];
-    const { tx, insertValues, updateSets } = createStandIn({
+    const standIn = createStandIn({
       selects: [[targetRow], loadedSets, [{ value: 7 }]],
       insertRows: [parkedRow],
       updateRows: [recycledRow],
     });
-    wire(tx);
+    const { tx, insertValues, updateSets } = standIn;
+    wire(standIn);
 
     const result = await replaceSessionExercise(10, 2);
 
@@ -255,15 +309,45 @@ describe('replaceSessionExercise', () => {
     const loadedSets = [
       { setNumber: 1, completed: true, reps: 8, weight: 82.5, rir: null, partialReps: null, method: 'linear', isDropGroup: false },
     ];
-    const { tx, insertValues } = createStandIn({
+    const standIn = createStandIn({
       selects: [[targetRow], loadedSets, [{ value: null }]],
       insertRows: [parkedRow],
       updateRows: [recycledRow],
     });
-    wire(tx);
+    const { insertValues } = standIn;
+    wire(standIn);
 
     await replaceSessionExercise(10, 2);
 
     expect(insertValues[0]).toEqual(expect.objectContaining({ order: 1 }));
+  });
+
+  it('issues every statement before the driver commits (the callback is synchronous)', async () => {
+    // Same real-data path as above: three reads, then the parked insert, the set
+    // reassignment, the recycle and the template rebuild.
+    const loadedSets = [
+      { setNumber: 1, completed: true, reps: 8, weight: 82.5, rir: null, partialReps: null, method: 'linear', isDropGroup: false },
+      { setNumber: 2, completed: false, reps: 6, weight: 85, rir: 1, partialReps: null, method: 'linear', isDropGroup: false },
+    ];
+    const standIn = createStandIn({
+      selects: [[targetRow], loadedSets, [{ value: 7 }]],
+      insertRows: [parkedRow],
+      updateRows: [recycledRow],
+    });
+    wire(standIn);
+
+    await replaceSessionExercise(10, 2);
+
+    // THE DISCRIMINATING ASSERTION IN THIS FILE. The driver commits as soon as the
+    // callback returns its value. Under the async callback everything after the first
+    // `await` ran past that commit — the parked insert, the set reassignment, the
+    // recycle and the template rebuild, each in autocommit where a later throw rolls
+    // back nothing. The sequence assertions above cannot see that: they pass under
+    // both shapes because the method calls still happen, only their transaction
+    // membership differs. The behavioural rollback proof is the new case in
+    // `sync-transaction-atomicity.test.ts`, which runs the real driver; this is the
+    // SQL-free analogue, and it is the one assertion here that fails against the
+    // async callback.
+    expect(standIn.statementsAfterCommit).toEqual([]);
   });
 });
