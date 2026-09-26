@@ -385,43 +385,50 @@ export async function updateRoutineExerciseTargets(
  */
 export async function repairRoutineTargetDefaults() {
   if (!getCurrentUserId()) return;
-  await db.transaction(async (tx) => {
-    await tx
-      .update(routineExercises)
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire before the later repairs and leave earlier ones
+  // committed even when a later statement fails. `.run()` reaches `stmt.executeSync`,
+  // so the four repairs share one transaction on the shipping driver. The function
+  // itself stays `async` on purpose, so callers receive a rejected promise rather
+  // than a synchronous throw when the callback throws.
+  return db.transaction((tx) => {
+    tx.update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
       .where(
         and(
           eq(routineExercises.targetSets, 1),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
       .where(
         and(
           isNull(routineExercises.targetSets),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
       .where(
         and(
           isNull(routineExercises.targetReps),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
       .where(
         and(
           lte(routineExercises.targetReps, 0),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
+      )
+      .run();
   });
 }
 
@@ -816,40 +823,48 @@ export async function updateSessionExerciseNotes(
 }
 
 export async function createSuperSetPair(firstId: number, secondId: number) {
-  // Use a transaction to ensure atomicity — no half-paired superset on failure
-  return db.transaction(async (tx) => {
+  // Use a transaction to ensure atomicity — no half-paired superset on failure.
+  //
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire after the first pair-id write and leave a
+  // half-paired superset behind when a later statement fails. Writes use `.run()` and
+  // the two balancing reads use sequential `.all()` (both read pre-update state, so
+  // their order does not matter), so the whole callback runs inside the transaction
+  // on the shipping driver.
+  return db.transaction((tx) => {
     // Generate pair id from both exercise IDs + timestamp for uniqueness
     const pairId = firstId * 1000000 + secondId * 1000 + (Date.now() % 1000);
-    await tx
-      .update(sessionExercises)
+    tx.update(sessionExercises)
       .set({ supersetPairId: pairId })
       .where(
         and(eq(sessionExercises.id, firstId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-      );
-    await tx
-      .update(sessionExercises)
+      )
+      .run();
+    tx.update(sessionExercises)
       .set({ supersetPairId: pairId })
       .where(
         and(eq(sessionExercises.id, secondId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-      );
+      )
+      .run();
 
     // Balance series between both sides: a super set cycle needs a set on EACH side with the same
     // setNumber. If one exercise already had sets before pairing (e.g. Press had serie 1 and the
     // paired Remo has none), create empty matching sets on the side that's missing them.
-    const [setsFirst, setsSecond] = await Promise.all([
-      tx
-        .select({ setNumber: sets.setNumber })
-        .from(sets)
-        .where(
-          and(eq(sets.sessionExerciseId, firstId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
-        ),
-      tx
-        .select({ setNumber: sets.setNumber })
-        .from(sets)
-        .where(
-          and(eq(sets.sessionExerciseId, secondId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
-        ),
-    ]);
+    const setsFirst = tx
+      .select({ setNumber: sets.setNumber })
+      .from(sets)
+      .where(
+        and(eq(sets.sessionExerciseId, firstId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
+      )
+      .all();
+    const setsSecond = tx
+      .select({ setNumber: sets.setNumber })
+      .from(sets)
+      .where(
+        and(eq(sets.sessionExerciseId, secondId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
+      )
+      .all();
     const firstNumbers = new Set(setsFirst.map((s) => s.setNumber));
     const secondNumbers = new Set(setsSecond.map((s) => s.setNumber));
     const allNumbers = new Set([...firstNumbers, ...secondNumbers]);
@@ -865,7 +880,7 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     }
 
     if (missingSets.length > 0) {
-      await tx.insert(sets).values(missingSets);
+      tx.insert(sets).values(missingSets).run();
     }
 
     return pairId;
