@@ -162,3 +162,168 @@ describe('PRAGMA foreign_keys = ON on the app connection (U2)', () => {
     expect(countSetsOf(2)).toBe(0);
   });
 });
+
+// Contract-pinning for the referential integrity that enabling the pragma
+// bought. This block changes no production code: with enforcement on, the
+// invariant lives in exactly one place — the database — and the writers
+// (`createRoutine`, `updateRoutine`) pass `categoryId` / `folderId` straight
+// through. A JavaScript pre-check in those writers would duplicate the
+// invariant somewhere nothing forces anyone to maintain, so the contract is
+// pinned here instead.
+//
+// Every rejection asserts the cause is a foreign-key error, not merely that
+// something threw. Each ON arm is paired with the pragma OFF for the same
+// operation in the negative-control cases at the bottom: without that arm a
+// green suite could not distinguish enforcement from a vacuous assertion.
+//
+// `updateRoutine` with `folderId: null` stays green on purpose — unlinking is
+// legitimate, and the contract must state its own boundary.
+describe('Referential integrity contract: the database enforces it (pragma ON)', () => {
+  const OWNER_ID = OWNER;
+  const LIVE_FOLDER_ID = 10;
+  const LIVE_ROUTINE_ID = 20;
+  const MISSING_ID = 9999;
+
+  function row(sql: string, ...params: unknown[]): any {
+    return sqlite.prepare(sql).get(...params);
+  }
+
+  function categoryExists(id: number): boolean {
+    return row('SELECT COUNT(*) AS c FROM categories WHERE id = ?', id).c > 0;
+  }
+
+  function folderExists(id: number): boolean {
+    return row('SELECT COUNT(*) AS c FROM routine_folders WHERE id = ?', id).c > 0;
+  }
+
+  function routineExists(id: number): boolean {
+    return row('SELECT COUNT(*) AS c FROM routines WHERE id = ?', id).c > 0;
+  }
+
+  function routineCountNamed(name: string): number {
+    return row('SELECT COUNT(*) AS c FROM routines WHERE name = ?', name).c;
+  }
+
+  function routineFolderId(id: number): number | null {
+    const stored = row('SELECT folder_id FROM routines WHERE id = ?', id);
+    return stored === undefined ? null : stored.folder_id;
+  }
+
+  function seedLiveRoutine(): void {
+    sqlite
+      .prepare(
+        'INSERT INTO routines (id, user_id, name, folder_id, created_at) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(LIVE_ROUTINE_ID, OWNER_ID, 'Push day', LIVE_FOLDER_ID, 0);
+  }
+
+  beforeAll(() => {
+    sqlite.exec(CREATE_TABLES_SQL);
+  });
+
+  beforeEach(() => {
+    // Children before parents, so the ON arm's own cleanup obeys the FK it pins.
+    sqlite.exec('DELETE FROM routines; DELETE FROM routine_folders; DELETE FROM categories;');
+    sqlite.exec(
+      "INSERT INTO categories (id, name, color, icon, created_at) VALUES (1, 'Strength', '#fff', 'x', 0);"
+    );
+    sqlite
+      .prepare(
+        'INSERT INTO routine_folders (id, user_id, name, created_at) VALUES (?, ?, ?, ?)'
+      )
+      .run(LIVE_FOLDER_ID, OWNER_ID, 'Push', 0);
+    setCurrentUserId(OWNER_ID);
+    sqlite.exec('PRAGMA foreign_keys = ON');
+  });
+
+  // Case 1 — createRoutine with a nonexistent folderId.
+  it('createRoutine rejects a nonexistent folderId and stores nothing', async () => {
+    expect(foreignKeysEnabled()).toBe(1);
+
+    await expect(
+      queries.createRoutine({ name: 'Dead folder routine', folderId: MISSING_ID })
+    ).rejects.toThrow(/foreign key/i);
+
+    // Nothing was stored: a rejected write cannot leave a partial row.
+    expect(routineCountNamed('Dead folder routine')).toBe(0);
+  });
+
+  // Case 2 — updateRoutine with a nonexistent folderId.
+  it('updateRoutine rejects a nonexistent folderId and leaves the stored folder unchanged', async () => {
+    seedLiveRoutine();
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBe(LIVE_FOLDER_ID);
+
+    await expect(
+      queries.updateRoutine(LIVE_ROUTINE_ID, { folderId: MISSING_ID })
+    ).rejects.toThrow(/foreign key/i);
+
+    // The rejection did not damage the row: its live link is intact.
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBe(LIVE_FOLDER_ID);
+  });
+
+  // Case 3 — createRoutine with a nonexistent categoryId.
+  it('createRoutine rejects a nonexistent categoryId and stores nothing', async () => {
+    expect(categoryExists(MISSING_ID)).toBe(false);
+
+    await expect(
+      queries.createRoutine({ name: 'Dead category routine', categoryId: MISSING_ID })
+    ).rejects.toThrow(/foreign key/i);
+
+    expect(routineCountNamed('Dead category routine')).toBe(0);
+  });
+
+  // Case 4 — the boundary: unlinking is legitimate and must stay possible.
+  it('updateRoutine with folderId: null still succeeds and unlinks', async () => {
+    seedLiveRoutine();
+
+    await expect(queries.updateRoutine(LIVE_ROUTINE_ID, { folderId: null })).resolves.toBeDefined();
+
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBeNull();
+  });
+
+  // Case 5 — the user-visible consequence: deleting a folder unlinks, not dangles.
+  it('deleteFolder unlinks its routines instead of leaving a dangling id', async () => {
+    seedLiveRoutine();
+
+    await queries.deleteFolder(LIVE_FOLDER_ID);
+
+    // The folder is gone, the routine survives, and the FK's ON DELETE SET NULL
+    // fired on the shipping path — so the UI copy that promises "routines are
+    // only unlinked from this folder" now tells the truth.
+    expect(folderExists(LIVE_FOLDER_ID)).toBe(false);
+    expect(routineExists(LIVE_ROUTINE_ID)).toBe(true);
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBeNull();
+  });
+
+  // Case 6a — negative control for case 1: OFF, the invalid write is ACCEPTED
+  // and stores a dead reference. This is what makes case 1 able to fail.
+  it('[negative control] with the pragma OFF, createRoutine accepts an invalid folderId as a dead reference', async () => {
+    sqlite.exec('PRAGMA foreign_keys = OFF');
+    expect(foreignKeysEnabled()).toBe(0);
+
+    await expect(
+      queries.createRoutine({ name: 'Dead folder routine', folderId: MISSING_ID })
+    ).resolves.toBeDefined();
+
+    expect(routineCountNamed('Dead folder routine')).toBe(1);
+    const stored = sqlite
+      .prepare('SELECT folder_id FROM routines WHERE name = ?')
+      .get('Dead folder routine') as { folder_id: number };
+    expect(stored.folder_id).toBe(MISSING_ID);
+    expect(folderExists(MISSING_ID)).toBe(false); // the reference is dead
+  });
+
+  // Case 6b — negative control for case 5: OFF, deleteFolder leaves folder_id
+  // pointing at a row that no longer exists.
+  it('[negative control] with the pragma OFF, deleteFolder leaves folder_id pointing at a deleted row', async () => {
+    seedLiveRoutine();
+    sqlite.exec('PRAGMA foreign_keys = OFF');
+    expect(foreignKeysEnabled()).toBe(0);
+
+    await queries.deleteFolder(LIVE_FOLDER_ID);
+
+    expect(folderExists(LIVE_FOLDER_ID)).toBe(false);
+    expect(routineExists(LIVE_ROUTINE_ID)).toBe(true);
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBe(LIVE_FOLDER_ID); // dangling
+  });
+});
