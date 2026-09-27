@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS — Unit 1 (schema freeze) LANDED, suite green on the merged base.** PR #1
-(`fix/db-integrity-foreign-keys`) was **merged** into `main` (`92264cb`) and this branch was rebased onto it, so
-Unit 1 now sits on top of the N1/N2 fixes. Branch `feat/sqlite-schema-freeze`, local only (not pushed). The next
-merge and any push stay the user's decision.
+**Status**: **IN PROGRESS.** Unit 1 (schema freeze) is merged into `main` (**`660e85a`**) and its branch is gone.
+Unit 2 (the identity layer) is on `feat/identity-contract`, branched from `660e85a`; **U2a is landed
+(`9fee0ca`)** and U2b–U2f remain. Local branch, no PR yet — the repo's pattern is one PR per feature branch once
+it is reviewable. Merge and push stay the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -171,15 +171,48 @@ facts, all `file:line` evidenced:
 **Proposed slicing** (detail and line lists in Engram #543).
 
 - **U2a — contract plumbing, zero behaviour change. Spec below.**
-- **U2b — generators + backfill.** `uuid()` over `Crypto.randomUUID()`, one shared timestamp convention, and a
-  version-gated backfill. `exercises` is blocked by decision 3; the nine user-owned tables are not.
+### U2b — identity generators + one-time backfill (spec)
+
+**Deliverables**
+
+- **`lib/db/identity.ts`** (new): `uuid()` over `Crypto.randomUUID()` (expo-crypto, synchronous) and
+  `nowSeconds()` (unix-seconds, the decided convention). The single place both the backfill and U2c import.
+- **`runIdentityBackfill(database)`** (same module): one-time, version-gated data migration.
+- **`lib/db/index.ts`**: call it from `initializeDatabase`, before the "exercises already imported" early return
+  (the branch every installed database takes).
+- **`__tests__/lib/db/identity-backfill.test.ts`** (new).
+
+**Backfill semantics** (idempotent; only rows where the column is NULL):
+
+- `updated_at = COALESCE(created_at, <nowSeconds>)` on the nine tables; for `routine_exercises` and
+  `session_exercises`, which had no `created_at`, set `created_at = <nowSeconds>` and `updated_at` to the same.
+- `uuid` per row where NULL, generated in JS (SQL cannot mint a v4). **`exercises` only where `user_id IS NOT
+  NULL`** — shared seed rows stay NULL and are keyed by `original_id` (decision 3). `categories` untouched.
+- `deleted_at` stays NULL.
+
+**Versioning — a watermark, not independent gates.** `PRAGMA user_version` is one integer, so the steps are
+sequential: the backfill runs only when `ORPHAN_CLEANUP_VERSION <= version < IDENTITY_BACKFILL_VERSION` (= 2) and
+stamps 2 only after success. A failed cleanup (version 0) must therefore **skip** the backfill — otherwise a
+non-fatal failure in the earlier step would be permanently skipped by the later one. The backfill's own failure
+is non-fatal and retried on the next launch, like the cleanup.
+
+**TDD.** Build a database with the current schema (`CREATE_TABLES_SQL`), insert rows leaving the identity columns
+NULL, run the backfill, and assert: every `uuid` is a non-empty string and unique within its table; seeded
+`exercises` (`user_id IS NULL`) keep `uuid IS NULL`; `updated_at` is a positive integer and `deleted_at IS NULL`; a
+second run changes nothing. `expo-crypto` must be mocked (it is a native module).
+
+**Allowed edit surfaces**: `lib/db/identity.ts`, `lib/db/index.ts`, `__tests__/lib/db/identity-backfill.test.ts`.
 - **U2c — write paths, one table per commit**, starting with `sets` (highest churn, most tx-bound writes).
 - **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
 - **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
   fix, because a tombstoned parent otherwise keeps authorizing its live children.
 - **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
 
-### U2a — identity contract plumbing (spec)
+### U2a — identity contract plumbing — LANDED (`9fee0ca`)
+
+Gate: `npx tsc --noEmit` exit 0 · `npx jest` **40 suites / 379 tests**. Parent negative control: dropping one
+new ALTER fails 2 tests, changing a manifest column type fails 3; both files byte-identical after revert. Zero
+behaviour change, as designed.
 
 **Goal**: the schema carries the identity, versioning and tombstone columns, with **zero behaviour change** —
 nothing reads or writes them yet.
