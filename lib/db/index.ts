@@ -7,14 +7,16 @@ import { EXERCISE_NAMES_ES } from './exercise-names-es';
 import { now } from '../utils/date';
 import { CREATE_TABLES_SQL } from './ddl';
 import { runSchemaMigrations } from './schema-migrations';
+import { runIdentityBackfill } from './identity';
+import { ORPHAN_CLEANUP_VERSION } from './migration-versions';
 
 const DATABASE_NAME = 'fitness-tracker.db';
 
 // `PRAGMA user_version` tracks one-time data migrations on a database. Version 1
 // is the orphan cleanup in `initializeDatabase` below; a later one-time
 // migration claims version 2, then 3, and so on, each compared against its own
-// constant before it is allowed to run.
-const ORPHAN_CLEANUP_VERSION = 1;
+// constant before it is allowed to run. The watermarks live in
+// `./migration-versions` so this file and `./identity` cannot drift.
 
 const expoDb = openDatabaseSync(DATABASE_NAME);
 
@@ -189,6 +191,20 @@ export async function initializeDatabase() {
     } catch (error) {
       if (__DEV__) console.error('⚠️ Orphan cleanup failed, retrying on next launch', error);
     }
+  }
+
+  // One-time identity backfill: gives every pre-existing row a `uuid` and an
+  // `updated_at` (and `created_at` on the two child tables). It must run before
+  // the "exercises already imported" early return below, which is the branch
+  // every installed database takes, and after the orphan cleanup above so it
+  // only claims its watermark on a database whose cleanup already ran. Like that
+  // cleanup, a failure is deliberately non-fatal: nothing reads the identity
+  // columns yet, and because the version is not stamped the next launch retries
+  // it instead of skipping it forever.
+  try {
+    runIdentityBackfill(expoDb);
+  } catch (error) {
+    if (__DEV__) console.error('⚠️ Identity backfill failed, retrying on next launch', error);
   }
 
   // Check if exercises already imported
