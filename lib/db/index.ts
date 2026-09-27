@@ -6,6 +6,7 @@ import exercisesData from './exercises-data.json';
 import { EXERCISE_NAMES_ES } from './exercise-names-es';
 import { now } from '../utils/date';
 import { CREATE_TABLES_SQL } from './ddl';
+import { runSchemaMigrations } from './schema-migrations';
 
 const DATABASE_NAME = 'fitness-tracker.db';
 
@@ -152,117 +153,9 @@ export async function initializeDatabase() {
   // Create tables if they don't exist
   expoDb.execSync(CREATE_TABLES_SQL);
 
-  // Migration: add folder_id to routines if missing
-  try {
-    expoDb.execSync('ALTER TABLE routines ADD COLUMN folder_id INTEGER REFERENCES routine_folders(id) ON DELETE SET NULL');
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add rest_time to session_exercises if missing
-  try {
-    expoDb.execSync('ALTER TABLE session_exercises ADD COLUMN rest_time INTEGER DEFAULT 60');
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add superset pair id to session_exercises
-  try {
-    expoDb.execSync('ALTER TABLE session_exercises ADD COLUMN superset_pair_id INTEGER');
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add unit to exercises if missing
-  try {
-    expoDb.execSync("ALTER TABLE exercises ADD COLUMN unit TEXT DEFAULT 'kg'");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add drop set columns to sets table
-  try {
-    expoDb.execSync("ALTER TABLE sets ADD COLUMN method TEXT DEFAULT 'linear'");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE sets ADD COLUMN drop_order INTEGER DEFAULT 0");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE sets ADD COLUMN is_drop_group INTEGER DEFAULT 0");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add RIR (Reps In Reserve) to sets table
-  try {
-    expoDb.execSync("ALTER TABLE sets ADD COLUMN rir INTEGER");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add partial_reps for 'partial' intensity method
-  try {
-    expoDb.execSync("ALTER TABLE sets ADD COLUMN partial_reps INTEGER");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add note_type for exercise notes categorization
-  try {
-    expoDb.execSync("ALTER TABLE session_exercises ADD COLUMN note_type TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add name_es and description_es for Spanish translations
-  try {
-    expoDb.execSync("ALTER TABLE exercises ADD COLUMN name_es TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE exercises ADD COLUMN description_es TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-
-  // Migration: add user_id columns for Supabase RLS (nullable for local SQLite)
-  try {
-    expoDb.execSync("ALTER TABLE sessions ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE routines ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE routine_folders ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE body_measurements ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  try {
-    expoDb.execSync("ALTER TABLE progress_photos ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
-  // exercises is the shared library plus user-created customs: seeded rows keep
-  // user_id NULL (visible to everyone), customs are stamped with their owner.
-  try {
-    expoDb.execSync("ALTER TABLE exercises ADD COLUMN user_id TEXT");
-  } catch {
-    // Column already exists, ignore
-  }
+  // Add the columns a database created before each one existed is missing.
+  // Each statement is idempotent (a present column throws and is ignored).
+  runSchemaMigrations(expoDb);
 
   // One-time cleanup of the unambiguous orphan rows left behind while
   // `PRAGMA foreign_keys` was never enabled (see U2). Every read joins through a
