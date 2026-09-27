@@ -385,43 +385,50 @@ export async function updateRoutineExerciseTargets(
  */
 export async function repairRoutineTargetDefaults() {
   if (!getCurrentUserId()) return;
-  await db.transaction(async (tx) => {
-    await tx
-      .update(routineExercises)
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire before the later repairs and leave earlier ones
+  // committed even when a later statement fails. `.run()` reaches `stmt.executeSync`,
+  // so the four repairs share one transaction on the shipping driver. The function
+  // itself stays `async` on purpose, so callers receive a rejected promise rather
+  // than a synchronous throw when the callback throws.
+  return db.transaction((tx) => {
+    tx.update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
       .where(
         and(
           eq(routineExercises.targetSets, 1),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetSets: DEFAULT_TARGET_SETS })
       .where(
         and(
           isNull(routineExercises.targetSets),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
       .where(
         and(
           isNull(routineExercises.targetReps),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
-    await tx
-      .update(routineExercises)
+      )
+      .run();
+    tx.update(routineExercises)
       .set({ targetReps: DEFAULT_TARGET_REPS })
       .where(
         and(
           lte(routineExercises.targetReps, 0),
           routineOwnedByCurrentUser(routineExercises.routineId)
         )
-      );
+      )
+      .run();
   });
 }
 
@@ -643,23 +650,35 @@ export function setHasRealData(
 }
 
 export async function replaceSessionExercise(id: number, exerciseId: number) {
-  return db.transaction(async (tx) => {
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire at the first read and leave every later write — the
+  // parked row, the set reassignment, the recycle, the template rebuild — in
+  // autocommit. Here that is not just lost rows: the data move reassigns every set of
+  // the slot, so a half-applied run rewrites visible session history. Reads use
+  // `.get()` / `.all()`, writes use `.run()`, and the two returned rows come from
+  // `returning()` through the synchronous read path. The function itself stays `async`
+  // on purpose, so callers receive a rejected promise rather than a synchronous throw
+  // when the callback throws.
+  return db.transaction((tx) => {
     // 1. Load the target row, ownership-checked. Nothing to do when it is not ours.
-    const [row] = await tx
+    const row = tx
       .select()
       .from(sessionExercises)
       .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
-      .limit(1);
+      .limit(1)
+      .get();
     if (!row) return [];
 
     // 2. Load the slot's sets in order.
-    const slotSets = await tx
+    const slotSets = tx
       .select()
       .from(sets)
       .where(
         and(eq(sets.sessionExerciseId, id), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
       )
-      .orderBy(asc(sets.setNumber));
+      .orderBy(asc(sets.setNumber))
+      .all();
 
     // 3/4. Nothing loaded: keep today's behaviour — swap the exercise in place.
     // The row keeps its id, order and supersetPairId, and the empty template sets
@@ -669,13 +688,14 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
         .update(sessionExercises)
         .set({ exerciseId })
         .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
-        .returning();
+        .returning()
+        .all();
     }
 
     // 5. The slot carries real data. Park the OUTGOING exercise as its own entry so
     // the record of what the user actually did stays attributed to it, then recycle
     // the slot for the incoming exercise with a fresh empty template.
-    const [maxOrderRow] = await tx
+    const maxOrderRow = tx
       .select({ value: sql<number | null>`max(${sessionExercises.order})` })
       .from(sessionExercises)
       .where(
@@ -683,12 +703,13 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
           eq(sessionExercises.sessionId, row.sessionId),
           sessionOwnedByCurrentUser(sessionExercises.sessionId)
         )
-      );
+      )
+      .get();
     const parkedOrder = (maxOrderRow?.value ?? 0) + 1;
 
     // 5a. The parked entry never inherits the pair: the superset link follows the
     // slot, not the exercise, so a group of two can never grow into three.
-    const [parked] = await tx
+    const parked = tx
       .insert(sessionExercises)
       .values({
         sessionId: row.sessionId,
@@ -699,32 +720,36 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
         noteType: row.noteType,
         supersetPairId: null,
       })
-      .returning();
+      .returning()
+      .get();
 
     // 5b. Every set of the slot moves with the outgoing exercise, including the
     // untouched ones, so the parked record is faithful and complete.
-    await tx
-      .update(sets)
+    tx.update(sets)
       .set({ sessionExerciseId: parked.id })
-      .where(eq(sets.sessionExerciseId, id));
+      .where(eq(sets.sessionExerciseId, id))
+      .run();
 
     // 5c. Recycle the slot for the incoming exercise. Same id/order/supersetPairId.
-    const [recycled] = await tx
+    const recycled = tx
       .update(sessionExercises)
       .set({ exerciseId })
       .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
-      .returning();
+      .returning()
+      .get();
 
     // 5d. Rebuild an empty template of the same size on the recycled slot.
     if (slotSets.length > 0) {
-      await tx.insert(sets).values(
-        slotSets.map((_, index) => ({
-          sessionExerciseId: id,
-          setNumber: index + 1,
-          completed: false,
-          createdAt: now(),
-        }))
-      );
+      tx.insert(sets)
+        .values(
+          slotSets.map((_, index) => ({
+            sessionExerciseId: id,
+            setNumber: index + 1,
+            completed: false,
+            createdAt: now(),
+          }))
+        )
+        .run();
     }
 
     return [recycled];
@@ -816,40 +841,48 @@ export async function updateSessionExerciseNotes(
 }
 
 export async function createSuperSetPair(firstId: number, secondId: number) {
-  // Use a transaction to ensure atomicity — no half-paired superset on failure
-  return db.transaction(async (tx) => {
+  // Use a transaction to ensure atomicity — no half-paired superset on failure.
+  //
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire after the first pair-id write and leave a
+  // half-paired superset behind when a later statement fails. Writes use `.run()` and
+  // the two balancing reads use sequential `.all()` (both read pre-update state, so
+  // their order does not matter), so the whole callback runs inside the transaction
+  // on the shipping driver.
+  return db.transaction((tx) => {
     // Generate pair id from both exercise IDs + timestamp for uniqueness
     const pairId = firstId * 1000000 + secondId * 1000 + (Date.now() % 1000);
-    await tx
-      .update(sessionExercises)
+    tx.update(sessionExercises)
       .set({ supersetPairId: pairId })
       .where(
         and(eq(sessionExercises.id, firstId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-      );
-    await tx
-      .update(sessionExercises)
+      )
+      .run();
+    tx.update(sessionExercises)
       .set({ supersetPairId: pairId })
       .where(
         and(eq(sessionExercises.id, secondId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
-      );
+      )
+      .run();
 
     // Balance series between both sides: a super set cycle needs a set on EACH side with the same
     // setNumber. If one exercise already had sets before pairing (e.g. Press had serie 1 and the
     // paired Remo has none), create empty matching sets on the side that's missing them.
-    const [setsFirst, setsSecond] = await Promise.all([
-      tx
-        .select({ setNumber: sets.setNumber })
-        .from(sets)
-        .where(
-          and(eq(sets.sessionExerciseId, firstId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
-        ),
-      tx
-        .select({ setNumber: sets.setNumber })
-        .from(sets)
-        .where(
-          and(eq(sets.sessionExerciseId, secondId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
-        ),
-    ]);
+    const setsFirst = tx
+      .select({ setNumber: sets.setNumber })
+      .from(sets)
+      .where(
+        and(eq(sets.sessionExerciseId, firstId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
+      )
+      .all();
+    const setsSecond = tx
+      .select({ setNumber: sets.setNumber })
+      .from(sets)
+      .where(
+        and(eq(sets.sessionExerciseId, secondId), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId))
+      )
+      .all();
     const firstNumbers = new Set(setsFirst.map((s) => s.setNumber));
     const secondNumbers = new Set(setsSecond.map((s) => s.setNumber));
     const allNumbers = new Set([...firstNumbers, ...secondNumbers]);
@@ -865,7 +898,7 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     }
 
     if (missingSets.length > 0) {
-      await tx.insert(sets).values(missingSets);
+      tx.insert(sets).values(missingSets).run();
     }
 
     return pairId;
@@ -994,17 +1027,24 @@ export async function replaceDropSetGroup(data: {
   drops: Array<{ reps?: number; weight?: number; rir?: number; completed?: boolean }>;
 }): Promise<typeof sets.$inferSelect[]> {
   await assertSessionExerciseOwned(data.sessionExerciseId);
-  return db.transaction(async (tx) => {
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire at the delete and leave the group destroyed when the
+  // replacement insert fails. The delete uses `.run()` and the inserted rows are read
+  // back through the returning query's synchronous `.all()`, so the whole callback runs
+  // inside the transaction on the shipping driver. The function itself stays `async` on
+  // purpose, so callers receive a rejected promise rather than a synchronous throw.
+  return db.transaction((tx) => {
     // Delete all existing drops in this group
-    await tx
-      .delete(sets)
+    tx.delete(sets)
       .where(
         and(
           eq(sets.sessionExerciseId, data.sessionExerciseId),
           eq(sets.setNumber, data.setNumber),
           sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
         )
-      );
+      )
+      .run();
 
     if (data.drops.length === 0) return [];
 
@@ -1023,7 +1063,7 @@ export async function replaceDropSetGroup(data: {
       createdAt: now(),
     }));
 
-    return tx.insert(sets).values(values).returning();
+    return tx.insert(sets).values(values).returning().all();
   });
 }
 
@@ -1183,14 +1223,24 @@ export async function duplicateSessionData(
 ) {
   await assertSessionOwned(sourceSessionId);
   await assertSessionOwned(targetSessionId);
-  return db.transaction(async (tx) => {
-    const sourceExercises = await tx
+  // The callback MUST stay synchronous, for the same reason as `deleteSession`: the
+  // driver runs `begin`, calls the callback, then `commit` without awaiting it, so an
+  // `await` would let COMMIT fire at the first source read and leave an exercise with
+  // no sets (or no exercises at all) behind when a later statement fails. Sources are
+  // read with `.all()`, the inserted exercise id comes from the returning query's
+  // synchronous `.get()`, and the copied sets are written with `.run()`. The loop stays
+  // sequential because each iteration depends on the id the previous insert returned.
+  // The function itself stays `async` on purpose, so callers receive a rejected
+  // promise rather than a synchronous throw when the callback throws.
+  return db.transaction((tx) => {
+    const sourceExercises = tx
       .select()
       .from(sessionExercises)
-      .where(eq(sessionExercises.sessionId, sourceSessionId));
+      .where(eq(sessionExercises.sessionId, sourceSessionId))
+      .all();
 
     for (const se of sourceExercises) {
-      const newExercise = await tx
+      const newExercise = tx
         .insert(sessionExercises)
         .values({
           sessionId: targetSessionId,
@@ -1200,28 +1250,32 @@ export async function duplicateSessionData(
           supersetPairId: se.supersetPairId,
           restTime: se.restTime,
         })
-        .returning();
+        .returning()
+        .get();
 
-      const sourceSets = await tx
+      const sourceSets = tx
         .select()
         .from(sets)
-        .where(eq(sets.sessionExerciseId, se.id));
+        .where(eq(sets.sessionExerciseId, se.id))
+        .all();
 
       if (sourceSets.length > 0) {
-        await tx.insert(sets).values(
-          sourceSets.map((s) => ({
-            sessionExerciseId: newExercise[0].id,
-            setNumber: s.setNumber,
-            reps: s.reps,
-            weight: s.weight,
-            completed: false,
-            method: s.method,
-            dropOrder: s.dropOrder,
-            isDropGroup: s.isDropGroup,
-            rir: s.rir,
-            createdAt: now(),
-          }))
-        );
+        tx.insert(sets)
+          .values(
+            sourceSets.map((s) => ({
+              sessionExerciseId: newExercise.id,
+              setNumber: s.setNumber,
+              reps: s.reps,
+              weight: s.weight,
+              completed: false,
+              method: s.method,
+              dropOrder: s.dropOrder,
+              isDropGroup: s.isDropGroup,
+              rir: s.rir,
+              createdAt: now(),
+            }))
+          )
+          .run();
       }
     }
   });
