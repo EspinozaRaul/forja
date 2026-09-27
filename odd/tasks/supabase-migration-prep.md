@@ -1,14 +1,27 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS — Unit 1 (schema freeze) in flight.** Branch `feat/sqlite-schema-freeze`, branched
-from `main` @ `af8c436`. PR #1 (`fix/db-integrity-foreign-keys`) is still **open and unmerged**, so this branch
-starts from the same base the PR did; neither is stacked on the other. Merge and push stay the user's decision.
+**Status**: **IN PROGRESS — Unit 1 (schema freeze) LANDED, not pushed, not merged.** Branch
+`feat/sqlite-schema-freeze`, branched from `main` @ `af8c436`. PR #1 (`fix/db-integrity-foreign-keys`) is still
+**open and unmerged**, so this branch starts from the same base the PR did; neither is stacked on the other.
+Merge and push stay the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
 
-**Gate**: `npx tsc --noEmit` clean and `npx jest` green. Baseline on `af8c436`: **39 suites / 374 tests**
-(measured on the PR branch work; `main` alone is 36 / 347 — the delta lives only in PR #1).
+**Gate**: `npx tsc --noEmit` clean and `npx jest` green. Baseline on `af8c436` alone: **36 suites / 347
+tests**; with Unit 1 landed: **37 suites / 352 tests** (this branch). The PR branch's larger count (39 / 374)
+lives only in PR #1.
+
+### Landed on this branch
+
+| Unit | Commit | What landed |
+| --- | --- | --- |
+| tracking | `961f38e` | this document |
+| U1 | `af39968` | `runSchemaMigrations` extracted from `initializeDatabase`; `SCHEMA_VERSION` + `SCHEMA_MANIFEST` + `MIGRATION_ADDED_COLUMNS`; the freeze test pinning the fresh shape and the legacy upgrade path |
+
+Gate observed on `af39968`: `npx tsc --noEmit` exit 0 · `npx jest` **37 suites / 352 tests**. Parent negative
+control (independent of the writer): dropping the `note_type` ALTER fails 2 tests; renaming a manifest column
+fails 3; both files byte-identical after revert.
 
 ---
 
@@ -67,10 +80,19 @@ exists and is invocable, but a POST with the anon key returns `204` where the sc
 
 ---
 
-## Unit 1 — Freeze the SQLite schema as a versioned contract
+## Unit 1 — Freeze the SQLite schema as a versioned contract — LANDED (`af39968`)
 
 **Goal**: introduce a single versioned description of the local schema and a test that reads the *real*
 database back and fails on drift, covering both the fresh-create path and the old-install upgrade path.
+
+**As built, one deviation from the spec below.** The upgrade fixture is **not** the drizzle `0000` snapshot: the
+writer proved (read-only, `node:sqlite`) that `0000` is a stale artifact — its `exercises` is missing 9 columns
+that the earliest runtime DDL already declared, and no ALTER adds them — so "every manifest column exists after
+`0000` + migrations" is unsatisfiable. The fixture is synthesized as `SCHEMA_MANIFEST` minus
+`MIGRATION_ADDED_COLUMNS` (authored from the ALTERs), with a precondition that each listed column is genuinely
+absent. This is strictly stronger: it also pins a `CREATE`-vs-`ALTER` divergence in type / notnull / default
+between a fresh and an upgraded install. `body_part` stays out of the map (its ALTER is on the early-return
+branch) and the legacy fixture therefore includes it — a documented infidelity.
 
 **Deliverables**
 
