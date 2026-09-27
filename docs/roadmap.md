@@ -1,7 +1,7 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-24
-> Status: everything through `893eda8` is pushed to `origin/main`; the 2026-09-20 session's fourteen units, the six-unit technical batch and the second eight-unit technical batch are all in `main`, with a decision list still open
+> Last updated: 2026-09-27
+> Status: `origin/main` is at `af8c436`; the 2026-09-20 session's fourteen units, the six-unit technical batch and the second eight-unit technical batch are all in `main`, and the database-integrity work is published as **PR #1** and not yet merged, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
 worth checking. The standard for building screens lives in `docs/ui-standard.md`; `AGENTS.md`
@@ -27,9 +27,15 @@ the three bottom sheets. `origin/main` is at `30a7e89`.
 committed measurement script, the superset delete made atomic, the custom-rest dialog unclipped,
 the typography and the last counted nouns, the fourteen header-hidden screens given a real
 container, the dead `session.exerciseCount` deleted, the Jest allow-list pruned, and the three ASCII
-arrows turned into Ionicons. `origin/main` is at `893eda8`, the tree is clean, and the gate on it is
-`npx tsc --noEmit` exit 0 with `npx jest` **36 suites / 347 tests** (from 29 / 271). The branch was
-deleted; `main` is the only branch left.
+arrows turned into Ionicons. `origin/main` reached `893eda8` there, the tree was clean, and the gate on
+it is `npx tsc --noEmit` exit 0 with `npx jest` **36 suites / 347 tests** (from 29 / 271). That batch's
+branch was deleted.
+
+**Delivery status, updated 2026-09-27.** The docs refresh that follows `893eda8` is `af8c436`, and that is
+where `origin/main` is now. The database-integrity work — N1's inert cascades and N2's five non-atomic
+transactions, plus the harness-fidelity follow-up and a version-gated startup cleanup — is published as
+**PR #1** (`fix/db-integrity-foreign-keys`) and is **not merged**; merging it is the user's
+decision. Its own gate is `npx tsc --noEmit` exit 0 with `npx jest` **39 suites / 374 tests**.
 
 ### Landed this session
 
@@ -71,8 +77,8 @@ deleted; `main` is the only branch left.
    session removal), and with a valid stored session the app does enter its logged-in state offline.
    What remains is a genuinely signed-out user needing a network to get back in. **It now has a real
    case, measured on 2026-09-22 — see "The T7 case" below.**
-5. **Deleting the branches.** Seventeen branches exist and every one is contained in `main`.
-   Deleting them needs your OK; do not do it on your own.
+5. **Deleting the branches.** Done, and needs nothing: `origin` carries exactly two branches now — `main`
+   and `fix/db-integrity-foreign-keys`, the latter being PR #1. Verified with `git ls-remote --heads origin`.
 6. **Obs-06, the app-wide large-text strategy.** The largest remaining piece. Of its two recorded
    instances, **B3 is closed** — the custom-rest dialog was unclipped in `a64bca9`. It already
    carried `maxHeight`; what it actually needed was a scrollable body, its `width: 280` literal
@@ -248,7 +254,7 @@ anything hand-edited inside them is gone.
 | i18n | Catalogues reconciled (704 = 704 keys), Jest unblocked (AsyncStorage mock + pinned locale), parity test created and later widened to see `t('key', {...})` and template-literal bases | `__tests__/lib/i18n/catalog-parity.test.ts`, 7 tests |
 | Layout standard | `components/ui/Screen.tsx` + `ScreenHeader.tsx`, `SafeAreaProvider` declared by the app, the 5 progress screens migrated, `docs/ui-standard.md` written | The simulator (before/after), `docs/ui-standard.md` |
 | Security (local) | Every local datum scoped to the authenticated account; 8 tautological ownership filters found and fixed; legacy backfill; local wipe on account deletion; cache cleared on sign-out | `__tests__/lib/db/user-scope.test.ts` + `cross-account-writes.test.ts` (real SQLite), each validated by a negative control |
-| Security (Supabase) | Plan SQL aligned with the app (3 tables and several columns were missing), RLS on all 10 tables with 38 policies, RPC `REVOKE`d from PUBLIC, both scripts wrapped in a transaction | **Not executed anywhere** — it has only been parse-checked. Run it in the Supabase SQL editor |
+| Security (Supabase) | Plan SQL aligned with the app (3 tables and several columns were missing), RLS on all 10 tables with **37** policies, RPC `REVOKE`d from PUBLIC, and the schema and the RPC wrapped in a transaction — the seed script is not, it is 1330 lines of autocommitted `INSERT`s | **Not executed anywhere** — it has only been parse-checked. Run it in the Supabase SQL editor |
 | Data bugs | Notes editing no longer rewrites `completedAt`; the session screen's hook order is unconditional; `useAuth` unblocks on a rejected session; `mostFrequentExercise` counts completed sessions only | `queries-live-fixes.test.ts`, `useAuth.test.ts`, both with negative controls |
 | Hygiene | `.bak` (1211 lines), 29 unused imports, 23 dead constants/tokens, 99 dead i18n keys removed; the parity guard now catches more (525 → 562 keys) | Commit `f31106e`, and the missing `session.exerciseCount` it found |
 | Visible quality | `QueryState` for loading/failure/empty with retry on 17 screens; contrast brought to AA with role tokens (`text.onAccent`, `errorStrong`); 124 unlabelled interactive elements → 0, plus every TextInput | `QueryState.test.tsx`, `interactive-elements.test.ts`, measured contrast pairs |
@@ -297,8 +303,9 @@ The two branches are split on purpose — together their diffs exceed the 400-li
 
 1. **Test v1.0.7 on the phone** (the R8 pre-release). If it holds up, say so and it gets promoted to
    Latest; if something breaks, revert the R8 commit and rebuild. Checklist is in the release notes.
-2. **Run the two SQL scripts in Supabase**, in the order in the file header, then the three control
-   queries. Nothing has ever been executed, so the first run is the real verification.
+2. **Run the three SQL scripts in Supabase**, in the order the schema file's own header documents
+   (`supabase-schema.sql` → `create-delete-account-rpc.sql` → `import-exercises.sql`), then the three
+   control queries. Nothing has ever been executed, so the first run is the real verification.
 3. **The two-account test** for the isolation work: sign in as A, log something, sign out, sign in as
    B, confirm B sees nothing of A's. It needs a second email account.
 
@@ -321,7 +328,8 @@ Ordered by what I would do first.
    wrong: `:752` and `:777` are already synchronous, and `:937` is a leaf-set read region with no
    transaction. Their `async` callbacks hit the trap `deleteSession` avoids — the driver commits at
    the first `await`, so later statements run in autocommit. `deleteSession`'s own callback is
-   synchronous on purpose (`:518`). Tracked as N2 in `odd/tasks/db-integrity-foreign-keys.md`.
+   synchronous on purpose (`:518`). Tracked as N2 in `odd/tasks/db-integrity-foreign-keys.md`, and **fixed
+   on `fix/db-integrity-foreign-keys`** (PR #1): `grep -c "async (tx)" lib/db/queries.ts` is now 0.
 3. **Sequential writes in a loop**: `app/routine/[id].tsx:220-230` awaited `createSet` per set, so
    materialising a routine was O(exercises × sets) round trips. It now fans them out through one
    `Promise.all` (`7338fcd`), matching the session and home paths. That is **fan-out, not batching**:
@@ -330,8 +338,13 @@ Ordered by what I would do first.
 4. **The two EN→ES exercise-name maps** (`lib/db/exercise-names-es.ts` and
    `lib/i18n/exercise-translations.ts`) can disagree, so the same exercise can be named differently
    depending on where it is read.
-5. **The data migration to Supabase** — the schema and RLS plan exist; the plan for getting 1324
-   exercises plus the user's own rows into Postgres does not.
+5. **The data migration to Supabase** — the schema and RLS plan exist, and an exercise-only importer
+exists in two forms: `scripts/import-exercises.sql` and `scripts/import-to-supabase.ts`, the latter **not
+runnable as committed** (it needs `tsx`, which is not a dependency, and it reads a hardcoded `/tmp`
+dataset path). What does not exist is **any path for the user's own rows** — and no data-layer code at all:
+the only non-auth Supabase call in runtime code is `supabase.rpc('delete_user_account')`
+(`lib/hooks/useAuth.ts:140`). So this is a **new feature, not a switch**, and the step that gates it is the
+cross-system identity layer (`uuid`, `updated_at`, `deleted_at`), which this list does not name.
 6. **`progress_photos.uri` is a local file URI**, so remote sync needs a Storage bucket and object
    policies before that screen can work across devices.
 7. **Ecosystem drift**: `expo-doctor` reports 20 patch-level updates behind;
@@ -369,7 +382,9 @@ Ordered by what I would do first.
     delete an exercise cited only by routines that no longer exist. And **three confirmation strings
     are false** today, not one: the exercise and superset deletes promise *"Se eliminan sus series"*,
     and the folder delete promises the routines are merely unlinked. Full map, the two premises
-    verified before coding, and the unit split: `odd/tasks/db-integrity-foreign-keys.md`.
+    verified before coding, and the unit split: `odd/tasks/db-integrity-foreign-keys.md`. **Fixed on
+    `fix/db-integrity-foreign-keys`** (PR #1): the pragma is enabled at module scope, the four orphan kinds
+    are cleaned once per database, and the three confirmation strings this entry lists now tell the truth.
 
 ---
 
