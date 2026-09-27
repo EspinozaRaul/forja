@@ -1,9 +1,11 @@
 # db-integrity-foreign-keys
 
-**Status**: **N1 and N2 both closed.** U1–U5 landed on this branch; nothing is merged or pushed. The user's
-decisions: clean only the unambiguous orphans automatically (N1), do N1 before N2, and **relocate** the
+**Status**: **CLOSED — all eight units landed**, and the branch is published as PR #1
+(https://github.com/EspinozaRaul/forja/pull/1) with `main` untouched until the user merges. The user's
+decisions: clean only the unambiguous orphans automatically (N1); do N1 before N2; **relocate** the
 `duplicateSessionData` owner-copy case to the synchronous harness rather than leave a proxy file asserting
-against a driver it cannot represent.
+against a driver it cannot represent; **pin** the referential contract in tests instead of duplicating the
+invariant in code (U6); and **gate** the cleanup so it runs once per database and can never brick the app (U8).
 
 ### Landed on this branch
 
@@ -17,6 +19,7 @@ against a driver it cannot represent.
 | U5 | `b3d7d44` | `replaceSessionExercise` converted, and its fake `tx` made to model the driver |
 | U6 | `200e0c1` | the referential contract pinned by test — no production change |
 | U7 | `4759e3d` | `cross-account-writes.test.ts` moved onto the session that ships |
+| U8 | `8017ba9` | the cleanup gated on `PRAGMA user_version`, made non-fatal, and retried on failure — plus the incomplete test double it exposed |
 
 `grep -c "async (tx)" lib/db/queries.ts` is **0**, and all eight `db.transaction` callbacks now run inside one
 transaction on the shipping driver. The unit table below is the measured map from *before* the conversion;
@@ -234,6 +237,16 @@ refusals, are untouched.
   transaction path was broken. The file now uses the `foreign-keys.test.ts` harness, runs `lib/db/index`
   unmodified, and establishes the pragma state explicitly, so its cases run under the same enforcement as the
   device.
+- **`app/_layout.tsx`'s initialization failure is a dead end.** When `initializeDatabase` rejects, the screen
+  shows two strings and offers no retry and no telemetry — and on a real phone there is no crash report. U8
+  removed the cleanup's ability to reach that state, but `CREATE_TABLES_SQL` can still fail there, and the
+  screen itself is still the wrong shape for a recoverable failure. That is a UI decision with its own
+  design, deliberately not folded into U8.
+- **One theoretical path into that dead end remains, stated rather than hidden.** U8's version read
+  (`getFirstSync('PRAGMA user_version')`) sits outside the cleanup's `try/catch`, so a failure there would
+  still propagate. A pragma read on a live connection does not fail in practice, and if it did the database
+  would be unusable anyway, which is why failing loudly is the honest behaviour at that point — but it is a
+  path, and it is written down instead of assumed away.
 - **`user-scope.test.ts` still runs on `sqlite-proxy`.** It is the remaining file on that adapter. Its cases
   are ownership predicates with no transaction callback, so the limitation does not touch them today — but it
   applies the same way, and the same move would be needed before any transaction test lands there. Recorded as
