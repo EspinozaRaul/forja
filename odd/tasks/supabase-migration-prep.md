@@ -144,6 +144,50 @@ inserts the cleanup below it, not the block itself).
 
 ---
 
+## Unit 2 — Identity layer (`uuid` / `updated_at` / `deleted_at`) — mapped, not started
+
+A read-only map of every write and delete path exists (Engram #543, `forja/delivery/identity-layer-map`). Headline
+facts, all `file:line` evidenced:
+
+- **Both sides lack the identity columns.** No `uuid`/`updated_at`/`deleted_at` in `ddl.ts`, `schema.ts` or
+  `scripts/supabase-schema.sql`; `created_at` itself is absent on `routine_exercises` and `session_exercises`.
+- **`expo-crypto` is installed (~57.0.2) and imported nowhere**; the API is synchronous
+  `randomUUID(): string` (`expo-crypto/build/Crypto.d.ts`).
+- **All 23 deletes are hard**, `deleteUserLocalData` is **not transactional** (9 sequential deletes,
+  `queries.ts:2087-2101`), and every hook funnels through `lib/db/queries.ts` — `lib/progress/queries.ts` has
+  zero writes.
+- `now()` returns a `Date` (`lib/utils/date.ts:4-6`) and `initializeDatabase` shadows it (`index.ts:213`).
+
+**Fork decisions (human, the audit offers both sides and no code commits).**
+
+1. **Timestamp convention**: unix-seconds (drizzle `mode:'timestamp'`) or milliseconds. Today both exist
+   (`queries.ts:486` seconds, `queries.ts:855` ms).
+2. **Tombstones**: in-table `deleted_at` columns or a `sync_tombstones` side table.
+3. **Seed identity for shared `exercises`**: no `uuid` at all (sync = user rows only) vs a deterministic v5 from
+   `original_id` vs random per side (guarantees the two libraries never match).
+4. **`body_measurements` has no UPDATE path**: add `updateBodyMeasurement`, or keep delete+create semantics
+   (which doubles tombstone volume per edit).
+5. **Retention/purge policy** for tombstones.
+
+**Proposed slicing** (detail and line lists in Engram #543).
+
+- **U2a — contract plumbing, zero behaviour change.** Nullable `uuid`/`updated_at`/`deleted_at` on all 10 tables
+  (plus `created_at` on the two child tables) in `ddl.ts`, `schema-manifest.ts` (`SCHEMA_VERSION` → 2) and
+  `runSchemaMigrations`; the freeze test pins both shapes. Unblocked today.
+- **U2b — generators + backfill.** `uuid()` over `Crypto.randomUUID()`, one shared timestamp convention, and a
+  version-gated backfill. `exercises` is blocked by decision 3; the nine user-owned tables are not.
+- **U2c — write paths, one table per commit**, starting with `sets` (highest churn, most tx-bound writes).
+- **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
+- **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
+  fix, because a tombstoned parent otherwise keeps authorizing its live children.
+- **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
+
+Highest risks: soft deletes silently disable every FK cascade / `SET NULL` (`index.ts:31`); `user-scope.ts`
+subqueries and the ~30 stat aggregates read without a tombstone guard; SQLite cannot `ADD COLUMN ... NOT NULL`
+without a default, so the pattern is add-nullable → backfill → `CREATE UNIQUE INDEX`.
+
+---
+
 ## Recorded, deliberately not in this unit
 
 - **The identity layer** (`uuid` / `updated_at` / `deleted_at`) is Unit 2+, each bumping `SCHEMA_VERSION`.
