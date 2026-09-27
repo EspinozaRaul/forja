@@ -158,22 +158,19 @@ facts, all `file:line` evidenced:
   zero writes.
 - `now()` returns a `Date` (`lib/utils/date.ts:4-6`) and `initializeDatabase` shadows it (`index.ts:213`).
 
-**Fork decisions (human, the audit offers both sides and no code commits).**
+**Fork decisions — RESOLVED (user, 2026-09-27).**
 
-1. **Timestamp convention**: unix-seconds (drizzle `mode:'timestamp'`) or milliseconds. Today both exist
-   (`queries.ts:486` seconds, `queries.ts:855` ms).
-2. **Tombstones**: in-table `deleted_at` columns or a `sync_tombstones` side table.
-3. **Seed identity for shared `exercises`**: no `uuid` at all (sync = user rows only) vs a deterministic v5 from
-   `original_id` vs random per side (guarantees the two libraries never match).
-4. **`body_measurements` has no UPDATE path**: add `updateBodyMeasurement`, or keep delete+create semantics
-   (which doubles tombstone volume per edit).
-5. **Retention/purge policy** for tombstones.
+1. **Timestamps**: **unix-seconds** `INTEGER`, consistent with drizzle `mode:'timestamp'` and `created_at`.
+2. **Tombstones**: **in-table `deleted_at` columns** on every synced table, not a side table.
+3. **Seed identity for shared `exercises`**: **`uuid` only on user-created customs**; the seeded library is keyed
+   by `original_id`. This sidesteps the seed-parity problem instead of versioning an algorithm for it.
+4. **`body_measurements`**: **add `updateBodyMeasurement`** so an edit is an `UPDATE` (stable `uuid`, one
+   `updated_at` bump), not tombstone + re-create. Lands in U2c.
+5. **Retention/purge policy** for tombstones: deferred to U2d, where the first tombstone is written.
 
 **Proposed slicing** (detail and line lists in Engram #543).
 
-- **U2a — contract plumbing, zero behaviour change.** Nullable `uuid`/`updated_at`/`deleted_at` on all 10 tables
-  (plus `created_at` on the two child tables) in `ddl.ts`, `schema-manifest.ts` (`SCHEMA_VERSION` → 2) and
-  `runSchemaMigrations`; the freeze test pins both shapes. Unblocked today.
+- **U2a — contract plumbing, zero behaviour change. Spec below.**
 - **U2b — generators + backfill.** `uuid()` over `Crypto.randomUUID()`, one shared timestamp convention, and a
   version-gated backfill. `exercises` is blocked by decision 3; the nine user-owned tables are not.
 - **U2c — write paths, one table per commit**, starting with `sets` (highest churn, most tx-bound writes).
@@ -181,6 +178,37 @@ facts, all `file:line` evidenced:
 - **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
   fix, because a tombstoned parent otherwise keeps authorizing its live children.
 - **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
+
+### U2a — identity contract plumbing (spec)
+
+**Goal**: the schema carries the identity, versioning and tombstone columns, with **zero behaviour change** —
+nothing reads or writes them yet.
+
+**Columns** (all nullable: SQLite cannot `ALTER TABLE ... ADD COLUMN ... NOT NULL` without a default, so the
+`NOT NULL` the audit asks for is an app-level invariant locally; the server column can be `NOT NULL`).
+
+- `uuid TEXT`, `updated_at INTEGER`, `deleted_at INTEGER` on the nine synced tables: `exercises`,
+  `routine_folders`, `routines`, `routine_exercises`, `sessions`, `session_exercises`, `sets`,
+  `body_measurements`, `progress_photos`.
+- `created_at INTEGER` on `routine_exercises` and `session_exercises` (audit item 8; the other seven already have it).
+- **`categories` is excluded**: admin-seeded global reference data (`schema.ts:4-9`), never written by a client, so
+  it has no identity to sync. Recorded, not silent.
+- 29 new columns total, all in `SCHEMA_MANIFEST` and `MIGRATION_ADDED_COLUMNS`; `SCHEMA_VERSION` → 2.
+
+**Method (strict TDD, contract-first).**
+
+1. Update `schema-manifest.ts` only — `SCHEMA_VERSION = 2`, the manifest, `MIGRATION_ADDED_COLUMNS`. Run the
+   freeze test: **RED** (a fresh `CREATE_TABLES_SQL` no longer matches the manifest, and the legacy fixture no
+   longer reaches it).
+2. Add the columns to `ddl.ts` (fresh shape), `schema.ts` (drizzle, so U2c can write them) and
+   `runSchemaMigrations` (29 `addColumn` calls). **GREEN.**
+3. Negative control: rename one new column in the manifest, watch the freeze test fail, revert.
+
+**Allowed edit surfaces**: `lib/db/ddl.ts`, `lib/db/schema.ts`, `lib/db/schema-manifest.ts`,
+`lib/db/schema-migrations.ts`. No test file changes — the freeze test derives everything from the manifest.
+
+**Invariant**: `SCHEMA_MANIFEST` order must match `ddl.ts` declaration order (the fresh-shape assertion is
+order-sensitive); the upgrade path is order-insensitive because SQLite appends.
 
 Highest risks: soft deletes silently disable every FK cascade / `SET NULL` (`index.ts:31`); `user-scope.ts`
 subqueries and the ~30 stat aggregates read without a tombstone guard; SQLite cannot `ADD COLUMN ... NOT NULL`
