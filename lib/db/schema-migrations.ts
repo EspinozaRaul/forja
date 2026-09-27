@@ -43,4 +43,37 @@ export function runSchemaMigrations(database: SchemaMigrationDatabase): void {
   addColumn('ALTER TABLE body_measurements ADD COLUMN user_id TEXT');
   addColumn('ALTER TABLE progress_photos ADD COLUMN user_id TEXT');
   addColumn('ALTER TABLE exercises ADD COLUMN user_id TEXT');
+
+  // Unit 2 identity layer (U2a): nullable cross-system identity, versioning and
+  // tombstone columns. Nothing reads or writes them yet; a later unit backfills
+  // and enforces the app-level invariants.
+  addColumn('ALTER TABLE exercises ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE exercises ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE exercises ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE routine_folders ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE routine_folders ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE routine_folders ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE routines ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE routines ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE routines ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE routine_exercises ADD COLUMN created_at INTEGER');
+  addColumn('ALTER TABLE routine_exercises ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE routine_exercises ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE routine_exercises ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE sessions ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE sessions ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE sessions ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE session_exercises ADD COLUMN created_at INTEGER');
+  addColumn('ALTER TABLE session_exercises ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE session_exercises ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE session_exercises ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE sets ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE sets ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE sets ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE body_measurements ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE body_measurements ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE body_measurements ADD COLUMN deleted_at INTEGER');
+  addColumn('ALTER TABLE progress_photos ADD COLUMN uuid TEXT');
+  addColumn('ALTER TABLE progress_photos ADD COLUMN updated_at INTEGER');
+  addColumn('ALTER TABLE progress_photos ADD COLUMN deleted_at INTEGER');
 }

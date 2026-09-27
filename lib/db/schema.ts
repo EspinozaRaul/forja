@@ -29,6 +29,9 @@ export const exercises = sqliteTable('exercises', {
   originalId: text('original_id'), // ID from dataset for tracking
   unit: text('unit').default('kg'), // kg or lbs per exercise
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 }, (exercises) => ({
   // NOT unique on purpose. The seeded dataset contains 6 (category, name) pairs twice —
   // "lever chest press", "barbell seated calf raise", "push-up (on stability ball)" and
@@ -46,6 +49,9 @@ export const routineFolders = sqliteTable('routine_folders', {
   color: text('color').default('#00F5A0'),
   icon: text('icon').default('📁'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
 
 export const routines = sqliteTable('routines', {
@@ -56,6 +62,9 @@ export const routines = sqliteTable('routines', {
   categoryId: integer('category_id').references(() => categories.id),
   folderId: integer('folder_id').references(() => routineFolders.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
 
 export const routineExercises = sqliteTable('routine_exercises', {
@@ -69,6 +78,10 @@ export const routineExercises = sqliteTable('routine_exercises', {
   order: integer('order').notNull(),
   targetSets: integer('target_sets').default(DEFAULT_TARGET_SETS),
   targetReps: integer('target_reps').default(DEFAULT_TARGET_REPS),
+  createdAt: integer('created_at', { mode: 'timestamp' }), // backfilled in U2b
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
 
 export const sessions = sqliteTable('sessions', {
@@ -79,6 +92,9 @@ export const sessions = sqliteTable('sessions', {
   completedAt: integer('completed_at', { mode: 'timestamp' }),
   duration: integer('duration'),
   notes: text('notes'),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
 
 export const sessionExercises = sqliteTable('session_exercises', {
@@ -94,6 +110,10 @@ export const sessionExercises = sqliteTable('session_exercises', {
   notes: text('notes'),
   noteType: text('note_type'), // 'rendimiento' | 'ajuste' | null
   supersetPairId: integer('superset_pair_id'), // shared pair id; both exercises of a super set get the same value
+  createdAt: integer('created_at', { mode: 'timestamp' }), // backfilled in U2b
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 }, (table) => ({
   sessionIdx: index('se_session_idx').on(table.sessionId),
   exerciseIdx: index('se_exercise_idx').on(table.exerciseId),
@@ -115,6 +135,9 @@ export const sets = sqliteTable('sets', {
   rir: integer('rir'), // Reps In Reserve: 0 = to failure, 1 = one rep left, etc.
   partialReps: integer('partial_reps'), // Partial reps for 'partial' method (C+P format)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 }, (table) => ({
   sessionExerciseIdx: index('sets_session_exercise_idx').on(table.sessionExerciseId),
 }));
@@ -132,6 +155,9 @@ export const bodyMeasurements = sqliteTable('body_measurements', {
   thighs: real('thighs'),           // cm (per thigh)
   notes: text('notes'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
 
 export const progressPhotos = sqliteTable('progress_photos', {
@@ -141,4 +167,7 @@ export const progressPhotos = sqliteTable('progress_photos', {
   uri: text('uri').notNull(),       // local file URI
   bodyPart: text('body_part'),      // optional: 'front', 'back', 'side', etc.
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  uuid: text('uuid'), // cross-system identity, backfilled in U2b
+  updatedAt: integer('updated_at', { mode: 'timestamp' }), // unix seconds
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // tombstone, unix seconds
 });
