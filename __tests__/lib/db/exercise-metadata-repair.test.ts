@@ -16,8 +16,15 @@ jest.mock('expo-sqlite', () => {
   const isRowReturning = (sql: string) =>
     /^\s*(select|pragma|with)\b/i.test(sql) || /\breturning\b/i.test(sql);
 
-  const client = {
+  const client: any = {
     execSync: (sql: string) => sqlite.exec(sql),
+    // Mirrors the real `SQLiteDatabase.getFirstSync<T>(source, ...params): T | null`:
+    // the first row as a column-keyed object, or `null` when the statement yields
+    // no row, read through the same node:sqlite handle as the rest of this double.
+    // `initializeDatabase` reads `PRAGMA user_version` through it, so the double
+    // must not diverge from the driver it stands in for.
+    getFirstSync: (source: string, ...params: unknown[]) =>
+      sqlite.prepare(source).get(...params) ?? null,
     prepareSync(sql: string) {
       const statement = sqlite.prepare(sql);
       return {
@@ -49,7 +56,7 @@ jest.mock('expo-sqlite', () => {
     },
   };
 
-  return { __esModule: true, openDatabaseSync: () => client, __sqlite: sqlite };
+  return { __esModule: true, openDatabaseSync: () => client, __sqlite: sqlite, __client: client };
 });
 
 import { DatabaseSync } from 'node:sqlite';
@@ -220,5 +227,30 @@ describe('initializeDatabase seed writes name_es from EXERCISE_NAMES_ES', () => 
   it('writes the big map value for a name the small map never had (air bike)', () => {
     // 1190 dataset names are big-map-only; before the fix these kept their English name.
     expect(seededNameEs('air bike')).toBe('Bicicleta aérea');
+  });
+});
+
+// The double above stands in for the native module, so its client-level
+// `getFirstSync` must return exactly what the real `SQLiteDatabase` returns.
+// This is confirmed here rather than assumed: `initializeDatabase` gates the
+// one-time cleanup on `PRAGMA user_version`, so a wrong row shape would silently
+// read as the default `0`.
+describe('the expo-sqlite double models the client-level getFirstSync contract', () => {
+  it('returns the PRAGMA user_version row shape the real API returns', () => {
+    const client: any = require('expo-sqlite').__client;
+
+    // Set explicitly: this handle is shared across the file, so the value left
+    // by an earlier case is not a precondition of the shape under test.
+    client.execSync('PRAGMA user_version = 0');
+    expect(client.getFirstSync('PRAGMA user_version')).toEqual({ user_version: 0 });
+
+    client.execSync('PRAGMA user_version = 7');
+    expect(client.getFirstSync('PRAGMA user_version')).toEqual({ user_version: 7 });
+
+    // An empty result is `null`, not `undefined`, matching `T | null`.
+    expect(client.getFirstSync('SELECT 1 AS x WHERE 0')).toBeNull();
+
+    // Restore the shared handle for any case that runs after this one.
+    client.execSync('PRAGMA user_version = 0');
   });
 });

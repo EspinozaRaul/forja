@@ -9,6 +9,12 @@ import { CREATE_TABLES_SQL } from './ddl';
 
 const DATABASE_NAME = 'fitness-tracker.db';
 
+// `PRAGMA user_version` tracks one-time data migrations on a database. Version 1
+// is the orphan cleanup in `initializeDatabase` below; a later one-time
+// migration claims version 2, then 3, and so on, each compared against its own
+// constant before it is allowed to run.
+const ORPHAN_CLEANUP_VERSION = 1;
+
 const expoDb = openDatabaseSync(DATABASE_NAME);
 
 // SQLite defaults `foreign_keys` OFF, and expo-sqlite 57.0.2 does not enable it
@@ -264,14 +270,33 @@ export async function initializeDatabase() {
   // which counts references without joining the live parent. It must run before
   // the "exercises already imported" early return below: that is the branch every
   // installed database containing orphans takes, and `routines.folder_id` exists
-  // by this point because the ALTER above it already ran. Idempotent by
-  // construction: a second pass matches no rows.
-  expoDb.execSync(`
+  // by this point because the ALTER above it already ran.
+  //
+  // Unlike `PRAGMA foreign_keys = ON` at module scope, which is per-connection
+  // and so must run on every launch, this block is a one-time data migration: it
+  // runs once per database, gated by the version it records on success, and a
+  // launch only pays for it until it has succeeded. A failure here is
+  // deliberately non-fatal: these rows are invisible to every read, so the app is
+  // usable without the cleanup, and because the version is not stamped the next
+  // launch retries it instead of skipping it forever.
+  const orphanCleanupVersion =
+    expoDb.getFirstSync<{ user_version: number }>('PRAGMA user_version')?.user_version ?? 0;
+
+  if (orphanCleanupVersion < ORPHAN_CLEANUP_VERSION) {
+    try {
+      expoDb.execSync(`
     DELETE FROM sets              WHERE session_exercise_id NOT IN (SELECT id FROM session_exercises);
     DELETE FROM routine_exercises WHERE routine_id          NOT IN (SELECT id FROM routines);
     UPDATE routines SET folder_id  = NULL WHERE folder_id IS NOT NULL AND folder_id NOT IN (SELECT id FROM routine_folders);
     UPDATE sessions SET routine_id = NULL WHERE routine_id IS NOT NULL AND routine_id NOT IN (SELECT id FROM routines);
   `);
+      // Stamped only after the cleanup above succeeded, so a failed run is
+      // retried on the next launch rather than skipped forever.
+      expoDb.execSync(`PRAGMA user_version = ${ORPHAN_CLEANUP_VERSION}`);
+    } catch (error) {
+      if (__DEV__) console.error('⚠️ Orphan cleanup failed, retrying on next launch', error);
+    }
+  }
 
   // Check if exercises already imported
   const exerciseCount = await db.select({ count: sql<number>`count(*)` }).from(exercises);
