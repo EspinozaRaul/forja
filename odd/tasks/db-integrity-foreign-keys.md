@@ -16,7 +16,7 @@ against a driver it cannot represent.
 | U4 | `57ab1c4` | `replaceDropSetGroup` and `duplicateSessionData` converted; the owner-copy case relocated |
 | U5 | `b3d7d44` | `replaceSessionExercise` converted, and its fake `tx` made to model the driver |
 | U6 | `200e0c1` | the referential contract pinned by test — no production change |
-| docs | this commit | the plan below becomes the record |
+| U7 | `4759e3d` | `cross-account-writes.test.ts` moved onto the session that ships |
 
 `grep -c "async (tx)" lib/db/queries.ts` is **0**, and all eight `db.transaction` callbacks now run inside one
 transaction on the shipping driver. The unit table below is the measured map from *before* the conversion;
@@ -227,12 +227,17 @@ refusals, are untouched.
 - The web mock (`lib/db/index.web.ts`) keeps its divergence: it is an in-memory store with no FK concept,
   so `deleteSessionExercise` still leaves mock `sets` behind there. The store is non-persistent, so the
   residue dies on reload. Recorded as a decision, not a bug.
-- **`cross-account-writes.test.ts` runs on a driver that cannot represent the shipping one.** Its
-  `sqlite-proxy` adapter resolves with promises, so no synchronous callback can run under it. Every case in
-  that file that touches a converted function is therefore limited to the refusal paths, which throw before
-  the transaction opens — that is why the 14 survivors still pass. Re-harnessing the file onto the expo-sqlite
-  sync harness is the real long-term fix, because a green run there says nothing about transaction semantics.
-  **Its own unit, not this batch.**
+- **CLOSED in U7 — `cross-account-writes.test.ts` now runs on the session that ships.** It used to replace
+  `lib/db/index` with a `sqlite-proxy` database, whose adapter resolves with promises, so no synchronous
+  `db.transaction` callback could run under it: only refusal paths, which throw before the transaction opens,
+  were representable. That is also why the case claiming "(transaction path works)" stayed green while the
+  transaction path was broken. The file now uses the `foreign-keys.test.ts` harness, runs `lib/db/index`
+  unmodified, and establishes the pragma state explicitly, so its cases run under the same enforcement as the
+  device.
+- **`user-scope.test.ts` still runs on `sqlite-proxy`.** It is the remaining file on that adapter. Its cases
+  are ownership predicates with no transaction callback, so the limitation does not touch them today — but it
+  applies the same way, and the same move would be needed before any transaction test lands there. Recorded as
+  a constraint, not scheduled.
 - The two insert-only script connections (`scripts/import-exercises.ts:46`,
   `lib/db/import-exercises.ts:53`) are left without the pragma: they delete no parent and depend on no
   cascade.
