@@ -1,35 +1,101 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CREATE_TABLES_SQL } from '../../../lib/db/ddl';
 
-// Same real-SQLite harness as `user-scope.test.ts`: the only module replaced is
-// `lib/db/index`, rewired to drizzle's sqlite-proxy over `node:sqlite`, so every
-// assertion below runs the SQL that ships instead of a mocked query chain.
-jest.mock('../../../lib/db/index', () => {
+// Harness: the real database module over the driver that ships.
+//
+// The only thing faked is the native boundary — `expo-sqlite`'s `openDatabaseSync`
+// returns a synchronous client backed by `node:sqlite` — so `lib/db/index` runs
+// unmodified and every assertion below executes the SQL that ships through
+// `drizzle-orm/expo-sqlite`, the session production uses. `foreign-keys.test.ts`
+// and `orphan-cleanup.test.ts` use this same harness.
+//
+// This file used to replace `lib/db/index` with a `sqlite-proxy` database instead.
+// That adapter resolves with promises, so no synchronous `db.transaction` callback
+// could run under it: `duplicateSessionData` reads its source rows with `.all()` and
+// iterates them, and on that adapter `.all()` yields a promise, so the loop threw
+// `TypeError: sourceExercises is not iterable` before copying a single row. Only the
+// refusal paths, which throw before the transaction opens, were representable. Here
+// the converted (synchronous-callback) functions run their success paths too, which
+// is the axis the N2 fix was about.
+//
+// FOREIGN-KEY STATE: production runs with `PRAGMA foreign_keys = ON` (U2 issues it at
+// module scope in `lib/db/index`), so this file establishes ON explicitly and asserts
+// it in the setup instead of inheriting `node:sqlite`'s own default. The declared
+// `ON DELETE CASCADE` / `SET NULL` actions are therefore enforced here, exactly as on
+// the device.
+jest.mock('expo-sqlite', () => {
   const { DatabaseSync } = require('node:sqlite');
-  const { drizzle } = require('drizzle-orm/sqlite-proxy');
-
   const sqlite = new DatabaseSync(':memory:');
-  const db = drizzle((sql: string, params: unknown[], method: string) => {
-    const statement = sqlite.prepare(sql);
-    if (method === 'run') {
-      statement.run(...params);
-      return Promise.resolve({ rows: [] });
-    }
-    statement.setReturnArrays(true);
-    const rows = statement.all(...params);
-    return Promise.resolve(method === 'get' ? { rows: rows[0] } : { rows });
-  });
+  const execSyncCalls: string[] = [];
 
-  return { __esModule: true, db, __sqlite: sqlite, initializeDatabase: jest.fn() };
+  // Set explicitly, never inherited: `node:sqlite` happens to default this to 1,
+  // while a shipping connection would be 0 if `lib/db/index` did not issue the
+  // pragma itself.
+  sqlite.exec('PRAGMA foreign_keys = ON');
+
+  const isRowReturning = (sql: string) =>
+    /^\s*(select|pragma|with)\b/i.test(sql) || /\breturning\b/i.test(sql);
+
+  const client = {
+    execSync: (sql: string) => {
+      execSyncCalls.push(sql);
+      sqlite.exec(sql);
+    },
+    prepareSync(sql: string) {
+      const statement = sqlite.prepare(sql);
+      return {
+        executeSync(params: unknown[] = []) {
+          if (isRowReturning(sql)) {
+            statement.setReturnArrays(true);
+            const rowList = statement.all(...params);
+            return {
+              changes: 0,
+              lastInsertRowId: 0,
+              getAllSync: () => rowList,
+              getFirstSync: () => rowList[0],
+            };
+          }
+          const info = statement.run(...params);
+          return {
+            changes: info.changes,
+            lastInsertRowId: info.lastInsertRowId,
+            getAllSync: () => [],
+            getFirstSync: () => undefined,
+          };
+        },
+        executeForRawResultSync(params: unknown[] = []) {
+          statement.setReturnArrays(true);
+          const rowList = statement.all(...params);
+          return { getAllSync: () => rowList, getFirstSync: () => rowList[0] };
+        },
+      };
+    },
+  };
+
+  return {
+    __esModule: true,
+    openDatabaseSync: () => client,
+    __sqlite: sqlite,
+    __execSyncCalls: execSyncCalls,
+  };
 });
 
 import * as queries from '../../../lib/db/queries';
 import { setCurrentUserId } from '../../../lib/db/user-scope';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 let sqlite: any;
+let execSyncCalls: string[];
 
-function count(sql: string): number {
-  return sqlite.prepare(sql).get().c;
+function count(sql: string, ...params: unknown[]): number {
+  return sqlite.prepare(sql).get(...params).c;
+}
+
+function rows(sql: string, ...params: unknown[]): any[] {
+  return sqlite.prepare(sql).all(...params);
+}
+
+function foreignKeysEnabled(): number {
+  return sqlite.prepare('PRAGMA foreign_keys').get().foreign_keys;
 }
 
 const T0 = 1767225600000; // 2026-01-01T00:00:00Z
@@ -84,12 +150,21 @@ async function seedCompletedSession(userId: string, options: SeedOptions = {}) {
 
 describe('data layer cross-account gaps', () => {
   beforeAll(() => {
-    sqlite = require('../../../lib/db/index').__sqlite;
+    sqlite = require('expo-sqlite').__sqlite;
+    execSyncCalls = require('expo-sqlite').__execSyncCalls;
+
+    // The state is production's, and it is asserted rather than assumed: the app
+    // module issues the pragma itself at module scope (recorded by the fake client),
+    // and the connection this file drives is enforcing it.
+    expect(execSyncCalls).toContain('PRAGMA foreign_keys = ON');
+    expect(foreignKeysEnabled()).toBe(1);
+
     sqlite.exec(CREATE_TABLES_SQL);
   });
 
   beforeEach(() => {
-    // Children first so this works even if a connection enables FK enforcement.
+    // Children first: the connection enforces foreign keys, so parents cannot be
+    // deleted while children still reference them.
     sqlite.exec(
       'DELETE FROM sets; DELETE FROM session_exercises; DELETE FROM sessions;' +
         'DELETE FROM routine_exercises; DELETE FROM routines; DELETE FROM routine_folders;' +
@@ -185,17 +260,99 @@ describe('data layer cross-account gaps', () => {
       expect(count('SELECT COUNT(*) AS c FROM session_exercises')).toBe(beforeSe);
       expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(beforeSets);
     });
+  });
 
-    // The `duplicateSessionData` owner-copy case that lived here was relocated on
-    // 2026-09-26, not dropped. That function now has a synchronous callback, and this
-    // file's `sqlite-proxy` harness cannot run one: the adapter resolves with
-    // `Promise.resolve(...)`, so `.all()` is a promise and the copy loop throws on it.
-    // Its old name claimed "(transaction path works)" while the transaction path was
-    // broken, which is the proof that this harness cannot discriminate the two shapes.
-    // The coverage lives in `sync-transaction-atomicity.test.ts` now, on the driver
-    // that ships, and it asserts strictly more: every copied set hangs off its own
-    // copied exercise, the ids are new, the copy is unchecked, the source is
-    // untouched, and a failure mid-callback rolls the whole copy back.
+  // The owner-copy case that used to live in the block above was relocated to
+  // `sync-transaction-atomicity.test.ts` on 2026-09-26, when this file still ran on
+  // `sqlite-proxy` and could not execute `duplicateSessionData`'s synchronous
+  // callback at all. The file is on the shipping driver now, so the cross-account
+  // dimension of that copy is pinned here again; the atomicity dimension (one copied
+  // set per copied exercise, rollback on a mid-callback failure) stays there to keep
+  // the two suites from restating each other.
+  describe('duplicateSessionData copies inside the owner account (converted sync callback)', () => {
+    it("copies the owner's session into the owner's target and leaves the other account's data untouched", async () => {
+      // `duplicateSessionData` is one of the functions whose transaction callback was
+      // converted to be synchronous. The previous harness could not execute this path
+      // at all: the callback loads the source slots with `.all()` and then iterates
+      // them, and on the `sqlite-proxy` adapter `.all()` resolves with a promise, so
+      // the loop threw `TypeError: sourceExercises is not iterable` before any row was
+      // copied. Only the refusal arms above — which throw in `assertSessionOwned`
+      // before the transaction opens — were representable on that adapter.
+      const source = await seedCompletedSession('user-a', { exerciseId: 1, reps: 8, weight: 100 });
+      const other = await seedCompletedSession('user-b', { exerciseId: 2, reps: 5, weight: 60 });
+
+      const otherSlots = rows('SELECT * FROM session_exercises WHERE session_id = ?', other.session.id);
+      const otherSets = rows(
+        'SELECT s.* FROM sets s JOIN session_exercises se ON se.id = s.session_exercise_id WHERE se.session_id = ?',
+        other.session.id
+      );
+
+      setCurrentUserId('user-a');
+      const [target] = await queries.createSession({ startedAt: new Date(T1) });
+
+      await queries.duplicateSessionData(source.session.id, target.id);
+
+      // The copy landed in the owner's target, as new rows attached to each other.
+      const copiedSlots = rows('SELECT * FROM session_exercises WHERE session_id = ?', target.id);
+      expect(copiedSlots).toHaveLength(1);
+      expect(copiedSlots[0].id).not.toBe(source.sessionExercise.id);
+      expect(copiedSlots[0].exercise_id).toBe(1);
+
+      const copiedSets = rows('SELECT * FROM sets WHERE session_exercise_id = ?', copiedSlots[0].id);
+      expect(copiedSets).toHaveLength(1);
+      expect(copiedSets[0].completed).toBe(0);
+
+      // The source session still holds exactly what it held.
+      expect(
+        count('SELECT COUNT(*) AS c FROM session_exercises WHERE id = ?', source.sessionExercise.id)
+      ).toBe(1);
+      expect(
+        count('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ?', source.sessionExercise.id)
+      ).toBe(1);
+
+      // The other account's session is untouched, down to its ids.
+      expect(
+        rows('SELECT * FROM session_exercises WHERE session_id = ?', other.session.id)
+      ).toEqual(otherSlots);
+      expect(
+        rows(
+          'SELECT s.* FROM sets s JOIN session_exercises se ON se.id = s.session_exercise_id WHERE se.session_id = ?',
+          other.session.id
+        )
+      ).toEqual(otherSets);
+      expect(otherSlots).toHaveLength(1);
+      expect(otherSets).toHaveLength(1);
+    });
+  });
+
+  describe('deleteSessionExercise cross-account', () => {
+    it("removes the owner's sets through the declared CASCADE and leaves the other account's slot intact", async () => {
+      const mine = await seedOwnedSessionExercise('user-a');
+      insertSet(mine.sessionExercise.id);
+      const theirs = await seedOwnedSessionExercise('user-b');
+      insertSet(theirs.sessionExercise.id);
+
+      setCurrentUserId('user-a');
+      await queries.deleteSessionExercise(mine.sessionExercise.id);
+
+      // `deleteSessionExercise` deletes only the `session_exercises` row; its sets go
+      // through the declared `ON DELETE CASCADE`, which is real only while the pragma
+      // is ON. With the pragma forced OFF this case fails here, which is what makes it
+      // the file's evidence that the harness enforces the state it sets.
+      expect(
+        count('SELECT COUNT(*) AS c FROM session_exercises WHERE id = ?', mine.sessionExercise.id)
+      ).toBe(0);
+      expect(
+        count('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ?', mine.sessionExercise.id)
+      ).toBe(0);
+
+      // The other account's slot and its set survive the ownership-scoped delete.
+      expect(count('SELECT COUNT(*) AS c FROM session_exercises')).toBe(1);
+      expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(1);
+      expect(
+        count('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ?', theirs.sessionExercise.id)
+      ).toBe(1);
+    });
   });
 
   describe('deleteSession cross-account', () => {
