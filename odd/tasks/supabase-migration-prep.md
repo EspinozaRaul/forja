@@ -1,27 +1,28 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS — Unit 1 (schema freeze) LANDED, not pushed, not merged.** Branch
-`feat/sqlite-schema-freeze`, branched from `main` @ `af8c436`. PR #1 (`fix/db-integrity-foreign-keys`) is still
-**open and unmerged**, so this branch starts from the same base the PR did; neither is stacked on the other.
-Merge and push stay the user's decision.
+**Status**: **IN PROGRESS — Unit 1 (schema freeze) LANDED, suite green on the merged base.** PR #1
+(`fix/db-integrity-foreign-keys`) was **merged** into `main` (`92264cb`) and this branch was rebased onto it, so
+Unit 1 now sits on top of the N1/N2 fixes. Branch `feat/sqlite-schema-freeze`, local only (not pushed). The next
+merge and any push stay the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
 
-**Gate**: `npx tsc --noEmit` clean and `npx jest` green. Baseline on `af8c436` alone: **36 suites / 347
-tests**; with Unit 1 landed: **37 suites / 352 tests** (this branch). The PR branch's larger count (39 / 374)
-lives only in PR #1.
+**Gate**: `npx tsc --noEmit` clean and `npx jest` green. On `main` after PR #1 (`92264cb`): **39 suites / 374
+tests**. On this branch over that base: **40 suites / 379 tests**.
 
 ### Landed on this branch
 
 | Unit | Commit | What landed |
 | --- | --- | --- |
-| tracking | `961f38e` | this document |
-| U1 | `af39968` | `runSchemaMigrations` extracted from `initializeDatabase`; `SCHEMA_VERSION` + `SCHEMA_MANIFEST` + `MIGRATION_ADDED_COLUMNS`; the freeze test pinning the fresh shape and the legacy upgrade path |
+| tracking | `49dfa7d` | this document |
+| U1 | `edb7532` | `runSchemaMigrations` extracted from `initializeDatabase`; `SCHEMA_VERSION` + `SCHEMA_MANIFEST` + `MIGRATION_ADDED_COLUMNS`; the freeze test pinning the fresh shape and the legacy upgrade path |
+| tracking | `3ad2d32` | Unit 1's landing recorded |
 
-Gate observed on `af39968`: `npx tsc --noEmit` exit 0 · `npx jest` **37 suites / 352 tests**. Parent negative
-control (independent of the writer): dropping the `note_type` ALTER fails 2 tests; renaming a manifest column
-fails 3; both files byte-identical after revert.
+Gate observed on `edb7532` over the pre-merge base `af8c436`: `npx tsc --noEmit` exit 0 · `npx jest` **37 suites
+/ 352 tests**; after the rebase onto `92264cb`: exit 0 · **40 suites / 379 tests**. Parent negative control
+(independent of the writer): dropping the `note_type` ALTER fails 2 tests; renaming a manifest column fails 3;
+both files byte-identical after revert.
 
 ---
 
@@ -63,9 +64,11 @@ it is cheap, and it keeps this work from colliding with PR #1. Each later layer 
 - **No version.** `PRAGMA user_version` is used today only for the Unit-1 orphan cleanup
   (`ORPHAN_CLEANUP_VERSION = 1`, on the PR branch). There is no schema-shape version and no contract that pins
   the shape, so nothing fails when `ddl.ts` and reality drift.
-- **The original shape exists as an artifact**: `lib/db/migrations/0000_charming_alex_wilder.sql` is the drizzle
-  v1 schema (no `routine_folders`, no `user_id`, no `folder_id`, no `unit`, no drop-set columns). It is the
-  fixture for "old install upgraded by the `ALTER`s".
+- **The drizzle `0000` snapshot is NOT a faithful install** and was rejected as the upgrade fixture.
+  `lib/db/migrations/0000_charming_alex_wilder.sql` has no `routine_folders` and no `user_id` anywhere, and its
+  `exercises` lacks 9 columns (`equipment`, `target_muscle`, `muscle_group`, `body_part`, `secondary_muscles`,
+  `instructions_es`, `image_url`, `gif_url`, `original_id`) that the earliest indexed runtime DDL always
+  declared. See Unit 1, "As built".
 - **The gap the audit names**: every test harness builds its schema from `CREATE_TABLES_SQL`, where the columns
   already exist, so the `ALTER` path — the only path that runs on an installed device — is covered by nothing.
 
