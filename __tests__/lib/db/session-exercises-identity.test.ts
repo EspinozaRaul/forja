@@ -99,6 +99,14 @@ function slotIdentity(id: number): SlotIdentity | undefined {
   return row === undefined ? undefined : { ...row };
 }
 
+/** True when the slot's raw row still exists and carries a tombstone. */
+function slotTombstoned(id: number): boolean {
+  const row = sqlite
+    .prepare('SELECT deleted_at FROM session_exercises WHERE id = ?')
+    .get(id) as { deleted_at: number | null } | undefined;
+  return row !== undefined && row.deleted_at !== null;
+}
+
 /** A secondary session owned by the same account, for the copy path. */
 function seedTargetSession(id: number): void {
   sqlite
@@ -318,9 +326,10 @@ describe('session_exercises write paths mint identity (U2c)', () => {
 
     await queries.deleteSessionExercise(mine.id);
 
-    // The deleted row is gone (a hard delete); the survivor is unpaired and its
+    // The deleted row is tombstoned, not gone; the survivor is unpaired and its
     // identity survives the dissolve.
-    expect(slotIdentity(mine.id)).toBeUndefined();
+    expect(slotTombstoned(mine.id)).toBe(true);
+    expect(slotIdentity(mine.id)).toBeDefined();
     expect(pairIdOf(survivor.id)).toBeNull();
     const survivorAfter = slotIdentity(survivor.id);
     expect(survivorAfter?.uuid).toBe(survivorBefore?.uuid);
@@ -340,7 +349,8 @@ describe('session_exercises write paths mint identity (U2c)', () => {
 
     await queries.deleteSuperSetMembers([member.id], 888);
 
-    expect(slotIdentity(member.id)).toBeUndefined();
+    expect(slotTombstoned(member.id)).toBe(true);
+    expect(slotIdentity(member.id)).toBeDefined();
     // The pair id was already carried over by whoever called the delete (the list
     // arrives as an argument), so the row keeps its id and only loses identity when
     // it is a member of `memberIds`.

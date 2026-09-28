@@ -107,6 +107,36 @@ function injectFailureOnDelete(table: 'session_exercises' | 'sessions'): void {
   };
 }
 
+/** Make the named UPDATE throw, so the earlier child tombstones are at risk. */
+function injectFailureOnUpdate(table: 'session_exercises' | 'sessions'): void {
+  const pattern = new RegExp('^\\s*update\\s+["`]?' + table + '["`]?\\s+set\\b', 'i');
+  mockedIndex.__hooks.onStatement = (sql: string) => {
+    if (pattern.test(sql.trim())) {
+      throw new Error(`injected ${table} update failure`);
+    }
+  };
+}
+
+/** Allowlisted full statements per table, so no identifier is ever interpolated. */
+const RAW_TOMBSTONE_SQL: Record<'sets' | 'session_exercises' | 'sessions', string> = {
+  sets: 'SELECT deleted_at FROM sets WHERE id = ?',
+  session_exercises: 'SELECT deleted_at FROM session_exercises WHERE id = ?',
+  sessions: 'SELECT deleted_at FROM sessions WHERE id = ?',
+};
+
+/**
+ * Raw tombstone read, straight from SQLite. A row count can no longer prove a
+ * rollback once the writes are tombstones — a committed tombstone leaves the row
+ * in place — so `deleted_at` is the only discriminating check. `undefined` means
+ * the row is physically gone, which must also fail the assertion.
+ */
+function rawTombstone(
+  table: 'sets' | 'session_exercises' | 'sessions',
+  id: number
+): { deleted_at: number | null } | undefined {
+  return sqlite.prepare(RAW_TOMBSTONE_SQL[table]).get(id) as { deleted_at: number | null } | undefined;
+}
+
 describe('deleteSession atomicity (expo-sqlite sync driver)', () => {
   beforeAll(() => {
     sqlite = mockedIndex.__sqlite;
@@ -142,17 +172,19 @@ describe('deleteSession atomicity (expo-sqlite sync driver)', () => {
     mockedIndex.__hooks.onStatement = null;
   });
 
-  it('rolls back the sets delete when the session_exercises delete throws', async () => {
-    injectFailureOnDelete('session_exercises');
+  it('rolls back the sets tombstone when the session_exercises update throws', async () => {
+    injectFailureOnUpdate('session_exercises');
 
     await expect(queries.deleteSession(SESSION_ID)).rejects.toThrow(
-      'injected session_exercises delete failure'
+      'injected session_exercises update failure'
     );
 
-    // The sets delete runs first; without a transaction it is already permanent.
-    expect(count('sets')).toBe(1);
-    expect(count('session_exercises')).toBe(1);
-    expect(count('sessions')).toBe(1);
+    // The sets tombstone runs first; without a transaction it is already permanent.
+    // `deleted_at` — not a row count — is what proves the rollback: the tombstone is
+    // an UPDATE, so a committed one leaves the row sitting in the table.
+    expect(rawTombstone('sets', 1)).toEqual({ deleted_at: null });
+    expect(rawTombstone('session_exercises', 1)).toEqual({ deleted_at: null });
+    expect(rawTombstone('sessions', 1)).toEqual({ deleted_at: null });
   });
 
   it('negative control: the async-callback shape commits the sets delete before the failure (the trap)', async () => {
@@ -190,18 +222,19 @@ describe('deleteSession atomicity (expo-sqlite sync driver)', () => {
     expect(count('sessions')).toBe(1);
   });
 
-  it('rolls back both child deletes when the sessions delete throws', async () => {
-    injectFailureOnDelete('sessions');
+  it('rolls back both child tombstones when the sessions update throws', async () => {
+    injectFailureOnUpdate('sessions');
 
     await expect(queries.deleteSession(SESSION_ID)).rejects.toThrow(
-      'injected sessions delete failure'
+      'injected sessions update failure'
     );
 
     // The residual-session failure mode: the surviving `sessions` row is what
-    // `getActiveSession` keeps returning, so both child tables must come back.
-    expect(count('sets')).toBe(1);
-    expect(count('session_exercises')).toBe(1);
-    expect(count('sessions')).toBe(1);
+    // `getActiveSession` keeps returning, so both child tombstones must come back
+    // live. `deleted_at` is the discriminating check; none of the rows left the table.
+    expect(rawTombstone('sets', 1)).toEqual({ deleted_at: null });
+    expect(rawTombstone('session_exercises', 1)).toEqual({ deleted_at: null });
+    expect(rawTombstone('sessions', 1)).toEqual({ deleted_at: null });
   });
 
   it('negative control: the pre-fix shape leaves the half-deleted session when the sessions delete throws', async () => {
