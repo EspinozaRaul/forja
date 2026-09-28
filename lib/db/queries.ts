@@ -2222,7 +2222,7 @@ export async function getBodyMeasurements() {
   return db
     .select()
     .from(bodyMeasurements)
-    .where(ownedByCurrentUser(bodyMeasurements.userId))
+    .where(and(ownedByCurrentUser(bodyMeasurements.userId), isNull(bodyMeasurements.deletedAt)))
     .orderBy(desc(bodyMeasurements.date));
 }
 
@@ -2282,7 +2282,7 @@ export async function getProgressPhotos() {
   return db
     .select()
     .from(progressPhotos)
-    .where(ownedByCurrentUser(progressPhotos.userId))
+    .where(and(ownedByCurrentUser(progressPhotos.userId), isNull(progressPhotos.deletedAt)))
     .orderBy(desc(progressPhotos.date));
 }
 
