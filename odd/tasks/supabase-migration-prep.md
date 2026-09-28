@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** Unit 1 and identity parts 1–2 (U2a–U2c, U2e) are merged into `main` (`207a54d`,
-PRs #2–#4). **U2d (tombstones) is landed on `feat/identity-tombstones`** — six families, gate 63 suites / 537
-tests — and not yet published. Only U2f (account deletion) remains in the identity layer. Merge stays the user's
-decision.
+**Status**: **IN PROGRESS — the identity layer's six units are all landed.** U2a–U2c, U2d and U2e are merged into
+`main` (`93aeca6`, PRs #2–#5); **U2f (account deletion) is landed on `feat/account-deletion`** (gate 64 suites /
+540 tests) and not yet published. What remains is the recorded work, not the layer: the `uuid` unique indexes,
+drizzle parity, the dashboard scripts and the device test. Merge stays the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -260,7 +260,12 @@ NULL forever. `updateBodyMeasurement` has no UI caller yet — the measurements 
   explicit unlink is narrower than the old FK, which would null any routine pointing at the folder including
   another account's. Recorded decision: `sessions.routine_id` keeps pointing at a tombstoned routine — the row
   still exists, so the reference is not dangling, and it preserves which routine a session belonged to.
-- **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
+- **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`. **LANDED**
+  (`a74a2fd`, `feat/account-deletion`): the nine sequential deletes are now one synchronous transaction, so a
+  failure can no longer leave a half-erased account whose surviving rows belong to a `user_id` that no longer
+  exists. The deletion stays hard, and the photo URIs are read outside the transaction so they survive it. The
+  RPC reconciliation is a dashboard action, not code: the live function does not match
+  `scripts/create-delete-account-rpc.sql` (Engram #539).
 
 ### U2a — identity contract plumbing — LANDED (`9fee0ca`)
 
