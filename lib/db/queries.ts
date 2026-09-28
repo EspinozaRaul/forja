@@ -332,7 +332,10 @@ export async function addExerciseToRoutine(data: {
   targetReps?: number;
 }) {
   await assertRoutineOwned(data.routineId);
-  return db.insert(routineExercises).values(data).returning();
+  return db
+    .insert(routineExercises)
+    .values({ ...data, createdAt: now(), uuid: uuid(), updatedAt: now() })
+    .returning();
 }
 
 export async function removeExerciseFromRoutine(id: number) {
@@ -346,7 +349,7 @@ export async function removeExerciseFromRoutine(id: number) {
 export async function updateRoutineExerciseOrder(id: number, order: number) {
   return db
     .update(routineExercises)
-    .set({ order })
+    .set({ order, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -356,7 +359,7 @@ export async function updateRoutineExerciseOrder(id: number, order: number) {
 export async function replaceRoutineExercise(id: number, exerciseId: number) {
   return db
     .update(routineExercises)
-    .set({ exerciseId })
+    .set({ exerciseId, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -369,7 +372,7 @@ export async function updateRoutineExerciseTargets(
 ) {
   return db
     .update(routineExercises)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -401,7 +404,7 @@ export async function repairRoutineTargetDefaults() {
   // than a synchronous throw when the callback throws.
   return db.transaction((tx) => {
     tx.update(routineExercises)
-      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .set({ targetSets: DEFAULT_TARGET_SETS, updatedAt: now() })
       .where(
         and(
           eq(routineExercises.targetSets, 1),
@@ -410,7 +413,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .set({ targetSets: DEFAULT_TARGET_SETS, updatedAt: now() })
       .where(
         and(
           isNull(routineExercises.targetSets),
@@ -419,7 +422,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .set({ targetReps: DEFAULT_TARGET_REPS, updatedAt: now() })
       .where(
         and(
           isNull(routineExercises.targetReps),
@@ -428,7 +431,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .set({ targetReps: DEFAULT_TARGET_REPS, updatedAt: now() })
       .where(
         and(
           lte(routineExercises.targetReps, 0),
