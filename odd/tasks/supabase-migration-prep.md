@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** Unit 1 (schema freeze) is merged into `main` (**`660e85a`**) and its branch is gone.
-Unit 2 (the identity layer) is on `feat/identity-contract`, branched from `660e85a`; **U2a is landed
-(`9fee0ca`)** and U2b–U2f remain. Local branch, no PR yet — the repo's pattern is one PR per feature branch once
-it is reviewable. Merge and push stay the user's decision.
+**Status**: **IN PROGRESS.** Unit 1 (schema freeze) is merged into `main` (`660e85a`). Unit 2 (the identity
+layer) is on `feat/identity-contract`, branched from `660e85a`: **U2a, U2b and U2c are landed and published as
+PR #3** (18 commits, `MERGEABLE` / `CLEAN`, +2872/−77 over 21 files). U2d–U2f remain, and they are the units that
+change behaviour. Merge stays the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
