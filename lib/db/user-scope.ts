@@ -52,21 +52,30 @@ export function visibleToCurrentUser(column: AnyColumn): SQL {
   return or(isNull(column), eq(column, currentUserId)) as SQL;
 }
 
-/** WHERE fragment: the referenced session belongs to the active account. */
+/**
+ * WHERE fragment: the referenced session belongs to the active account and is
+ * not tombstoned. `deleted_at IS NULL` means live.
+ */
 export function sessionOwnedByCurrentUser(sessionIdColumn: AnyColumn): SQL {
-  return sql`EXISTS (SELECT 1 FROM ${sessions} WHERE ${sessions.id} = ${sessionIdColumn} AND ${sessions.userId} = ${currentUserId})`;
+  return sql`EXISTS (SELECT 1 FROM ${sessions} WHERE ${sessions.id} = ${sessionIdColumn} AND ${sessions.userId} = ${currentUserId} AND ${sessions.deletedAt} IS NULL)`;
 }
 
 /**
  * WHERE fragment for child rows of sessions (`session_exercises`, `sets`): the
- * referenced session_exercise — and the session that owns it — belong to the
- * active account. Child tables carry no `user_id`; ownership is inherited.
+ * referenced session_exercise is live — and the session that owns it — belongs
+ * to the active account. Child tables carry no `user_id`; ownership is
+ * inherited. A tombstoned session_exercise is refused by its own `deleted_at`,
+ * even while its parent session is live; the nested `sessionOwnedByCurrentUser`
+ * already guards the session.
  */
 export function sessionExerciseOwnedByCurrentUser(sessionExerciseIdColumn: AnyColumn): SQL {
-  return sql`EXISTS (SELECT 1 FROM ${sessionExercises} WHERE ${sessionExercises.id} = ${sessionExerciseIdColumn} AND ${sessionOwnedByCurrentUser(sessionExercises.sessionId)})`;
+  return sql`EXISTS (SELECT 1 FROM ${sessionExercises} WHERE ${sessionExercises.id} = ${sessionExerciseIdColumn} AND ${sessionExercises.deletedAt} IS NULL AND ${sessionOwnedByCurrentUser(sessionExercises.sessionId)})`;
 }
 
-/** WHERE fragment: the referenced routine belongs to the active account. */
+/**
+ * WHERE fragment: the referenced routine belongs to the active account and is
+ * not tombstoned, so a deleted routine stops authorizing its children.
+ */
 export function routineOwnedByCurrentUser(routineIdColumn: AnyColumn): SQL {
-  return sql`EXISTS (SELECT 1 FROM ${routines} WHERE ${routines.id} = ${routineIdColumn} AND ${routines.userId} = ${currentUserId})`;
+  return sql`EXISTS (SELECT 1 FROM ${routines} WHERE ${routines.id} = ${routineIdColumn} AND ${routines.userId} = ${currentUserId} AND ${routines.deletedAt} IS NULL)`;
 }
