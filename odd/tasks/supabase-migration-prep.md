@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** The identity layer (U2a–U2f) is complete and merged into `main` (`331bf03`, PRs
-#2–#6). The `uuid` unique indexes landed after it on `feat/uuid-unique-indexes` (`db88281`, `SCHEMA_VERSION` 3,
-gate 64 suites / 543 tests) and is not yet published. Remaining recorded work: drizzle parity, the dashboard
-scripts and the device test. Merge stays the user's decision.
+**Status**: **IN PROGRESS.** The identity layer (U2a–U2f) and the `uuid` unique indexes are merged into `main`
+(`0617374`, PRs #2–#7; `SCHEMA_VERSION` 3). **Drizzle parity is landed on `feat/drizzle-parity`** (`2a4df65`,
+gate 65 suites / 548 tests) and not yet published. Remaining recorded work: the dashboard scripts (a user action)
+and the device test. Merge stays the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -311,8 +311,11 @@ without a default, so the pattern is add-nullable → backfill → `CREATE UNIQU
 ## Recorded, deliberately not in this unit
 
 - **The identity layer** (`uuid` / `updated_at` / `deleted_at`) is Unit 2+, each bumping `SCHEMA_VERSION`.
-- **`lib/db/schema.ts` (drizzle) parity** is not asserted here. It is a real drift risk (queries are typed by
-  it, the database is built by `ddl.ts`) but reconciling it is its own unit.
+- **CLOSED — drizzle parity is pinned by test** (`2a4df65`). `lib/db/schema.ts` is what the typed queries are
+  written against and `SCHEMA_MANIFEST` is what the database is; nothing forced them to agree, so a column added
+  to one side drifted silently. `__tests__/lib/db/drizzle-parity.test.ts` now asserts table-name parity, column
+  names in both directions, nullability, SQL type (`getSQLType()`, the signal that tells INTEGER from REAL) and
+  the primary key. No drift existed when it landed.
 - **CLOSED — the `uuid` columns have a UNIQUE index** (`db88281`, `SCHEMA_VERSION` 3). Nine `<table>_uuid_idx`
   indexes, created by `ddl.ts` on a fresh install and by `runSchemaMigrations` after its `ALTER`s on an upgraded
   one, declared in the manifest and in the new `MIGRATION_ADDED_INDEXES`. `NOT NULL` stays deferred: SQLite cannot
