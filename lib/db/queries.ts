@@ -46,7 +46,13 @@ async function assertSessionOwned(sessionId: number): Promise<void> {
   const owned = await db
     .select({ id: sessions.id })
     .from(sessions)
-    .where(and(eq(sessions.id, sessionId), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(
+        eq(sessions.id, sessionId),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
+      )
+    )
     .limit(1);
   if (owned.length === 0) {
     throw new Error('Session does not belong to the current user');
@@ -308,7 +314,8 @@ export async function getRoutineSessionCounts(): Promise<Record<number, number>>
       and(
         isNotNull(sessions.routineId),
         isNotNull(sessions.completedAt),
-        ownedByCurrentUser(sessions.userId)
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
       )
     )
     .groupBy(sessions.routineId);
@@ -459,7 +466,7 @@ export async function getAllSessions() {
   return db
     .select()
     .from(sessions)
-    .where(ownedByCurrentUser(sessions.userId))
+    .where(and(ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt)))
     .orderBy(desc(sessions.startedAt));
 }
 
@@ -467,7 +474,9 @@ export async function getSessionById(id: number) {
   return db
     .select()
     .from(sessions)
-    .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt))
+    )
     .limit(1);
 }
 
@@ -475,7 +484,13 @@ export async function getActiveSession(): Promise<typeof sessions.$inferSelect |
   const result = await db
     .select()
     .from(sessions)
-    .where(and(isNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(
+        isNull(sessions.completedAt),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
+      )
+    )
     .orderBy(desc(sessions.startedAt))
     .limit(1);
   return result[0] ?? null;
@@ -1135,7 +1150,13 @@ export async function getLastSessionForRoutine(routineId: number) {
   const lastSession = await db
     .select()
     .from(sessions)
-    .where(and(eq(sessions.routineId, routineId), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(
+        eq(sessions.routineId, routineId),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
+      )
+    )
     .orderBy(desc(sessions.completedAt))
     .limit(1);
 
@@ -1194,7 +1215,8 @@ export async function getLastSetsForExercise(exerciseId: number) {
         and(
           eq(sessionExercises.exerciseId, exerciseId),
           isNotNull(sessions.completedAt),
-          ownedByCurrentUser(sessions.userId)
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
         )
       )
       .orderBy(desc(sessions.completedAt))
@@ -1233,7 +1255,8 @@ export async function getLastSetsPerExercise(
         and(
           inArray(sessionExercises.exerciseId, exerciseIds),
           isNotNull(sessions.completedAt),
-          ownedByCurrentUser(sessions.userId)
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
         )
       )
       .orderBy(desc(sessions.completedAt));
@@ -1434,7 +1457,14 @@ export async function getLastRirByRoutineExerciseIds(
   const lastSession = await db
     .select({ id: sessions.id })
     .from(sessions)
-    .where(and(eq(sessions.routineId, routineId), isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(
+        eq(sessions.routineId, routineId),
+        isNotNull(sessions.completedAt),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
+      )
+    )
     .orderBy(desc(sessions.completedAt))
     .limit(1);
 
@@ -1557,6 +1587,7 @@ export async function getLastNotesByExerciseIds(exerciseIds: number[]): Promise<
       isNotNull(sessions.completedAt),
       isNotNull(sessionExercises.notes),
       ownedByCurrentUser(sessions.userId),
+      isNull(sessions.deletedAt),
     ))
     .orderBy(desc(sessions.startedAt));
 
@@ -1611,7 +1642,8 @@ export async function getLastWorkoutPerExercise(
         .where(
           and(
             inArray(sessionExercises.exerciseId, exerciseIds),
-            ownedByCurrentUser(sessions.userId)
+            ownedByCurrentUser(sessions.userId),
+            isNull(sessions.deletedAt)
           )
         )
         .orderBy(desc(sessions.startedAt), desc(sets.createdAt));
@@ -1717,7 +1749,8 @@ export async function getExerciseSessions(exerciseId: number): Promise<ExerciseS
           and(
             eq(sessionExercises.exerciseId, exerciseId),
             isNotNull(sessions.completedAt),
-            ownedByCurrentUser(sessions.userId)
+            ownedByCurrentUser(sessions.userId),
+            isNull(sessions.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1770,7 +1803,8 @@ export async function getExerciseProgressionData(
           and(
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
-            ownedByCurrentUser(sessions.userId)
+            ownedByCurrentUser(sessions.userId),
+            isNull(sessions.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1852,7 +1886,8 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
           and(
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
-            ownedByCurrentUser(sessions.userId)
+            ownedByCurrentUser(sessions.userId),
+            isNull(sessions.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1906,27 +1941,49 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     // Total workouts (completed sessions only)
     db.select({ count: sql<number>`count(*)` })
       .from(sessions)
-      .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId))),
+      .where(
+        and(
+          isNotNull(sessions.completedAt),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
+        )
+      ),
     // Total volume: sum of reps × weight over COMPLETED sets only
     db.select({ total: sql<number>`coalesce(sum(${sets.reps} * ${sets.weight}), 0)` })
       .from(sets)
       .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-      .where(and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId))),
+      .where(
+        and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt))
+      ),
     // Total completed sets
     db.select({ count: sql<number>`coalesce(count(*), 0)` })
       .from(sets)
       .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
-      .where(and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId))),
+      .where(
+        and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt))
+      ),
     // Total time (sum of completed session durations only)
     db.select({ total: sql<number>`coalesce(sum(${sessions.duration}), 0)` })
       .from(sessions)
-      .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId))),
+      .where(
+        and(
+          isNotNull(sessions.completedAt),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
+        )
+      ),
     // Current streak — consecutive days with at least one completed session
     db.select({ startedAt: sessions.startedAt })
       .from(sessions)
-      .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+      .where(
+        and(
+          isNotNull(sessions.completedAt),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
+        )
+      )
       .orderBy(desc(sessions.startedAt))
       .limit(100),
     // Most frequent exercise — completed sessions only, like every sibling
@@ -1939,7 +1996,13 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       .from(sessionExercises)
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
       .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-      .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+      .where(
+        and(
+          isNotNull(sessions.completedAt),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
+        )
+      )
       .groupBy(sessionExercises.exerciseId)
       .orderBy(desc(sql`count(*)`))
       .limit(1),
@@ -2017,7 +2080,8 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
           eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week),
           eq(sessionExercises.exerciseId, exerciseId),
           isNotNull(sessions.completedAt),
-          ownedByCurrentUser(sessions.userId)
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
         )
       )
       .groupBy(sessions.id)
@@ -2038,7 +2102,8 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
         .where(and(
           eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week),
           isNotNull(sessions.completedAt),
-          ownedByCurrentUser(sessions.userId)
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt)
         ))
         .groupBy(sessions.id)
         .orderBy(desc(sessions.startedAt));
