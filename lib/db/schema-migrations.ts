@@ -23,6 +23,14 @@ export function runSchemaMigrations(database: SchemaMigrationDatabase): void {
     }
   };
 
+  const addIndex = (sql: string): void => {
+    try {
+      database.execSync(sql);
+    } catch {
+      // Index already exists, ignore.
+    }
+  };
+
   addColumn(
     'ALTER TABLE routines ADD COLUMN folder_id INTEGER REFERENCES routine_folders(id) ON DELETE SET NULL'
   );
@@ -76,4 +84,28 @@ export function runSchemaMigrations(database: SchemaMigrationDatabase): void {
   addColumn('ALTER TABLE progress_photos ADD COLUMN uuid TEXT');
   addColumn('ALTER TABLE progress_photos ADD COLUMN updated_at INTEGER');
   addColumn('ALTER TABLE progress_photos ADD COLUMN deleted_at INTEGER');
+
+  // The identity layer's uuid uniqueness. Runs after the ALTERs above, so the
+  // column always exists; `CREATE UNIQUE INDEX IF NOT EXISTS` is idempotent and
+  // keeps the same swallow-all posture as `addColumn`. SQLite allows multiple
+  // NULLs in a UNIQUE index, so the shared seed `exercises` rows stay valid.
+  addIndex('CREATE UNIQUE INDEX IF NOT EXISTS exercises_uuid_idx ON exercises (uuid)');
+  addIndex(
+    'CREATE UNIQUE INDEX IF NOT EXISTS routine_folders_uuid_idx ON routine_folders (uuid)'
+  );
+  addIndex('CREATE UNIQUE INDEX IF NOT EXISTS routines_uuid_idx ON routines (uuid)');
+  addIndex(
+    'CREATE UNIQUE INDEX IF NOT EXISTS routine_exercises_uuid_idx ON routine_exercises (uuid)'
+  );
+  addIndex('CREATE UNIQUE INDEX IF NOT EXISTS sessions_uuid_idx ON sessions (uuid)');
+  addIndex(
+    'CREATE UNIQUE INDEX IF NOT EXISTS session_exercises_uuid_idx ON session_exercises (uuid)'
+  );
+  addIndex('CREATE UNIQUE INDEX IF NOT EXISTS sets_uuid_idx ON sets (uuid)');
+  addIndex(
+    'CREATE UNIQUE INDEX IF NOT EXISTS body_measurements_uuid_idx ON body_measurements (uuid)'
+  );
+  addIndex(
+    'CREATE UNIQUE INDEX IF NOT EXISTS progress_photos_uuid_idx ON progress_photos (uuid)'
+  );
 }

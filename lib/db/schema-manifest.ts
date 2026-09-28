@@ -8,7 +8,7 @@
 // Bump `SCHEMA_VERSION` whenever the shape changes: a later layer (identity
 // columns, etc.) is expected to add a version and extend the manifest with it.
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export interface SchemaColumn {
   name: string;
@@ -48,6 +48,24 @@ export const MIGRATION_ADDED_COLUMNS: Record<string, string[]> = {
   progress_photos: ['user_id', 'uuid', 'updated_at', 'deleted_at'],
 };
 
+// Indexes that `runSchemaMigrations` creates on databases that predate them.
+// Authored from the migration (whose source is `MIGRATION_ADDED_COLUMNS`'s
+// companion statement), deliberately NOT by diffing the manifest. Each index is
+// the uniqueness the audit asks for on `uuid`: `NOT NULL` stays deferred because
+// SQLite cannot `ADD COLUMN ... NOT NULL` without a default, but a UNIQUE index
+// still tolerates the shared seed rows whose `uuid` is NULL.
+export const MIGRATION_ADDED_INDEXES: Record<string, string[]> = {
+  exercises: ['exercises_uuid_idx'],
+  routine_folders: ['routine_folders_uuid_idx'],
+  routines: ['routines_uuid_idx'],
+  routine_exercises: ['routine_exercises_uuid_idx'],
+  sessions: ['sessions_uuid_idx'],
+  session_exercises: ['session_exercises_uuid_idx'],
+  sets: ['sets_uuid_idx'],
+  body_measurements: ['body_measurements_uuid_idx'],
+  progress_photos: ['progress_photos_uuid_idx'],
+};
+
 export const SCHEMA_MANIFEST: SchemaTable[] = [
   {
     name: 'categories',
@@ -85,7 +103,10 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [{ name: 'name_category_idx', unique: 0, columns: ['name', 'category_id'] }],
+    indexes: [
+      { name: 'exercises_uuid_idx', unique: 1, columns: ['uuid'] },
+      { name: 'name_category_idx', unique: 0, columns: ['name', 'category_id'] },
+    ],
   },
   {
     name: 'routine_folders',
@@ -101,7 +122,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [],
+    indexes: [{ name: 'routine_folders_uuid_idx', unique: 1, columns: ['uuid'] }],
   },
   {
     name: 'routines',
@@ -117,7 +138,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [],
+    indexes: [{ name: 'routines_uuid_idx', unique: 1, columns: ['uuid'] }],
   },
   {
     name: 'routine_exercises',
@@ -133,7 +154,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [],
+    indexes: [{ name: 'routine_exercises_uuid_idx', unique: 1, columns: ['uuid'] }],
   },
   {
     name: 'sessions',
@@ -152,6 +173,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
     indexes: [
       { name: 'sessions_completed_at_idx', unique: 0, columns: ['completed_at'] },
       { name: 'sessions_routine_id_idx', unique: 0, columns: ['routine_id'] },
+      { name: 'sessions_uuid_idx', unique: 1, columns: ['uuid'] },
     ],
   },
   {
@@ -173,6 +195,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
     indexes: [
       { name: 'se_exercise_idx', unique: 0, columns: ['exercise_id'] },
       { name: 'se_session_idx', unique: 0, columns: ['session_id'] },
+      { name: 'session_exercises_uuid_idx', unique: 1, columns: ['uuid'] },
     ],
   },
   {
@@ -194,7 +217,10 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [{ name: 'sets_session_exercise_idx', unique: 0, columns: ['session_exercise_id'] }],
+    indexes: [
+      { name: 'sets_session_exercise_idx', unique: 0, columns: ['session_exercise_id'] },
+      { name: 'sets_uuid_idx', unique: 1, columns: ['uuid'] },
+    ],
   },
   {
     name: 'body_measurements',
@@ -215,7 +241,7 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [],
+    indexes: [{ name: 'body_measurements_uuid_idx', unique: 1, columns: ['uuid'] }],
   },
   {
     name: 'progress_photos',
@@ -230,6 +256,6 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
-    indexes: [],
+    indexes: [{ name: 'progress_photos_uuid_idx', unique: 1, columns: ['uuid'] }],
   },
 ];
