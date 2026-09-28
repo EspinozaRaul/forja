@@ -214,6 +214,31 @@ describe('identity backfill (U2b)', () => {
     expect(readUserVersion(sqlite)).toBe(IDENTITY_BACKFILL_VERSION);
   });
 
+  it('gives a legacy custom (user_id NULL, original_id NULL) a uuid and an updated_at', () => {
+    const { sqlite, database } = makeDatabase();
+    buildAndSeed(sqlite);
+
+    // A legacy custom predates account scoping: no `user_id` and no `original_id`,
+    // exactly the shape `claimLegacyRows` adopts at first sign-in. It is a custom,
+    // not a shared seed row, so the backfill must give it an identity.
+    sqlite.exec(
+      "INSERT INTO exercises (id, user_id, name, original_id, created_at) VALUES (3, NULL, 'Legacy custom lift', NULL, 1000);"
+    );
+    sqlite.exec('PRAGMA user_version = 1');
+
+    runIdentityBackfill(database);
+
+    const legacy = first(sqlite, 'SELECT uuid, updated_at FROM exercises WHERE id = 3') as {
+      uuid: string | null;
+      updated_at: number | null;
+    };
+    expect(legacy.uuid).toEqual(expect.any(String));
+    expect(legacy.updated_at).toBeGreaterThan(0);
+
+    // The shared seed row (`original_id` set) is still uuid-less.
+    expect(first(sqlite, 'SELECT uuid FROM exercises WHERE id = 1')).toEqual({ uuid: null });
+  });
+
   it('is a no-op when user_version is 0 (the failed-cleanup case)', () => {
     const { sqlite, database } = makeDatabase();
     buildAndSeed(sqlite);

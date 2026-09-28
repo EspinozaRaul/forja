@@ -103,11 +103,14 @@ export function runIdentityBackfill(database: IdentityBackfillDatabase): void {
     );
   }
 
-  // SQL cannot mint a v4 uuid, so they are generated per row in JS. Shared seed
-  // exercises (`user_id IS NULL`) stay NULL and are keyed by `original_id`
-  // instead; only user-created rows get a cross-system identity.
+  // SQL cannot mint a v4 uuid, so they are generated per row in JS. A shared
+  // seed exercise is identified by its `original_id` (seeded rows always carry
+  // one) and stays NULL, keyed by that `original_id` instead; a custom —
+  // including a legacy custom that predates scoping and has neither `user_id`
+  // nor `original_id` — gets a cross-system identity.
   for (const table of SYNCED_TABLES) {
-    const predicate = table === 'exercises' ? 'uuid IS NULL AND user_id IS NOT NULL' : 'uuid IS NULL';
+    const predicate =
+      table === 'exercises' ? 'uuid IS NULL AND original_id IS NULL' : 'uuid IS NULL';
     const rows = database.getAllSync<{ id: number }>(
       `SELECT id FROM ${table} WHERE ${predicate}`
     );
