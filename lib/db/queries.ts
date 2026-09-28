@@ -296,8 +296,21 @@ export async function deleteExercise(id: number) {
     );
   }
 
+  // Tombstone, not delete: the row stays so the removal can sync, and a
+  // tombstone still needs `updated_at` bumped to win conflict resolution. The
+  // exact ownership WHERE is kept, so the soft delete is never broader than the
+  // hard one it replaces: `exercises` is hybrid, and `user_id = <current>` can
+  // never match the shared library (`user_id IS NULL`), so a seeded row is
+  // untouchable here.
+  //
+  // The FK `ON DELETE RESTRICT` on `routine_exercises.exercise_id` /
+  // `session_exercises.exercise_id` is now inert for this path: a tombstone is an
+  // UPDATE, so the restriction can no longer block a legitimate delete. The
+  // reference-count pre-check above is what keeps a referenced exercise from
+  // being tombstoned, and it stays the thing that phrases the refusal.
   return db
-    .delete(exercises)
+    .update(exercises)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(and(eq(exercises.id, id), ownedByCurrentUser(exercises.userId)));
 }
 
