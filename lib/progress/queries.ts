@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, inArray, isNotNull } from 'drizzle-orm';
+import { eq, desc, asc, sql, and, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { sessions, sessionExercises, sets, exercises } from '../db/schema';
 import { db } from '../db';
 import { getSessionById, getSessionExercisesWithSets } from '../db/queries';
@@ -46,12 +46,25 @@ export async function getSessionsByMonth(yearMonth: string): Promise<SessionByMo
       totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
-    .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
-    .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
+    // LEFT JOINs keep a session with no children: each child's tombstone guard
+    // must live in its own ON clause, or the join degrades to an INNER JOIN and
+    // drops those sessions entirely.
+    .leftJoin(
+      sessionExercises,
+      and(
+        eq(sessionExercises.sessionId, sessions.id),
+        isNull(sessionExercises.deletedAt)
+      )
+    )
+    .leftJoin(
+      sets,
+      and(eq(sets.sessionExerciseId, sessionExercises.id), isNull(sets.deletedAt))
+    )
     .where(and(
       eq(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`, yearMonth),
       isNotNull(sessions.completedAt),
-      ownedByCurrentUser(sessions.userId)
+      ownedByCurrentUser(sessions.userId),
+      isNull(sessions.deletedAt)
     ))
     .groupBy(sessions.id)
     .orderBy(asc(sessions.startedAt));
@@ -68,9 +81,27 @@ export async function getSessionMonthIndex(): Promise<SessionMonthIndexEntry[]> 
       totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
-    .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
-    .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
-    .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+    // Same LEFT JOIN rule as getSessionsByMonth: the child guards go in the ON
+    // clauses so sessions without children (or whose children are all
+    // tombstoned) still count in sessionCount.
+    .leftJoin(
+      sessionExercises,
+      and(
+        eq(sessionExercises.sessionId, sessions.id),
+        isNull(sessionExercises.deletedAt)
+      )
+    )
+    .leftJoin(
+      sets,
+      and(eq(sets.sessionExerciseId, sessionExercises.id), isNull(sets.deletedAt))
+    )
+    .where(
+      and(
+        isNotNull(sessions.completedAt),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt)
+      )
+    )
     .groupBy(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`)
     .orderBy(desc(sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch')`));
 }
@@ -118,9 +149,18 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
       sessionCount: sql<number>`count(distinct ${sessions.id})`,
     })
     .from(sessionExercises)
+    // Every join here is INNER, so all four guards may live in the WHERE.
     .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
     .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-    .where(and(isNotNull(sessions.completedAt), ownedByCurrentUser(sessions.userId)))
+    .where(
+      and(
+        isNotNull(sessions.completedAt),
+        ownedByCurrentUser(sessions.userId),
+        isNull(sessions.deletedAt),
+        isNull(sessionExercises.deletedAt),
+        isNull(exercises.deletedAt)
+      )
+    )
     .groupBy(sessionExercises.exerciseId)
     .orderBy(desc(sql`count(distinct ${sessions.id})`))
     .limit(limit);
@@ -140,6 +180,8 @@ export async function getMostUsedExercises(limit = 6): Promise<MostUsedExercise[
           and(
             inArray(sessionExercises.exerciseId, exerciseIds),
             eq(sets.completed, true),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt),
             sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
           )
         );
@@ -201,10 +243,15 @@ export async function getRoutineSessionsByPeriods(
     sql`strftime('%Y-%m', ${sessions.startedAt}, 'unixepoch') = ${p}`
   );
 
+  // Every join below is INNER, so all four guards may live in the WHERE.
   const whereClause = and(
     eq(sessions.routineId, routineId),
     isNotNull(sessions.completedAt),
     ownedByCurrentUser(sessions.userId),
+    isNull(sessions.deletedAt),
+    isNull(sessionExercises.deletedAt),
+    isNull(exercises.deletedAt),
+    isNull(sets.deletedAt),
     ...[sql`(${sql.join(periodConditions, sql` OR `)})`]
   );
 

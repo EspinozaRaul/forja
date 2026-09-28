@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** Unit 1 (schema freeze) is merged into `main` (`660e85a`). Unit 2 (the identity
-layer) is on `feat/identity-contract`, branched from `660e85a`: **U2a, U2b and U2c are landed and published as
-PR #3** (18 commits, `MERGEABLE` / `CLEAN`, +2872/−77 over 21 files). U2d–U2f remain, and they are the units that
-change behaviour. Merge stays the user's decision.
+**Status**: **IN PROGRESS.** Unit 1 (schema freeze) and identity part 1 (U2a–U2c) are merged into `main`
+(`ce57b49`, PRs #2 and #3). **U2e (read guards) is landed on `feat/identity-guards`** — seven slices, gate 57
+suites / 498 tests — and not yet published. U2d (tombstones) and U2f (account deletion) remain, and U2d is the
+unit that finally changes delete behaviour. Merge stays the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -239,9 +239,17 @@ transaction callback stays synchronous (`.run()`).
 426 tests. A U2b correction landed with it (`65d5e73`): the backfill identifies a shared seed row by
 `original_id`, so legacy customs (`user_id` and `original_id` both NULL) finally get a uuid instead of keeping a
 NULL forever. `updateBodyMeasurement` has no UI caller yet — the measurements screen has no edit affordance.
-- **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
-- **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
-  fix, because a tombstoned parent otherwise keeps authorizing its live children.
+- **U2e — read guards FIRST (reordered 2026-09-28).** A soft delete without a guard brings the row back into
+  every read, and a guard is a provable no-op while every `deleted_at` is still NULL, so it lands safely and is
+  testable by setting `deleted_at` directly. Slice: (1) the `user-scope.ts` EXISTS guards — the highest-leverage
+  fix, because a tombstoned parent otherwise keeps authorizing its live children; (2) the per-query and aggregate
+  guards, one read family per commit. **LANDED** on `feat/identity-guards`: `1459f81` user-scope EXISTS guards,
+  `5dd60e4` sessions, `d6792a9` sets + session_exercises, `7710925` routines + folders + routine_exercises,
+  `2bfecaa` exercises, `a35472c` measurements + photos, `55b14c8` the progress readers (with the LEFT-JOIN `ON`
+  placement that keeps childless sessions). `deleteUserLocalData` deliberately reads tombstones so account
+  deletion can purge them.
+- **U2d — tombstone conversion** once the guards exist, one delete family per commit, ordered by resurrection
+  damage (and every FK cascade / `SET NULL` it relies on goes inert).
 - **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
 
 ### U2a — identity contract plumbing — LANDED (`9fee0ca`)
