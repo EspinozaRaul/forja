@@ -179,6 +179,11 @@ Gate: `npx tsc --noEmit` exit 0 · `npx jest` **41 suites / 383 tests**. As buil
 `runIdentityBackfill` so it is testable. Parent negative control: dropping the watermark's lower bound fails the
 failed-cleanup case (`user_version 0`).
 
+**Correction (`65d5e73`).** The first version identified a shared seed exercise by `user_id IS NULL` and so
+skipped the legacy customs `claimLegacyRows` adopts at sign-in (no `user_id`, no `original_id`), which would have
+left them with a NULL uuid forever. A shared seed row is the one that carries an `original_id`; the predicate is
+now `uuid IS NULL AND original_id IS NULL`.
+
 **Deliverables**
 
 - **`lib/db/identity.ts`** (new): `uuid()` over `Crypto.randomUUID()` (expo-crypto, synchronous) and
@@ -227,8 +232,13 @@ transaction callback stays synchronous (`.run()`).
 **Test per table**: an INSERT mints a non-null, unique `uuid` and a positive `updated_at`; an UPDATE bumps
 `updated_at`; shared `exercises` rows stay `uuid IS NULL`.
 
-**Progress**: `sets` LANDED (`ffb8fec`, 42/390), `session_exercises` LANDED (`0ad73eb`, 43/399), `sessions`
-LANDED (`c3ae017`, 44/403), `routines` LANDED (`b1628d0`, 45/406). Next: `routine_folders`.
+**Progress**: **U2c LANDED — all nine synced tables mint identity on every non-delete write**: `sets`
+(`ffb8fec`), `session_exercises` (`0ad73eb`), `sessions` (`c3ae017`), `routines` (`b1628d0`),
+`routine_folders` (`43423b0`), `routine_exercises` (`9004096`), `body_measurements` (`5923671`, plus the new
+`updateBodyMeasurement`), `progress_photos` (`96c9364`) and `exercises` (`7238ade`). Branch gate: 50 suites /
+426 tests. A U2b correction landed with it (`65d5e73`): the backfill identifies a shared seed row by
+`original_id`, so legacy customs (`user_id` and `original_id` both NULL) finally get a uuid instead of keeping a
+NULL forever. `updateBodyMeasurement` has no UI caller yet — the measurements screen has no edit affordance.
 - **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
 - **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
   fix, because a tombstoned parent otherwise keeps authorizing its live children.
