@@ -171,7 +171,13 @@ facts, all `file:line` evidenced:
 **Proposed slicing** (detail and line lists in Engram #543).
 
 - **U2a — contract plumbing, zero behaviour change. Spec below.**
-### U2b — identity generators + one-time backfill (spec)
+### U2b — identity generators + one-time backfill — LANDED (`1508fc6`)
+
+Gate: `npx tsc --noEmit` exit 0 · `npx jest` **41 suites / 383 tests**. As built: `sessions.updated_at` uses
+`COALESCE(completed_at, started_at, :now)` (that table has no `created_at`); both watermarks live in
+`lib/db/migration-versions.ts` so `index.ts` and `identity.ts` cannot drift; the watermark gate is encapsulated in
+`runIdentityBackfill` so it is testable. Parent negative control: dropping the watermark's lower bound fails the
+failed-cleanup case (`user_version 0`).
 
 **Deliverables**
 
@@ -202,7 +208,24 @@ NULL, run the backfill, and assert: every `uuid` is a non-empty string and uniqu
 second run changes nothing. `expo-crypto` must be mocked (it is a native module).
 
 **Allowed edit surfaces**: `lib/db/identity.ts`, `lib/db/index.ts`, `__tests__/lib/db/identity-backfill.test.ts`.
-- **U2c — write paths, one table per commit**, starting with `sets` (highest churn, most tx-bound writes).
+### U2c — write paths per table (spec; one table per commit, `sets` first)
+
+Every INSERT writes `uuid` (user-created rows only, for `exercises`) and `updated_at`; every UPDATE writes
+`updated_at`. Deletes are U2d. Through drizzle, `updated_at`/`created_at` use `integer(..., { mode: 'timestamp' })`,
+so the writer passes `now()` (a `Date`), which encodes to the same unix seconds the backfill writes; `uuid()` comes
+from `lib/db/identity.ts`.
+
+**`sets` first** (highest churn): `createSet` (`queries.ts:947-951`), `createDropSets` (`:977`/`:980`),
+`createSuperSetPair` (`:893`/`:896`/`:901`), `replaceDropSetGroup` (`:1063`/`:1066`) and `duplicateSessionData`
+(`:1263-1278`) add `uuid: uuid()` + `updatedAt: now()`; `updateSet` (`:996-997`) adds `updatedAt: now()`. Every
+transaction callback stays synchronous (`.run()`).
+
+**Then one commit per table**, in this order: `session_exercises`, `sessions`, `routines`, `routine_folders`,
+`routine_exercises`, `body_measurements` (also adds the missing `updateBodyMeasurement`), `progress_photos`, then
+`exercises` (customs only — shared seed rows stay `uuid IS NULL`).
+
+**Test per table**: an INSERT mints a non-null, unique `uuid` and a positive `updated_at`; an UPDATE bumps
+`updated_at`; shared `exercises` rows stay `uuid IS NULL`.
 - **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
 - **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
   fix, because a tombstoned parent otherwise keeps authorizing its live children.
@@ -254,6 +277,11 @@ without a default, so the pattern is add-nullable → backfill → `CREATE UNIQU
 - **The identity layer** (`uuid` / `updated_at` / `deleted_at`) is Unit 2+, each bumping `SCHEMA_VERSION`.
 - **`lib/db/schema.ts` (drizzle) parity** is not asserted here. It is a real drift risk (queries are typed by
   it, the database is built by `ddl.ts`) but reconciling it is its own unit.
+- **The `uuid` columns have no UNIQUE index yet.** U2a left them nullable, U2b backfilled them, but uniqueness is
+  asserted by test only — not enforced by the schema. A dedicated schema unit must add the unique indexes (and the
+  freeze test needs a `MIGRATION_ADDED_INDEXES` notion, since `runSchemaMigrations` does not create indexes yet).
+- **`__tests__/lib/db/orphan-cleanup.test.ts` keeps its own local `ORPHAN_CLEANUP_VERSION = 1`**; it is outside
+  this feature's edit surfaces and still matches `lib/db/migration-versions.ts`, but it can drift.
 - **The remote Supabase drift** is a dashboard action (run/repair `supabase-schema.sql`, reconcile the RPC);
   it needs no repo change and cannot be done from here without the secret key.
 - **`components/ExercisePicker.tsx`** — 3 `Modal`s with `presentationStyle="pageSheet"`, no `onRequestClose`,
