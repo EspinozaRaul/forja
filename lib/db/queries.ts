@@ -2474,35 +2474,61 @@ export async function claimLegacyRows(): Promise<void> {
  * caller wipes while the session is still live.
  */
 export async function deleteUserLocalData(userId: string): Promise<string[]> {
+  // The URI read stays OUTSIDE the transaction: it is an `await`, and the callback
+  // below must run synchronously on the shipping driver. Keeping it here also means
+  // the URIs are captured before the rows are erased.
   const ownedPhotos = await db
     .select({ uri: progressPhotos.uri })
     .from(progressPhotos)
     .where(eq(progressPhotos.userId, userId));
 
-  const ownedSessionIds = db
-    .select({ id: sessions.id })
-    .from(sessions)
-    .where(eq(sessions.userId, userId));
-  const ownedSessionExerciseIds = db
-    .select({ id: sessionExercises.id })
-    .from(sessionExercises)
-    .where(inArray(sessionExercises.sessionId, ownedSessionIds));
+  // All nine deletes share one transaction, so a failure partway through cannot
+  // leave a half-erased account whose surviving rows belong to a `user_id` no
+  // account answers to. The callback MUST stay synchronous, for the same reason as
+  // `deleteSession`: the driver's session runs `begin`, calls the callback, then
+  // `commit` without awaiting it, so an `async` callback that suspends at its first
+  // `await` would commit after the first statement and run the rest in autocommit.
+  // `.run()` and the subquery id lists built with `tx.select(...)` keep it
+  // synchronous end to end. The deletes stay hard: this is account deletion, not a
+  // tombstone, and the children-before-parents order is load-bearing (the FK
+  // RESTRICT on `exercises` makes the `exercises` delete last).
+  //
+  // The function itself stays `async` on purpose: the callback throws synchronously
+  // on failure, and callers depend on a rejected promise rather than a synchronous
+  // throw. The transaction is `await`ed so a test-only async driver (drizzle's
+  // sqlite-proxy) cannot settle the caller before the commit; on the shipping driver
+  // `transaction` is synchronous, so this resolves to `undefined` after a commit that
+  // already happened.
+  await db.transaction((tx) => {
+    const ownedSessionIds = tx
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(eq(sessions.userId, userId));
+    const ownedSessionExerciseIds = tx
+      .select({ id: sessionExercises.id })
+      .from(sessionExercises)
+      .where(inArray(sessionExercises.sessionId, ownedSessionIds));
 
-  await db.delete(sets).where(inArray(sets.sessionExerciseId, ownedSessionExerciseIds));
-  await db.delete(sessionExercises).where(inArray(sessionExercises.sessionId, ownedSessionIds));
-  await db.delete(sessions).where(eq(sessions.userId, userId));
+    tx.delete(sets).where(inArray(sets.sessionExerciseId, ownedSessionExerciseIds)).run();
+    tx.delete(sessionExercises)
+      .where(inArray(sessionExercises.sessionId, ownedSessionIds))
+      .run();
+    tx.delete(sessions).where(eq(sessions.userId, userId)).run();
 
-  const ownedRoutineIds = db
-    .select({ id: routines.id })
-    .from(routines)
-    .where(eq(routines.userId, userId));
-  await db.delete(routineExercises).where(inArray(routineExercises.routineId, ownedRoutineIds));
-  await db.delete(routines).where(eq(routines.userId, userId));
-  await db.delete(routineFolders).where(eq(routineFolders.userId, userId));
+    const ownedRoutineIds = tx
+      .select({ id: routines.id })
+      .from(routines)
+      .where(eq(routines.userId, userId));
+    tx.delete(routineExercises)
+      .where(inArray(routineExercises.routineId, ownedRoutineIds))
+      .run();
+    tx.delete(routines).where(eq(routines.userId, userId)).run();
+    tx.delete(routineFolders).where(eq(routineFolders.userId, userId)).run();
 
-  await db.delete(bodyMeasurements).where(eq(bodyMeasurements.userId, userId));
-  await db.delete(progressPhotos).where(eq(progressPhotos.userId, userId));
-  await db.delete(exercises).where(eq(exercises.userId, userId));
+    tx.delete(bodyMeasurements).where(eq(bodyMeasurements.userId, userId)).run();
+    tx.delete(progressPhotos).where(eq(progressPhotos.userId, userId)).run();
+    tx.delete(exercises).where(eq(exercises.userId, userId)).run();
+  });
 
   return ownedPhotos.map((row) => row.uri);
 }
