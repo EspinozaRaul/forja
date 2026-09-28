@@ -2375,8 +2375,13 @@ export async function updateBodyMeasurement(
 }
 
 export async function deleteBodyMeasurement(id: number) {
+  // Tombstone, not delete: the row stays so the removal can sync, and a
+  // tombstone still needs `updated_at` bumped to win conflict resolution. The
+  // exact ownership WHERE is kept, so the soft delete is never broader than the
+  // hard one it replaces.
   return db
-    .delete(bodyMeasurements)
+    .update(bodyMeasurements)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(and(eq(bodyMeasurements.id, id), ownedByCurrentUser(bodyMeasurements.userId)));
 }
 
@@ -2408,8 +2413,18 @@ export async function createProgressPhoto(data: {
 }
 
 export async function deleteProgressPhoto(id: number) {
+  // Tombstone, not delete: the row stays so the removal can sync, and a
+  // tombstone still needs `updated_at` bumped to win conflict resolution. The
+  // exact ownership WHERE is kept, so the soft delete is never broader than the
+  // hard one it replaces.
+  //
+  // The local photo file is deliberately NOT unlinked here: `deleteUserLocalData`
+  // returns the raw rows' `uri` values and `lib/hooks/useAuth.ts` unlinks them.
+  // This write must keep `uri` readable on the tombstoned row so that path still
+  // works; the file only stops being the DB row's concern.
   return db
-    .delete(progressPhotos)
+    .update(progressPhotos)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(and(eq(progressPhotos.id, id), ownedByCurrentUser(progressPhotos.userId)));
 }
 
