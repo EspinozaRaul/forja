@@ -611,7 +611,13 @@ export async function deleteSession(id: number) {
     sessionOwnedByCurrentUser(sessionExercises.sessionId)
   );
   return db.transaction((tx) => {
-    tx.delete(sets)
+    // Tombstone, not delete: the row stays so the removal can sync, and a
+    // tombstone still needs `updated_at` bumped to win conflict resolution. Order
+    // is children-before-parent and it is load-bearing: `sessionOwnedByCurrentUser`
+    // refuses a tombstoned session, so tombstoning `sessions` first would make the
+    // two child updates above match nothing and leave live orphaned children.
+    tx.update(sets)
+      .set({ deletedAt: now(), updatedAt: now() })
       .where(
         inArray(
           sets.sessionExerciseId,
@@ -619,8 +625,12 @@ export async function deleteSession(id: number) {
         )
       )
       .run();
-    tx.delete(sessionExercises).where(ownedSession).run();
-    tx.delete(sessions)
+    tx.update(sessionExercises)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(ownedSession)
+      .run();
+    tx.update(sessions)
+      .set({ deletedAt: now(), updatedAt: now() })
       .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
       .run();
   });

@@ -370,9 +370,11 @@ describe('data layer cross-account gaps', () => {
       // The owner deletes: sets → session_exercises → sessions.
       setCurrentUserId('user-a');
       await queries.deleteSession(session.id);
-      expect(count('SELECT COUNT(*) AS c FROM sessions')).toBe(0);
-      expect(count('SELECT COUNT(*) AS c FROM session_exercises')).toBe(0);
-      expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(0);
+      expect(count('SELECT COUNT(*) AS c FROM sessions WHERE deleted_at IS NOT NULL')).toBe(1);
+      expect(
+        count('SELECT COUNT(*) AS c FROM session_exercises WHERE deleted_at IS NOT NULL')
+      ).toBe(1);
+      expect(count('SELECT COUNT(*) AS c FROM sets WHERE deleted_at IS NOT NULL')).toBe(1);
     });
   });
 
