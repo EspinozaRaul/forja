@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** Unit 1 (schema freeze) and identity part 1 (U2a–U2c) are merged into `main`
-(`ce57b49`, PRs #2 and #3). **U2e (read guards) is landed on `feat/identity-guards`** — seven slices, gate 57
-suites / 498 tests — and not yet published. U2d (tombstones) and U2f (account deletion) remain, and U2d is the
-unit that finally changes delete behaviour. Merge stays the user's decision.
+**Status**: **IN PROGRESS.** Unit 1 and identity parts 1–2 (U2a–U2c, U2e) are merged into `main` (`207a54d`,
+PRs #2–#4). **U2d (tombstones) is landed on `feat/identity-tombstones`** — six families, gate 63 suites / 537
+tests — and not yet published. Only U2f (account deletion) remains in the identity layer. Merge stays the user's
+decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -249,7 +249,17 @@ NULL forever. `updateBodyMeasurement` has no UI caller yet — the measurements 
   placement that keeps childless sessions). `deleteUserLocalData` deliberately reads tombstones so account
   deletion can purge them.
 - **U2d — tombstone conversion** once the guards exist, one delete family per commit, ordered by resurrection
-  damage (and every FK cascade / `SET NULL` it relies on goes inert).
+  damage (and every FK cascade / `SET NULL` it relies on goes inert). **LANDED** on `feat/identity-tombstones`:
+  `87cb9e7` sets, `ccbea9f` sessions, `1c07fa5` session_exercises, `c10e188` routines, `659cc6e` exercises,
+  `43ae15a` measurements/photos. Every user-facing delete is a tombstone keeping its exact ownership WHERE;
+  `deleteUserLocalData` and the orphan cleanup stay hard.
+
+  **The inert FK actions were the whole difficulty.** A tombstone does not fire `ON DELETE CASCADE` / `SET NULL`,
+  so each family writes its children explicitly (`deleteSession`'s three layers, `deleteRoutine`'s
+  routine_exercises, `deleteSessionExercise`'s sets) and `deleteFolder` unlinks its routines itself. The
+  explicit unlink is narrower than the old FK, which would null any routine pointing at the folder including
+  another account's. Recorded decision: `sessions.routine_id` keeps pointing at a tombstoned routine — the row
+  still exists, so the reference is not dangling, and it preserves which routine a session belonged to.
 - **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
 
 ### U2a — identity contract plumbing — LANDED (`9fee0ca`)
