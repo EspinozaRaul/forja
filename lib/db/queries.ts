@@ -1118,14 +1118,18 @@ export async function updateSet(
 }
 
 export async function deleteSet(id: number) {
+  // Tombstone, not delete: the row stays so the deletion can sync, and a
+  // tombstone still needs `updated_at` bumped to win conflict resolution.
   return db
-    .delete(sets)
+    .update(sets)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(and(eq(sets.id, id), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)));
 }
 
 export async function deleteDropSetGroup(sessionExerciseId: number, setNumber: number) {
   return db
-    .delete(sets)
+    .update(sets)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(
       and(
         eq(sets.sessionExerciseId, sessionExerciseId),
@@ -1153,8 +1157,10 @@ export async function replaceDropSetGroup(data: {
   // inside the transaction on the shipping driver. The function itself stays `async` on
   // purpose, so callers receive a rejected promise rather than a synchronous throw.
   return db.transaction((tx) => {
-    // Delete all existing drops in this group
-    tx.delete(sets)
+    // Tombstone all existing drops in this group (write, not delete, so the
+    // removal can sync); the rows stay for the incoming replacements.
+    tx.update(sets)
+      .set({ deletedAt: now(), updatedAt: now() })
       .where(
         and(
           eq(sets.sessionExerciseId, data.sessionExerciseId),

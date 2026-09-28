@@ -303,10 +303,12 @@ describe('sync transaction atomicity for the converted callbacks (expo-sqlite dr
     });
 
     function dropGroupRows(): { id: number; reps: number | null; weight: number | null }[] {
+      // The live rows of the group only: `replaceDropSetGroup` tombstones the old
+      // drops, so an unfiltered read would also return the soft-deleted pair.
       return sqlite
         .prepare(
           'SELECT id, reps, weight FROM sets WHERE session_exercise_id = 1 AND set_number = 1' +
-            ' ORDER BY drop_order'
+            ' AND deleted_at IS NULL ORDER BY drop_order'
         )
         .all();
     }
