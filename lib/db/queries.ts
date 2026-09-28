@@ -2110,7 +2110,13 @@ export async function createProgressPhoto(data: {
 }) {
   return db
     .insert(progressPhotos)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -2147,7 +2153,10 @@ export async function claimLegacyRows(): Promise<void> {
     .update(bodyMeasurements)
     .set({ userId, updatedAt: now() })
     .where(isNull(bodyMeasurements.userId));
-  await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
+  await db
+    .update(progressPhotos)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(progressPhotos.userId));
   await db
     .update(exercises)
     .set({ userId })
