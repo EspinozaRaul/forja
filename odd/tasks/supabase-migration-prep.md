@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS.** The identity layer (U2a–U2f) and the `uuid` unique indexes are merged into `main`
-(`0617374`, PRs #2–#7; `SCHEMA_VERSION` 3). **Drizzle parity is landed on `feat/drizzle-parity`** (`2a4df65`,
-gate 65 suites / 548 tests) and not yet published. Remaining recorded work: the dashboard scripts (a user action)
-and the device test. Merge stays the user's decision.
+**Status**: **CLOSED (code side).** Everything the code can do is merged into `main` (`8b34d31`, PRs #1–#8): the
+schema freeze, the identity layer (U2a–U2f), the `uuid` unique indexes (`SCHEMA_VERSION` 3) and the drizzle
+parity. Gate: 65 suites / 548 tests. What remains is not code: run the three SQL scripts in the dashboard, and
+test a fresh APK on a device — the cold start on an old database now exercises the identity backfill.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
