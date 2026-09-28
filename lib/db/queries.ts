@@ -197,7 +197,7 @@ export async function getAllExercises() {
   return db
     .select()
     .from(exercises)
-    .where(visibleToCurrentUser(exercises.userId))
+    .where(and(visibleToCurrentUser(exercises.userId), isNull(exercises.deletedAt)))
     .orderBy(asc(exercises.name));
 }
 
@@ -205,14 +205,22 @@ export async function getExercisesByCategory(categoryId: number) {
   return db
     .select()
     .from(exercises)
-    .where(and(eq(exercises.categoryId, categoryId), visibleToCurrentUser(exercises.userId)));
+    .where(
+      and(
+        eq(exercises.categoryId, categoryId),
+        visibleToCurrentUser(exercises.userId),
+        isNull(exercises.deletedAt)
+      )
+    );
 }
 
 export async function getExerciseById(id: number) {
   return db
     .select()
     .from(exercises)
-    .where(and(eq(exercises.id, id), visibleToCurrentUser(exercises.userId)))
+    .where(
+      and(eq(exercises.id, id), visibleToCurrentUser(exercises.userId), isNull(exercises.deletedAt))
+    )
     .limit(1);
 }
 
@@ -1209,7 +1217,12 @@ export async function getLastSessionForRoutine(routineId: number) {
       exerciseName: exercises.name,
     })
     .from(sessionExercises)
-    .leftJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
+    // LEFT JOIN: the guard belongs in the ON clause so a slot whose exercise is
+    // tombstoned keeps its slot (with a null name) instead of dropping it.
+    .leftJoin(
+      exercises,
+      and(eq(sessionExercises.exerciseId, exercises.id), isNull(exercises.deletedAt))
+    )
     .where(
       and(
         eq(sessionExercises.sessionId, lastSession[0].id),
@@ -1569,6 +1582,7 @@ export async function getLastWeightByExerciseIds(exerciseIds: number[]): Promise
       sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
       isNull(sets.deletedAt),
       isNull(sessionExercises.deletedAt),
+      isNull(exercises.deletedAt),
     ))
     .orderBy(desc(sets.createdAt));
 
@@ -1698,7 +1712,8 @@ export async function getLastWorkoutPerExercise(
             ownedByCurrentUser(sessions.userId),
             isNull(sessions.deletedAt),
             isNull(sets.deletedAt),
-            isNull(sessionExercises.deletedAt)
+            isNull(sessionExercises.deletedAt),
+            isNull(exercises.deletedAt)
           )
         )
         .orderBy(desc(sessions.startedAt), desc(sets.createdAt));
@@ -2080,7 +2095,8 @@ export async function getGlobalStats(): Promise<GlobalStats> {
           isNotNull(sessions.completedAt),
           ownedByCurrentUser(sessions.userId),
           isNull(sessions.deletedAt),
-          isNull(sessionExercises.deletedAt)
+          isNull(sessionExercises.deletedAt),
+          isNull(exercises.deletedAt)
         )
       )
       .groupBy(sessionExercises.exerciseId)
