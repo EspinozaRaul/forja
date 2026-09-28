@@ -2056,7 +2056,34 @@ export async function createBodyMeasurement(data: {
 }) {
   return db
     .insert(bodyMeasurements)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({ ...data, userId: getCurrentUserId(), createdAt: now(), uuid: uuid(), updatedAt: now() })
+    .returning();
+}
+
+/**
+ * Edits an existing measurement. An edit is an UPDATE with a stable `uuid` and a
+ * single `updated_at` bump, never a tombstone + re-create, so cross-system
+ * identity survives the change. Scoped to the active account, and `uuid` is
+ * deliberately not part of the writable set.
+ */
+export async function updateBodyMeasurement(
+  id: number,
+  data: {
+    date?: Date;
+    weight?: number | null;
+    bodyFat?: number | null;
+    chest?: number | null;
+    waist?: number | null;
+    hips?: number | null;
+    arms?: number | null;
+    thighs?: number | null;
+    notes?: string | null;
+  }
+) {
+  return db
+    .update(bodyMeasurements)
+    .set({ ...data, updatedAt: now() })
+    .where(and(eq(bodyMeasurements.id, id), ownedByCurrentUser(bodyMeasurements.userId)))
     .returning();
 }
 
@@ -2116,7 +2143,10 @@ export async function claimLegacyRows(): Promise<void> {
     .where(isNull(routineFolders.userId));
   await db.update(routines).set({ userId, updatedAt: now() }).where(isNull(routines.userId));
   await db.update(sessions).set({ userId, updatedAt: now() }).where(isNull(sessions.userId));
-  await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
+  await db
+    .update(bodyMeasurements)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(bodyMeasurements.userId));
   await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
   await db
     .update(exercises)
