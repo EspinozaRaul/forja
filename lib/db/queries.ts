@@ -35,7 +35,13 @@ async function assertRoutineOwned(routineId: number): Promise<void> {
   const owned = await db
     .select({ id: routines.id })
     .from(routines)
-    .where(and(eq(routines.id, routineId), ownedByCurrentUser(routines.userId)))
+    .where(
+      and(
+        eq(routines.id, routineId),
+        ownedByCurrentUser(routines.userId),
+        isNull(routines.deletedAt)
+      )
+    )
     .limit(1);
   if (owned.length === 0) {
     throw new Error('Routine does not belong to the current user');
@@ -103,7 +109,7 @@ export async function getAllFolders() {
   return db
     .select()
     .from(routineFolders)
-    .where(ownedByCurrentUser(routineFolders.userId))
+    .where(and(ownedByCurrentUser(routineFolders.userId), isNull(routineFolders.deletedAt)))
     .orderBy(desc(routineFolders.createdAt));
 }
 
@@ -111,7 +117,13 @@ export async function getFolderById(id: number) {
   return db
     .select()
     .from(routineFolders)
-    .where(and(eq(routineFolders.id, id), ownedByCurrentUser(routineFolders.userId)))
+    .where(
+      and(
+        eq(routineFolders.id, id),
+        ownedByCurrentUser(routineFolders.userId),
+        isNull(routineFolders.deletedAt)
+      )
+    )
     .limit(1);
 }
 
@@ -119,7 +131,13 @@ export async function getRoutinesByFolder(folderId: number) {
   return db
     .select()
     .from(routines)
-    .where(and(eq(routines.folderId, folderId), ownedByCurrentUser(routines.userId)))
+    .where(
+      and(
+        eq(routines.folderId, folderId),
+        ownedByCurrentUser(routines.userId),
+        isNull(routines.deletedAt)
+      )
+    )
     .orderBy(desc(routines.createdAt));
 }
 
@@ -127,7 +145,13 @@ export async function getFolderRoutineCount(folderId: number) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(routines)
-    .where(and(eq(routines.folderId, folderId), ownedByCurrentUser(routines.userId)));
+    .where(
+      and(
+        eq(routines.folderId, folderId),
+        ownedByCurrentUser(routines.userId),
+        isNull(routines.deletedAt)
+      )
+    );
   return result[0]?.count ?? 0;
 }
 
@@ -233,11 +257,15 @@ export async function deleteExercise(id: number) {
   const routineRefs = await db
     .select({ count: sql<number>`count(*)` })
     .from(routineExercises)
-    .where(eq(routineExercises.exerciseId, id));
+    .where(
+      and(eq(routineExercises.exerciseId, id), isNull(routineExercises.deletedAt))
+    );
   const sessionRefs = await db
     .select({ count: sql<number>`count(*)` })
     .from(sessionExercises)
-    .where(eq(sessionExercises.exerciseId, id));
+    .where(
+      and(eq(sessionExercises.exerciseId, id), isNull(sessionExercises.deletedAt))
+    );
 
   if (routineRefs[0].count > 0 || sessionRefs[0].count > 0) {
     throw new Error(
@@ -256,7 +284,7 @@ export async function getAllRoutines() {
   return db
     .select()
     .from(routines)
-    .where(ownedByCurrentUser(routines.userId))
+    .where(and(ownedByCurrentUser(routines.userId), isNull(routines.deletedAt)))
     .orderBy(desc(routines.createdAt));
 }
 
@@ -264,7 +292,9 @@ export async function getRoutineById(id: number) {
   return db
     .select()
     .from(routines)
-    .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)))
+    .where(
+      and(eq(routines.id, id), ownedByCurrentUser(routines.userId), isNull(routines.deletedAt))
+    )
     .limit(1);
 }
 
@@ -337,7 +367,8 @@ export async function getRoutineExercises(routineId: number) {
     .where(
       and(
         eq(routineExercises.routineId, routineId),
-        routineOwnedByCurrentUser(routineExercises.routineId)
+        routineOwnedByCurrentUser(routineExercises.routineId),
+        isNull(routineExercises.deletedAt)
       )
     )
     .orderBy(asc(routineExercises.order));
