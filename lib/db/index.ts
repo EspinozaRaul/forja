@@ -93,6 +93,12 @@ function datasetGifUrl(gifFile: string): string {
  * every routine, every historical session, and destroys user customs. Only rows
  * that carry a dataset `original_id` are matched; rows with `original_id IS NULL`
  * (user customs) are never touched.
+ *
+ * The UPDATEs below deliberately do NOT bump `updated_at`. They repair shared
+ * library rows on every launch (a broken gif URL, a missing `body_part`), which
+ * is not a user mutation: stamping `updated_at` here would mark hundreds of
+ * shared rows modified on every start and pollute the future sync's change set.
+ * A genuine user edit goes through `updateExercise`, which does bump it.
  */
 export async function repairExerciseMetadata(
   database: typeof db,
@@ -277,6 +283,9 @@ export async function initializeDatabase() {
         gifUrl,
         originalId: ex.id,
         createdAt: now,
+        // The seeded library is shared (`user_id IS NULL`), so it gets no `uuid`
+        // and stays keyed by `original_id`; it only needs an identity timestamp.
+        updatedAt: now,
       });
 
       imported++;

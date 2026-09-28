@@ -193,7 +193,15 @@ export async function createExercise(data: {
 }) {
   return db
     .insert(exercises)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      // Only customs get a cross-system identity: this INSERT always sets a
+      // user_id, so the row is never part of the shared seeded library.
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -203,9 +211,12 @@ export async function updateExercise(
   id: number,
   data: { name?: string; categoryId?: number; description?: string; unit?: string }
 ) {
+  // `updatedAt` only. This guard also lets the shared library rows be edited
+  // (e.g. their `unit`), and those are deliberately uuid-less: a shared row must
+  // not acquire an identity just because someone corrected its unit.
   return db
     .update(exercises)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(exercises.id, id), visibleToCurrentUser(exercises.userId)))
     .returning();
 }
@@ -2159,7 +2170,7 @@ export async function claimLegacyRows(): Promise<void> {
     .where(isNull(progressPhotos.userId));
   await db
     .update(exercises)
-    .set({ userId })
+    .set({ userId, updatedAt: now() })
     .where(and(isNull(exercises.userId), isNull(exercises.originalId)));
 }
 
