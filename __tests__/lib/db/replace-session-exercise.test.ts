@@ -19,6 +19,20 @@
 
 import { setHasRealData, replaceSessionExercise } from '../../../lib/db/queries';
 
+// `uuid()` reaches expo-crypto through `lib/db/identity`; that native module is
+// auto-mocked to return undefined under Jest, which would make the uuid assertions
+// below vacuous. Back it with a deterministic unique generator, the same stub the
+// sets-identity and identity-backfill suites use.
+jest.mock('expo-crypto', () => {
+  let counter = 0;
+  return {
+    randomUUID: () => {
+      counter += 1;
+      return `00000000-0000-4000-8000-${String(counter).padStart(12, '0')}`;
+    },
+  };
+});
+
 jest.mock('../../../lib/db/index', () => ({
   db: {
     select: jest.fn(),
@@ -289,7 +303,7 @@ describe('replaceSessionExercise', () => {
     });
 
     // Every set of the slot moves to the parked row.
-    expect(updateSets[0]).toEqual({ sessionExerciseId: 99 });
+    expect(updateSets[0]).toEqual({ sessionExerciseId: 99, updatedAt: expect.any(Date) });
 
     // Recycled slot: only exerciseId changes; id/order/supersetPairId are untouched.
     expect(updateSets[1]).toEqual({ exerciseId: 2 });
@@ -298,8 +312,8 @@ describe('replaceSessionExercise', () => {
     // Fresh empty template of the same size on the recycled slot.
     expect(tx.insert).toHaveBeenNthCalledWith(2, sets);
     expect(insertValues[1]).toEqual([
-      { sessionExerciseId: 10, setNumber: 1, completed: false, createdAt: expect.any(Date) },
-      { sessionExerciseId: 10, setNumber: 2, completed: false, createdAt: expect.any(Date) },
+      { sessionExerciseId: 10, setNumber: 1, completed: false, createdAt: expect.any(Date), updatedAt: expect.any(Date), uuid: expect.any(String) },
+      { sessionExerciseId: 10, setNumber: 2, completed: false, createdAt: expect.any(Date), updatedAt: expect.any(Date), uuid: expect.any(String) },
     ]);
 
     expect(result).toEqual([recycledRow]);

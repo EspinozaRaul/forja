@@ -16,6 +16,7 @@ import { countVisibleSets } from '../utils/routine-diff';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS } from '../constants/routine-defaults';
 import type { SessionExercise, Set } from '../types';
 import { now } from '../utils/date';
+import { uuid } from './identity';
 import {
   ownedByCurrentUser,
   routineOwnedByCurrentUser,
@@ -726,7 +727,7 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     // 5b. Every set of the slot moves with the outgoing exercise, including the
     // untouched ones, so the parked record is faithful and complete.
     tx.update(sets)
-      .set({ sessionExerciseId: parked.id })
+      .set({ sessionExerciseId: parked.id, updatedAt: now() })
       .where(eq(sets.sessionExerciseId, id))
       .run();
 
@@ -747,6 +748,8 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
             setNumber: index + 1,
             completed: false,
             createdAt: now(),
+            updatedAt: now(),
+            uuid: uuid(),
           }))
         )
         .run();
@@ -890,10 +893,24 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     const missingSets: typeof sets.$inferInsert[] = [];
     for (const setNumber of allNumbers) {
       if (!firstNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: now() });
+        missingSets.push({
+          sessionExerciseId: firstId,
+          setNumber,
+          completed: false,
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
+        });
       }
       if (!secondNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: now() });
+        missingSets.push({
+          sessionExerciseId: secondId,
+          setNumber,
+          completed: false,
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
+        });
       }
     }
 
@@ -949,6 +966,8 @@ export async function createSet(data: {
       ...data,
       completed: false,
       createdAt: now(),
+      updatedAt: now(),
+      uuid: uuid(),
     })
     .returning();
 }
@@ -975,6 +994,8 @@ export async function createDropSets(data: {
     rir: drop.rir,
     partialReps: null,
     createdAt: now(),
+    updatedAt: now(),
+    uuid: uuid(),
   }));
 
   return db.insert(sets).values(values).returning();
@@ -994,7 +1015,7 @@ export async function updateSet(
 ) {
   return db
     .update(sets)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(sets.id, id), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)))
     .returning();
 }
@@ -1061,6 +1082,8 @@ export async function replaceDropSetGroup(data: {
       rir: drop.rir,
       partialReps: null,
       createdAt: now(),
+      updatedAt: now(),
+      uuid: uuid(),
     }));
 
     return tx.insert(sets).values(values).returning().all();
@@ -1273,6 +1296,10 @@ export async function duplicateSessionData(
               isDropGroup: s.isDropGroup,
               rir: s.rir,
               createdAt: now(),
+              // A copy is a new row: it must never inherit the source uuid, or
+              // the two collapse to one row on the remote side.
+              updatedAt: now(),
+              uuid: uuid(),
             }))
           )
           .run();
