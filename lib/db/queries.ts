@@ -252,7 +252,7 @@ export async function createRoutine(data: {
 }) {
   return db
     .insert(routines)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({ ...data, userId: getCurrentUserId(), createdAt: now(), uuid: uuid(), updatedAt: now() })
     .returning();
 }
 
@@ -262,7 +262,7 @@ export async function updateRoutine(
 ) {
   return db
     .update(routines)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)))
     .returning();
 }
@@ -2102,7 +2102,7 @@ export async function claimLegacyRows(): Promise<void> {
   const userId = getCurrentUserId();
   if (!userId) return;
   await db.update(routineFolders).set({ userId }).where(isNull(routineFolders.userId));
-  await db.update(routines).set({ userId }).where(isNull(routines.userId));
+  await db.update(routines).set({ userId, updatedAt: now() }).where(isNull(routines.userId));
   await db.update(sessions).set({ userId, updatedAt: now() }).where(isNull(sessions.userId));
   await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
   await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
