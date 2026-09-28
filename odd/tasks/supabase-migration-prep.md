@@ -239,9 +239,13 @@ transaction callback stays synchronous (`.run()`).
 426 tests. A U2b correction landed with it (`65d5e73`): the backfill identifies a shared seed row by
 `original_id`, so legacy customs (`user_id` and `original_id` both NULL) finally get a uuid instead of keeping a
 NULL forever. `updateBodyMeasurement` has no UI caller yet — the measurements screen has no edit affordance.
-- **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
-- **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
-  fix, because a tombstoned parent otherwise keeps authorizing its live children.
+- **U2e — read guards FIRST (reordered 2026-09-28).** A soft delete without a guard brings the row back into
+  every read, and a guard is a provable no-op while every `deleted_at` is still NULL, so it lands safely and is
+  testable by setting `deleted_at` directly. Slice: (1) the `user-scope.ts` EXISTS guards — the highest-leverage
+  fix, because a tombstoned parent otherwise keeps authorizing its live children; (2) the per-query and aggregate
+  guards, one read family per commit.
+- **U2d — tombstone conversion** once the guards exist, one delete family per commit, ordered by resurrection
+  damage (and every FK cascade / `SET NULL` it relies on goes inert).
 - **U2f — account deletion** in one transaction, and reconcile the deployed `delete_user_account`.
 
 ### U2a — identity contract plumbing — LANDED (`9fee0ca`)
