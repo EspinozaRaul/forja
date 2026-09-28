@@ -599,7 +599,10 @@ export async function addExerciseToSession(data: {
   notes?: string;
 }) {
   await assertSessionOwned(data.sessionId);
-  return db.insert(sessionExercises).values(data).returning();
+  return db
+    .insert(sessionExercises)
+    .values({ ...data, createdAt: now(), updatedAt: now(), uuid: uuid() })
+    .returning();
 }
 
 export async function updateSessionExerciseRestTime(
@@ -608,7 +611,7 @@ export async function updateSessionExerciseRestTime(
 ) {
   return db
     .update(sessionExercises)
-    .set({ restTime })
+    .set({ restTime, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -618,7 +621,7 @@ export async function updateSessionExerciseRestTime(
 export async function updateSessionExerciseOrder(id: number, order: number) {
   return db
     .update(sessionExercises)
-    .set({ order })
+    .set({ order, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -687,7 +690,7 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     if (!slotSets.some(setHasRealData)) {
       return tx
         .update(sessionExercises)
-        .set({ exerciseId })
+        .set({ exerciseId, updatedAt: now() })
         .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
         .returning()
         .all();
@@ -720,6 +723,10 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
         notes: row.notes,
         noteType: row.noteType,
         supersetPairId: null,
+        // A parked copy is a new row: it must never inherit the slot's uuid.
+        createdAt: now(),
+        updatedAt: now(),
+        uuid: uuid(),
       })
       .returning()
       .get();
@@ -734,7 +741,7 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     // 5c. Recycle the slot for the incoming exercise. Same id/order/supersetPairId.
     const recycled = tx
       .update(sessionExercises)
-      .set({ exerciseId })
+      .set({ exerciseId, updatedAt: now() })
       .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
       .returning()
       .get();
@@ -779,7 +786,7 @@ export async function deleteSessionExercise(id: number) {
   // later statement would run in autocommit.
   return db.transaction((tx) => {
     tx.update(sessionExercises)
-      .set({ supersetPairId: null })
+      .set({ supersetPairId: null, updatedAt: now() })
       .where(
         and(
           isNotNull(sessionExercises.supersetPairId),
@@ -805,7 +812,7 @@ export async function deleteSuperSetMembers(memberIds: number[], pairId: number 
   return db.transaction((tx) => {
     if (pairId != null) {
       tx.update(sessionExercises)
-        .set({ supersetPairId: null })
+        .set({ supersetPairId: null, updatedAt: now() })
         .where(
           and(
             eq(sessionExercises.supersetPairId, pairId),
@@ -836,7 +843,7 @@ export async function updateSessionExerciseNotes(
   if (noteType !== undefined) update.noteType = noteType;
   return db
     .update(sessionExercises)
-    .set(update)
+    .set({ ...update, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -857,13 +864,13 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     // Generate pair id from both exercise IDs + timestamp for uniqueness
     const pairId = firstId * 1000000 + secondId * 1000 + (Date.now() % 1000);
     tx.update(sessionExercises)
-      .set({ supersetPairId: pairId })
+      .set({ supersetPairId: pairId, updatedAt: now() })
       .where(
         and(eq(sessionExercises.id, firstId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
       )
       .run();
     tx.update(sessionExercises)
-      .set({ supersetPairId: pairId })
+      .set({ supersetPairId: pairId, updatedAt: now() })
       .where(
         and(eq(sessionExercises.id, secondId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
       )
@@ -925,7 +932,7 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
 export async function unlinkSuperSetPair(pairId: number) {
   return db
     .update(sessionExercises)
-    .set({ supersetPairId: null })
+    .set({ supersetPairId: null, updatedAt: now() })
     .where(
       and(
         eq(sessionExercises.supersetPairId, pairId),
@@ -1272,6 +1279,11 @@ export async function duplicateSessionData(
           notes: se.notes,
           supersetPairId: se.supersetPairId,
           restTime: se.restTime,
+          // A copy is a new row: it must never inherit the source uuid, or the
+          // two collapse to one row on the remote side.
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
         })
         .returning()
         .get();
