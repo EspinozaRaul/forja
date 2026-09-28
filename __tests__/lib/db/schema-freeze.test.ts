@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { CREATE_TABLES_SQL } from '../../../lib/db/ddl';
 import {
   MIGRATION_ADDED_COLUMNS,
+  MIGRATION_ADDED_INDEXES,
   SCHEMA_MANIFEST,
   SCHEMA_VERSION,
   type SchemaColumn,
@@ -19,11 +20,15 @@ import { runSchemaMigrations } from '../../../lib/db/schema-migrations';
 // `expo-sqlite` mock and no import of `lib/db/index` (which opens the device
 // database at import time).
 //
-// Two paths are pinned:
-//   * a fresh install, whose `CREATE_TABLES_SQL` must match the manifest exactly
-//     (columns in declaration order), and
-//   * a legacy install built as the manifest minus `MIGRATION_ADDED_COLUMNS`,
-//     which `runSchemaMigrations` must bring to the same frozen shape.
+// Three paths are pinned:
+//   * `CREATE_TABLES_SQL` alone, whose declared shape must match the manifest
+//     exactly (tables, columns in declaration order, indexes) — the integration
+//     case cannot see a missing ddl index, because `runSchemaMigrations`
+//     re-creates the same indexes,
+//   * a fresh install (`CREATE_TABLES_SQL` + `runSchemaMigrations`), proving the
+//     migrations are a no-op on a fresh database, and
+//   * a legacy install built as the manifest minus the migration-added columns
+//     and indexes, which `runSchemaMigrations` must bring to the same shape.
 //
 // The upgrade path is the audit's gap: every other harness builds its schema
 // from `CREATE_TABLES_SQL`, where the ALTER-added columns already exist, so the
@@ -129,8 +134,10 @@ function buildLegacyFixtureSql(): string {
     const added = new Set(MIGRATION_ADDED_COLUMNS[table.name] ?? []);
     const legacyColumns = table.columns.filter((column) => !added.has(column.name));
     statements.push(buildCreateTable(table, legacyColumns));
+    const addedIndexes = new Set(MIGRATION_ADDED_INDEXES[table.name] ?? []);
     for (const index of table.indexes) {
       if (index.name === null) continue; // already recreated by the UNIQUE constraint
+      if (addedIndexes.has(index.name)) continue; // the migration creates this one
       statements.push(
         `CREATE ${index.unique === 1 ? 'UNIQUE ' : ''}INDEX ${quoteIdent(index.name)} ` +
           `ON ${quoteIdent(table.name)} (${index.columns.map(quoteIdent).join(', ')});`
@@ -169,6 +176,18 @@ describe(`SQLite schema freeze (SCHEMA_VERSION ${SCHEMA_VERSION})`, () => {
     expect(readShape(sqlite)).toEqual(SCHEMA_MANIFEST);
   });
 
+  it('CREATE_TABLES_SQL alone pins the full manifest shape', () => {
+    // `ddl.ts` on its own must match the manifest — tables, columns in
+    // declaration order, and indexes. The "fresh install" case above cannot see a
+    // missing ddl index, because `runSchemaMigrations` re-creates the same
+    // indexes; only applying `CREATE_TABLES_SQL` alone isolates the declared shape
+    // from the upgrade index backfill.
+    const { sqlite, client } = makeClient();
+    client.execSync(CREATE_TABLES_SQL);
+
+    expect(readShape(sqlite)).toEqual(SCHEMA_MANIFEST);
+  });
+
   it('runSchemaMigrations emits exactly the columns MIGRATION_ADDED_COLUMNS declares', () => {
     const { client, statements } = makeClient();
     client.execSync(CREATE_TABLES_SQL);
@@ -193,6 +212,34 @@ describe(`SQLite schema freeze (SCHEMA_VERSION ${SCHEMA_VERSION})`, () => {
     expect(actual).toEqual(expected);
   });
 
+  it('runSchemaMigrations emits exactly the indexes MIGRATION_ADDED_INDEXES declares', () => {
+    const { client, statements } = makeClient();
+    client.execSync(CREATE_TABLES_SQL);
+    runSchemaMigrations(client);
+
+    const emitted: Record<string, string[]> = {};
+    for (const sql of statements.filter((statement) =>
+      /^CREATE UNIQUE INDEX/i.test(statement.trim())
+    )) {
+      const match = /^CREATE UNIQUE INDEX IF NOT EXISTS\s+(\S+)\s+ON\s+(\S+)\s*\(/i.exec(
+        sql.trim()
+      );
+      expect(match).not.toBeNull();
+      const [, index, table] = match as RegExpExecArray;
+      if (!emitted[table]) emitted[table] = [];
+      emitted[table].push(index);
+    }
+
+    const expected: Record<string, string[]> = {};
+    for (const [table, indexes] of Object.entries(MIGRATION_ADDED_INDEXES)) {
+      expected[table] = [...indexes].sort();
+    }
+    const actual: Record<string, string[]> = {};
+    for (const [table, indexes] of Object.entries(emitted)) actual[table] = [...indexes].sort();
+
+    expect(actual).toEqual(expected);
+  });
+
   it('upgrade path: a legacy install reaches the frozen shape and keeps its rows', () => {
     const { sqlite, client } = makeClient();
     client.execSync('PRAGMA foreign_keys = OFF'); // mirrors an old install
@@ -207,10 +254,35 @@ describe(`SQLite schema freeze (SCHEMA_VERSION ${SCHEMA_VERSION})`, () => {
       }
     }
 
+    // PRECONDITION: every migration-added index is also genuinely absent, so
+    // the upgrade assertion below cannot be satisfied by the fixture.
+    for (const [table, indexes] of Object.entries(MIGRATION_ADDED_INDEXES)) {
+      const present = new Set(
+        (sqlite.prepare(`PRAGMA index_list(${table})`).all() as any[]).map(
+          (row) => row.name as string
+        )
+      );
+      for (const index of indexes) {
+        expect(present.has(index)).toBe(false);
+      }
+    }
+
     insertLegacyRows(client);
     runSchemaMigrations(client);
 
     expect(normalizeShape(readShape(sqlite))).toEqual(normalizeShape(SCHEMA_MANIFEST));
+
+    // The migration, not the fixture, created each uuid index.
+    for (const [table, indexes] of Object.entries(MIGRATION_ADDED_INDEXES)) {
+      const present = new Set(
+        (sqlite.prepare(`PRAGMA index_list(${table})`).all() as any[]).map(
+          (row) => row.name as string
+        )
+      );
+      for (const index of indexes) {
+        expect(present.has(index)).toBe(true);
+      }
+    }
 
     // The inserted rows survive the migration, per table (literal SQL: table
     // names come from the manifest constant, never from user input).
@@ -241,5 +313,29 @@ describe(`SQLite schema freeze (SCHEMA_VERSION ${SCHEMA_VERSION})`, () => {
 
     expect(() => runSchemaMigrations(client)).not.toThrow();
     expect(readShape(sqlite)).toEqual(SCHEMA_MANIFEST);
+  });
+
+  it('rejects a duplicate non-null uuid and accepts multiple NULL uuids', () => {
+    const { client } = makeClient();
+    client.execSync(CREATE_TABLES_SQL);
+
+    // Shared seed rows have no uuid; SQLite allows multiple NULLs in a UNIQUE index.
+    expect(() =>
+      client.execSync(
+        `INSERT INTO exercises (id, name, created_at) VALUES
+           (1, 'Bench Press', 1000),
+           (2, 'Squat', 1000);`
+      )
+    ).not.toThrow();
+
+    client.execSync(
+      `INSERT INTO exercises (id, name, created_at, uuid) VALUES (3, 'Deadlift', 1000, 'uuid-abc');`
+    );
+
+    expect(() =>
+      client.execSync(
+        `INSERT INTO exercises (id, name, created_at, uuid) VALUES (4, 'Row', 1000, 'uuid-abc');`
+      )
+    ).toThrow(/UNIQUE constraint failed: exercises\.uuid/i);
   });
 });

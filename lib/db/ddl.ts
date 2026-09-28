@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS exercises (
 );
 
 CREATE INDEX IF NOT EXISTS name_category_idx ON exercises(name, category_id);
+CREATE UNIQUE INDEX IF NOT EXISTS exercises_uuid_idx ON exercises (uuid);
 
 CREATE TABLE IF NOT EXISTS routine_folders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,6 +54,8 @@ CREATE TABLE IF NOT EXISTS routine_folders (
   deleted_at INTEGER
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS routine_folders_uuid_idx ON routine_folders (uuid);
+
 CREATE TABLE IF NOT EXISTS routines (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT,
@@ -66,6 +69,8 @@ CREATE TABLE IF NOT EXISTS routines (
   deleted_at INTEGER
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS routines_uuid_idx ON routines (uuid);
+
 CREATE TABLE IF NOT EXISTS routine_exercises (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   routine_id INTEGER NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
@@ -78,6 +83,8 @@ CREATE TABLE IF NOT EXISTS routine_exercises (
   updated_at INTEGER,
   deleted_at INTEGER
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS routine_exercises_uuid_idx ON routine_exercises (uuid);
 
 CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,6 +101,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS sessions_completed_at_idx ON sessions(completed_at);
 CREATE INDEX IF NOT EXISTS sessions_routine_id_idx ON sessions(routine_id);
+CREATE UNIQUE INDEX IF NOT EXISTS sessions_uuid_idx ON sessions (uuid);
 
 CREATE TABLE IF NOT EXISTS session_exercises (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,6 +120,7 @@ CREATE TABLE IF NOT EXISTS session_exercises (
 
 CREATE INDEX IF NOT EXISTS se_session_idx ON session_exercises(session_id);
 CREATE INDEX IF NOT EXISTS se_exercise_idx ON session_exercises(exercise_id);
+CREATE UNIQUE INDEX IF NOT EXISTS session_exercises_uuid_idx ON session_exercises (uuid);
 
 CREATE TABLE IF NOT EXISTS sets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,6 +141,7 @@ CREATE TABLE IF NOT EXISTS sets (
 );
 
 CREATE INDEX IF NOT EXISTS sets_session_exercise_idx ON sets(session_exercise_id);
+CREATE UNIQUE INDEX IF NOT EXISTS sets_uuid_idx ON sets (uuid);
 
 CREATE TABLE IF NOT EXISTS body_measurements (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,6 +161,8 @@ CREATE TABLE IF NOT EXISTS body_measurements (
   deleted_at INTEGER
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS body_measurements_uuid_idx ON body_measurements (uuid);
+
 CREATE TABLE IF NOT EXISTS progress_photos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT,
@@ -162,4 +174,6 @@ CREATE TABLE IF NOT EXISTS progress_photos (
   updated_at INTEGER,
   deleted_at INTEGER
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS progress_photos_uuid_idx ON progress_photos (uuid);
 `;
