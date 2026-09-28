@@ -155,7 +155,7 @@ function insertLegacyRows(client: MinimalClient): void {
   `);
 }
 
-describe('SQLite schema freeze (SCHEMA_VERSION 1)', () => {
+describe(`SQLite schema freeze (SCHEMA_VERSION ${SCHEMA_VERSION})`, () => {
   it('SCHEMA_VERSION is a positive integer', () => {
     expect(Number.isInteger(SCHEMA_VERSION)).toBe(true);
     expect(SCHEMA_VERSION).toBeGreaterThan(0);

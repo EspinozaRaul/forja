@@ -16,6 +16,7 @@ import { countVisibleSets } from '../utils/routine-diff';
 import { DEFAULT_TARGET_SETS, DEFAULT_TARGET_REPS } from '../constants/routine-defaults';
 import type { SessionExercise, Set } from '../types';
 import { now } from '../utils/date';
+import { uuid } from './identity';
 import {
   ownedByCurrentUser,
   routineOwnedByCurrentUser,
@@ -131,7 +132,13 @@ export async function createFolder(data: {
 }) {
   return db
     .insert(routineFolders)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -141,7 +148,7 @@ export async function updateFolder(
 ) {
   return db
     .update(routineFolders)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(routineFolders.id, id), ownedByCurrentUser(routineFolders.userId)))
     .returning();
 }
@@ -186,7 +193,15 @@ export async function createExercise(data: {
 }) {
   return db
     .insert(exercises)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      // Only customs get a cross-system identity: this INSERT always sets a
+      // user_id, so the row is never part of the shared seeded library.
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -196,9 +211,12 @@ export async function updateExercise(
   id: number,
   data: { name?: string; categoryId?: number; description?: string; unit?: string }
 ) {
+  // `updatedAt` only. This guard also lets the shared library rows be edited
+  // (e.g. their `unit`), and those are deliberately uuid-less: a shared row must
+  // not acquire an identity just because someone corrected its unit.
   return db
     .update(exercises)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(exercises.id, id), visibleToCurrentUser(exercises.userId)))
     .returning();
 }
@@ -251,7 +269,7 @@ export async function createRoutine(data: {
 }) {
   return db
     .insert(routines)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({ ...data, userId: getCurrentUserId(), createdAt: now(), uuid: uuid(), updatedAt: now() })
     .returning();
 }
 
@@ -261,7 +279,7 @@ export async function updateRoutine(
 ) {
   return db
     .update(routines)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)))
     .returning();
 }
@@ -325,7 +343,10 @@ export async function addExerciseToRoutine(data: {
   targetReps?: number;
 }) {
   await assertRoutineOwned(data.routineId);
-  return db.insert(routineExercises).values(data).returning();
+  return db
+    .insert(routineExercises)
+    .values({ ...data, createdAt: now(), uuid: uuid(), updatedAt: now() })
+    .returning();
 }
 
 export async function removeExerciseFromRoutine(id: number) {
@@ -339,7 +360,7 @@ export async function removeExerciseFromRoutine(id: number) {
 export async function updateRoutineExerciseOrder(id: number, order: number) {
   return db
     .update(routineExercises)
-    .set({ order })
+    .set({ order, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -349,7 +370,7 @@ export async function updateRoutineExerciseOrder(id: number, order: number) {
 export async function replaceRoutineExercise(id: number, exerciseId: number) {
   return db
     .update(routineExercises)
-    .set({ exerciseId })
+    .set({ exerciseId, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -362,7 +383,7 @@ export async function updateRoutineExerciseTargets(
 ) {
   return db
     .update(routineExercises)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     )
@@ -394,7 +415,7 @@ export async function repairRoutineTargetDefaults() {
   // than a synchronous throw when the callback throws.
   return db.transaction((tx) => {
     tx.update(routineExercises)
-      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .set({ targetSets: DEFAULT_TARGET_SETS, updatedAt: now() })
       .where(
         and(
           eq(routineExercises.targetSets, 1),
@@ -403,7 +424,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetSets: DEFAULT_TARGET_SETS })
+      .set({ targetSets: DEFAULT_TARGET_SETS, updatedAt: now() })
       .where(
         and(
           isNull(routineExercises.targetSets),
@@ -412,7 +433,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .set({ targetReps: DEFAULT_TARGET_REPS, updatedAt: now() })
       .where(
         and(
           isNull(routineExercises.targetReps),
@@ -421,7 +442,7 @@ export async function repairRoutineTargetDefaults() {
       )
       .run();
     tx.update(routineExercises)
-      .set({ targetReps: DEFAULT_TARGET_REPS })
+      .set({ targetReps: DEFAULT_TARGET_REPS, updatedAt: now() })
       .where(
         and(
           lte(routineExercises.targetReps, 0),
@@ -469,7 +490,13 @@ export async function createSession(data: {
   }
   return db
     .insert(sessions)
-    .values({ ...data, userId: getCurrentUserId(), startedAt: data.startedAt ?? now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      startedAt: data.startedAt ?? now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -486,7 +513,11 @@ export async function completeSession(
   const completedAtSeconds = Math.floor((data.completedAt ?? now()).getTime() / 1000);
   return db
     .update(sessions)
-    .set({ ...data, completedAt: sql`coalesce(${sessions.completedAt}, ${completedAtSeconds})` })
+    .set({
+      ...data,
+      completedAt: sql`coalesce(${sessions.completedAt}, ${completedAtSeconds})`,
+      updatedAt: now(),
+    })
     .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
     .returning();
 }
@@ -494,11 +525,13 @@ export async function completeSession(
 export async function updateSessionNotes(id: number, notes: string | null) {
   // Notes-only write. It must NOT touch completed_at — that date drives the
   // history ordering and the statistics grouping, so editing notes used to make a
-  // finished session jump to today. `sessions` has no updated_at column, so
-  // `notes` is the only field changed.
+  // finished session jump to today. `updated_at` IS bumped: it records when the
+  // row last changed, and editing notes is a real change. `notes` and
+  // `updated_at` are the only fields changed, so the completion date is still
+  // preserved.
   return db
     .update(sessions)
-    .set({ notes })
+    .set({ notes, updatedAt: now() })
     .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
     .returning();
 }
@@ -598,7 +631,10 @@ export async function addExerciseToSession(data: {
   notes?: string;
 }) {
   await assertSessionOwned(data.sessionId);
-  return db.insert(sessionExercises).values(data).returning();
+  return db
+    .insert(sessionExercises)
+    .values({ ...data, createdAt: now(), updatedAt: now(), uuid: uuid() })
+    .returning();
 }
 
 export async function updateSessionExerciseRestTime(
@@ -607,7 +643,7 @@ export async function updateSessionExerciseRestTime(
 ) {
   return db
     .update(sessionExercises)
-    .set({ restTime })
+    .set({ restTime, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -617,7 +653,7 @@ export async function updateSessionExerciseRestTime(
 export async function updateSessionExerciseOrder(id: number, order: number) {
   return db
     .update(sessionExercises)
-    .set({ order })
+    .set({ order, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -686,7 +722,7 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     if (!slotSets.some(setHasRealData)) {
       return tx
         .update(sessionExercises)
-        .set({ exerciseId })
+        .set({ exerciseId, updatedAt: now() })
         .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
         .returning()
         .all();
@@ -719,6 +755,10 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
         notes: row.notes,
         noteType: row.noteType,
         supersetPairId: null,
+        // A parked copy is a new row: it must never inherit the slot's uuid.
+        createdAt: now(),
+        updatedAt: now(),
+        uuid: uuid(),
       })
       .returning()
       .get();
@@ -726,14 +766,14 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
     // 5b. Every set of the slot moves with the outgoing exercise, including the
     // untouched ones, so the parked record is faithful and complete.
     tx.update(sets)
-      .set({ sessionExerciseId: parked.id })
+      .set({ sessionExerciseId: parked.id, updatedAt: now() })
       .where(eq(sets.sessionExerciseId, id))
       .run();
 
     // 5c. Recycle the slot for the incoming exercise. Same id/order/supersetPairId.
     const recycled = tx
       .update(sessionExercises)
-      .set({ exerciseId })
+      .set({ exerciseId, updatedAt: now() })
       .where(and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId)))
       .returning()
       .get();
@@ -747,6 +787,8 @@ export async function replaceSessionExercise(id: number, exerciseId: number) {
             setNumber: index + 1,
             completed: false,
             createdAt: now(),
+            updatedAt: now(),
+            uuid: uuid(),
           }))
         )
         .run();
@@ -776,7 +818,7 @@ export async function deleteSessionExercise(id: number) {
   // later statement would run in autocommit.
   return db.transaction((tx) => {
     tx.update(sessionExercises)
-      .set({ supersetPairId: null })
+      .set({ supersetPairId: null, updatedAt: now() })
       .where(
         and(
           isNotNull(sessionExercises.supersetPairId),
@@ -802,7 +844,7 @@ export async function deleteSuperSetMembers(memberIds: number[], pairId: number 
   return db.transaction((tx) => {
     if (pairId != null) {
       tx.update(sessionExercises)
-        .set({ supersetPairId: null })
+        .set({ supersetPairId: null, updatedAt: now() })
         .where(
           and(
             eq(sessionExercises.supersetPairId, pairId),
@@ -833,7 +875,7 @@ export async function updateSessionExerciseNotes(
   if (noteType !== undefined) update.noteType = noteType;
   return db
     .update(sessionExercises)
-    .set(update)
+    .set({ ...update, updatedAt: now() })
     .where(
       and(eq(sessionExercises.id, id), sessionOwnedByCurrentUser(sessionExercises.sessionId))
     )
@@ -854,13 +896,13 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     // Generate pair id from both exercise IDs + timestamp for uniqueness
     const pairId = firstId * 1000000 + secondId * 1000 + (Date.now() % 1000);
     tx.update(sessionExercises)
-      .set({ supersetPairId: pairId })
+      .set({ supersetPairId: pairId, updatedAt: now() })
       .where(
         and(eq(sessionExercises.id, firstId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
       )
       .run();
     tx.update(sessionExercises)
-      .set({ supersetPairId: pairId })
+      .set({ supersetPairId: pairId, updatedAt: now() })
       .where(
         and(eq(sessionExercises.id, secondId), sessionOwnedByCurrentUser(sessionExercises.sessionId))
       )
@@ -890,10 +932,24 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
     const missingSets: typeof sets.$inferInsert[] = [];
     for (const setNumber of allNumbers) {
       if (!firstNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: firstId, setNumber, completed: false, createdAt: now() });
+        missingSets.push({
+          sessionExerciseId: firstId,
+          setNumber,
+          completed: false,
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
+        });
       }
       if (!secondNumbers.has(setNumber)) {
-        missingSets.push({ sessionExerciseId: secondId, setNumber, completed: false, createdAt: now() });
+        missingSets.push({
+          sessionExerciseId: secondId,
+          setNumber,
+          completed: false,
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
+        });
       }
     }
 
@@ -908,7 +964,7 @@ export async function createSuperSetPair(firstId: number, secondId: number) {
 export async function unlinkSuperSetPair(pairId: number) {
   return db
     .update(sessionExercises)
-    .set({ supersetPairId: null })
+    .set({ supersetPairId: null, updatedAt: now() })
     .where(
       and(
         eq(sessionExercises.supersetPairId, pairId),
@@ -949,6 +1005,8 @@ export async function createSet(data: {
       ...data,
       completed: false,
       createdAt: now(),
+      updatedAt: now(),
+      uuid: uuid(),
     })
     .returning();
 }
@@ -975,6 +1033,8 @@ export async function createDropSets(data: {
     rir: drop.rir,
     partialReps: null,
     createdAt: now(),
+    updatedAt: now(),
+    uuid: uuid(),
   }));
 
   return db.insert(sets).values(values).returning();
@@ -994,7 +1054,7 @@ export async function updateSet(
 ) {
   return db
     .update(sets)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(sets.id, id), sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)))
     .returning();
 }
@@ -1061,6 +1121,8 @@ export async function replaceDropSetGroup(data: {
       rir: drop.rir,
       partialReps: null,
       createdAt: now(),
+      updatedAt: now(),
+      uuid: uuid(),
     }));
 
     return tx.insert(sets).values(values).returning().all();
@@ -1249,6 +1311,11 @@ export async function duplicateSessionData(
           notes: se.notes,
           supersetPairId: se.supersetPairId,
           restTime: se.restTime,
+          // A copy is a new row: it must never inherit the source uuid, or the
+          // two collapse to one row on the remote side.
+          createdAt: now(),
+          updatedAt: now(),
+          uuid: uuid(),
         })
         .returning()
         .get();
@@ -1273,6 +1340,10 @@ export async function duplicateSessionData(
               isDropGroup: s.isDropGroup,
               rir: s.rir,
               createdAt: now(),
+              // A copy is a new row: it must never inherit the source uuid, or
+              // the two collapse to one row on the remote side.
+              updatedAt: now(),
+              uuid: uuid(),
             }))
           )
           .run();
@@ -1996,7 +2067,34 @@ export async function createBodyMeasurement(data: {
 }) {
   return db
     .insert(bodyMeasurements)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({ ...data, userId: getCurrentUserId(), createdAt: now(), uuid: uuid(), updatedAt: now() })
+    .returning();
+}
+
+/**
+ * Edits an existing measurement. An edit is an UPDATE with a stable `uuid` and a
+ * single `updated_at` bump, never a tombstone + re-create, so cross-system
+ * identity survives the change. Scoped to the active account, and `uuid` is
+ * deliberately not part of the writable set.
+ */
+export async function updateBodyMeasurement(
+  id: number,
+  data: {
+    date?: Date;
+    weight?: number | null;
+    bodyFat?: number | null;
+    chest?: number | null;
+    waist?: number | null;
+    hips?: number | null;
+    arms?: number | null;
+    thighs?: number | null;
+    notes?: string | null;
+  }
+) {
+  return db
+    .update(bodyMeasurements)
+    .set({ ...data, updatedAt: now() })
+    .where(and(eq(bodyMeasurements.id, id), ownedByCurrentUser(bodyMeasurements.userId)))
     .returning();
 }
 
@@ -2023,7 +2121,13 @@ export async function createProgressPhoto(data: {
 }) {
   return db
     .insert(progressPhotos)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -2050,14 +2154,23 @@ export async function deleteProgressPhoto(id: number) {
 export async function claimLegacyRows(): Promise<void> {
   const userId = getCurrentUserId();
   if (!userId) return;
-  await db.update(routineFolders).set({ userId }).where(isNull(routineFolders.userId));
-  await db.update(routines).set({ userId }).where(isNull(routines.userId));
-  await db.update(sessions).set({ userId }).where(isNull(sessions.userId));
-  await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
-  await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
+  await db
+    .update(routineFolders)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(routineFolders.userId));
+  await db.update(routines).set({ userId, updatedAt: now() }).where(isNull(routines.userId));
+  await db.update(sessions).set({ userId, updatedAt: now() }).where(isNull(sessions.userId));
+  await db
+    .update(bodyMeasurements)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(bodyMeasurements.userId));
+  await db
+    .update(progressPhotos)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(progressPhotos.userId));
   await db
     .update(exercises)
-    .set({ userId })
+    .set({ userId, updatedAt: now() })
     .where(and(isNull(exercises.userId), isNull(exercises.originalId)));
 }
 

@@ -8,7 +8,7 @@
 // Bump `SCHEMA_VERSION` whenever the shape changes: a later layer (identity
 // columns, etc.) is expected to add a version and extend the manifest with it.
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface SchemaColumn {
   name: string;
@@ -37,14 +37,15 @@ export interface SchemaTable {
 // its ALTER lives on the early-return branch of `initializeDatabase` (it only
 // runs once exercises already exist) and is not part of `runSchemaMigrations`.
 export const MIGRATION_ADDED_COLUMNS: Record<string, string[]> = {
-  routines: ['folder_id', 'user_id'],
-  session_exercises: ['rest_time', 'superset_pair_id', 'note_type'],
-  exercises: ['unit', 'name_es', 'description_es', 'user_id'],
-  sets: ['method', 'drop_order', 'is_drop_group', 'rir', 'partial_reps'],
-  sessions: ['user_id'],
-  routine_folders: ['user_id'],
-  body_measurements: ['user_id'],
-  progress_photos: ['user_id'],
+  routines: ['folder_id', 'user_id', 'uuid', 'updated_at', 'deleted_at'],
+  routine_exercises: ['created_at', 'uuid', 'updated_at', 'deleted_at'],
+  session_exercises: ['rest_time', 'superset_pair_id', 'note_type', 'created_at', 'uuid', 'updated_at', 'deleted_at'],
+  exercises: ['unit', 'name_es', 'description_es', 'user_id', 'uuid', 'updated_at', 'deleted_at'],
+  sets: ['method', 'drop_order', 'is_drop_group', 'rir', 'partial_reps', 'uuid', 'updated_at', 'deleted_at'],
+  sessions: ['user_id', 'uuid', 'updated_at', 'deleted_at'],
+  routine_folders: ['user_id', 'uuid', 'updated_at', 'deleted_at'],
+  body_measurements: ['user_id', 'uuid', 'updated_at', 'deleted_at'],
+  progress_photos: ['user_id', 'uuid', 'updated_at', 'deleted_at'],
 };
 
 export const SCHEMA_MANIFEST: SchemaTable[] = [
@@ -80,6 +81,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'original_id', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
       { name: 'unit', type: 'TEXT', notNull: 0, pk: 0, dfltValue: "'kg'" },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [{ name: 'name_category_idx', unique: 0, columns: ['name', 'category_id'] }],
   },
@@ -93,6 +97,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'color', type: 'TEXT', notNull: 0, pk: 0, dfltValue: "'#00F5A0'" },
       { name: 'icon', type: 'TEXT', notNull: 0, pk: 0, dfltValue: "'📁'" },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [],
   },
@@ -106,6 +113,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'category_id', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'folder_id', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [],
   },
@@ -118,6 +128,10 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'order', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
       { name: 'target_sets', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: '3' },
       { name: 'target_reps', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: '10' },
+      { name: 'created_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [],
   },
@@ -131,6 +145,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'completed_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'duration', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'notes', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [
       { name: 'sessions_completed_at_idx', unique: 0, columns: ['completed_at'] },
@@ -148,6 +165,10 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'notes', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
       { name: 'note_type', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
       { name: 'superset_pair_id', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'created_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [
       { name: 'se_exercise_idx', unique: 0, columns: ['exercise_id'] },
@@ -169,6 +190,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'rir', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'partial_reps', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [{ name: 'sets_session_exercise_idx', unique: 0, columns: ['session_exercise_id'] }],
   },
@@ -187,6 +211,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'thighs', type: 'REAL', notNull: 0, pk: 0, dfltValue: null },
       { name: 'notes', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [],
   },
@@ -199,6 +226,9 @@ export const SCHEMA_MANIFEST: SchemaTable[] = [
       { name: 'uri', type: 'TEXT', notNull: 1, pk: 0, dfltValue: null },
       { name: 'body_part', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
       { name: 'created_at', type: 'INTEGER', notNull: 1, pk: 0, dfltValue: null },
+      { name: 'uuid', type: 'TEXT', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'updated_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
+      { name: 'deleted_at', type: 'INTEGER', notNull: 0, pk: 0, dfltValue: null },
     ],
     indexes: [],
   },

@@ -32,7 +32,10 @@ CREATE TABLE IF NOT EXISTS exercises (
   gif_url TEXT,
   original_id TEXT,
   unit TEXT DEFAULT 'kg',
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS name_category_idx ON exercises(name, category_id);
@@ -44,7 +47,10 @@ CREATE TABLE IF NOT EXISTS routine_folders (
   description TEXT,
   color TEXT DEFAULT '#00F5A0',
   icon TEXT DEFAULT '📁',
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS routines (
@@ -54,7 +60,10 @@ CREATE TABLE IF NOT EXISTS routines (
   description TEXT,
   category_id INTEGER REFERENCES categories(id),
   folder_id INTEGER REFERENCES routine_folders(id) ON DELETE SET NULL,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS routine_exercises (
@@ -63,7 +72,11 @@ CREATE TABLE IF NOT EXISTS routine_exercises (
   exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE RESTRICT,
   "order" INTEGER NOT NULL,
   target_sets INTEGER DEFAULT 3,
-  target_reps INTEGER DEFAULT 10
+  target_reps INTEGER DEFAULT 10,
+  created_at INTEGER,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -73,7 +86,10 @@ CREATE TABLE IF NOT EXISTS sessions (
   started_at INTEGER NOT NULL,
   completed_at INTEGER,
   duration INTEGER,
-  notes TEXT
+  notes TEXT,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS sessions_completed_at_idx ON sessions(completed_at);
@@ -87,7 +103,11 @@ CREATE TABLE IF NOT EXISTS session_exercises (
   rest_time INTEGER DEFAULT 60,
   notes TEXT,
   note_type TEXT,
-  superset_pair_id INTEGER
+  superset_pair_id INTEGER,
+  created_at INTEGER,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS se_session_idx ON session_exercises(session_id);
@@ -105,7 +125,10 @@ CREATE TABLE IF NOT EXISTS sets (
   is_drop_group INTEGER DEFAULT 0,
   rir INTEGER,
   partial_reps INTEGER,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS sets_session_exercise_idx ON sets(session_exercise_id);
@@ -122,7 +145,10 @@ CREATE TABLE IF NOT EXISTS body_measurements (
   arms REAL,
   thighs REAL,
   notes TEXT,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS progress_photos (
@@ -131,6 +157,9 @@ CREATE TABLE IF NOT EXISTS progress_photos (
   date INTEGER NOT NULL,
   uri TEXT NOT NULL,
   body_part TEXT,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  uuid TEXT,
+  updated_at INTEGER,
+  deleted_at INTEGER
 );
 `;
