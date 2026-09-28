@@ -185,9 +185,9 @@ describe('user-scope EXISTS guards exclude tombstoned rows (U2e)', () => {
     tombstone(TOMBSTONE_SESSION_EXERCISE, 1);
 
     // The session it hangs from is still live, so the session guard alone would
-    // still return the row...
-    expect(await queries.getSessionExercises(1)).toHaveLength(1);
-    // ...and the child guard is what excludes it.
+    // still authorize the row; the child's own `deleted_at` guard is what hides
+    // it from its own read.
+    expect(await queries.getSessionExercises(1)).toHaveLength(0);
     expect(await ownedSets()).toHaveLength(0);
     expect(await queries.getSetsForSessionExercise(1)).toHaveLength(0);
   });

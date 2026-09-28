@@ -66,7 +66,8 @@ async function assertSessionExerciseOwned(sessionExerciseId: number): Promise<vo
     .where(
       and(
         eq(sessionExercises.id, sessionExerciseId),
-        sessionOwnedByCurrentUser(sessionExercises.sessionId)
+        sessionOwnedByCurrentUser(sessionExercises.sessionId),
+        isNull(sessionExercises.deletedAt)
       )
     )
     .limit(1);
@@ -595,7 +596,8 @@ export async function getSessionExercises(sessionId: number) {
     .where(
       and(
         eq(sessionExercises.sessionId, sessionId),
-        sessionOwnedByCurrentUser(sessionExercises.sessionId)
+        sessionOwnedByCurrentUser(sessionExercises.sessionId),
+        isNull(sessionExercises.deletedAt)
       )
     )
     .orderBy(asc(sessionExercises.order));
@@ -612,7 +614,8 @@ export async function getSessionExercisesWithSets(sessionId: number): Promise<Se
     .where(
       and(
         eq(sessionExercises.sessionId, sessionId),
-        sessionOwnedByCurrentUser(sessionExercises.sessionId)
+        sessionOwnedByCurrentUser(sessionExercises.sessionId),
+        isNull(sessionExercises.deletedAt)
       )
     )
     .orderBy(asc(sessionExercises.order));
@@ -623,7 +626,7 @@ export async function getSessionExercisesWithSets(sessionId: number): Promise<Se
   const allSets = await db
     .select()
     .from(sets)
-    .where(inArray(sets.sessionExerciseId, seIds))
+    .where(and(inArray(sets.sessionExerciseId, seIds), isNull(sets.deletedAt)))
     .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
 
   const setsBySE = new Map<number, typeof allSets>();
@@ -997,7 +1000,8 @@ export async function getSetsForSessionExercise(sessionExerciseId: number) {
     .where(
       and(
         eq(sets.sessionExerciseId, sessionExerciseId),
-        sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+        sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+        isNull(sets.deletedAt)
       )
     )
     .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
@@ -1175,7 +1179,12 @@ export async function getLastSessionForRoutine(routineId: number) {
     })
     .from(sessionExercises)
     .leftJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
-    .where(eq(sessionExercises.sessionId, lastSession[0].id))
+    .where(
+      and(
+        eq(sessionExercises.sessionId, lastSession[0].id),
+        isNull(sessionExercises.deletedAt)
+      )
+    )
     .orderBy(asc(sessionExercises.order));
 
   const seIds = sessionExercisesData.map((se) => se.id);
@@ -1184,7 +1193,7 @@ export async function getLastSessionForRoutine(routineId: number) {
     allSets = await db
       .select()
       .from(sets)
-      .where(inArray(sets.sessionExerciseId, seIds))
+      .where(and(inArray(sets.sessionExerciseId, seIds), isNull(sets.deletedAt)))
       .orderBy(asc(sets.setNumber), asc(sets.dropOrder));
   }
 
@@ -1216,7 +1225,8 @@ export async function getLastSetsForExercise(exerciseId: number) {
           eq(sessionExercises.exerciseId, exerciseId),
           isNotNull(sessions.completedAt),
           ownedByCurrentUser(sessions.userId),
-          isNull(sessions.deletedAt)
+          isNull(sessions.deletedAt),
+          isNull(sessionExercises.deletedAt)
         )
       )
       .orderBy(desc(sessions.completedAt))
@@ -1228,7 +1238,7 @@ export async function getLastSetsForExercise(exerciseId: number) {
   const setsData = await db
     .select()
     .from(sets)
-    .where(eq(sets.sessionExerciseId, lastSE[0].id));
+    .where(and(eq(sets.sessionExerciseId, lastSE[0].id), isNull(sets.deletedAt)));
 
   return setsData;
 }
@@ -1256,7 +1266,8 @@ export async function getLastSetsPerExercise(
           inArray(sessionExercises.exerciseId, exerciseIds),
           isNotNull(sessions.completedAt),
           ownedByCurrentUser(sessions.userId),
-          isNull(sessions.deletedAt)
+          isNull(sessions.deletedAt),
+          isNull(sessionExercises.deletedAt)
         )
       )
       .orderBy(desc(sessions.completedAt));
@@ -1282,7 +1293,7 @@ export async function getLastSetsPerExercise(
   const allSets = await db
     .select()
     .from(sets)
-    .where(inArray(sets.sessionExerciseId, seIdList));
+    .where(and(inArray(sets.sessionExerciseId, seIdList), isNull(sets.deletedAt)));
 
   // Index by exerciseId
   const setsBySE = new Map<number, typeof allSets>();
@@ -1399,7 +1410,9 @@ export async function getSetsByExerciseId(exerciseId: number) {
         .where(
           and(
             eq(sessionExercises.exerciseId, exerciseId),
-            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .orderBy(desc(sessionExercises.sessionId), asc(sets.setNumber), asc(sets.dropOrder));
@@ -1428,7 +1441,9 @@ export async function getExerciseStats(exerciseId: number): Promise<ExerciseStat
           and(
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
-            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         );
 
@@ -1482,7 +1497,9 @@ export async function getLastRirByRoutineExerciseIds(
       and(
         eq(sessionExercises.sessionId, lastSession[0].id),
         inArray(sessionExercises.exerciseId, exerciseIds),
-        isNotNull(sets.rir)
+        isNotNull(sets.rir),
+        isNull(sets.deletedAt),
+        isNull(sessionExercises.deletedAt)
       )
     )
     .orderBy(asc(sets.setNumber));
@@ -1519,6 +1536,8 @@ export async function getLastWeightByExerciseIds(exerciseIds: number[]): Promise
       inArray(sessionExercises.exerciseId, exerciseIds),
       isNotNull(sets.weight),
       sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+      isNull(sets.deletedAt),
+      isNull(sessionExercises.deletedAt),
     ))
     .orderBy(desc(sets.createdAt));
 
@@ -1553,6 +1572,8 @@ export async function getLastRepsByExerciseIds(exerciseIds: number[]): Promise<R
       inArray(sessionExercises.exerciseId, exerciseIds),
       isNotNull(sets.reps),
       sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+      isNull(sets.deletedAt),
+      isNull(sessionExercises.deletedAt),
     ))
     .orderBy(desc(sets.createdAt));
 
@@ -1588,6 +1609,7 @@ export async function getLastNotesByExerciseIds(exerciseIds: number[]): Promise<
       isNotNull(sessionExercises.notes),
       ownedByCurrentUser(sessions.userId),
       isNull(sessions.deletedAt),
+      isNull(sessionExercises.deletedAt),
     ))
     .orderBy(desc(sessions.startedAt));
 
@@ -1643,7 +1665,9 @@ export async function getLastWorkoutPerExercise(
           and(
             inArray(sessionExercises.exerciseId, exerciseIds),
             ownedByCurrentUser(sessions.userId),
-            isNull(sessions.deletedAt)
+            isNull(sessions.deletedAt),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .orderBy(desc(sessions.startedAt), desc(sets.createdAt));
@@ -1711,6 +1735,8 @@ export async function getMaxWeightByExerciseIds(exerciseIds: number[]): Promise<
       inArray(sessionExercises.exerciseId, exerciseIds),
       isNotNull(sets.weight),
       sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+      isNull(sets.deletedAt),
+      isNull(sessionExercises.deletedAt),
     ))
     .groupBy(sessionExercises.exerciseId);
 
@@ -1750,7 +1776,9 @@ export async function getExerciseSessions(exerciseId: number): Promise<ExerciseS
             eq(sessionExercises.exerciseId, exerciseId),
             isNotNull(sessions.completedAt),
             ownedByCurrentUser(sessions.userId),
-            isNull(sessions.deletedAt)
+            isNull(sessions.deletedAt),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1804,7 +1832,9 @@ export async function getExerciseProgressionData(
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
             ownedByCurrentUser(sessions.userId),
-            isNull(sessions.deletedAt)
+            isNull(sessions.deletedAt),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1844,7 +1874,9 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
             isNotNull(sets.weight),
-            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .orderBy(desc(sets.weight))
@@ -1866,7 +1898,9 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
             eq(sets.completed, true),
             isNotNull(sets.weight),
             isNotNull(sets.reps),
-            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId)
+            sessionExerciseOwnedByCurrentUser(sets.sessionExerciseId),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .orderBy(desc(sql`${sets.weight} * ${sets.reps}`))
@@ -1887,7 +1921,9 @@ export async function getExercisePRs(exerciseId: number): Promise<ExercisePRs> {
             eq(sessionExercises.exerciseId, exerciseId),
             eq(sets.completed, true),
             ownedByCurrentUser(sessions.userId),
-            isNull(sessions.deletedAt)
+            isNull(sessions.deletedAt),
+            isNull(sets.deletedAt),
+            isNull(sessionExercises.deletedAt)
           )
         )
         .groupBy(sessions.id)
@@ -1954,7 +1990,13 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
       .where(
-        and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt))
+        and(
+          eq(sets.completed, true),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt),
+          isNull(sets.deletedAt),
+          isNull(sessionExercises.deletedAt)
+        )
       ),
     // Total completed sets
     db.select({ count: sql<number>`coalesce(count(*), 0)` })
@@ -1962,7 +2004,13 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       .innerJoin(sessionExercises, eq(sets.sessionExerciseId, sessionExercises.id))
       .innerJoin(sessions, eq(sessionExercises.sessionId, sessions.id))
       .where(
-        and(eq(sets.completed, true), ownedByCurrentUser(sessions.userId), isNull(sessions.deletedAt))
+        and(
+          eq(sets.completed, true),
+          ownedByCurrentUser(sessions.userId),
+          isNull(sessions.deletedAt),
+          isNull(sets.deletedAt),
+          isNull(sessionExercises.deletedAt)
+        )
       ),
     // Total time (sum of completed session durations only)
     db.select({ total: sql<number>`coalesce(sum(${sessions.duration}), 0)` })
@@ -2000,7 +2048,8 @@ export async function getGlobalStats(): Promise<GlobalStats> {
         and(
           isNotNull(sessions.completedAt),
           ownedByCurrentUser(sessions.userId),
-          isNull(sessions.deletedAt)
+          isNull(sessions.deletedAt),
+          isNull(sessionExercises.deletedAt)
         )
       )
       .groupBy(sessionExercises.exerciseId)
@@ -2081,7 +2130,9 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
           eq(sessionExercises.exerciseId, exerciseId),
           isNotNull(sessions.completedAt),
           ownedByCurrentUser(sessions.userId),
-          isNull(sessions.deletedAt)
+          isNull(sessions.deletedAt),
+          isNull(sessionExercises.deletedAt),
+          isNull(sets.deletedAt)
         )
       )
       .groupBy(sessions.id)
@@ -2097,8 +2148,17 @@ export async function getWeeklySessions(week: string, exerciseId?: number): Prom
       totalVolume: sql<number>`coalesce(sum(case when ${sets.completed} = 1 then ${sets.reps} * ${sets.weight} else 0 end), 0)`,
     })
     .from(sessions)
-    .leftJoin(sessionExercises, eq(sessionExercises.sessionId, sessions.id))
-        .leftJoin(sets, eq(sets.sessionExerciseId, sessionExercises.id))
+    // The two LEFT JOINs keep a live session visible even when every slot (or
+    // set) under it is tombstoned, so the row's own guard belongs in the join's
+    // ON clause: in the WHERE it would turn the join inner and drop the session.
+    .leftJoin(
+      sessionExercises,
+      and(eq(sessionExercises.sessionId, sessions.id), isNull(sessionExercises.deletedAt))
+    )
+    .leftJoin(
+      sets,
+      and(eq(sets.sessionExerciseId, sessionExercises.id), isNull(sets.deletedAt))
+    )
         .where(and(
           eq(sql`strftime('%Y-%W', ${sessions.startedAt}, 'unixepoch')`, week),
           isNotNull(sessions.completedAt),
