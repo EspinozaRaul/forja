@@ -470,7 +470,13 @@ export async function createSession(data: {
   }
   return db
     .insert(sessions)
-    .values({ ...data, userId: getCurrentUserId(), startedAt: data.startedAt ?? now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      startedAt: data.startedAt ?? now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -487,7 +493,11 @@ export async function completeSession(
   const completedAtSeconds = Math.floor((data.completedAt ?? now()).getTime() / 1000);
   return db
     .update(sessions)
-    .set({ ...data, completedAt: sql`coalesce(${sessions.completedAt}, ${completedAtSeconds})` })
+    .set({
+      ...data,
+      completedAt: sql`coalesce(${sessions.completedAt}, ${completedAtSeconds})`,
+      updatedAt: now(),
+    })
     .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
     .returning();
 }
@@ -495,11 +505,13 @@ export async function completeSession(
 export async function updateSessionNotes(id: number, notes: string | null) {
   // Notes-only write. It must NOT touch completed_at — that date drives the
   // history ordering and the statistics grouping, so editing notes used to make a
-  // finished session jump to today. `sessions` has no updated_at column, so
-  // `notes` is the only field changed.
+  // finished session jump to today. `updated_at` IS bumped: it records when the
+  // row last changed, and editing notes is a real change. `notes` and
+  // `updated_at` are the only fields changed, so the completion date is still
+  // preserved.
   return db
     .update(sessions)
-    .set({ notes })
+    .set({ notes, updatedAt: now() })
     .where(and(eq(sessions.id, id), ownedByCurrentUser(sessions.userId)))
     .returning();
 }
@@ -2091,7 +2103,7 @@ export async function claimLegacyRows(): Promise<void> {
   if (!userId) return;
   await db.update(routineFolders).set({ userId }).where(isNull(routineFolders.userId));
   await db.update(routines).set({ userId }).where(isNull(routines.userId));
-  await db.update(sessions).set({ userId }).where(isNull(sessions.userId));
+  await db.update(sessions).set({ userId, updatedAt: now() }).where(isNull(sessions.userId));
   await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
   await db.update(progressPhotos).set({ userId }).where(isNull(progressPhotos.userId));
   await db
