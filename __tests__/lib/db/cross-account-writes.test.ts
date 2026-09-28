@@ -326,7 +326,7 @@ describe('data layer cross-account gaps', () => {
   });
 
   describe('deleteSessionExercise cross-account', () => {
-    it("removes the owner's sets through the declared CASCADE and leaves the other account's slot intact", async () => {
+    it("tombstones the owner's slot and its sets and leaves the other account's slot live", async () => {
       const mine = await seedOwnedSessionExercise('user-a');
       insertSet(mine.sessionExercise.id);
       const theirs = await seedOwnedSessionExercise('user-b');
@@ -335,22 +335,30 @@ describe('data layer cross-account gaps', () => {
       setCurrentUserId('user-a');
       await queries.deleteSessionExercise(mine.sessionExercise.id);
 
-      // `deleteSessionExercise` deletes only the `session_exercises` row; its sets go
-      // through the declared `ON DELETE CASCADE`, which is real only while the pragma
-      // is ON. With the pragma forced OFF this case fails here, which is what makes it
-      // the file's evidence that the harness enforces the state it sets.
+      // `deleteSessionExercise` tombstones the row and its sets explicitly: a
+      // tombstone is not a cascade, so both would otherwise stay live and sync.
+      // The rows survive with `deleted_at` set, so the checks assert that.
       expect(
-        count('SELECT COUNT(*) AS c FROM session_exercises WHERE id = ?', mine.sessionExercise.id)
-      ).toBe(0);
+        count(
+          'SELECT COUNT(*) AS c FROM session_exercises WHERE id = ? AND deleted_at IS NOT NULL',
+          mine.sessionExercise.id
+        )
+      ).toBe(1);
       expect(
-        count('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ?', mine.sessionExercise.id)
-      ).toBe(0);
+        count(
+          'SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ? AND deleted_at IS NOT NULL',
+          mine.sessionExercise.id
+        )
+      ).toBe(1);
 
-      // The other account's slot and its set survive the ownership-scoped delete.
-      expect(count('SELECT COUNT(*) AS c FROM session_exercises')).toBe(1);
-      expect(count('SELECT COUNT(*) AS c FROM sets')).toBe(1);
+      // The other account's slot and its set are untouched and still live.
+      expect(count('SELECT COUNT(*) AS c FROM session_exercises WHERE deleted_at IS NULL')).toBe(1);
+      expect(count('SELECT COUNT(*) AS c FROM sets WHERE deleted_at IS NULL')).toBe(1);
       expect(
-        count('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ?', theirs.sessionExercise.id)
+        count(
+          'SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ? AND deleted_at IS NULL',
+          theirs.sessionExercise.id
+        )
       ).toBe(1);
     });
   });

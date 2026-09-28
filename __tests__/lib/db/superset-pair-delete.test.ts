@@ -100,6 +100,11 @@ function pairIdOf(id: number): number | null {
   return row ? row.p : null;
 }
 
+function deletedAtOf(id: number): number | null | undefined {
+  const row = sqlite.prepare('SELECT deleted_at AS d FROM session_exercises WHERE id = ?').get(id);
+  return row ? row.d : undefined;
+}
+
 /** Make the Nth matching delete throw, so an earlier statement is at risk. */
 function injectFailureOnDelete(table: string, occurrence: number): void {
   let seen = 0;
@@ -109,6 +114,32 @@ function injectFailureOnDelete(table: string, occurrence: number): void {
     seen += 1;
     if (seen === occurrence) {
       throw new Error(`injected ${table} delete failure #${occurrence}`);
+    }
+  };
+}
+
+/**
+ * Make the Nth session_exercises TOMBSTONE update throw, so an earlier member's
+ * tombstone (and the pair unlink) is at risk. Only statements that write
+ * `deleted_at` count, so the member index the caller passes keeps the same
+ * meaning the old hard-delete injection gave it; the pair-dissolve UPDATE, which
+ * writes only `superset_pair_id` and `updated_at`, is not a tombstone.
+ */
+function injectFailureOnTombstone(occurrence: number): void {
+  let seen = 0;
+  // The tombstone is the only session_exercises UPDATE whose SET clause writes
+  // `deleted_at`. The ownership guard's EXISTS subquery also mentions
+  // `sessions.deleted_at`, so the where clause must be excluded before searching
+  // or the pair-dissolve UPDATE would match too and shift every occurrence index.
+  const update = /^\s*update\s+["`]?session_exercises["`]?\s+set\s+/i;
+  mockedIndex.__hooks.onStatement = (sql: string) => {
+    const statement = sql.trim();
+    if (!update.test(statement)) return;
+    const setClause = statement.split(/\swhere\s/i)[0] ?? statement;
+    if (!/\bdeleted_at\b/i.test(setClause)) return;
+    seen += 1;
+    if (seen === occurrence) {
+      throw new Error(`injected session_exercises tombstone failure #${occurrence}`);
     }
   };
 }
@@ -157,19 +188,26 @@ describe('super set delete atomicity (expo-sqlite sync driver)', () => {
     it('deletes both members of the pair', async () => {
       await queries.deleteSuperSetMembers([1, 2], PAIR_ID);
 
-      expect(count()).toBe(0);
+      // A tombstone, not a physical delete: both rows stay with `deleted_at` set.
+      expect(count()).toBe(2);
+      expect(deletedAtOf(1)).not.toBeNull();
+      expect(deletedAtOf(2)).not.toBeNull();
     });
 
-    it('rolls back the unlink and the first delete when the second delete throws', async () => {
-      injectFailureOnDelete('session_exercises', 2);
+    it('rolls back the unlink and the first tombstone when the second tombstone throws', async () => {
+      injectFailureOnTombstone(2);
 
       await expect(queries.deleteSuperSetMembers([1, 2], PAIR_ID)).rejects.toThrow(
-        'injected session_exercises delete failure #2'
+        'injected session_exercises tombstone failure #2'
       );
 
-      // The unlink ran first and member 1 was already deleted; both must come back,
-      // including the pair ids the unlink cleared.
+      // The unlink ran first and member 1 was already tombstoned; both must come back,
+      // including the pair ids the unlink cleared. `deleted_at` — not a row count — is
+      // what proves the rollback now: a committed tombstone leaves the row sitting in
+      // the table, so `count()` would read two either way.
       expect(count()).toBe(2);
+      expect(deletedAtOf(1)).toBeNull();
+      expect(deletedAtOf(2)).toBeNull();
       expect(pairIdOf(1)).toBe(PAIR_ID);
       expect(pairIdOf(2)).toBe(PAIR_ID);
     });
@@ -177,17 +215,21 @@ describe('super set delete atomicity (expo-sqlite sync driver)', () => {
     it('deletes both members even when no pair id is supplied (no unlink to run)', async () => {
       await queries.deleteSuperSetMembers([1, 2], null);
 
-      expect(count()).toBe(0);
+      expect(count()).toBe(2);
+      expect(deletedAtOf(1)).not.toBeNull();
+      expect(deletedAtOf(2)).not.toBeNull();
     });
 
-    it('rolls back the unlink when the first delete throws', async () => {
-      injectFailureOnDelete('session_exercises', 1);
+    it('rolls back the unlink when the first tombstone throws', async () => {
+      injectFailureOnTombstone(1);
 
       await expect(queries.deleteSuperSetMembers([1, 2], PAIR_ID)).rejects.toThrow(
-        'injected session_exercises delete failure #1'
+        'injected session_exercises tombstone failure #1'
       );
 
       expect(count()).toBe(2);
+      expect(deletedAtOf(1)).toBeNull();
+      expect(deletedAtOf(2)).toBeNull();
       expect(pairIdOf(1)).toBe(PAIR_ID);
       expect(pairIdOf(2)).toBe(PAIR_ID);
     });
@@ -252,7 +294,12 @@ describe('super set delete atomicity (expo-sqlite sync driver)', () => {
 
       await queries.deleteSessionExercise(1);
 
-      expect(count()).toBe(2);
+      // The row is tombstoned, not removed, so the count stays at three; only the
+      // pair ids prove the survivors were unlinked.
+      expect(count()).toBe(3);
+      expect(deletedAtOf(1)).not.toBeNull();
+      expect(deletedAtOf(2)).toBeNull();
+      expect(deletedAtOf(3)).toBeNull();
       expect(pairIdOf(2)).toBeNull();
       expect(pairIdOf(3)).toBeNull();
     });
@@ -279,7 +326,10 @@ describe('super set delete atomicity (expo-sqlite sync driver)', () => {
 
       await queries.deleteSessionExercise(3);
 
-      expect(count()).toBe(2);
+      expect(count()).toBe(3);
+      expect(deletedAtOf(3)).not.toBeNull();
+      expect(deletedAtOf(1)).toBeNull();
+      expect(deletedAtOf(2)).toBeNull();
       expect(pairIdOf(1)).toBe(PAIR_ID);
       expect(pairIdOf(2)).toBe(PAIR_ID);
     });

@@ -896,7 +896,27 @@ export async function deleteSessionExercise(id: number) {
         )
       )
       .run();
-    tx.delete(sessionExercises).where(owned).run();
+    // Children before parent, matching `deleteSession`: a tombstone is not a
+    // cascade, so these sets must be tombstoned explicitly or they stay live and
+    // would sync. The subquery keeps the same `owned` scope, so the soft delete is
+    // never broader than the hard one it replaces.
+    tx.update(sets)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(
+        inArray(
+          sets.sessionExerciseId,
+          tx.select({ id: sessionExercises.id }).from(sessionExercises).where(owned)
+        )
+      )
+      .run();
+    // Tombstone, not delete: the row stays so the removal can sync, and a
+    // tombstone still needs `updated_at` bumped to win conflict resolution. The
+    // exact `owned` predicate is kept, so the soft delete is never broader than
+    // the hard one it replaces.
+    tx.update(sessionExercises)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(owned)
+      .run();
   });
 }
 
@@ -921,13 +941,26 @@ export async function deleteSuperSetMembers(memberIds: number[], pairId: number 
         .run();
     }
     for (const memberId of memberIds) {
-      tx.delete(sessionExercises)
+      // Tombstone per member, keeping each WHERE (id + ownership) exactly as it was
+      // when this was a hard delete. Children before parent: a tombstone is not a
+      // cascade, so the member's sets must be tombstoned explicitly or they stay
+      // live and would sync.
+      const member = and(
+        eq(sessionExercises.id, memberId),
+        sessionOwnedByCurrentUser(sessionExercises.sessionId)
+      );
+      tx.update(sets)
+        .set({ deletedAt: now(), updatedAt: now() })
         .where(
-          and(
-            eq(sessionExercises.id, memberId),
-            sessionOwnedByCurrentUser(sessionExercises.sessionId)
+          inArray(
+            sets.sessionExerciseId,
+            tx.select({ id: sessionExercises.id }).from(sessionExercises).where(member)
           )
         )
+        .run();
+      tx.update(sessionExercises)
+        .set({ deletedAt: now(), updatedAt: now() })
+        .where(member)
         .run();
     }
   });

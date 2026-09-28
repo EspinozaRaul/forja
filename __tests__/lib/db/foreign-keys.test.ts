@@ -16,11 +16,11 @@ import { CREATE_TABLES_SQL } from '../../../lib/db/ddl';
 //   1. Boundary — the real `lib/db/index` module (the pattern is in
 //      `exercise-metadata-repair.test.ts`) issues the pragma and its connection
 //      ends up enforcing it. Only this proves *our* code enables it.
-//   2. Behaviour — a real exported query from `lib/db/queries.ts` whose outcome
-//      depends on the `sets.session_exercise_id → session_exercises.id` CASCADE
-//      differs between OFF and ON. The OFF arm is what makes the test able to
-//      fail: asserting only "children are gone" would pass on node:sqlite's
-//      default even if the app enabled nothing.
+//   2. Behaviour — a real exported query from `lib/db/queries.ts`, asserted in
+//      both pragma states. The delete family tombstones instead of hard-deleting,
+//      so the `sets.session_exercise_id → session_exercises.id` CASCADE is no
+//      longer the mechanism that removes a slot's sets: both arms must show the
+//      parent and its sets tombstoned, with no child left live.
 jest.mock('expo-sqlite', () => {
   const { DatabaseSync } = require('node:sqlite');
   const sqlite = new DatabaseSync(':memory:');
@@ -100,6 +100,20 @@ function sessionExerciseExists(id: number): boolean {
   );
 }
 
+function tombstonedSessionExerciseExists(id: number): boolean {
+  return (
+    sqlite
+      .prepare('SELECT COUNT(*) AS c FROM session_exercises WHERE id = ? AND deleted_at IS NOT NULL')
+      .get(id).c > 0
+  );
+}
+
+function liveSetsOf(sessionExerciseId: number): number {
+  return sqlite
+    .prepare('SELECT COUNT(*) AS c FROM sets WHERE session_exercise_id = ? AND deleted_at IS NULL')
+    .get(sessionExerciseId).c;
+}
+
 describe('PRAGMA foreign_keys = ON on the app connection (U2)', () => {
   beforeAll(() => {
     sqlite.exec(CREATE_TABLES_SQL);
@@ -146,20 +160,23 @@ describe('PRAGMA foreign_keys = ON on the app connection (U2)', () => {
     expect(foreignKeysEnabled()).toBe(1);
   });
 
-  it('the sets → session_exercises CASCADE removes child rows only with the pragma ON', async () => {
-    // OFF: the shipped defect reproduced. The parent row is really deleted, but
-    // the declared CASCADE is inert and its sets survive as orphans.
+  it('deleteSessionExercise tombstones the slot and its sets, independent of the pragma', async () => {
+    // The delete family no longer hard-deletes, so the FK `ON DELETE CASCADE` is
+    // no longer the mechanism that removes a slot's sets: both arms tombstone the
+    // parent and its sets explicitly, and nothing is left live.
     sqlite.exec('PRAGMA foreign_keys = OFF');
     await queries.deleteSessionExercise(1);
-    expect(sessionExerciseExists(1)).toBe(false); // the delete ran
-    expect(countSetsOf(1)).toBe(1); // ...and the cascade did not fire
+    expect(sessionExerciseExists(1)).toBe(true); // the row stays (tombstoned)
+    expect(tombstonedSessionExerciseExists(1)).toBe(true);
+    expect(countSetsOf(1)).toBe(1); // the set stays (tombstoned)
+    expect(liveSetsOf(1)).toBe(0);
 
-    // ON: the same query, against the same data shape, now removes the
-    // children through the declaration itself.
     sqlite.exec('PRAGMA foreign_keys = ON');
     await queries.deleteSessionExercise(2);
-    expect(sessionExerciseExists(2)).toBe(false);
-    expect(countSetsOf(2)).toBe(0);
+    expect(sessionExerciseExists(2)).toBe(true);
+    expect(tombstonedSessionExerciseExists(2)).toBe(true);
+    expect(countSetsOf(2)).toBe(1);
+    expect(liveSetsOf(2)).toBe(0);
   });
 });
 
