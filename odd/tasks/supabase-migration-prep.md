@@ -228,7 +228,7 @@ transaction callback stays synchronous (`.run()`).
 `updated_at`; shared `exercises` rows stay `uuid IS NULL`.
 
 **Progress**: `sets` LANDED (`ffb8fec`, 42/390), `session_exercises` LANDED (`0ad73eb`, 43/399), `sessions`
-LANDED (`c3ae017`, 44/403). Next: `routines`.
+LANDED (`c3ae017`, 44/403), `routines` LANDED (`b1628d0`, 45/406). Next: `routine_folders`.
 - **U2d — tombstone conversion, one delete family per commit**, ordered by resurrection damage.
 - **U2e — read guards**, starting with `user-scope.ts:42-79` (the EXISTS subqueries): the single highest-leverage
   fix, because a tombstoned parent otherwise keeps authorizing its live children.
