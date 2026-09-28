@@ -132,7 +132,13 @@ export async function createFolder(data: {
 }) {
   return db
     .insert(routineFolders)
-    .values({ ...data, userId: getCurrentUserId(), createdAt: now() })
+    .values({
+      ...data,
+      userId: getCurrentUserId(),
+      createdAt: now(),
+      uuid: uuid(),
+      updatedAt: now(),
+    })
     .returning();
 }
 
@@ -142,7 +148,7 @@ export async function updateFolder(
 ) {
   return db
     .update(routineFolders)
-    .set(data)
+    .set({ ...data, updatedAt: now() })
     .where(and(eq(routineFolders.id, id), ownedByCurrentUser(routineFolders.userId)))
     .returning();
 }
@@ -2101,7 +2107,10 @@ export async function deleteProgressPhoto(id: number) {
 export async function claimLegacyRows(): Promise<void> {
   const userId = getCurrentUserId();
   if (!userId) return;
-  await db.update(routineFolders).set({ userId }).where(isNull(routineFolders.userId));
+  await db
+    .update(routineFolders)
+    .set({ userId, updatedAt: now() })
+    .where(isNull(routineFolders.userId));
   await db.update(routines).set({ userId, updatedAt: now() }).where(isNull(routines.userId));
   await db.update(sessions).set({ userId, updatedAt: now() }).where(isNull(sessions.userId));
   await db.update(bodyMeasurements).set({ userId }).where(isNull(bodyMeasurements.userId));
