@@ -1,9 +1,9 @@
 # supabase-migration-prep
 
-**Status**: **IN PROGRESS — the identity layer's six units are all landed.** U2a–U2c, U2d and U2e are merged into
-`main` (`93aeca6`, PRs #2–#5); **U2f (account deletion) is landed on `feat/account-deletion`** (gate 64 suites /
-540 tests) and not yet published. What remains is the recorded work, not the layer: the `uuid` unique indexes,
-drizzle parity, the dashboard scripts and the device test. Merge stays the user's decision.
+**Status**: **IN PROGRESS.** The identity layer (U2a–U2f) is complete and merged into `main` (`331bf03`, PRs
+#2–#6). The `uuid` unique indexes landed after it on `feat/uuid-unique-indexes` (`db88281`, `SCHEMA_VERSION` 3,
+gate 64 suites / 543 tests) and is not yet published. Remaining recorded work: drizzle parity, the dashboard
+scripts and the device test. Merge stays the user's decision.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -313,9 +313,10 @@ without a default, so the pattern is add-nullable → backfill → `CREATE UNIQU
 - **The identity layer** (`uuid` / `updated_at` / `deleted_at`) is Unit 2+, each bumping `SCHEMA_VERSION`.
 - **`lib/db/schema.ts` (drizzle) parity** is not asserted here. It is a real drift risk (queries are typed by
   it, the database is built by `ddl.ts`) but reconciling it is its own unit.
-- **The `uuid` columns have no UNIQUE index yet.** U2a left them nullable, U2b backfilled them, but uniqueness is
-  asserted by test only — not enforced by the schema. A dedicated schema unit must add the unique indexes (and the
-  freeze test needs a `MIGRATION_ADDED_INDEXES` notion, since `runSchemaMigrations` does not create indexes yet).
+- **CLOSED — the `uuid` columns have a UNIQUE index** (`db88281`, `SCHEMA_VERSION` 3). Nine `<table>_uuid_idx`
+  indexes, created by `ddl.ts` on a fresh install and by `runSchemaMigrations` after its `ALTER`s on an upgraded
+  one, declared in the manifest and in the new `MIGRATION_ADDED_INDEXES`. `NOT NULL` stays deferred: SQLite cannot
+  add it without a default, so uniqueness is schema-enforced and non-nullness is an app invariant.
 - **`__tests__/lib/db/orphan-cleanup.test.ts` keeps its own local `ORPHAN_CLEANUP_VERSION = 1`**; it is outside
   this feature's edit surfaces and still matches `lib/db/migration-versions.ts`, but it can drift.
 - **The remote Supabase drift** is a dashboard action (run/repair `supabase-schema.sql`, reconcile the RPC);
