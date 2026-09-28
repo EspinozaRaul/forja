@@ -185,10 +185,25 @@ export async function updateFolder(
 }
 
 export async function deleteFolder(id: number) {
-  // onDelete: 'set null' in the FK handles unlinking routines automatically
-  return db
-    .delete(routineFolders)
-    .where(and(eq(routineFolders.id, id), ownedByCurrentUser(routineFolders.userId)));
+  // The FK's `onDelete: 'set null'` can no longer do the unlinking: a tombstone
+  // is an UPDATE, not a DELETE, so the FK never fires and the routines would keep
+  // a `folder_id` pointing at the tombstoned folder. Unlink them explicitly
+  // first, in the SAME transaction as the tombstone — the old single DELETE was
+  // atomic, and these two writes must stay so.
+  return db.transaction((tx) => {
+    // The exact ownership WHERE keeps the unlink from touching another account's
+    // routine, which the unscoped FK cascade never promised.
+    tx.update(routines)
+      .set({ folderId: null, updatedAt: now() })
+      .where(and(eq(routines.folderId, id), ownedByCurrentUser(routines.userId)))
+      .run();
+    // Tombstone, not delete: the row stays so the removal can sync, and a
+    // tombstone still needs `updated_at` bumped to win conflict resolution.
+    tx.update(routineFolders)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(and(eq(routineFolders.id, id), ownedByCurrentUser(routineFolders.userId)))
+      .run();
+  });
 }
 
 // ─── Exercises ─────────────────────────────────────────
@@ -330,9 +345,31 @@ export async function updateRoutine(
 }
 
 export async function deleteRoutine(id: number) {
-  return db
-    .delete(routines)
-    .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)));
+  return db.transaction((tx) => {
+    // Children before parent, and it is load-bearing: `routineOwnedByCurrentUser`
+    // refuses a tombstoned routine, so tombstoning `routines` first would make
+    // this update match nothing and leave live orphaned children. A tombstone
+    // also makes the FK `ON DELETE CASCADE` inert, so the children MUST be
+    // tombstoned explicitly or they stay live and would sync. The child WHERE
+    // keeps both the exact routine id and the same ownership scope as the parent.
+    tx.update(routineExercises)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(
+        and(
+          eq(routineExercises.routineId, id),
+          routineOwnedByCurrentUser(routineExercises.routineId)
+        )
+      )
+      .run();
+    // Tombstone, not delete: the row stays so the removal can sync, and a
+    // tombstone still needs `updated_at` bumped to win conflict resolution. The
+    // exact WHERE is kept, so the soft delete is never broader than the hard one
+    // it replaces.
+    tx.update(routines)
+      .set({ deletedAt: now(), updatedAt: now() })
+      .where(and(eq(routines.id, id), ownedByCurrentUser(routines.userId)))
+      .run();
+  });
 }
 
 /**
@@ -397,8 +434,13 @@ export async function addExerciseToRoutine(data: {
 }
 
 export async function removeExerciseFromRoutine(id: number) {
+  // Tombstone, not delete: the row stays so the removal can sync, and a
+  // tombstone still needs `updated_at` bumped to win conflict resolution. The
+  // exact WHERE is kept, so the soft delete is never broader than the hard one it
+  // replaces.
   return db
-    .delete(routineExercises)
+    .update(routineExercises)
+    .set({ deletedAt: now(), updatedAt: now() })
     .where(
       and(eq(routineExercises.id, id), routineOwnedByCurrentUser(routineExercises.routineId))
     );

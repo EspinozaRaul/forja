@@ -213,6 +213,15 @@ describe('Referential integrity contract: the database enforces it (pragma ON)',
     return row('SELECT COUNT(*) AS c FROM routine_folders WHERE id = ?', id).c > 0;
   }
 
+  function tombstonedFolderExists(id: number): boolean {
+    return (
+      row(
+        'SELECT COUNT(*) AS c FROM routine_folders WHERE id = ? AND deleted_at IS NOT NULL',
+        id
+      ).c > 0
+    );
+  }
+
   function routineExists(id: number): boolean {
     return row('SELECT COUNT(*) AS c FROM routines WHERE id = ?', id).c > 0;
   }
@@ -299,15 +308,18 @@ describe('Referential integrity contract: the database enforces it (pragma ON)',
   });
 
   // Case 5 — the user-visible consequence: deleting a folder unlinks, not dangles.
-  it('deleteFolder unlinks its routines instead of leaving a dangling id', async () => {
+  it('deleteFolder tombstones the folder and explicitly unlinks its routines', async () => {
     seedLiveRoutine();
 
     await queries.deleteFolder(LIVE_FOLDER_ID);
 
-    // The folder is gone, the routine survives, and the FK's ON DELETE SET NULL
-    // fired on the shipping path — so the UI copy that promises "routines are
-    // only unlinked from this folder" now tells the truth.
-    expect(folderExists(LIVE_FOLDER_ID)).toBe(false);
+    // The delete family tombstones instead of hard-deleting, so the folder row
+    // survives with `deleted_at` set rather than vanishing. A tombstone makes the
+    // FK's `ON DELETE SET NULL` inert, so `deleteFolder` unlinks the routines
+    // explicitly in the same transaction — the UI copy that promises "routines
+    // are only unlinked from this folder" still tells the truth.
+    expect(folderExists(LIVE_FOLDER_ID)).toBe(true); // the row stays (tombstoned)
+    expect(tombstonedFolderExists(LIVE_FOLDER_ID)).toBe(true);
     expect(routineExists(LIVE_ROUTINE_ID)).toBe(true);
     expect(routineFolderId(LIVE_ROUTINE_ID)).toBeNull();
   });
@@ -330,17 +342,18 @@ describe('Referential integrity contract: the database enforces it (pragma ON)',
     expect(folderExists(MISSING_ID)).toBe(false); // the reference is dead
   });
 
-  // Case 6b — negative control for case 5: OFF, deleteFolder leaves folder_id
-  // pointing at a row that no longer exists.
-  it('[negative control] with the pragma OFF, deleteFolder leaves folder_id pointing at a deleted row', async () => {
+  // Case 6b — the unlink is explicit, not FK-dependent. It used to be a negative
+  // control for case 5 (the FK was the mechanism); a tombstone never fires the FK
+  // at all now, so the pragma cannot change the outcome and the case pins that.
+  it('with the pragma OFF, deleteFolder still tombstones the folder and unlinks explicitly', async () => {
     seedLiveRoutine();
     sqlite.exec('PRAGMA foreign_keys = OFF');
     expect(foreignKeysEnabled()).toBe(0);
 
     await queries.deleteFolder(LIVE_FOLDER_ID);
 
-    expect(folderExists(LIVE_FOLDER_ID)).toBe(false);
+    expect(tombstonedFolderExists(LIVE_FOLDER_ID)).toBe(true);
     expect(routineExists(LIVE_ROUTINE_ID)).toBe(true);
-    expect(routineFolderId(LIVE_ROUTINE_ID)).toBe(LIVE_FOLDER_ID); // dangling
+    expect(routineFolderId(LIVE_ROUTINE_ID)).toBeNull(); // explicit unlink, not the FK
   });
 });
