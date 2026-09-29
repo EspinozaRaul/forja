@@ -117,7 +117,7 @@ export default function RoutineDetailScreen() {
         data: { name: editName.trim(), description: editDescription.trim() || undefined },
       });
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('routine.detail.updateFailed'));
     }
   };
@@ -132,7 +132,7 @@ export default function RoutineDetailScreen() {
         targetReps: DEFAULT_TARGET_REPS,
       });
       setShowPicker(false);
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('routine.detail.addExerciseFailed'));
     }
   };
@@ -149,7 +149,7 @@ export default function RoutineDetailScreen() {
         });
       }
       setShowPicker(false);
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('routine.detail.addExercisesFailed'));
     }
   };
@@ -168,7 +168,7 @@ export default function RoutineDetailScreen() {
       try {
         await updateOrder.mutateAsync({ id: target.id, order: dragIndex + 1 });
         await updateOrder.mutateAsync({ id: source.id, order: index + 1 });
-      } catch (error) {
+      } catch {
         showAlert(t('common.error'), t('routine.detail.reorderFailed'));
       }
       setDragIndex(null);
@@ -182,7 +182,7 @@ export default function RoutineDetailScreen() {
     
     try {
       await replaceExercise.mutateAsync({ id: target.id, exerciseId: exercise.id });
-    } catch (error) {
+    } catch {
       showAlert(t('common.error'), t('routine.detail.replaceFailed'));
     }
     setReplaceIndex(null);
@@ -198,7 +198,7 @@ export default function RoutineDetailScreen() {
           await haptics.warning();
           await removeExerciseFromRoutine.mutateAsync(routineExerciseId);
           setDragIndex(null);
-        } catch (error) {
+        } catch {
           await haptics.error();
           showAlert(t('common.error'), t('routine.detail.removeExerciseFailed'));
         }
@@ -216,7 +216,7 @@ export default function RoutineDetailScreen() {
           await haptics.warning();
           await deleteRoutine.mutateAsync(routineId);
           router.back();
-        } catch (error) {
+        } catch {
           await haptics.error();
           showAlert(t('common.error'), t('routine.detail.deleteRoutineFailed'));
         }
@@ -260,7 +260,7 @@ export default function RoutineDetailScreen() {
       }
 
       router.push(`/session/${session[0].id}`);
-    } catch (error) {
+    } catch {
       await haptics.error();
       showAlert(t('common.error'), t('routine.detail.startSessionFailed'));
     }
