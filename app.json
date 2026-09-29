@@ -24,7 +24,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 14,
+      "versionCode": 15,
       "package": "com.espinoza21.fitnesstracker",
       "allowBackup": false,
       "blockedPermissions": [
