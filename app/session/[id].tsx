@@ -664,7 +664,9 @@ export default function SessionScreen() {
         bottomOffset={spacing.md + spacing.sm}
       >
         <View style={{ padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
+          {/* flexWrap lets the add control drop to its own line when it no longer
+              fits beside the heading; the heading keeps its size and is never truncated. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', rowGap: spacing.sm, marginBottom: spacing.sm + spacing.xs }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('session.exercises')}</Text>
             <TouchableOpacity
               onPress={() => setShowPicker(true)}
