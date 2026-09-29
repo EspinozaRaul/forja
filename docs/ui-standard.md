@@ -246,7 +246,7 @@ the principle, not copying its structure literally.
 **This is the target, not the state of the repo.** The divergences below were
 measured, not guessed, and each is its own migration work unit. `<Button>` is used
 27 times, and all 27 call sites choose a variant explicitly — none falls through to
-`primary`. The `compact` size is passed at 5 call sites. 31 files still mount a bare
+`primary`. The `compact` size is passed at 7 call sites. 31 files still mount a bare
 `TouchableOpacity` (129 tags in total) and 28 of them paint their own
 `backgroundColor`, so most buttons in the app are not the button. `borderRadius.md`
 (83), `.lg` (37) and `.full` (22) still compete for the same rectangular job. No
@@ -272,7 +272,7 @@ modals = 18
 buttonCallsites = 27
 buttonVariants = 27
 buttonVariantFallthroughs = 0
-buttonCompactCallsites = 5
+buttonCompactCallsites = 7
 pressables = 176
 pressableAuditDenominator = 33
 bareTouchableOpacityFiles = 31

@@ -160,6 +160,7 @@ export default function SessionSummaryScreen() {
           <Button
             title={isEditingNotes ? t('common.save') : t('common.edit')}
             variant="secondary"
+            compact
             onPress={() => {
               if (isEditingNotes) {
                 handleSaveNotes();
