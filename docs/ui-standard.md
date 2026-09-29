@@ -268,12 +268,12 @@ paragraph cannot go stale silently again.
 
 ```text
 <!-- ui-metrics:begin -->
-modals = 17
+modals = 18
 buttonCallsites = 27
 buttonVariants = 27
 buttonVariantFallthroughs = 0
 buttonCompactCallsites = 5
-pressables = 174
+pressables = 176
 pressableAuditDenominator = 33
 bareTouchableOpacityFiles = 31
 bareTouchableOpacityTags = 129
@@ -284,7 +284,7 @@ radiusFull = 22
 glyphActions = 0
 glyphAsciiCandidates = 0
 unlabelledInteractive = 0
-accessibilityLabelSites = 118
+accessibilityLabelSites = 119
 accessibilityHintSites = 35
 accessibilityHintKeys = 29
 roleHeaderOccurrences = 0

@@ -6,11 +6,12 @@ import path from 'node:path';
  * non-interactive card content must not bubble to the backdrop `Pressable` and
  * close the dialog.
  *
- * The dialogs are inline JSX in `app/session/[id].tsx`, not extractable
- * components, so the contract is asserted structurally against the source — the
- * same approach as `__tests__/components/routine-start-modal.test.ts`. The
- * reference implementation is the start-session modal in
- * `app/routine/[id].tsx`, whose card carries `accessible={false}` plus
+ * The dialogs are inline JSX in the session screens (`app/session/[id].tsx`
+ * and `app/session/history/[id].tsx`), not extractable components, so the
+ * contract is asserted structurally against the source — the same approach as
+ * `__tests__/components/routine-start-modal.test.ts`. The reference
+ * implementation is the start-session modal in `app/routine/[id].tsx`, whose
+ * card carries `accessible={false}` plus
  * `onPress={(e) => e.stopPropagation()}`.
  *
  * What this pins: the source arrangement — that a card rendered inside a
@@ -22,17 +23,28 @@ import path from 'node:path';
  */
 
 const ROOT = path.join(__dirname, '..', '..');
-const SCREEN = path.join(ROOT, 'app', 'session', '[id].tsx');
 
 /**
- * The three `<Modal>`s in the screen, identified by the state that opens each.
- * The superset-partner picker has no tappable backdrop today, so its check is
- * inert by design; it stays listed so the guard activates if that changes.
+ * The screens whose inline `<Modal>`s this guard covers, and the markers (the
+ * state that opens each) that identify them. The superset-partner picker has no
+ * tappable backdrop today, so its checks are inert by design; it stays listed so
+ * the guard activates if that changes.
  */
-const MODALS = [
-  { name: 'superset-partner picker', marker: 'visible={supersetPartnerMode !== null}' },
-  { name: 'routine-diff', marker: 'visible={showRoutineDiffModal}' },
-  { name: 'cancel/end confirm', marker: 'visible={confirmAction !== null}' },
+const SCREENS = [
+  {
+    label: 'app/session/[id].tsx',
+    path: path.join(ROOT, 'app', 'session', '[id].tsx'),
+    modals: [
+      { name: 'superset-partner picker', marker: 'visible={supersetPartnerMode !== null}' },
+      { name: 'routine-diff', marker: 'visible={showRoutineDiffModal}' },
+      { name: 'cancel/end confirm', marker: 'visible={confirmAction !== null}' },
+    ],
+  },
+  {
+    label: 'app/session/history/[id].tsx',
+    path: path.join(ROOT, 'app', 'session', 'history', '[id].tsx'),
+    modals: [{ name: 'save-as-routine', marker: 'visible={showSaveAsRoutine}' }],
+  },
 ] as const;
 
 /** Returns the JSX of the `<Modal>` opened by `marker`, or '' when not found. */
@@ -73,26 +85,37 @@ function hasTappableBackdrop(block: string): boolean {
 }
 
 describe('session modal dismissal', () => {
-  const src = fs.readFileSync(SCREEN, 'utf8');
+  for (const screen of SCREENS) {
+    const src = fs.readFileSync(screen.path, 'utf8');
 
-  for (const modal of MODALS) {
-    describe(modal.name, () => {
-      const block = modalBlock(src, modal.marker);
+    for (const modal of screen.modals) {
+      describe(`${screen.label} · ${modal.name}`, () => {
+        const block = modalBlock(src, modal.marker);
 
-      it('is found in the screen source', () => {
-        // Stops a renamed marker from silently disabling the guard below.
-        expect(block).not.toBe('');
+        it('is found in the screen source', () => {
+          // Stops a renamed marker from silently disabling the guard below.
+          expect(block).not.toBe('');
+        });
+
+        it('stops card taps from bubbling to the tappable backdrop', () => {
+          if (!hasTappableBackdrop(block)) {
+            // No tappable backdrop: a card tap cannot dismiss this dialog.
+            return;
+          }
+          const card = cardOpenTag(block);
+          expect(card).not.toBeNull();
+          expect(card).toContain('onPress={(e) => e.stopPropagation()}');
+        });
+
+        it('declares onRequestClose so the hardware back button dismisses it', () => {
+          if (!hasTappableBackdrop(block)) {
+            // No tappable backdrop: the dialog is not dismissible by tap, so the
+            // hardware-back contract is not asserted for it.
+            return;
+          }
+          expect(block).toContain('onRequestClose');
+        });
       });
-
-      it('stops card taps from bubbling to the tappable backdrop', () => {
-        if (!hasTappableBackdrop(block)) {
-          // No tappable backdrop: a card tap cannot dismiss this dialog.
-          return;
-        }
-        const card = cardOpenTag(block);
-        expect(card).not.toBeNull();
-        expect(card).toContain('onPress={(e) => e.stopPropagation()}');
-      });
-    });
+    }
   }
 });
