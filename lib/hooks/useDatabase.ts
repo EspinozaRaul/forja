@@ -20,7 +20,14 @@ export function useDatabase() {
         dbInitialized = true;
         if (!cancelled) setIsReady(true);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
+        const failure = e instanceof Error ? e : new Error(String(e));
+        // Logged in every build, not only under `__DEV__`, and here rather than in
+        // the screen that renders the failure. The release APK has no crash
+        // reporting and that screen carries no detail, so a dev-only log left a
+        // device failure with no trace at all — while a log inside the render body
+        // would re-fire on every re-render and make render impure.
+        console.error('Database initialization failed:', failure);
+        if (!cancelled) setError(failure);
       }
     }
 

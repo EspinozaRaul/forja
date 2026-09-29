@@ -2,6 +2,7 @@ import '../global.css';
 import '../lib/i18n';
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Text, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -14,6 +15,8 @@ import { useDatabase } from '../lib/hooks/useDatabase';
 import { useAuth } from '../lib/hooks/useAuth';
 import { colors, spacing, fontWeights, fonts } from '../lib/theme/tokens';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Screen } from '../components/ui/Screen';
 
 const queryClient = new QueryClient();
 
@@ -126,14 +129,20 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
 
   if (error) {
-    if (__DEV__) console.error('Database initialization failed:', error);
+    // `useDatabase` reports the failure and logs it in every build; this branch only
+    // renders it. The root is `<Screen>` so the message clears the status bar and the
+    // device insets, and `EmptyState` keeps it in the app's one failure look instead of
+    // growing a second one. It was a bare `View` with `className` before, and className
+    // is inert here: the message rendered at the top-left, on the Android window
+    // background, underneath the status bar.
     return (
-      <View className="flex-1 items-center justify-center bg-dark-bg p-6">
-        <Text className="text-lg font-semibold text-error mb-2">{t('common.databaseError')}</Text>
-        <Text className="text-sm text-dark-text-secondary text-center">
-          {t('common.databaseInitFailed')}
-        </Text>
-      </View>
+      <Screen>
+        <EmptyState
+          icon={<Ionicons name="alert-circle-outline" size={48} color={colors.error} />}
+          title={t('common.databaseError')}
+          message={t('common.databaseInitFailed')}
+        />
+      </Screen>
     );
   }
 
@@ -161,7 +170,7 @@ function FontInitializer({ children }: { children: React.ReactNode }) {
 
   if (!fontsLoaded && !fontError) {
     return (
-      <View className="flex-1 items-center justify-center bg-dark-bg">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg.primary }}>
         <ActivityIndicator size="large" color={colors.accent.primary} />
       </View>
     );

@@ -18,6 +18,13 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Local build credentials — SECRETS, never commit (see docs/release-runbook.md).
+# credentials.json carries the keystore passwords in clear text and credentials/ carries
+# the keystore itself. Both stay on this machine: that keystore is the identity of every
+# published APK, and without it an update can never be signed again.
+credentials.json
+/credentials/
+
 # Metro
 .metro-health-check*
 

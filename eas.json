@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 21.0.2",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -11,12 +11,14 @@
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "credentialsSource": "local",
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     "production": {
       "autoIncrement": true,
+      "credentialsSource": "local",
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }

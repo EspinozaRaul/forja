@@ -1,6 +1,6 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-27
+> Last updated: 2026-09-29
 > Status: `origin/main` is at `af8c436`; the 2026-09-20 session's fourteen units, the six-unit technical batch and the second eight-unit technical batch are all in `main`, and the database-integrity work is published as **PR #1** and not yet merged, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
@@ -230,6 +230,44 @@ Still true and unrelated to the keystore: `npx expo prebuild` **clears** `androi
 prints "Clearing android, ios"); it does not sync. Both are gitignored, so there is no repo diff, but
 anything hand-edited inside them is gone.
 
+### Resolved — v1.0.7 (the R8 pre-release) breaks on the device (2026-09-29)
+
+**The device test that item 1 of "Pending — your hands" asked for came back negative: v1.0.7
+installs and then shows the database-failure screen, so the app never reaches a screen.** The build
+under test is the published one, identified against this file's own recorded hash instead of by
+filename:
+
+- `build-1789353271236.apk` →
+  `sha256 = 3116c29aa556fada55adb9391db0e49808c1881929c31e053f8be9858e6b96e2`, the v1.0.7 asset hash
+  recorded in the keystore section above. `aapt2` reports `versionCode 5`, `versionName 1.0.7`,
+  82.4 MiB — the 82.5 MB of the release table.
+- The JS is **not** the variable: `assets/index.android.bundle` is byte-identical in v1.0.6
+  (`build-1789352343523.apk`) and v1.0.7 —
+  `sha256 = 23898b93f64fd3e50ab0d7f63fb2455da204bff7c0c5a3ae9e36688e2d670d01` in both. Between those two
+  commits only `app.json` changed: `fa73a99` added `enableMinifyInReleaseBuilds` +
+  `enableShrinkResourcesInReleaseBuilds`.
+- So the regression sits in the R8-minified native layer. **The exact break is still unproven**:
+  neither the device's `logcat` nor the R8 `mapping.txt` exists (section 4 already records that the
+  mapping dies with EAS's temp directory), and no emulator is installed locally to reproduce it.
+
+**Response, following the pre-recorded decision in item 1: the R8 commit is reverted.** `app.json`
+drops both flags and `expo.version` goes 1.0.7 → 1.0.8. `android/gradle.properties` was flipped to
+`false` by hand as well, because a stale generated copy would otherwise keep R8 on for a local
+`./gradlew assembleRelease`.
+
+**Still unverified:** whether v1.0.8 starts on the phone. If it does, R8 is confirmed and the flags
+stay off until someone adds keep rules and re-verifies on a device. If it does not, the fault is the
+database the phone already has rather than the build, and the next step is `logcat` on the device.
+
+**Found while diagnosing it, and closed with it:** that failure screen styled itself with
+`className`, which is inert in this app — no `babel.config.js` and no `metro.config.js`, so NativeWind
+never reaches the bundle (`react-native-css-interop` appears 0 times in the exported bundle against
+3534 `node_modules` paths). The message rendered at the top-left, on the Android window background,
+under the status bar. The screen is now `<Screen>` + `<EmptyState>` over the token layer, the failure
+is logged in every build instead of only under `__DEV__` (with a test whose negative control fails
+when the guard comes back), and `docs/ui-standard.md` §4 names the trap. **Still open:** the other 25
+`className` props in 8 files are dead and remain backlog.
+
 ### Still unverified
 
 1. **The Supabase redirect allowlist must cover `forja://reset-password`.** No repo file can prove
@@ -259,7 +297,7 @@ anything hand-edited inside them is gone.
 | Hygiene | `.bak` (1211 lines), 29 unused imports, 23 dead constants/tokens, 99 dead i18n keys removed; the parity guard now catches more (525 → 562 keys) | Commit `f31106e`, and the missing `session.exerciseCount` it found |
 | Visible quality | `QueryState` for loading/failure/empty with retry on 17 screens; contrast brought to AA with role tokens (`text.onAccent`, `errorStrong`); 124 unlabelled interactive elements → 0, plus every TextInput | `QueryState.test.tsx`, `interactive-elements.test.ts`, measured contrast pairs |
 | Animations | 1324 exercise GIFs converted to MP4 (122.8 MB → 10.7 MB), bundled so they work offline, no longer dependent on a third-party GitHub repo | `scripts/convert-exercise-gifs.sh`, the guard test, and the APK contents |
-| Release | `preview` now increments the version code (root cause of 21 APKs all reporting `versionCode=2`); x86/x86_64 native libs dropped; R8 enabled; releases published | `aapt2`/`apksigner` on the artifact: 145 MB → 93.5 MB → 82.5 MB, certificate unchanged |
+| Release | `preview` now increments the version code (root cause of 21 APKs all reporting `versionCode=2`); x86/x86_64 native libs dropped; R8 enabled in v1.0.7 and **reverted in v1.0.8** after it broke at runtime on the device; releases published | `aapt2`/`apksigner` on the artifact: 145 MB → 93.5 MB → 82.5 MB, certificate unchanged; the v1.0.7 break: a byte-identical JS bundle against v1.0.6, and the device screen |
 
 Current state (2026-09-17), per branch:
 
@@ -301,8 +339,11 @@ The two branches are split on purpose — together their diffs exceed the 400-li
 
 ## 3. Pending — your hands
 
-1. **Test v1.0.7 on the phone** (the R8 pre-release). If it holds up, say so and it gets promoted to
-   Latest; if something breaks, revert the R8 commit and rebuild. Checklist is in the release notes.
+1. **Test v1.0.8 on the phone** (the R8 revert). v1.0.7 was tested on 2026-09-29 and failed — the
+   database screen, never the app — so the flags are off and this build is the confirmation. If it
+   holds up, say so and it gets promoted to Latest; if it fails too, the fault is the phone's
+   database and the next step is `logcat`. Hashes and reasoning: "Resolved — v1.0.7 (the R8
+   pre-release) breaks on the device".
 2. **Run the three SQL scripts in Supabase**, in the order the schema file's own header documents
    (`supabase-schema.sql` → `create-delete-account-rpc.sql` → `import-exercises.sql`), then the three
    control queries. Nothing has ever been executed, so the first run is the real verification.

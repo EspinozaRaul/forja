@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
-> Last updated: 2026-09-21
-> Status: v1.4 (Layout foundation + query states + modal containment + action roles)
+> Last updated: 2026-09-29
+> Status: v1.5 (Layout foundation + query states + modal containment + action roles + className is not a styling source)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -79,6 +79,14 @@ Contrast is checkable without a device: compute the ratio from the two token val
 (relative luminance, then `(L1+0.05)/(L2+0.05)`). Text needs 4.5:1, or 3:1 when it is
 large (≥18pt, or ≥14pt bold). Anything that is not text — an icon, a border, a chart line —
 needs 3:1.
+
+**`className` is not a styling source in this app.** There is no `babel.config.js` and no
+`metro.config.js`, so NativeWind's runtime never reaches the bundle — `react-native-css-interop`
+appears **zero** times in the exported bundle, against 3534 `node_modules` paths. Every `className`
+prop is a dead string that reads like styling and does nothing. Style with `style` and the tokens
+above. This is how the database-failure screen in `app/_layout.tsx` rendered its message at the
+top-left, under the status bar, on the Android window background instead of centred on
+`bg.primary`: the props were there, the styles were not.
 
 ## 5. Every user-facing string goes through i18n
 
