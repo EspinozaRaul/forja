@@ -1,7 +1,7 @@
 # ui-aesthetic-pass
 
-**Status**: **IN PROGRESS — Slice 1 in flight.** The design review is done and verified (Engram #562); this
-document tracks the implementation. Branch: to be created from `main` (`6010c6d` at the time of writing).
+**Status**: **IN PROGRESS — Slice 1 LANDED on `feat/ui-legibility` (`ad2af48`).** Branched from `main`
+(`6010c6d`). Gate: 66 suites / 566 tests.
 
 **Why**: the user wants to improve the app's aesthetics. The review — done with the `apple-design` skill, its HIG
 references and the app's own `docs/ui-standard.md` — says the aesthetics are **not** the problem: Forja has a real
@@ -36,7 +36,15 @@ places**; the session-row chips carry `paddingVertical: spacing.xxs` (1 pt) at 1
 
 ---
 
-## Slice 1 — the legibility floor (spec)
+## Slice 1 — the legibility floor — LANDED (`ad2af48`)
+
+Gate: `npx tsc --noEmit` exit 0 · `npx jest` **66 suites / 566 tests**. Parent negative control: reverting
+`tag.equipmentText` fails its case; `tokens.ts` byte-identical after revert.
+
+**One thing the implementation flagged for Slice 2**: `app/(tabs)/index.tsx:212`, the workout-count numeral
+(24 pt, accent on `bg.elevated`), measures **2.94:1** — it misses even the 3:1 large-text allowance, by 0.06. It
+was left as accent because the guard says display numerals stay accent; it belongs with the tab-bar tint (the same
+2.94 pair) in Slice 2.
 
 **Goal**: no information-carrying text below 4.5:1, and no token below the 11 pt minimum. Token-level, plus two
 call sites.
