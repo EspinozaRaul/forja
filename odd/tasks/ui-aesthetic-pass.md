@@ -74,13 +74,40 @@ Negative control: revert one token and watch the case fail.
 
 ---
 
-## Slice 2 — targets and the tab bar (next, not in this slice)
+## Slice 2 — targets and the tab bar — IN FLIGHT
 
-- Tab bar: active tint `accent.primary` → a lighter steel that clears 5:1 (candidates: `#7A9AB5` 6.32,
-  `#93B8D9` 8.96); the selected tab must not be the least legible element. Filled icons consistently
-  (`app/(tabs)/_layout.tsx`).
-- Session-row chips: height and/or `hitSlop` to reach the 28 pt minimum (44 preferred), with spacing
-  (`components/session/SessionExerciseItem.tsx:436,446`).
+**Verified before writing** (computed from the tokens):
+
+| Pair | Ratio | Verdict |
+| --- | --- | --- |
+| tab active `accent.primary` on `bg.primary` | 3.65 | below the 4.5 the 11 pt label needs, and **below** the inactive `text.muted` 5.83 |
+| `accent.light #8FB3D4` on `bg.primary` | **8.49** | the candidate |
+| workouts numeral, `accent.primary` on `bg.elevated` | **2.94** | fails the 3:1 large-text floor |
+| `accent.light` on `bg.elevated` | **6.85** | the candidate |
+| warning / success / error / ember numerals on `bg.elevated` | 6.07 / 4.86 / 4.29 / 4.55 | all pass — only the accent fails |
+
+**A false positive, refuted:** the review claimed the tab icons mix filled and outline. They do not — Ionicons
+exposes `home`/`home-outline`, `list`/`list-outline`, `bar-chart`/`bar-chart-outline`, and the code uses `home`,
+`list`, `bar-chart`, i.e. the non-outline forms already. **No icon change.**
+
+**Changes**
+
+- `lib/theme/tokens.ts`: add `accent.light: '#8FB3D4'` — the accent light enough to be *text* and large numerals
+  on elevated surfaces (8.49:1 on `bg.primary`, 6.85:1 on `bg.elevated`). The dark `accent.primary` stays for
+  surfaces, borders and filled buttons, where it is not carrying text.
+- `app/(tabs)/_layout.tsx`: `tabBarActiveTintColor` → `accent.light`, so the selected tab is the most legible
+  element in the bar instead of the least.
+- `app/(tabs)/index.tsx`: the workouts numeral (24 pt) → `accent.light`.
+- `components/session/SessionExerciseItem.tsx`: the superset and rest chips must reach the **28 pt minimum** touch
+  target (HIG `accessibility.md › Mobility`). They render ~15 pt tall today at 11 pt text with no `hitSlop`.
+  Prefer `hitSlop` over padding so the visual does not change, and keep the horizontal slop small enough that the
+  adjacent controls (the row's `gap: spacing.xs` = 4) do not overlap.
+
+**Test**: extend `__tests__/lib/theme/contrast-floor.test.ts` — `accent.light` on `bg.primary` and on
+`bg.elevated` both clear 4.5:1.
+
+**Allowed edit surfaces**: `lib/theme/tokens.ts`, `app/(tabs)/_layout.tsx`, `app/(tabs)/index.tsx`,
+`components/session/SessionExerciseItem.tsx`, `__tests__/lib/theme/contrast-floor.test.ts`.
 
 ---
 
