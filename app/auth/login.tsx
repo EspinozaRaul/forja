@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,11 @@ import { authErrorMessageKey } from '../../lib/auth/auth-error-message';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
+
+// The eye toggle is an absolutely-positioned icon over the password field, so
+// the field reserves this footprint on the right. The icon does not scale with
+// the OS text size, so the reserve is fixed and the value can never run under it.
+const PASSWORD_TOGGLE_ICON_SIZE = 20;
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -61,7 +66,11 @@ export default function LoginScreen() {
 
   return (
     <>
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <View style={styles.emberDot} />
@@ -123,7 +132,7 @@ export default function LoginScreen() {
           >
             <Ionicons
               name={showPassword ? 'eye-off' : 'eye'}
-              size={20}
+              size={PASSWORD_TOGGLE_ICON_SIZE}
               color={colors.text.muted}
             />
           </TouchableOpacity>
@@ -173,7 +182,7 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
     <ConfirmDialog
       visible={dialog.visible}
       title={dialog.title}
@@ -192,6 +201,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg.primary,
+  },
+  // `flexGrow: 1` keeps the content centred while it fits and lets it scroll
+  // once it is taller than the viewport, so no end of the column is clipped.
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: spacing.lg,
   },
@@ -282,6 +296,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     borderWidth: 0,
+    // `right: spacing.md` + `spacing.xs` of button padding + the icon + a gap.
+    paddingRight: spacing.md + spacing.xs + PASSWORD_TOGGLE_ICON_SIZE + spacing.xs * 2,
   },
   toggleButton: {
     position: 'absolute',
