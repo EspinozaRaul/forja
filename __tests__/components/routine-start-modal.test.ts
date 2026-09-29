@@ -15,8 +15,8 @@ import path from 'node:path';
  * NOT which node happens to scroll. So the properties pinned here are:
  *   1. the card is height-bounded by the shared `MODAL.MAX_HEIGHT`,
  *   2. there is exactly ONE scroll region, and it is the exercise box — the only
- *      content that grows — with `MODAL.MAX_BODY_HEIGHT` on its container and
- *      `flexShrink: 1` on the box itself,
+ *      content that grows — carrying both `MODAL.MAX_BODY_HEIGHT` and
+ *      `flexShrink: 1` ON THE SCROLLING NODE ITSELF,
  *   3. the title and the message are fixed chrome above it,
  *   4. both actions render after it, stacked rather than sharing a row.
  *
@@ -75,16 +75,22 @@ describe('start-session modal containment', () => {
     expect(block.match(/<\/ScrollView>/g)?.length).toBe(1);
   });
 
-  it('scrolls the exercise list inside its own bounded box', () => {
-    expect(exerciseBox(block)).toMatch(/maxHeight:\s*MODAL\.MAX_BODY_HEIGHT/);
-    expect(scrollViewOpenTag(block)).toMatch(/flexShrink:\s*1\b/);
+  it('bounds the scroll region itself, not a wrapper around it', () => {
+    // The assertion that would have caught what shipped as v1.0.8 (code 14): the cap
+    // sat on the wrapper, so the ScrollView measured its own content, had nothing to
+    // overflow, did not scroll, and the wrapper clipped it instead.
+    expect(scrollViewOpenTag(block)).toMatch(/maxHeight:\s*MODAL\.MAX_BODY_HEIGHT/);
   });
 
-  it('lets the box shrink so the actions stay on screen on a short viewport', () => {
+  it('lets the scroll region shrink so the actions stay on screen on a short viewport', () => {
     // The card's bound plus this shrink are what keep the actions reachable at the
     // largest accessibility text size. It is load-bearing on its own, so it gets
     // its own assertion: removing it must fail here, not pass silently.
-    expect(exerciseBox(block)).toMatch(/flexShrink:\s*1\b/);
+    expect(scrollViewOpenTag(block)).toMatch(/flexShrink:\s*1\b/);
+  });
+
+  it('scrolls the exercise list inside the box', () => {
+    expect(exerciseBox(block)).toContain('routine.detail.lastSession');
   });
 
   it('keeps both actions after the scroll region', () => {

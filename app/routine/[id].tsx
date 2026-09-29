@@ -482,10 +482,15 @@ export default function RoutineDetailScreen() {
             </Text>
             {lastSession && (
               <View
-                style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.sm + spacing.xs, flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT, marginBottom: spacing.md }}
+                style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.sm + spacing.xs, flexShrink: 1, marginBottom: spacing.md }}
               >
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
-                <ScrollView style={{ flexShrink: 1 }}>
+                {/* The bound belongs on the scrolling node itself. `maxHeight` on the
+                    wrapper above does not bound this view: without a cap of its own a
+                    ScrollView measures its content, so nothing overflows, nothing
+                    scrolls, and the wrapper clips what does not fit. v1.0.8 (code 14)
+                    shipped that way and did not scroll. */}
+                <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
                   {lastSession.exercises?.map((se) => {
                     const unit = resolveUnit(
                       allExercises?.find((e) => e.id === se.exerciseId)?.unit ?? null,

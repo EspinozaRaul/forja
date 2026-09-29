@@ -162,12 +162,20 @@ they cannot confirm and they cannot dismiss.
 
 - **Only the action row is outside the scroll region, and there is exactly one
   region.** It is the container whose content actually varies — the list's box — and
-  it carries `flexShrink: 1` plus, as a secondary limit, a `maxHeight` of
-  `MODAL.MAX_BODY_HEIGHT`. The title and the message are fixed chrome above it.
+  **both** its `flexShrink: 1` and its `maxHeight` of `MODAL.MAX_BODY_HEIGHT` sit on
+  the scrolling node itself. The title and the message are fixed chrome above it.
   Containment comes from the card's own `maxHeight` plus that `flexShrink`: when the
   content does not fit, the box is the node that gives up height, so the actions keep
   theirs. The body cap only limits how tall the box grows on a tall screen; it is not
   a containment proof.
+- **The bound must be on the scrolling node, not on a wrapper.** A `maxHeight` on the
+  wrapper around a `ScrollView` does not bound the `ScrollView` inside it: with no cap
+  of its own it measures its content, so nothing overflows and nothing scrolls — and
+  the wrapper, whose overflow is hidden, clips whatever does not fit. The result
+  looks right in a screenshot and cannot be scrolled, and no static test sees it:
+  v1.0.8 (code 14) shipped exactly that. The cap moved onto the `ScrollView` in
+  v1.0.8 (code 15), and `__tests__/components/routine-start-modal.test.ts` now holds
+  that one property, which is as far as a structural test can go for this defect.
 - **One region, not two.** A second scroll view of the same orientation inside the
   first is the interaction `scroll-views.md › Best practices` warns against ("Avoid
   putting a scroll view inside another scroll view with the same orientation"), and a
@@ -329,7 +337,8 @@ catalogueKeysEn = 682
       (failure always offers a retry) — never a bare `!data` fallback
 - [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), **only its actions** sit
       outside the single scroll region, and that region is the container whose content
-      varies — bounded by `MODAL.MAX_BODY_HEIGHT` and carrying `flexShrink: 1`
+      varies — with `MODAL.MAX_BODY_HEIGHT` and `flexShrink: 1` **on the scrolling node
+      itself**, never on a wrapper
 - [ ] Tapping outside a modal dismisses it: the backdrop is a `Pressable` with a
       translated label and role, and the card swallows the tap (`stopPropagation`)
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green
