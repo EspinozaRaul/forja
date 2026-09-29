@@ -111,6 +111,37 @@ exposes `home`/`home-outline`, `list`/`list-outline`, `bar-chart`/`bar-chart-out
 
 ---
 
+## Slice 3 — `accent.secondary` must not carry text — IN FLIGHT
+
+**Found by the parent's systematic sweep** (every text token against every background token), which the review
+missed: `accent.secondary #3A587F` is used as a **text colour** in three places at 13 pt, and it measures
+**2.06–2.56:1 on every background** — below even 3:1.
+
+| Site | Background | Ratio |
+| --- | --- | --- |
+| `app/routine/create.tsx:223` — the "last weight" label | `bg.card` / `bg.active` | **2.30 / 2.12** |
+| `components/DropSetLogger.tsx:176` — the `+` glyph | `bg.card` | **2.30** |
+| `components/DropSetLogger.tsx:451` — the `addDropText` style | `bg.card` | **2.30** |
+
+`accent.secondary` is a **surface/border** accent, not a text colour. `errorStrong` was checked and is clean: it
+is used only as `backgroundColor`, which is its documented role.
+
+**Changes**
+
+- The three text sites move to `colors.text.link` (the steel-blue text role: 5.68:1 on `bg.card`, 5.25:1 on
+  `bg.active`).
+- `lib/theme/tokens.ts`: the `accent.secondary` comment says explicitly that it is for surfaces and borders and
+  must not carry text, with its measured ratio.
+- `__tests__/lib/theme/contrast-floor.test.ts`: a **static** case that scans `app/` and `components/` and fails on
+  any `color: colors.accent.secondary` or `color: colors.errorStrong` — the durable guard, since a contrast
+  assertion cannot catch a token that is simply not allowed to be text. `backgroundColor:`/`borderColor:` uses stay
+  legal.
+
+**Allowed edit surfaces**: `lib/theme/tokens.ts`, `app/routine/create.tsx`, `components/DropSetLogger.tsx`,
+`__tests__/lib/theme/contrast-floor.test.ts`.
+
+---
+
 ## Recorded, deliberately not here
 
 - **The large-text unit (Obs-06)** is already tracked in `odd/tasks/ux-corrections-batch.md` with its own
