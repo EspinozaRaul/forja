@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,11 +27,21 @@ import { summarizeSets } from '../../lib/utils/session-summary';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../lib/hooks/useConfirmDialog';
 
+// The OS starts reporting the accessibility text sizes around 1.3. Below it the
+// two header pills keep their labels; at or above it they render icon-only (the
+// icon is already there, and the pill keeps its accessibilityLabel) so two
+// labelled pills cannot squeeze the screen title — which truncates by design —
+// to nothing. This mirrors what the platform does with toolbar items at
+// accessibility sizes.
+const HEADER_ACTION_LABEL_MAX_FONT_SCALE = 1.3;
+
 export default function RoutineDetailScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  const showHeaderActionLabels = fontScale < HEADER_ACTION_LABEL_MAX_FONT_SCALE;
   const routineId = parseInt(id, 10);
 
   if (isNaN(routineId)) {
@@ -302,19 +312,23 @@ export default function RoutineDetailScreen() {
                 onPress={handleStartEdit}
                 accessibilityRole="button"
                 accessibilityLabel={t('common.edit')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.accent.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.accent.primary, paddingHorizontal: showHeaderActionLabels ? spacing.md : spacing.sm, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
               >
                 <Ionicons name="create-outline" size={16} color={colors.text.onAccent} />
-                <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.edit')}</Text>
+                {showHeaderActionLabels && (
+                  <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.edit')}</Text>
+                )}
               </Pressable>
               <Pressable
                 onPress={handleDeleteRoutine}
                 accessibilityRole="button"
                 accessibilityLabel={t('common.delete')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.errorStrong, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.errorStrong, paddingHorizontal: showHeaderActionLabels ? spacing.md : spacing.sm, paddingVertical: spacing.sm, borderRadius: borderRadius.full }}
               >
                 <Ionicons name="trash-outline" size={16} color={colors.text.onAccent} />
-                <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.delete')}</Text>
+                {showHeaderActionLabels && (
+                  <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.onAccent }}>{t('common.delete')}</Text>
+                )}
               </Pressable>
             </View>
           )
@@ -343,7 +357,9 @@ export default function RoutineDetailScreen() {
 
       {/* Exercises List */}
       <View style={{ backgroundColor: colors.bg.card, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border.primary }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm + spacing.xs }}>
+        {/* flexWrap lets the button drop to its own line when it no longer fits
+            beside the heading; the heading keeps its size and is never truncated. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', rowGap: spacing.sm, marginBottom: spacing.sm + spacing.xs }}>
           <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{t('routine.detail.exercises')}</Text>
           <Button title={t('routine.detail.addExercise')} variant="secondary" compact onPress={() => setShowPicker(true)} />
         </View>

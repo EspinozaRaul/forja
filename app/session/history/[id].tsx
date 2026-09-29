@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -160,6 +160,7 @@ export default function SessionSummaryScreen() {
           <Button
             title={isEditingNotes ? t('common.save') : t('common.edit')}
             variant="secondary"
+            compact
             onPress={() => {
               if (isEditingNotes) {
                 handleSaveNotes();
@@ -259,32 +260,45 @@ export default function SessionSummaryScreen() {
       <View style={{ height: spacing.xxl }} />
     </ScrollView>
 
-    {/* Save as Routine Modal — outside ScrollView to prevent clipping */}
-    {showSaveAsRoutine && (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg, zIndex: 1000 }}>
-        <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: MODAL.MAX_WIDTH, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
-          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
-            {t('session.history.saveAsRoutine')}
-          </Text>
-          <TextInput
-            style={{
-              backgroundColor: colors.bg.elevated,
-              borderWidth: borderWidths.thin,
-              borderColor: colors.border.primary,
-              borderRadius: borderRadius.sm,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
-              fontSize: fontSizes.md,
-              color: colors.text.primary,
-              marginBottom: spacing.md,
-            }}
-            value={routineName}
-            onChangeText={setRoutineName}
-            placeholder={t('session.history.routineNamePlaceholder')}
-            placeholderTextColor={colors.text.muted}
-            accessibilityLabel={t('routine.create.nameLabel')}
-            autoFocus
-          />
+    {/* Save as Routine Modal — a real modal: a bounded card, a scrollable body
+        (title + input) and the action row outside the scroll (§8). */}
+    <Modal
+      accessible={true}
+      visible={showSaveAsRoutine}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowSaveAsRoutine(false)}
+    >
+      <Pressable
+        onPress={() => setShowSaveAsRoutine(false)}
+        accessibilityLabel={t('accessibility.common.close')}
+        accessibilityRole="button"
+        style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}
+      >
+        <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: MODAL.MAX_WIDTH, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
+          <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT, marginBottom: spacing.md }} keyboardShouldPersistTaps="handled">
+            <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md, textAlign: 'center' }}>
+              {t('session.history.saveAsRoutine')}
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.bg.elevated,
+                borderWidth: borderWidths.thin,
+                borderColor: colors.border.primary,
+                borderRadius: borderRadius.sm,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm,
+                fontSize: fontSizes.md,
+                color: colors.text.primary,
+              }}
+              value={routineName}
+              onChangeText={setRoutineName}
+              placeholder={t('session.history.routineNamePlaceholder')}
+              placeholderTextColor={colors.text.muted}
+              accessibilityLabel={t('routine.create.nameLabel')}
+              autoFocus
+            />
+          </ScrollView>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <TouchableOpacity
               onPress={() => setShowSaveAsRoutine(false)}
@@ -305,9 +319,9 @@ export default function SessionSummaryScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    )}
+        </Pressable>
+      </Pressable>
+    </Modal>
 
     <ConfirmDialog
       visible={dialog.visible}
@@ -339,13 +353,13 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
 
   return (
     <View style={{ marginBottom: spacing.lg }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-        <TouchableOpacity onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)} accessibilityRole="link">
-          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, marginBottom: spacing.sm }}>
+        <TouchableOpacity style={{ flexShrink: 1 }} onPress={() => router.push(`/exercise/${sessionExercise.exerciseId}`)} accessibilityRole="link">
+          <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.accent.primary, flexShrink: 1 }}>
             {exercise ? getExerciseName(exercise.name, i18n.language) : t('session.unknownExercise')}
           </Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted }}>
+        <Text style={{ fontSize: fontSizes.sm, color: colors.text.muted, flexShrink: 0 }}>
           {completedSets.length} {t('session.sets')} • {formatVolume(totalVolume, unit)}
         </Text>
       </View>
@@ -356,14 +370,16 @@ function SessionExerciseSummary({ sessionExercise }: { sessionExercise: SessionE
               key={set.id}
               style={{
                 flexDirection: 'row',
+                alignItems: 'center',
                 justifyContent: 'space-between',
+                gap: spacing.sm,
                 paddingVertical: spacing.xs,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border.primary,
               }}
             >
-              <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
-              <Text style={{ fontSize: fontSizes.md, color: colors.text.primary }}>
+              <Text style={{ fontSize: fontSizes.md, color: colors.text.secondary, flexShrink: 1 }}>{t('session.history.setNumber', { number: set.setNumber })}</Text>
+              <Text style={{ fontSize: fontSizes.md, color: colors.text.primary, flexShrink: 1 }}>
                 {set.reps ?? '-'} {t('session.reps')} × {formatWeight(set.weight, unit)}
               </Text>
               <Ionicons

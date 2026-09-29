@@ -168,7 +168,7 @@ export default function CreateRoutineScreen() {
       <View style={{ marginBottom: spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
           <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.secondary }}>{t('routine.create.exercises')}</Text>
-          <Button title={t('routine.create.addExercise')} variant="secondary" onPress={() => setShowPicker(true)} />
+          <Button title={t('routine.create.addExercise')} variant="secondary" compact onPress={() => setShowPicker(true)} />
         </View>
 
         {dragIndex !== null && (

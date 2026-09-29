@@ -16,6 +16,14 @@ import { haptics } from '../../../lib/utils/haptics';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../../../lib/hooks/useConfirmDialog';
 
+// The screen's card surface, shared by the folder description and the routine rows so
+// a new card reuses the existing styling instead of restating it.
+const cardStyle = {
+  backgroundColor: colors.bg.card,
+  borderRadius: borderRadius.lg,
+  padding: spacing.md + spacing.xs,
+};
+
 export default function FolderDetailScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -157,21 +165,23 @@ export default function FolderDetailScreen() {
   return (
     <>
     <View style={{ flex: 1, backgroundColor: colors.bg.primary }}>
-      {/* Header */}
+      {/* Header — fixed chrome, so it carries only fixed-height content: the back
+          arrow, the folder name and the action row. The description is variable-length
+          text and lives in the scroll body below; leaving it here would subtract its
+          grown height from the scroll area at accessibility text sizes. */}
       <View style={{ backgroundColor: colors.bg.card, paddingTop: insets.top + spacing.sm + spacing.xs, paddingBottom: spacing.sm + spacing.xs, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.primary }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: spacing.sm + spacing.xs }} hitSlop={8} accessibilityLabel={t('accessibility.common.back')} accessibilityRole="button">
             <Ionicons name="arrow-back" size={24} color={colors.accent.primary} />
           </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
-            </View>
-            {folder.description && (
-              <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginTop: spacing.xs }}>{folder.description}</Text>
-            )}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            {/* flexShrink lets a long name wrap inside its column instead of
+                overflowing the header. */}
+            <Text style={{ flexShrink: 1, fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{folder.name}</Text>
           </View>
-          <View style={{ flexDirection: 'row' }}>
+          {/* flexShrink: 0 keeps the actions at their intrinsic size: the name yields
+              and wraps, the Edit / Delete row is never pushed off-screen. */}
+          <View style={{ flexDirection: 'row', flexShrink: 0, marginLeft: spacing.sm }}>
             <TouchableOpacity onPress={handleEditFolder} style={{ padding: spacing.sm, marginRight: spacing.xs }} accessibilityRole="button">
               <Text style={{ fontSize: fontSizes.sm, color: colors.text.link, fontFamily: fonts.bodyMedium }}>{t('common.edit')}</Text>
             </TouchableOpacity>
@@ -184,6 +194,14 @@ export default function FolderDetailScreen() {
 
       {/* Routine List */}
       <ScrollView style={{ flex: 1, padding: spacing.md }}>
+        {/* The folder description scrolls with the body, as the first card above the
+            routine list, following the screen's card styling. */}
+        {folder.description ? (
+          <View style={[cardStyle, { marginBottom: spacing.sm + spacing.xs }]}>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary }}>{folder.description}</Text>
+          </View>
+        ) : null}
+
         {!routines || routines.length === 0 ? (
           <EmptyState
             title={t('routine.folder.emptyTitle')}
@@ -198,7 +216,7 @@ export default function FolderDetailScreen() {
                 accessibilityRole="button"
                 style={{ marginBottom: spacing.sm + spacing.xs }}
               >
-                <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.md + spacing.xs, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={[cardStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary }}>{routine.name}</Text>
                     {routine.description && (

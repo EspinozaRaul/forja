@@ -66,7 +66,7 @@ export function SupersetSetRow({ set, label, unit, previousWeight = null, previo
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }}>
-      <Text numberOfLines={1} style={{ width: 64, fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.muted }}>
+      <Text style={{ minWidth: 64, flexShrink: 1, fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.muted }}>
         {label}
       </Text>
       <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, alignItems: 'center' }}>
