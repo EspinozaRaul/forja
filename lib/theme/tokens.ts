@@ -56,8 +56,8 @@ export const colors = {
   tag: {
     muscle: '#22344A',    // muscle group tag background (steel blue family)
     equipment: '#1F332C', // equipment tag background (sage family)
-    text: '#7A9AB5',      // tag text color
-    equipmentText: '#6E9C8A',
+    text: '#8FB3D4',      // tag text color — 5.77:1 on tag.muscle (was #7A9AB5, 4.29:1)
+    equipmentText: '#82A896', // 5.10:1 on tag.equipment (was #6E9C8A, 4.33:1)
   },
   // Chart colors
   chart: {
@@ -110,8 +110,10 @@ export const fonts = {
 };
 
 export const fontSizes = {
-  xxs: 9,
-  xs2: 10,
+  // 11 pt is the HIG floor for information-carrying text: xxs and xs2 were 9 and
+  // 10, both below it, and both carry real labels.
+  xxs: 11,
+  xs2: 11,
   xs: 11,
   sm: 13,
   md: 15,

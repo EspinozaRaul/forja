@@ -391,7 +391,7 @@ export function RestTimer({
         <Text style={{ color: colors.text.primary, fontFamily: fonts.bodySemiBold, fontSize: fontSizes.sm}}>-{TIMER_CONFIG.REST_ADJUST_STEP}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', flex: 1 }}>
-        <Text style={{ fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, color: colors.accent.primary, marginBottom: spacing.xxs }}>{t('restTimer.rest')}</Text>
+        <Text style={{ fontSize: fontSizes.xxs, fontFamily: fonts.bodySemiBold, color: colors.text.link, marginBottom: spacing.xxs }}>{t('restTimer.rest')}</Text>
         <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
           {formatCountdown(remaining)}
         </Text>
