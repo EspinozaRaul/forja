@@ -35,6 +35,11 @@ export const colors = {
     // surfaces, borders and filled buttons, where it is a background and not
     // load-bearing text.
     light: '#8FB3D4',
+    // Surface/border accent only — it must NOT carry text. As text it measures
+    // 2.06-2.56:1 on every background token (2.30:1 on bg.card, 2.12:1 on
+    // bg.active), below even the 3:1 non-text floor and far below the 4.5:1
+    // small text needs. Use `text.link` (5.68:1 on bg.card, 5.25:1 on bg.active)
+    // for accent-coloured text.
     secondary: '#3A587F',
     muted: 'rgba(74, 111, 165, 0.15)',
   },

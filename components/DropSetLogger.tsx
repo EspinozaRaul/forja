@@ -173,7 +173,7 @@ export function DropSetLogger({
 
           {/* Add drop */}
           <TouchableOpacity onPress={onAddDrop} style={styles.addDropButton} accessibilityLabel={t('accessibility.dropActions.addDrop')} accessibilityRole="button" accessibilityHint={t('accessibility.dropActions.addDropHint')}>
-            <Text style={{ fontSize: fontSizes.sm, color: colors.accent.secondary }}>+</Text>
+            <Text style={{ fontSize: fontSizes.sm, color: colors.text.link }}>+</Text>
             <Text style={styles.addDropText}>{t('session.dropSet.addUnit', { unit: unitLabel })}</Text>
           </TouchableOpacity>
         </View>
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxs,
   },
   addDropText: {
-    fontSize: fontSizes.sm, color: colors.accent.secondary,
+    fontSize: fontSizes.sm, color: colors.text.link,
     fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
   },
   // --- Swipeable delete ---
