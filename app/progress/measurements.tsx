@@ -80,7 +80,7 @@ function MeasurementInput({
           textAlign: 'right',
         }}
       />
-      <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.muted, width: 30 }}>
+      <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.muted, minWidth: 30 }}>
         {field.unit}
       </Text>
     </View>

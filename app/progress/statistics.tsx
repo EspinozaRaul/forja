@@ -301,12 +301,17 @@ export default function StatisticsScreen() {
                   fontSize: fontSizes.sm, 
                   fontFamily: fonts.bodyMedium, 
                   color: colors.text.muted,
-                  width: 20,
+                  minWidth: 20,
                   textAlign: 'right',
                 }}>
                   {index + 1}
                 </Text>
-                <View style={{ flex: 1 }}>
+                {/* The badge beside this column shrinks (`flexShrink: 1`), so it
+                    wraps and absorbs the deficit before the name does. The floor
+                    still bounds the residual: once the badge bottoms out at its
+                    longest word, whatever space is still missing falls here, the
+                    only remaining column that yields, and it would collapse. */}
+                <View style={{ flex: 1, minWidth: spacing.xxl }}>
                   <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.primary }}>
                     {getExerciseName(ex.name, i18n.language)}
                   </Text>
@@ -325,7 +330,7 @@ export default function StatisticsScreen() {
                     }} />
                   </View>
                 </View>
-                <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.secondary }}>
+                <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.body, color: colors.text.secondary, flexShrink: 1 }}>
                   {ex.sessionCount} {t('progress.statistics.sessions')}
                 </Text>
               </View>
@@ -372,7 +377,7 @@ export default function StatisticsScreen() {
                   fontSize: fontSizes.sm, 
                   fontFamily: fonts.body, 
                   color: colors.text.primary,
-                  width: 80,
+                  minWidth: 80,
                 }}>
                   {group.name}
                 </Text>
