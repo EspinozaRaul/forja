@@ -158,12 +158,23 @@ export async function repairExerciseMetadata(
 }
 
 export async function initializeDatabase() {
-  // Create tables if they don't exist
-  expoDb.execSync(CREATE_TABLES_SQL);
-
+  // The column migrations run FIRST, and that order is load-bearing. `CREATE_TABLES_SQL`
+  // also creates the nine `uuid` unique indexes, while the `uuid` column itself is added
+  // by the migrations below. On a database created before the identity layer the tables
+  // already exist — so `CREATE TABLE IF NOT EXISTS` is a no-op — and the column does not:
+  // SQLite refuses an index over a missing column, the whole startup threw
+  // "no such column: uuid", and the app never left the failure screen. A fresh database
+  // hid it, because there the table is created with the column already in it.
+  //
+  // Running the migrations first is safe on every path: on a fresh database each ALTER
+  // throws "no such table" and is swallowed, and the DDL below then creates the full shape.
+  //
   // Add the columns a database created before each one existed is missing.
   // Each statement is idempotent (a present column throws and is ignored).
   runSchemaMigrations(expoDb);
+
+  // Create tables if they don't exist
+  expoDb.execSync(CREATE_TABLES_SQL);
 
   // One-time cleanup of the unambiguous orphan rows left behind while
   // `PRAGMA foreign_keys` was never enabled (see U2). Every read joins through a
