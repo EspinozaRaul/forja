@@ -1,7 +1,7 @@
 # Forja — UI Standard
 
 > Last updated: 2026-09-29
-> Status: v1.5 (Layout foundation + query states + modal containment + action roles + className is not a styling source)
+> Status: v1.6 (Layout foundation + query states + modal containment + action roles + className is not a styling source + one scroll region)
 
 How screens are built in this app. Follow it for every new screen. The shared
 components exist so that the correct screen is also the shortest one to write.
@@ -160,22 +160,34 @@ viewport; on a centred card the action row is the last child of the column, so i
 is pushed off-screen and there is nothing left to scroll. The user is then trapped:
 they cannot confirm and they cannot dismiss.
 
-- **Only the action row is outside the scroll region.** The title, the message and
-  every other piece of variable-length body content (a list, a set summary) go
-  inside the `ScrollView`, which carries `flexShrink: 1` and, as a secondary limit,
-  a `maxHeight` of `MODAL.MAX_BODY_HEIGHT`. Containment comes from the card's own
-  `maxHeight` plus that `flexShrink`: when the content does not fit, the body is the
-  node that gives up height, so the actions keep theirs. The body cap only limits how
-  tall the body grows on a tall screen; it is not a containment proof.
-- **Why the title and the message must be inside the scroll region.** Text grows with
-  the OS accessibility size, and so does every piece of chrome left outside the
-  `ScrollView`. Measured on a 667pt viewport: the card's content box is ~383pt, and
-  the action row alone is 70pt at the default text size and 185pt at
-  `accessibility-extra-extra-extra-large`. With the body's 16pt bottom margin that
-  leaves the body about 180pt at the largest size. Any text left outside the scroll region is subtracted
-  from the actions' budget, and at that size the title and the message need far more
-  than the box has. This is arithmetic, not a rendering detail: fix outside the scroll
-  only what must stay visible, and let the body absorb the rest.
+- **Only the action row is outside the scroll region, and there is exactly one
+  region.** It is the container whose content actually varies — the list's box — and
+  it carries `flexShrink: 1` plus, as a secondary limit, a `maxHeight` of
+  `MODAL.MAX_BODY_HEIGHT`. The title and the message are fixed chrome above it.
+  Containment comes from the card's own `maxHeight` plus that `flexShrink`: when the
+  content does not fit, the box is the node that gives up height, so the actions keep
+  theirs. The body cap only limits how tall the box grows on a tall screen; it is not
+  a containment proof.
+- **One region, not two.** A second scroll view of the same orientation inside the
+  first is the interaction `scroll-views.md › Best practices` warns against ("Avoid
+  putting a scroll view inside another scroll view with the same orientation"), and a
+  scroll indicator belongs to the content that moves. With the region on the card's
+  body, the indicator ran down the whole card and read as "the dialog scrolls", while
+  the list — the only thing that grows — did not scroll at all.
+- **Why the shrinking node carries the `flexShrink`, and not the actions.** Text grows
+  with the OS accessibility size, and so does every piece of chrome left outside the
+  box. Measured on a 667pt viewport: the card's content box is ~383pt, and the action
+  row alone is 70pt at the default text size and 185pt at
+  `accessibility-extra-extra-extra-large`. With the box's 16pt bottom margin that
+  leaves it about 180pt at the largest size, and less once the title and the message —
+  fixed chrome now — have taken their share. That trade is deliberate: at the largest
+  size the box becomes a small window onto the list while the actions keep their
+  place. What must never happen is the other direction — chrome that cannot shrink, or
+  actions outside the shrinking budget — because then the user is trapped again.
+  *Changed 2026-09-29:* the title and the message used to live inside the scroll
+  region. They moved out so the region could be the list's own box; the guarantee
+  above is what that move had to preserve, and
+  `__tests__/components/routine-start-modal.test.ts` re-pins it.
 - The **actions stay as siblings after** the scroll region, so scrolling the list can
   never carry them away. That placement on its own is not containment: in the
   original defect the actions were already outside any scroll region and were pushed
@@ -316,8 +328,8 @@ catalogueKeysEn = 682
 - [ ] Query-backed data routes loading / failure / empty through `<QueryState>`
       (failure always offers a retry) — never a bare `!data` fallback
 - [ ] A modal card is height-bounded (`MODAL.MAX_HEIGHT`), **only its actions** sit
-      outside the scroll region, and the title, the message and all variable-length
-      content scroll inside `MODAL.MAX_BODY_HEIGHT`
+      outside the single scroll region, and that region is the container whose content
+      varies — bounded by `MODAL.MAX_BODY_HEIGHT` and carrying `flexShrink: 1`
 - [ ] Tapping outside a modal dismisses it: the backdrop is a `Pressable` with a
       translated label and role, and the card swallows the tap (`stopPropagation`)
 - [ ] `npx tsc --noEmit` is clean and `npx jest` stays green

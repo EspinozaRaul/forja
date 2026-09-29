@@ -9,14 +9,23 @@ import path from 'node:path';
  *
  * The dialog is inline JSX in the screen, not an extractable component, so the
  * contract is asserted structurally against the source — the same approach as
- * `__tests__/a11y/interactive-elements.test.ts`. The properties checked are
- * exactly the ones the broken code lacked:
+ * `__tests__/a11y/interactive-elements.test.ts`.
+ *
+ * What contains that defect is the card's bound plus a single shrinkable node,
+ * NOT which node happens to scroll. So the properties pinned here are:
  *   1. the card is height-bounded by the shared `MODAL.MAX_HEIGHT`,
- *   2. all variable-length content — the title, the message and the exercise
- *      list — lives inside a `ScrollView` that is itself bounded by
- *      `MODAL.MAX_BODY_HEIGHT` and carries `flexShrink: 1`,
- *   3. both actions render after the scroll region, so scrolling can never
- *      push them away.
+ *   2. there is exactly ONE scroll region, and it is the exercise box — the only
+ *      content that grows — with `MODAL.MAX_BODY_HEIGHT` on its container and
+ *      `flexShrink: 1` on the box itself,
+ *   3. the title and the message are fixed chrome above it,
+ *   4. both actions render after it, stacked rather than sharing a row.
+ *
+ * The previous revision of this file pinned the same incident through a different
+ * arrangement: one scroll region holding the title, the message and the list. It
+ * was re-pinned deliberately when the scroll moved into the box. One property was
+ * dropped with it — "the scroll region renders unconditionally" — because it only
+ * existed to keep the title and the message from being stranded outside a guarded
+ * region; they are outside it by design now, so the guard cannot strand them.
  */
 
 const ROOT = path.join(__dirname, '..', '..');
@@ -41,6 +50,15 @@ function scrollViewOpenTag(block: string): string {
   return block.slice(start, block.indexOf('>', start) + 1);
 }
 
+/** Returns the exercise box: the container that holds the scroll region. */
+function exerciseBox(block: string): string {
+  const start = block.indexOf('{lastSession && (');
+  const scrollStart = block.indexOf('<ScrollView', start);
+  expect(start).toBeGreaterThan(-1);
+  expect(scrollStart).toBeGreaterThan(start);
+  return block.slice(start, scrollStart);
+}
+
 describe('start-session modal containment', () => {
   const src = fs.readFileSync(SCREEN, 'utf8');
   const block = startSessionModalBlock(src);
@@ -49,32 +67,24 @@ describe('start-session modal containment', () => {
     expect(block).toMatch(/maxHeight:\s*MODAL\.MAX_HEIGHT/);
   });
 
-  it('scrolls the variable-length exercise list', () => {
-    expect(block).toContain('<ScrollView');
-    expect(block).toContain('</ScrollView>');
+  it('has exactly one scroll region', () => {
+    // The list scrolls inside its box; the card does not scroll. A second region
+    // would nest two same-orientation scroll views, which is the interaction the
+    // moved scroll was meant to avoid.
+    expect(block.match(/<ScrollView/g)?.length).toBe(1);
+    expect(block.match(/<\/ScrollView>/g)?.length).toBe(1);
   });
 
-  it('renders the scroll region unconditionally', () => {
-    // The scroll region now carries the title and the message as well as the
-    // list, so guarding it with `{lastSession && ( … )}` would put the title
-    // and the message outside the scroll region whenever there is no previous
-    // session. Every other assertion in this file is index-based against the
-    // source, so a guarded region would still satisfy them — which is why this
-    // property needs its own check.
-    expect(block).not.toMatch(/\{\s*lastSession\s*&&\s*\(\s*<ScrollView/);
-  });
-
-  it('bounds the scroll region itself, not just its parent card', () => {
-    // The body cap is a secondary limit, so a dialog does not grow to fill a
-    // tall screen. Removing it, or swapping it for an unbounded value, fails here.
-    expect(scrollViewOpenTag(block)).toMatch(/maxHeight:\s*MODAL\.MAX_BODY_HEIGHT/);
-  });
-
-  it('lets the scroll region shrink so the actions stay on screen', () => {
-    // The card's bound plus this shrink are what contain the body on a short
-    // viewport. It is load-bearing on its own, so it gets its own assertion:
-    // removing it must fail here, not pass silently.
+  it('scrolls the exercise list inside its own bounded box', () => {
+    expect(exerciseBox(block)).toMatch(/maxHeight:\s*MODAL\.MAX_BODY_HEIGHT/);
     expect(scrollViewOpenTag(block)).toMatch(/flexShrink:\s*1\b/);
+  });
+
+  it('lets the box shrink so the actions stay on screen on a short viewport', () => {
+    // The card's bound plus this shrink are what keep the actions reachable at the
+    // largest accessibility text size. It is load-bearing on its own, so it gets
+    // its own assertion: removing it must fail here, not pass silently.
+    expect(exerciseBox(block)).toMatch(/flexShrink:\s*1\b/);
   });
 
   it('keeps both actions after the scroll region', () => {
@@ -84,17 +94,27 @@ describe('start-session modal containment', () => {
     expect(block.indexOf('routine.detail.continueLast')).toBeGreaterThan(scrollEnd);
   });
 
-  it('keeps the title and message inside the scroll region', () => {
+  it('keeps the title and the message outside the scroll region', () => {
     const scrollStart = block.indexOf('<ScrollView');
     const scrollEnd = block.indexOf('</ScrollView>');
-    expect(scrollStart).toBeGreaterThan(-1);
     expect(scrollEnd).toBeGreaterThan(scrollStart);
+
     const title = block.indexOf('routine.detail.startSession');
     const message = block.indexOf('routine.detail.previousSessionMessage');
-    expect(title).toBeGreaterThan(scrollStart);
-    expect(title).toBeLessThan(scrollEnd);
-    expect(message).toBeGreaterThan(scrollStart);
-    expect(message).toBeLessThan(scrollEnd);
+    expect(title).toBeGreaterThan(-1);
+    expect(title).toBeLessThan(scrollStart);
+    expect(message).toBeGreaterThan(-1);
+    expect(message).toBeLessThan(scrollStart);
+  });
+
+  it('stacks the two actions instead of sharing a row', () => {
+    // Arithmetic, not taste: at half the card's inner width each label gets about
+    // 104pt, so both wrap onto two lines and the two-line text does not line up
+    // between them. Stacked, each label fits on one line and the tap target grows.
+    const actionsStart = block.lastIndexOf('<View', block.indexOf('routine.detail.startFresh'));
+    expect(actionsStart).toBeGreaterThan(-1);
+    const actionsTag = block.slice(actionsStart, block.indexOf('>', actionsStart) + 1);
+    expect(actionsTag).not.toMatch(/flexDirection:\s*'row'/);
   });
 });
 
