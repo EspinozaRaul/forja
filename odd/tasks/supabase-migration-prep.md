@@ -2,8 +2,9 @@
 
 **Status**: **CLOSED (code side).** Everything the code can do is merged into `main` (`8b34d31`, PRs #1–#8): the
 schema freeze, the identity layer (U2a–U2f), the `uuid` unique indexes (`SCHEMA_VERSION` 3) and the drizzle
-parity. Gate: 65 suites / 548 tests. What remains is not code: run the three SQL scripts in the dashboard, and
-test a fresh APK on a device — the cold start on an old database now exercises the identity backfill.
+parity. Gate: 65 suites / 548 tests. The three dashboard scripts are **done and verified** (see below). What
+remains is one user action: test a fresh APK on a device — the cold start on an old database now exercises the
+identity backfill and the tombstones.
 
 **TDD**: **strict, ON** (`.pi/project.json` → `gentlePi.strictTDD: true`). Runner: `npx jest`; focused:
 `npx jest <path>`.
@@ -72,14 +73,27 @@ it is cheap, and it keeps this work from colliding with PR #1. Each later layer 
 - **The gap the audit names**: every test harness builds its schema from `CREATE_TABLES_SQL`, where the columns
   already exist, so the `ALTER` path — the only path that runs on an installed device — is covered by nothing.
 
-### Remote Supabase state (recorded here, acted on later)
+### Remote Supabase state — FIXED (2026-09-28)
 
-Read-only probes against project `tvhirldahraymahvthfq` (Engram #539) show the live schema is an **early
-version** of `scripts/supabase-schema.sql`: `routine_folders`, `body_measurements`, `progress_photos` return
-`404 PGRST205`, and `routines.folder_id` / `exercises.unit` return `42703 does not exist`. `delete_user_account`
-exists and is invocable, but a POST with the anon key returns `204` where the script's guard
-(`scripts/create-delete-account-rpc.sql:41-45`) demands an error — the deployed function is not the repo script.
-**Step 3 of the order (run the three scripts) is therefore not done, and is a dashboard action, not code.**
+The three scripts were run in the dashboard, in order, and verified.
+
+**Before:** the live schema was an **early version** of `scripts/supabase-schema.sql` — `routine_folders`,
+`body_measurements`, `progress_photos` answered `404 PGRST205`, `routines.folder_id` / `exercises.unit` answered
+`42703 does not exist` — and `delete_user_account` answered an anon POST with `204` instead of raising the
+script's guard.
+
+**After:** the three tables and both columns answer `200`; `delete_user_account` answers `400 P0001
+"delete_user_account: no authenticated user"`, which is the script's guard; and the seed is exact — **3
+categories, 1324 shared exercises, 1324 total**. **Step 3 of the order is done.**
+
+Two things learned on the way, worth keeping:
+
+- **The SQL editor rejects a query over ~1 MB.** The 1.8 MB seed had to be split into four batches
+  (`split -l 333`). Each batch runs as one transaction, so a failure rolls back the whole batch.
+- **The seed hard-codes `category_id` 1/2/3.** A `SERIAL` sequence that was advanced by an earlier rolled-back
+  attempt made the categories land on other ids, and the exercises failed with
+  `23503 ... exercises_category_id_fkey`. The fix is to pin the categories to ids 1/2/3 and reset the sequence
+  (`SELECT setval('categories_id_seq', 3)`).
 
 ---
 
