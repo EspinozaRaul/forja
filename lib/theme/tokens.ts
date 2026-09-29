@@ -29,6 +29,17 @@ export const colors = {
   // Accent — steel blue (the only cold hue, used with restraint)
   accent: {
     primary: '#4A6FA5',
+    // The light sibling of `primary`, used when the accent carries *text and
+    // large numerals on elevated surfaces*. Measured on the tokens below:
+    // 8.49:1 on bg.primary and 6.85:1 on bg.elevated. `primary` stays for
+    // surfaces, borders and filled buttons, where it is a background and not
+    // load-bearing text.
+    light: '#8FB3D4',
+    // Surface/border accent only — it must NOT carry text. As text it measures
+    // 2.06-2.56:1 on every background token (2.30:1 on bg.card, 2.12:1 on
+    // bg.active), below even the 3:1 non-text floor and far below the 4.5:1
+    // small text needs. Use `text.link` (5.68:1 on bg.card, 5.25:1 on bg.active)
+    // for accent-coloured text.
     secondary: '#3A587F',
     muted: 'rgba(74, 111, 165, 0.15)',
   },
@@ -56,8 +67,8 @@ export const colors = {
   tag: {
     muscle: '#22344A',    // muscle group tag background (steel blue family)
     equipment: '#1F332C', // equipment tag background (sage family)
-    text: '#7A9AB5',      // tag text color
-    equipmentText: '#6E9C8A',
+    text: '#8FB3D4',      // tag text color — 5.77:1 on tag.muscle (was #7A9AB5, 4.29:1)
+    equipmentText: '#82A896', // 5.10:1 on tag.equipment (was #6E9C8A, 4.33:1)
   },
   // Chart colors
   chart: {
@@ -110,8 +121,10 @@ export const fonts = {
 };
 
 export const fontSizes = {
-  xxs: 9,
-  xs2: 10,
+  // 11 pt is the HIG floor for information-carrying text: xxs and xs2 were 9 and
+  // 10, both below it, and both carry real labels.
+  xxs: 11,
+  xs2: 11,
   xs: 11,
   sm: 13,
   md: 15,

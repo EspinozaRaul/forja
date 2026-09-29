@@ -220,7 +220,7 @@ export default function CreateRoutineScreen() {
                   {getExerciseName(exercise.name, i18n.language)}
                 </Text>
                 {lastWeights.data?.[exercise.id] != null && (
-                  <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.accent.secondary }}>
+                  <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.body, color: colors.text.link }}>
                     {t('routine.create.lastWeight')}: {formatWeight(lastWeights.data?.[exercise.id]?.weight, resolveUnit(lastWeights.data?.[exercise.id]?.unit, settingsUnit))}
                   </Text>
                 )}

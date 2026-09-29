@@ -209,7 +209,7 @@ export default function HomeScreen() {
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xs }}>{t('tabs.home.workouts')}</Text>
-            <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.xl, fontFamily: fonts.display, fontWeight: fontWeights.bold, color: colors.accent.light }}>
               {globalStats?.totalWorkouts ?? 0}
             </Text>
           </View>
@@ -230,9 +230,9 @@ export default function HomeScreen() {
             style={{ marginTop: spacing.sm, backgroundColor: colors.bg.elevated, borderRadius: borderRadius.md, padding: spacing.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}
           >
             <Text style={{ fontSize: fontSizes.xs, fontFamily: fonts.bodyMedium, color: colors.text.muted, marginBottom: spacing.xxs }}>{t('tabs.home.mostFrequent')}</Text>
-            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.accent.primary }}>
+            <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.bodySemiBold, color: colors.text.link }}>
               {getExerciseName(globalStats.mostFrequentExercise, i18n.language)}{' '}
-              <Ionicons name="arrow-forward" size={15} color={colors.accent.primary} />
+              <Ionicons name="arrow-forward" size={15} color={colors.text.link} />
             </Text>
           </TouchableOpacity>
         )}
