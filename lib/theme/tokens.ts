@@ -29,6 +29,12 @@ export const colors = {
   // Accent — steel blue (the only cold hue, used with restraint)
   accent: {
     primary: '#4A6FA5',
+    // The light sibling of `primary`, used when the accent carries *text and
+    // large numerals on elevated surfaces*. Measured on the tokens below:
+    // 8.49:1 on bg.primary and 6.85:1 on bg.elevated. `primary` stays for
+    // surfaces, borders and filled buttons, where it is a background and not
+    // load-bearing text.
+    light: '#8FB3D4',
     secondary: '#3A587F',
     muted: 'rgba(74, 111, 165, 0.15)',
   },

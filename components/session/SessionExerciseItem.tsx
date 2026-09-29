@@ -431,6 +431,9 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
             <TouchableOpacity
               onPress={(e) => { e.stopPropagation(); onPairSuperset(); }}
               accessibilityRole="button"
+              // ~15 pt visual + 8 pt vertical slop clears the 28 pt HIG minimum
+              // control size; 2 pt horizontal keeps the 4 pt row gap uncrossed.
+              hitSlop={{ top: 8, bottom: 8, left: 2, right: 2 }}
               style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
             >
               <Text style={{ fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>{t('session.superSet')}</Text>
@@ -441,6 +444,9 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
             accessibilityLabel={t('accessibility.common.changeRest')}
             accessibilityRole="button"
             accessibilityState={{ expanded: showRestPicker }}
+            // ~15 pt visual + 8 pt vertical slop clears the 28 pt HIG minimum
+            // control size; 2 pt horizontal keeps the 4 pt row gap uncrossed.
+            hitSlop={{ top: 8, bottom: 8, left: 2, right: 2 }}
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border.primary, borderRadius: borderRadius.sm, paddingHorizontal: spacing.xs + spacing.xxs, paddingVertical: spacing.xxs }}
           >
             <Text style={{ fontSize: fontSizes.xs2, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold, color: colors.text.secondary }}>

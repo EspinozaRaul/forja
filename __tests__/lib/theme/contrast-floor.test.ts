@@ -68,6 +68,8 @@ describe('small information-carrying text clears 4.5:1', () => {
     ['text.link on bg.elevated', colors.text.link, colors.bg.elevated],
     ['text.onAccent on accent.primary', colors.text.onAccent, colors.accent.primary],
     ['success on bg.card', colors.success, colors.bg.card],
+    ['accent.light on bg.primary', colors.accent.light, colors.bg.primary],
+    ['accent.light on bg.elevated', colors.accent.light, colors.bg.elevated],
   ];
 
   it.each(pairs)('%s', (_label, foreground, background) => {

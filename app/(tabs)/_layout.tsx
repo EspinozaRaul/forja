@@ -27,7 +27,7 @@ export default function TabLayout() {
           // that a fixed height produced.
           paddingBottom: insets.bottom + spacing.xs,
         },
-        tabBarActiveTintColor: colors.accent.primary,
+        tabBarActiveTintColor: colors.accent.light,
         tabBarInactiveTintColor: colors.text.muted,
         tabBarLabelStyle: {
           fontSize: fontSizes.xs, fontFamily: fonts.bodySemiBold, fontWeight: fontWeights.semibold,
