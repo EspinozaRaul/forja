@@ -339,16 +339,31 @@ The two branches are split on purpose — together their diffs exceed the 400-li
 
 ## 3. Pending — your hands
 
-1. **Test v1.0.8 on the phone** (the R8 revert). v1.0.7 was tested on 2026-09-29 and failed — the
-   database screen, never the app — so the flags are off and this build is the confirmation. If it
-   holds up, say so and it gets promoted to Latest; if it fails too, the fault is the phone's
-   database and the next step is `logcat`. Hashes and reasoning: "Resolved — v1.0.7 (the R8
-   pre-release) breaks on the device".
-2. **Run the three SQL scripts in Supabase**, in the order the schema file's own header documents
-   (`supabase-schema.sql` → `create-delete-account-rpc.sql` → `import-exercises.sql`), then the three
-   control queries. Nothing has ever been executed, so the first run is the real verification.
+1. ~~**Test v1.0.8 on the phone**~~ — **done, and it failed twice before it worked.** v1.0.7 was
+tested on 2026-09-29 and failed; the R8 revert alone did not fix it either, because the build that
+reached the phone (`code 12`) still showed the database-failure screen. The real cause was a
+**second, independent defect**: `initializeDatabase` ran `CREATE_TABLES_SQL` before
+`runSchemaMigrations`, and the DDL's nine `CREATE UNIQUE INDEX ... (uuid)` statements ran before the
+ALTER that adds `uuid` — on any database created before the identity layer that is
+`no such column: uuid`, and the app never starts. **v1.0.8 (code 13) opened on the phone, the old
+database migrated, and the data was there.** Sequence, hashes and releases: "Resolved — v1.0.7 (the
+R8 pre-release) breaks on the device", `v1.0.8` → `v1.0.8-db-startup`; then `v1.0.8-modal` and
+`v1.0.8-modal-scroll` for the start-session dialog.
+2. **Supabase: the tables are up, but the server is NOT ready to sync.** Measured from this machine
+   on 2026-09-29 with the anon key (read-only, RLS-respecting): 3 categories, **1324** shared
+   exercises, `sessions` and `progress_photos` return 0 rows for anon (RLS denying by default), and
+   `delete_user_account` refuses an anonymous caller with `P0001`. So the three scripts *were* run —
+   the old claim that nothing had ever been executed was wrong. **What is missing is the identity
+   layer**: the deployed tables have no `uuid`, no `updated_at` and no `deleted_at` (Postgres 42703
+   on every one of them), so an upsert-by-uuid, a newest-wins conflict and a delete that does not
+   resurrect have nothing to stand on. That migration is the first work unit of the sync; it needs
+   the SQL editor (no service key or `psql` on this machine), and it touches nine tables plus the
+   nine unique indexes. Detail in `odd/tasks/supabase-sync.md`.
 3. **The two-account test** for the isolation work: sign in as A, log something, sign out, sign in as
    B, confirm B sees nothing of A's. It needs a second email account.
+4. **The three branches are unmerged.** `fix/release-v1.0.8` (the R8 revert, the legacy-database
+   fix) and `fix/modal-scroll-and-actions` (the dialog's scroll and its actions) are pushed, tagged
+   and released from, and `main` is still at `9cdc7bc`. Merging them is the owner's call.
 
 ---
 

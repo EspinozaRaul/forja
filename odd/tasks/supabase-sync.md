@@ -37,6 +37,17 @@ syncs anything by itself.
   `import-exercises.sql` were run in the dashboard and verified — the tables, the RLS policies, the RPC (now
   correctly refusing an anonymous caller) and the **3 categories + 1324 shared exercises** exist.
 
+  **Corrected by measurement on 2026-09-29 — "ready" is too strong.** Re-checked from this machine with the
+  anon key, read-only and RLS-respecting: the 3 categories, the 1324 shared exercises, the default-deny (anon
+  gets 0 rows from `sessions` and `progress_photos`) and the RPC's `P0001 … no authenticated user` all hold.
+  What does **not** hold is the shape: the deployed tables have **no `uuid`, no `updated_at` and no
+  `deleted_at`** — Postgres answers `42703` for each one, on `body_measurements`, `exercises`, `routines` and
+  `sessions`. The nine unique indexes do not exist either. So the server has the old shape: a sync cannot
+  upsert by `uuid`, cannot resolve a conflict by `updated_at`, and cannot propagate a delete without
+  resurrecting it. **The first work unit of this feature is a server-side migration** adding those three
+  columns plus the unique index to the nine synced tables — written here, run in the Supabase SQL editor
+  (this machine has no service key and no `psql`), then verified with the same anon-key checks.
+
 ---
 
 ## The order for the next session
