@@ -1,4 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import * as Application from 'expo-application';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../lib/i18n';
@@ -211,6 +212,27 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </Row>
       </View>
+
+      {/* The identity of the build that is actually installed on this phone.
+          `expo-application` reads it from the package, so it cannot disagree with
+          the binary the way the embedded manifest can in a dev build. This line
+          exists because four published releases all reported `1.0.8` — codes 12,
+          13, 14 and 15 — and Android's app info shows only the name, so the build
+          number is the one fact that tells two of them apart. */}
+      <Text
+        style={{
+          fontSize: fontSizes.xs,
+          fontFamily: fonts.body,
+          color: colors.text.muted,
+          textAlign: 'center',
+          marginTop: spacing.xl,
+        }}
+      >
+        {t('settings.buildVersion', {
+          version: Application.nativeApplicationVersion ?? '—',
+          build: Application.nativeBuildVersion ?? '—',
+        })}
+      </Text>
     </ScrollView>
     <ConfirmDialog
       visible={dialog.visible}

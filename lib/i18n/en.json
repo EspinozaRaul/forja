@@ -375,7 +375,8 @@
     "dangerZone": "Danger Zone",
     "deleteAccount": "Delete account",
     "deleteAccountConfirm": "Permanently delete your account? All your data, workouts, and settings will be erased. This action cannot be undone.",
-    "deleteAccountDescription": "Permanently delete your account and all associated data."
+    "deleteAccountDescription": "Permanently delete your account and all associated data.",
+    "buildVersion": "Version {{version}} (build {{build}})"
   },
   "tabs": {
     "home": {

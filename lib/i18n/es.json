@@ -845,6 +845,7 @@
     "vibration": "Vibración",
     "vibrationDescription": "Vibración al tocar.",
     "weightUnit": "Unidad de peso",
-    "weightUnitDefault": "Predeterminada para ejercicios nuevos."
+    "weightUnitDefault": "Predeterminada para ejercicios nuevos.",
+    "buildVersion": "Versión {{version}} (compilación {{build}})"
   }
 }
