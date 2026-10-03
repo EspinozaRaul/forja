@@ -42,25 +42,47 @@ tombstoned slot should keep its position — it should not: a removed slot is re
 **Acceptance**: a test that deletes a set, duplicates the session, and asserts the copy has no row for
 it. Negative control: removing the guard fails it.
 
+**LANDED** — `e165a05`. `__tests__/lib/db/duplicate-session-tombstones.test.ts` drives the real shipping
+driver (`drizzle-orm/expo-sqlite` over `node:sqlite`) through three cases. Negative control observed:
+removing both guards fails exactly the two deletion cases and nothing else. Gate: `tsc` clean, **73
+suites / 608 tests**.
+
 ---
 
 ## Unit 2 — the "ANTERIOR" column across every exercise
 
-**Not investigated yet.** What is known:
+**Investigated 2026-10-03. No defect found yet — this unit needs an observation before it needs code.**
 
-- The value comes from `app/session/[id].tsx:127`:
-  `const prevSets = lastSession?.exercises?.find((se) => se.exerciseId === exerciseId)?.sets;`
-  fed by `useLastSessionForRoutine` → `getLastSessionForRoutine`, which is **the last COMPLETED session
-  of that routine** (ordered by `completedAt`, `isNull(deletedAt)`).
-- So a session that was started and never completed cannot be the source — which means the number can
-  legitimately be older than what the owner last did. That may be the whole explanation, or there may be
-  a real staleness bug on top.
-- `useLastSetsPerExercise` / `getLastSetsForExercise` (`lib/db/queries.ts:1620`) are a **second, global**
-  source keyed by exercise across every routine. Two sources for the same number is a smell worth
-  checking before touching anything.
+`getPreviousForExercise` (`app/session/[id].tsx:100`) resolves the number in **three cascading
+sources**, which is itself the thing worth questioning:
 
-**To do**: measure which source feeds which screen, then compare against what the owner sees on the
-device. No code until the observation exists.
+1. **Primary**: `lastSetsGlobal[exerciseId]` ← `useLastSetsPerExercise` → `getLastSetsPerExercise`
+   (`lib/db/queries.ts:1398`). It is **global across ALL routines**: the most recent *completed*
+   sessionExercise holding that exercise, ordered by `desc(sessions.completedAt)`.
+2. **Fallback**: `lastSession` ← `getLastSessionForRoutine` — the last completed session of **that
+   routine**.
+3. **Per-field**: `lastWeights` / `lastReps` / `lastRirByExercise` per field independently.
+
+**Both queries are clean.** `getLastSetsPerExercise` filters `isNotNull(sessions.completedAt)` and both
+tombstones, and the batching is correct — it deliberately has **no** `limit(1)`; it dedupes to the first
+row per exercise in JS. `getLastRirByRoutineExerciseIds` carries the same guards. So this is not the
+same class of bug as unit 1.
+
+**What is legitimately confusing, and may be the whole report:** because the primary source is global,
+an exercise trained in two routines (the owner's FB-B and FB-C share "Elevación lateral sentado") shows
+the number from **whichever routine was most recent**, not from the one being performed. That is
+deliberate per the comment, but it reads as "the ANTERIOR is wrong" when you are looking at the other
+routine's number.
+
+**Second candidate**: the display filters `s.method !== 'partial'`, so a session whose last sets were
+partial falls back to something older for the placeholder.
+
+**Third, cosmetic but visible in the owner's own screenshot**: two formatters disagree —
+`SetLogger.tsx:41` renders `12.5 KG` and `previousText()` at `:89` renders `12.5KG`.
+
+**To do**: the owner has to name one exercise and say what he expected versus what he saw. Then
+reproduce it against the device with `adb`, the way the scroll and the lockout were settled. No code
+before that observation exists.
 
 ---
 

@@ -17,6 +17,10 @@ interface PartialSetLoggerProps {
   previousReps?: number | null;
   previousPartialReps?: number | null;
   previousMethod?: string | null;
+  /** See `SetLogger`'s note: the parent owns which row's delete action is open. */
+  isSwipeOpen?: boolean;
+  onSwipeOpen?: () => void;
+  onSwipeClose?: () => void;
 }
 
 export function PartialSetLogger({
@@ -29,9 +33,17 @@ export function PartialSetLogger({
   previousReps = null,
   previousPartialReps = null,
   previousMethod = null,
+  isSwipeOpen = false,
+  onSwipeOpen,
+  onSwipeClose,
 }: PartialSetLoggerProps) {
   const { t } = useTranslation();
   const swipeableRef = useRef<Swipeable>(null);
+
+  // Another row opened its action: close this one.
+  useEffect(() => {
+    if (!isSwipeOpen) swipeableRef.current?.close();
+  }, [isSwipeOpen]);
 
   const [weight, setWeight] = useState(set.weight?.toString() ?? '');
   const [reps, setReps] = useState(set.reps?.toString() ?? '');
@@ -88,6 +100,8 @@ export function PartialSetLogger({
   return (
     <Swipeable
       ref={swipeableRef}
+      onSwipeableOpen={() => onSwipeOpen?.()}
+      onSwipeableClose={() => onSwipeClose?.()}
       renderRightActions={renderRightActions}
       overshootRight={false}
       friction={2}

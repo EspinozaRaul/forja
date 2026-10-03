@@ -171,6 +171,17 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
     setShowIntensityPicker(true);
   };
 
+  // Only one row's delete action may be open at a time. While it is open it covers the row,
+  // and with it the intensity control — which is how the owner came to believe a control he
+  // still had was missing. Opening one closes the rest; see unit 3 of
+  // odd/tasks/session-data-integrity.md.
+  const [openSwipeSetId, setOpenSwipeSetId] = useState<number | null>(null);
+  const swipeProps = (setId: number) => ({
+    isSwipeOpen: openSwipeSetId === setId,
+    onSwipeOpen: () => setOpenSwipeSetId(setId),
+    onSwipeClose: () => setOpenSwipeSetId((current) => (current === setId ? null : current)),
+  });
+
   const handleSelectIntensityMethod = (method: IntensityMethod) => {
     if (pendingConversionSetId === null || !pendingConversionSet) return;
 
@@ -350,7 +361,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
           return result;
         });
       }
-    } catch (error) {
+    } catch {
       // On failure, revert to previous state
       if (previousSets) {
         queryClient.setQueryData(queryKey, previousSets);
@@ -828,6 +839,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
                 }}
                 onDelete={() => handleDeleteSet(set.id)}
                 onChangeMethod={() => handleOpenIntensityPicker(set.id, set)}
+                {...swipeProps(set.id)}
                 unit={unit}
                 previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
                 previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
@@ -846,6 +858,7 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
               onDelete={() => handleDeleteSet(set.id)}
               unit={unit}
               onOpenIntensityPicker={() => handleOpenIntensityPicker(set.id, set)}
+              {...swipeProps(set.id)}
               previousWeight={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.weight ?? null}
               previousReps={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.reps ?? null}
               previousRir={previousWeightFor?.(sessionExercise.exerciseId, set.setNumber)?.rir ?? null}
