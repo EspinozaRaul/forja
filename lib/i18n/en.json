@@ -742,6 +742,11 @@
       "label": "Partial",
       "description": "Partial reps with limited range",
       "unitLabel": "Partial"
+    },
+    "linear": {
+      "label": "Linear",
+      "description": "No method: a plain set",
+      "unitLabel": "Set"
     }
   },
   "timer": {

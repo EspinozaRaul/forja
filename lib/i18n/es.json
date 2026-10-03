@@ -576,6 +576,11 @@
       "label": "Parcial",
       "description": "Repeticiones parciales con rango limitado",
       "unitLabel": "Parcial"
+    },
+    "linear": {
+      "label": "Lineal",
+      "description": "Sin método: la serie normal",
+      "unitLabel": "Serie"
     }
   },
   "exercisePicker": {

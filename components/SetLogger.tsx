@@ -34,7 +34,6 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
   useEffect(() => { setWeight(set.weight?.toString() ?? ''); }, [set.weight]);
 
   const isDropSet = set.method === 'dropset';
-  const isLinear = set.method === 'linear' || set.method === null || set.method === 'partial';
 
   const weightPlaceholder = () => {
     if (previousWeight == null) return unit.toUpperCase();
@@ -159,8 +158,12 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
             />
           </View>
 
-          {/* Intensity method button */}
-          {isLinear && onOpenIntensityPicker && (
+          {/* Intensity method button — always available when a handler exists. It is how a
+              method is CHOSEN; gating it on the current method is what turned `superset` and the
+              pyramid values into a one-way door, because a set holding one of them fell into this
+              branch with `isLinear` false and lost the only control that could change it.
+              See odd/tasks/intensity-method-lockout.md. */}
+          {onOpenIntensityPicker && (
             <TouchableOpacity
               onPress={onOpenIntensityPicker}
               style={styles.intensityButton}
@@ -204,7 +207,7 @@ export function SetLogger({ set, onUpdate, onDelete, unit = 'kg', onOpenIntensit
         <RirPicker
           value={set.rir}
           onChange={(rir) => onUpdate({ rir })}
-          endPadding={(isLinear && onOpenIntensityPicker) ? 56 : 32}
+          endPadding={onOpenIntensityPicker ? 56 : 32}
         />
       </View>
     </Swipeable>

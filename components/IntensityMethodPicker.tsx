@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, fontSizes, fontWeights, borderWidths, fonts } from '../lib/theme/tokens';
 import { MODAL, ICON } from '../lib/constants/layout';
 
-export type IntensityMethod = 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
+export type IntensityMethod = 'linear' | 'dropset' | 'rest_pause' | 'cluster' | 'superset' | 'partial';
 
 interface IntensityMethodOption {
   id: IntensityMethod;
@@ -12,6 +12,11 @@ interface IntensityMethodOption {
 }
 
 const INTENSITY_METHODS: IntensityMethodOption[] = [
+  // `linear` goes first, and it is not decoration: it is the way OUT of every other method.
+  // Without it the picker was a one-way door — choosing a method persisted it, and no option
+  // could return the set to a plain one, so a cancelled Super Set pairing left the row with a
+  // method the UI no longer offered to change. See odd/tasks/intensity-method-lockout.md.
+  { id: 'linear', icon: 'remove-circle-outline' },
   { id: 'dropset', icon: 'flash' },
   { id: 'rest_pause', icon: 'pause' },
   { id: 'cluster', icon: 'ellipse' },

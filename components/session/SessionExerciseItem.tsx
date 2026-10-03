@@ -174,6 +174,23 @@ export function SessionExerciseItem({ sessionExercise, sessionId, previousWeight
   const handleSelectIntensityMethod = (method: IntensityMethod) => {
     if (pendingConversionSetId === null || !pendingConversionSet) return;
 
+    // Back to a plain set. This is the way OUT of every other method, so it runs before any
+    // editor opens and it clears everything a method could have left behind: the drop-group
+    // flag, the partial reps, and the method itself. Without this branch the picker was a
+    // one-way door — and a set holding a value the old `isLinear` gate did not know about lost
+    // the control that would have let it come back. See odd/tasks/intensity-method-lockout.md.
+    if (method === 'linear') {
+      updateSet.mutateAsync({
+        id: pendingConversionSetId,
+        data: { method: 'linear', isDropGroup: false, partialReps: null },
+        sessionExerciseId: sessionExercise.id,
+      });
+      if (dropSetMode === pendingConversionSetId) handleCancelDropSet(pendingConversionSetId);
+      setPendingConversionSetId(null);
+      setPendingConversionSet(null);
+      return;
+    }
+
     // Save method to DB immediately — prevents revert when switching to another set
     const isDropMethod = method === 'dropset' || method === 'rest_pause' || method === 'cluster';
     updateSet.mutateAsync({
