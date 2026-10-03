@@ -44,14 +44,8 @@ export default function SessionScreen() {
   const userId = useCurrentUserId();
   const insets = useSafeAreaInsets();
   const isKeyboardVisible = useKeyboardState((state) => state.isVisible);
-  // Measured on the device 2026-10-03: with the keyboard open the scroll reached its end and the
-  // focused input still sat half-covered — only its top edge and the caret were above the keyboard.
-  // `bottomOffset` was not enough because there was nothing left to scroll: the content ended right
-  // after the last row. The room has to exist INSIDE the scroll, so the bottom of the content grows
-  // by the keyboard's height while it is up. See unit 4 of odd/tasks/session-data-integrity.md.
-  const keyboardHeight = useKeyboardState((state) => state.height);
   // The action bar is a sibling of the scroll view and is glued to the keyboard, so the scroll
-  // also has to leave room for it: the bar's height changes with the keyboard (its bottom padding
+  // has to leave room for it: the bar's height changes with the keyboard (its bottom padding
   // drops while typing), so it is read from `onLayout` instead of hardcoded.
   const [actionBarHeight, setActionBarHeight] = useState(0);
   const sessionId = parseInt(id, 10);
@@ -673,7 +667,7 @@ export default function SessionScreen() {
         keyboardShouldPersistTaps="handled"
         bottomOffset={spacing.md + spacing.sm + actionBarHeight}
       >
-        <View style={{ padding: spacing.md, paddingBottom: spacing.md + (isKeyboardVisible ? keyboardHeight : 0) }}>
+        <View style={{ padding: spacing.md }}>
           {/* flexWrap lets the add control drop to its own line when it no longer
               fits beside the heading; the heading keeps its size and is never truncated. */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', rowGap: spacing.sm, marginBottom: spacing.sm + spacing.xs }}>
