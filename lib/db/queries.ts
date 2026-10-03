@@ -1480,7 +1480,16 @@ export async function duplicateSessionData(
     const sourceExercises = tx
       .select()
       .from(sessionExercises)
-      .where(eq(sessionExercises.sessionId, sourceSessionId))
+      .where(
+        and(
+          eq(sessionExercises.sessionId, sourceSessionId),
+          // A tombstoned slot is one the user removed. Copying it back is how a deleted
+          // exercise returns from the dead in the next session — the read below has the
+          // same guard, for the same reason, and this pair was the one the identity layer
+          // missed. See odd/tasks/session-data-integrity.md.
+          isNull(sessionExercises.deletedAt)
+        )
+      )
       .all();
 
     for (const se of sourceExercises) {
@@ -1505,7 +1514,7 @@ export async function duplicateSessionData(
       const sourceSets = tx
         .select()
         .from(sets)
-        .where(eq(sets.sessionExerciseId, se.id))
+        .where(and(eq(sets.sessionExerciseId, se.id), isNull(sets.deletedAt)))
         .all();
 
       if (sourceSets.length > 0) {
