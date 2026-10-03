@@ -1,7 +1,8 @@
 # app-observability
 
-**Status**: **IN PROGRESS** — task 1 (the version footer) is **written and gated**, uncommitted on
-`fix/modal-scroll-and-actions` pending the owner's call. Sentry is **decided, not yet integrated**.
+**Status**: **IN PROGRESS** — task 1 (the version footer) is **landed and released**. Sentry is
+**decided, not yet integrated**: the owner deferred it to the next build so this one could close the
+scroll defect first. Task 3 (device verification) is the open item.
 
 **Why this feature exists.** On 2026-10-01 the owner tested the app on his phone and reported that
 the start-session dialog *still* does not scroll. The very first question that could not be answered
@@ -71,6 +72,12 @@ and nothing here should be stretched to make it do that.
 - **Found by the guard, and fixed**: adding one key to each catalogue moved `catalogueKeys*` from 682
   to 683, and `__tests__/lib/metrics.test.ts` failed because `docs/ui-standard.md` still quoted 682.
   The document now carries the measured value. That is the guard working as designed.
+- **Released**: `a85ee64` (the footer), `edb3371` (`1.0.9`), `ec83221` (the versionCode bump the build
+  made). Artifact `build-1790873788953.apk`, 93 MB, verified by `scripts/check-signing.sh --apk`:
+  `versionCode 16`, `versionName 1.0.9`, the published key `38E23AA3…`, R8 off (69 class-name hits),
+  and a bundle hash that differs from code 15 — so the new JS is inside. Published as the
+  **`v1.0.9`** pre-release, asset `forja-v1.0.9-code16.apk`,
+  `sha256 b3542aeec75a59f4781352f84184f463a4e1b57d1297cb87ea82f31f07680571`.
 
 ### 2. Sentry integration
 
