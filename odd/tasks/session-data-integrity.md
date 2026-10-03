@@ -110,14 +110,34 @@ logic bug.
 
 ## Unit 4 — the keyboard covers the last exercises
 
-**New, reported 2026-10-03, not investigated.** The owner: "el teclado está tapando otra vez las últimas
-series cuando usas el teclado, cuando son los últimos ejercicios al final de la pantalla el teclado tapa
-el ejercicio".
+**New, reported 2026-10-03. REPRODUCED, attempted, REVERTED — still open.**
 
-`app.json` sets `softwareKeyboardLayoutMode: "resize"`, so the window shrinks and whatever must follow it
-is the scroll — the same shape of problem as the start-session dialog, and it should be measured the same
-way: positions from `uiautomator` (or `screencap` on the session screen, where the timer keeps the tree
-from ever going idle) rather than a look at a screenshot.
+**The bug, measured on the device.** With the keyboard open the scroll reached its end and the focused
+input sat **half-covered**: only its top edge and the caret stayed above the keyboard
+(`/tmp/x1.png`). The action bar ("Cancelar / Finalizar sesión") did not stay visible either.
+
+**What is NOT the cause.** The wiring is correct: the list is already a `KeyboardAwareScrollView` and
+`KeyboardProvider` wraps the app at `app/_layout.tsx:187`. There was no missing provider and no missing
+gesture handler — that is why this survived so long looking like a keyboard-configuration problem.
+
+**What the cause is.** There is no room left *inside* the content: the scroll cannot lift the last row
+because the content ends right after it.
+
+**The attempt, and why it was reverted.** `d0347ff` derived the content's bottom padding from
+`useKeyboardState((state) => state.height)`. The owner installed it and reported on the spot: the content
+now **keeps scrolling into empty space past the last exercise**. The derived value stays large, so the
+list grew a block of nothing. Reverted in `23ad5ec`.
+
+**Kept from the attempt**: `actionBarHeight`, measured through `onLayout` and added to `bottomOffset`.
+It is inert on its own and it is the part that is actually right.
+
+**Where to go next.** The room has to be added inside the content, but **not** as an absolute height
+derived from the keyboard state. Candidates to measure against the device: clamping the value, reading
+`state.height` without the `isVisible` flag, `contentContainerStyle` instead of the inner `View`, or
+letting the `KeyboardAwareScrollView` own the inset. Whatever is tried, **measure with `screencap` (the
+session screen never goes idle for `uiautomator`) and check both ends: the focused row stays visible AND
+there is no dead space when the keyboard is closed.** The first attempt fixed one end and broke the
+other.
 
 ---
 
