@@ -1,6 +1,6 @@
 # Forja — Roadmap y estado
 
-> Last updated: 2026-09-29
+> Last updated: 2026-10-03
 > Status: `origin/main` is at `af8c436`; the 2026-09-20 session's fourteen units, the six-unit technical batch and the second eight-unit technical batch are all in `main`, and the database-integrity work is published as **PR #1** and not yet merged, with a decision list still open
 
 This file is the handoff for the next session. It says what is done, what is pending, and what is
@@ -349,6 +349,14 @@ ALTER that adds `uuid` — on any database created before the identity layer tha
 database migrated, and the data was there.** Sequence, hashes and releases: "Resolved — v1.0.7 (the
 R8 pre-release) breaks on the device", `v1.0.8` → `v1.0.8-db-startup`; then `v1.0.8-modal` and
 `v1.0.8-modal-scroll` for the start-session dialog.
+**The scroll question closed on 2026-10-03, by measurement instead of argument.** Wireless
+debugging (`adb pair`, then mDNS — no cable needed) put this phone on the machine, and the dialog
+was driven from here: `adb shell input swipe` inside the scrollable node moved the list, in **both
+code 15 and code 16**. So the fix works and code 15 did fix it; the build described as broken was
+**code 14**, which is what `adb shell dumpsys package` showed (`versionCode=15`,
+`lastUpdateTime=2026-10-01 12:49:14`). **v1.0.9 (code 16)** carries the same fix plus the version
+footer in Settings, and is published. Method, obstacles and the one hypothesis left open:
+`odd/tasks/app-observability.md`.
 2. **Supabase: the tables are up, but the server is NOT ready to sync.** Measured from this machine
    on 2026-09-29 with the anon key (read-only, RLS-respecting): 3 categories, **1324** shared
    exercises, `sessions` and `progress_photos` return 0 rows for anon (RLS denying by default), and
@@ -361,9 +369,10 @@ R8 pre-release) breaks on the device", `v1.0.8` → `v1.0.8-db-startup`; then `v
    nine unique indexes. Detail in `odd/tasks/supabase-sync.md`.
 3. **The two-account test** for the isolation work: sign in as A, log something, sign out, sign in as
    B, confirm B sees nothing of A's. It needs a second email account.
-4. **The three branches are unmerged.** `fix/release-v1.0.8` (the R8 revert, the legacy-database
-   fix) and `fix/modal-scroll-and-actions` (the dialog's scroll and its actions) are pushed, tagged
-   and released from, and `main` is still at `9cdc7bc`. Merging them is the owner's call.
+4. **The unmerged branches.** `fix/release-v1.0.8` (the R8 revert, the legacy-database fix) and
+   `fix/modal-scroll-and-actions` (the dialog's scroll, its actions, and the version footer) are
+   pushed, tagged and released from, and `main` is still at `9cdc7bc`. Merging them is the owner's
+   call.
 
 ---
 

@@ -1,8 +1,9 @@
 # app-observability
 
-**Status**: **IN PROGRESS** — task 1 (the version footer) is **landed and released**. Sentry is
-**decided, not yet integrated**: the owner deferred it to the next build so this one could close the
-scroll defect first. Task 3 (device verification) is the open item.
+**Status**: **IN PROGRESS** — task 1 (the version footer) is **landed, released and verified on the
+device**. The scroll defect this feature was opened around turned out to be **not a defect**: the
+fix shipped in code 15 works, and the owner was running code 14. Detail in task 3. Sentry is still
+**decided, not integrated** (deferred by the owner to the next build).
 
 **Why this feature exists.** On 2026-10-01 the owner tested the app on his phone and reported that
 the start-session dialog *still* does not scroll. The very first question that could not be answered
@@ -89,11 +90,41 @@ and nothing here should be stretched to make it do that.
 - **Acceptance**: a deliberate test crash appears in the dashboard with a readable symbolicated stack,
   from a device build — not from a dev server.
 
-### 3. Device verification
+### 3. Device verification — DONE, 2026-10-03, and it closed the scroll question
 
-- **What**: the footer and a crash, observed on the real phone.
-- **Why**: every previous "it works" in this project that was reasoned from the style tree instead of
-  observed shipped something broken. The version footer exists to make this cheap.
+**How the device got connected, since there is no USB cable.** Wireless debugging. `adb pair
+192.168.0.188:35203 <code>` then mDNS brought the transport up on its own; no `adb connect` was
+needed. Phone: POCO X7 Pro (`rodin`), Android 16, 1220x2712.
+
+**Two obstacles worth recording, because both will recur:**
+
+- **MIUI/HyperOS refuses `adb shell input tap`** with `SecurityException: Injecting input events
+  requires the caller to have the INJECT_EVENTS permission`, on top of the ordinary "USB debugging"
+  switch. The separate **"Depuración USB (ajustes de seguridad)"** toggle under Developer options
+  ("Permitir la concesión de permisos y la simulación de entrada a través de la depuración USB") is
+  what enables it. Without that toggle `input` is dead; `uiautomator dump` and `screencap` work
+  regardless, so the screen can still be read.
+- **`am start -a android.intent.action.VIEW -d "forja://routines"` navigates the app without a tap.**
+  `forja://routine/2` answered "Rutina no encontrada" — the local routine ids are not `1..3` in list
+  order, so a deep link is not a substitute for reading the real id.
+
+**The scroll works, and it was measured, not judged.** Same modal and same list, with
+`adb shell input swipe 609 1650 609 1000 400` applied inside the scrollable node
+(`bounds [201,989][1018,1720]` — 731 px ≈ 244 dp on this density):
+
+| Build | Before the gesture | After the gesture |
+| --- | --- | --- |
+| code 15 (`1.0.8`) | Elevación lateral · Peso muerto rumano · Remo en Barra T | Aperturas pecho · Remo sentado · Extensión de pierna |
+| code 16 (`1.0.9`) | Elevación lateral · Peso muerto rumano · Remo en Barra T | Aperturas pecho · Remo sentado · Extensión de pierna |
+
+**So `829040e` is correct and code 15 did fix the scroll.** `adb shell dumpsys package` reported
+`versionCode=15` with `lastUpdateTime=2026-10-01 12:49:14`, so the build the owner described as
+broken was **code 14** (or an earlier one) — the build that shipped the defect. The one hypothesis
+this leaves untested is the `Pressable`-around-`ScrollView` pattern in the other six sites: it did
+**not** break this modal, and there is no evidence it breaks anything else.
+
+**The footer works.** After `adb install -r build-1790873788953.apk` (data intact, `versionCode`
+16 reported by the package manager), Settings renders `Versión 1.0.9 (compilación 16)`.
 
 ---
 
