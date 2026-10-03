@@ -92,9 +92,32 @@ before that observation exists.
 it is open it sits over the row and **hides the intensity control** — which is what made the owner think
 the control was missing in the first place.
 
-**Not a data defect.** The decision to make is behavioural: close the action when another row is
-touched, close it after a moment, or close it when the set is completed. That is a product choice, not a
-mechanical fix, so it needs the owner's call before code.
+**Not a data defect.** The decision was behavioural and the owner chose **(a): closing one row's action
+closes the others.**
+
+**LANDED** — `69e3061`. `SessionExerciseItem` owns `openSwipeSetId`; each row receives `isSwipeOpen`
+and closes itself when it flips to false, plus `onSwipeableOpen` / `onSwipeableClose` to report back.
+
+Rejected deliberately: **(b)** a timeout, which is timing magic that can fire while you are reading the
+row; **(c)** closing on complete, which does not cover the case that produced the report — reaching for
+the intensity control on a row you have not completed yet.
+
+**This was the cause of the intensity report.** The owner had not lost the control; the delete button
+was sitting on top of it. Worth remembering as a class: ask *what is covering what* before hunting for a
+logic bug.
+
+---
+
+## Unit 4 — the keyboard covers the last exercises
+
+**New, reported 2026-10-03, not investigated.** The owner: "el teclado está tapando otra vez las últimas
+series cuando usas el teclado, cuando son los últimos ejercicios al final de la pantalla el teclado tapa
+el ejercicio".
+
+`app.json` sets `softwareKeyboardLayoutMode: "resize"`, so the window shrinks and whatever must follow it
+is the scroll — the same shape of problem as the start-session dialog, and it should be measured the same
+way: positions from `uiautomator` (or `screencap` on the session screen, where the timer keeps the tree
+from ever going idle) rather than a look at a screenshot.
 
 ---
 
