@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Text, View, ScrollView, Modal, Pressable, TouchableOpacity, useWindowDimensions, StyleSheet } from 'react-native';
 import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -474,8 +474,24 @@ export default function RoutineDetailScreen() {
       />
 
       <Modal accessible={true} visible={showStartModal} transparent animationType="fade" onRequestClose={() => setShowStartModal(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }} onPress={() => setShowStartModal(false)} accessibilityLabel={t('accessibility.common.close')} accessibilityRole="button">
-          <Pressable style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }} onPress={(e) => e.stopPropagation()} accessible={false}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay.default, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
+          {/* The backdrop is a SIBLING of the card, never its ancestor, and the card is a
+              plain `View`. A `Pressable` that wraps the card claims the touch responder
+              for the whole subtree, so the `ScrollView` inside never sees the drag: the
+              gesture is consumed by nobody and Android hands it to the system. Measured
+              on the device on 2026-10-03 — the swipe inside this dialog opened the app
+              drawer while the list stayed still, with the last 49% of it clipped and
+              unreachable (every node below the fourth exercise reported its bottom edge
+              pinned to the container's edge). As siblings the card is hit-tested first,
+              so a tap that lands on it never reaches the backdrop and the dialog does
+              not dismiss itself. */}
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setShowStartModal(false)}
+            accessibilityLabel={t('accessibility.common.close')}
+            accessibilityRole="button"
+          />
+          <View style={{ backgroundColor: colors.bg.card, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, maxHeight: MODAL.MAX_HEIGHT, borderWidth: borderWidths.thin, borderColor: colors.border.primary }}>
             <Text style={{ fontSize: fontSizes.lg, fontFamily: fonts.bodySemiBold, color: colors.text.primary, marginBottom: spacing.md }}>{t('routine.detail.startSession')}</Text>
             <Text style={{ fontSize: fontSizes.md, fontFamily: fonts.body, color: colors.text.secondary, marginBottom: spacing.md }}>
               {t('routine.detail.previousSessionMessage')}
@@ -485,11 +501,13 @@ export default function RoutineDetailScreen() {
                 style={{ backgroundColor: colors.bg.elevated, borderRadius: borderRadius.sm, borderWidth: borderWidths.thin, borderColor: colors.border.primary, padding: spacing.sm + spacing.xs, flexShrink: 1, marginBottom: spacing.md }}
               >
                 <Text style={{ fontSize: fontSizes.sm, fontFamily: fonts.bodyMedium, color: colors.text.secondary, marginBottom: spacing.xs }}>{t('routine.detail.lastSession')}</Text>
-                {/* The bound belongs on the scrolling node itself. `maxHeight` on the
-                    wrapper above does not bound this view: without a cap of its own a
-                    ScrollView measures its content, so nothing overflows, nothing
-                    scrolls, and the wrapper clips what does not fit. v1.0.8 (code 14)
-                    shipped that way and did not scroll. */}
+                {/* This cap sizes the body; it is NOT what makes the view scrollable.
+                    An earlier revision of this comment claimed the cap alone was the
+                    fix, and the device disagreed: with the cap moved here the list still
+                    clipped at its container's edge and the drag never arrived. What
+                    makes the drag arrive is that the card is no longer inside a
+                    `Pressable` (see the comment on the backdrop above). Both are needed:
+                    the cap for layout, the sibling backdrop for the gesture. */}
                 <ScrollView style={{ flexShrink: 1, maxHeight: MODAL.MAX_BODY_HEIGHT }}>
                   {lastSession.exercises?.map((se) => {
                     const unit = resolveUnit(
@@ -520,8 +538,8 @@ export default function RoutineDetailScreen() {
               <Button title={t('routine.detail.startFresh')} variant="secondary" onPress={() => { setShowStartModal(false); handleStartSession(false); }} />
               <Button title={t('routine.detail.continueLast')} variant="primary" onPress={() => { setShowStartModal(false); handleStartSession(true); }} />
             </View>
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </Modal>
     </Screen>
     <ConfirmDialog

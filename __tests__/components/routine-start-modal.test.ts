@@ -18,7 +18,17 @@ import path from 'node:path';
  *      content that grows — carrying both `MODAL.MAX_BODY_HEIGHT` and
  *      `flexShrink: 1` ON THE SCROLLING NODE ITSELF,
  *   3. the title and the message are fixed chrome above it,
- *   4. both actions render after it, stacked rather than sharing a row.
+ *   4. both actions render after it, stacked rather than sharing a row,
+ *   5. **nothing between the card and the scroll region takes a press**, and the
+ *      backdrop is a sibling of the card rather than its ancestor.
+ *
+ * Property 5 is the one that was missing, and its absence is why this file said
+ * "guarded" while the dialog did not scroll in production — v1.0.8 codes 14 and 15
+ * and v1.0.9 code 16 all shipped the defect. Properties 1-4 describe where a bound
+ * sits; none of them implies a drag ever reaches the `ScrollView`, and a `Pressable`
+ * wrapping the card swallows it. Measured on the device 2026-10-03: with the wrapper
+ * in place, a swipe inside the dialog opened the app drawer while the list stayed
+ * still, and the last 49% of it stayed clipped and unreachable.
  *
  * The previous revision of this file pinned the same incident through a different
  * arrangement: one scroll region holding the title, the message and the list. It
@@ -121,6 +131,33 @@ describe('start-session modal containment', () => {
     expect(actionsStart).toBeGreaterThan(-1);
     const actionsTag = block.slice(actionsStart, block.indexOf('>', actionsStart) + 1);
     expect(actionsTag).not.toMatch(/flexDirection:\s*'row'/);
+  });
+
+  it('never puts the scroll region inside a pressable ancestor', () => {
+    // THE property, and the one this file got wrong for three releases. A `Pressable`
+    // wrapping the card claims the touch responder for the whole subtree, so the
+    // `ScrollView` inside never receives the drag: nobody consumes the gesture and
+    // Android hands it to the system.
+    //
+    // A static test CAN hold this one — it is a fact about the tree, not about
+    // rendering. The bound assertions above cannot, which is exactly why they passed
+    // while the dialog did not scroll: pinning where a `maxHeight` sits says nothing
+    // about whether the view moves.
+    const scrollStart = block.indexOf('<ScrollView');
+    expect(scrollStart).toBeGreaterThan(-1);
+    const cardStart = block.lastIndexOf('colors.bg.card', scrollStart);
+    expect(cardStart).toBeGreaterThan(-1);
+    expect(block.slice(cardStart, scrollStart)).not.toMatch(/<Pressable|<TouchableOpacity|\bonPress=/);
+  });
+
+  it('keeps the backdrop as a sibling of the card, not its ancestor', () => {
+    // The other half of the same fix: the backdrop must dismiss the dialog without
+    // wrapping the card. `absoluteFill` on a sibling makes both true at once.
+    const backdrop = block.indexOf('accessibility.common.close');
+    const card = block.lastIndexOf('colors.bg.card', block.indexOf('<ScrollView'));
+    expect(backdrop).toBeGreaterThan(-1);
+    expect(card).toBeGreaterThan(backdrop);
+    expect(block.slice(backdrop, card)).not.toMatch(/<\/Pressable>/);
   });
 });
 
