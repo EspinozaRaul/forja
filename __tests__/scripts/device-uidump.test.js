@@ -24,6 +24,7 @@ describe('parseNodes', () => {
         text: 'Peso muerto rumano',
         className: 'android.widget.TextView',
         clickable: false,
+        scrollable: false,
         left: 201,
         top: 989,
         right: 1018,
@@ -72,12 +73,33 @@ describe('parseNodes', () => {
         text: 'sin bounds',
         className: '',
         clickable: false,
+        scrollable: false,
         left: -1,
         top: -1,
         right: -1,
         bottom: -1,
       },
     ]);
+  });
+
+  it('flags the node that owns the scroll, which is the viewport a gesture is measured against', () => {
+    const nodes = parseNodes(
+      document(
+        '<node class="android.view.ViewGroup" bounds="[0,530][1220,1557]" scrollable="true" />',
+      ),
+      { includeUnlabelled: true },
+    );
+
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].scrollable).toBe(true);
+    expect(nodes[0].bottom).toBe(1557);
+  });
+
+  it('drops unlabelled containers by default, because listing the whole tree is noise', () => {
+    const xml = document('<node class="android.view.ViewGroup" bounds="[0,530][1220,1557]" />');
+
+    expect(parseNodes(xml)).toHaveLength(0);
+    expect(parseNodes(xml, { includeUnlabelled: true })).toHaveLength(1);
   });
 
   it('marks only the clickable nodes as clickable', () => {

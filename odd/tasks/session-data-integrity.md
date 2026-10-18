@@ -141,6 +141,51 @@ other.
 
 ---
 
+## Unit 4 — MEASURED ON THE DEVICE, 2026-10-18, on code 20
+
+Measured with `scripts/device` after pausing the session timer, which is what makes `uiautomator`
+dump this screen at all. Every number below is from a live dump, not from an image.
+
+**The concept that was missing.** `react-native-keyboard-controller@1.21.9` — the
+`KeyboardAwareScrollView` this screen already uses — **grows the content's bottom by the keyboard
+height on its own.** `KeyboardAwareScrollView/index.tsx:579-582` derives
+`padding = enabled ? currentKeyboardFrameHeight.value : 0`, the default `mode` is `"insets"`, and
+`ScrollViewWithBottomPadding/index.tsx:126-131` passes it to Android as the native
+`contentInsetBottom`. So the room inside the content was never missing: `d0347ff` added a **second**
+inset of the same size, and that is the whole explanation of the "endless scroll" the owner hit on
+v1.0.12.
+
+**The keyboard does not resize the window.** With the keyboard open the scrolling container reports
+`bounds=[0,511][1220,2556]`, i.e. the app still thinks it owns the full height; the keyboard at
+`1730..2712` merely overlays it. With the keyboard closed the same container is `[0,511][1220,2324]`
+— shorter, because the action bar shows its two buttons again. The library's own arithmetic lands the
+visible region at `511..1574`, which is exactly the action-bar top, so its inset is correct as it
+stands.
+
+**The action bar is not a bug.** `app/session/[id].tsx:790` renders the two buttons under
+`{!isKeyboardVisible && (...)}`, so *by design* they disappear while the keyboard is up and the bar
+collapses to its rest-timer area. The earlier note that "the action bar did not stay visible either"
+was reading intended behaviour as a defect.
+
+**The original symptom does not reproduce in code 20.** Focusing the weight input of the **last**
+exercise (`Sentadilla Pendular`) moved focus from `text="10" bounds=[680,511][916,570]` to
+`text="80" bounds=[439,1376][675,1502]`. The action bar starts at `1574`, so the focused input ends
+**72 px clear of it** and the screenshot shows the whole card, caret included. The retained
+`actionBarHeight` in `bottomOffset` — the half of `d0347ff` that was kept — is what does the work.
+
+**Still true, and it is the honest caveat:** with the keyboard open the scroll can still travel past
+the last exercise into an empty viewport. That space is the library's inset, not the app's padding, so
+it is present in code 20 exactly as it was before `d0347ff`. It is the price of the focused input being
+liftable; the app no longer doubles it.
+
+**The next measurement, if it is ever needed again:** the swipe helpers are unreliable on this screen —
+a swipe that starts on a `TextInput` or on a row's `Swipeable` never reaches the `ScrollView`, and a
+slow drag sometimes does not scroll at all. Only gestures that start inside the container move it, so
+verify each gesture changed the screen (hash the screenshot, timer region excluded) before trusting it.
+
+
+---
+
 ## The gate
 
 `npx tsc --noEmit` clean and `npx jest` green, per the repo's standing rule. Every behaviour change lands

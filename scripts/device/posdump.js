@@ -10,7 +10,8 @@
  *   node scripts/device/posdump.js --json > before.json
  *
  * On a screen that never goes idle (the session screen re-renders a timer every second)
- * `uiautomator` refuses to dump. There the answer comes from a screenshot; see the README.
+ * `uiautomator` refuses to dump. There the answer comes from a screenshot, or the timer
+ * has to be paused first; see the README.
  */
 
 const { dumpXml, parseNodes } = require('./lib/uidump');
@@ -25,26 +26,39 @@ function option(name) {
 
 const grep = option('--grep');
 const asJson = args.includes('--json');
+// `--all` keeps containers, which is how the viewport of a scrolling list is found:
+// the only node with `scrollable="true"` owns the bounds that a scroll is measured against.
+const includeUnlabelled = args.includes('--all');
 
-const nodes = parseNodes(dumpXml())
-  .filter((node) => !grep || node.text.includes(grep))
-  .sort((a, b) => a.top - b.top || a.left - b.left);
+try {
+  const nodes = parseNodes(dumpXml(), { includeUnlabelled })
+    .filter((node) => !grep || node.text.includes(grep))
+    .sort((a, b) => a.top - b.top || a.left - b.left);
 
-if (asJson) {
-  console.log(JSON.stringify(nodes, null, 2));
-} else {
-  for (const node of nodes) {
-    const centre = Math.round((node.top + node.bottom) / 2);
+  if (asJson) {
+    console.log(JSON.stringify(nodes, null, 2));
+  } else {
+    for (const node of nodes) {
+      const centre = Math.round((node.top + node.bottom) / 2);
+      console.log(
+        [
+          String(node.top).padStart(5),
+          String(node.bottom).padStart(5),
+          `y=${String(centre).padStart(5)}`,
+          node.clickable ? 'click' : '     ',
+          node.scrollable ? 'scrol' : '     ',
+          node.text || `<${node.className}>`,
+        ].join('  '),
+      );
+    }
+
     console.log(
-      [
-        String(node.top).padStart(5),
-        String(node.bottom).padStart(5),
-        `y=${String(centre).padStart(5)}`,
-        node.clickable ? 'click' : '     ',
-        node.text,
-      ].join('  '),
+      `\n${nodes.length} node(s)${includeUnlabelled ? '' : ' with a label'}${
+        grep ? ` matching ${JSON.stringify(grep)}` : ''
+      }`,
     );
   }
-
-  console.log(`\n${nodes.length} labelled node(s)${grep ? ` matching ${JSON.stringify(grep)}` : ''}`);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
 }
